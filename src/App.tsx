@@ -1,10 +1,22 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
-
+import { useEffect, useState } from "react";
+import reactLogo from "./assets/react.svg";
+import viteLogo from "/vite.svg";
+import "./styles/App.css";
+import axios from "./config/axiosCustomize";
 function App() {
-  const [count, setCount] = useState(0)
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const data = await axios.get("/");
+        console.log("Fetched data:", data);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    }
+    fetchData();
+  }, []);
 
   return (
     <>
@@ -29,7 +41,7 @@ function App() {
         Click on the Vite and React logos to learn more
       </p>
     </>
-  )
+  );
 }
 
-export default App
+export default App;
