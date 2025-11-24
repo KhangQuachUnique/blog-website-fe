@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Outlet } from "react-router-dom";
 import Header from "../header/header";
 import SideBar from "../sidebar/sideBar";
 
@@ -47,7 +48,9 @@ const AdminLayout = () => {
           collapsed={collapsed}
           setCollapsed={setCollapsed}
         ></Header>
-        <main>main content...</main>
+        <main className="">
+          <Outlet />
+        </main>
       </div>
     </div>
   );
