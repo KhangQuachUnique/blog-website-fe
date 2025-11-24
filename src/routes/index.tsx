@@ -6,7 +6,7 @@ import adminUserRoutes from "./admin/user.route";
 import adminPostRoutes from "./admin/post.route";
 import adminReportRoutes from "./admin/report.route";
 import authRoutes from "./auth/auth.route";
-
+import newsfeedRoutes from "./newsfeed/newsfeed.route";
 export const router = createBrowserRouter([
   {
     path: "/",
@@ -24,6 +24,7 @@ export const router = createBrowserRouter([
         path: "groups",
         element: <div>Groups Page</div>,
       },
+      ...newsfeedRoutes,
     ],
   },
   {
