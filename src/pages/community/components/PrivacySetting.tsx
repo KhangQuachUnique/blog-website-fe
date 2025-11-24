@@ -7,20 +7,20 @@ const PrivacySetting = () => {
 
   const handleChange = (value: PrivacyType) => {
     setPrivacy(value);
-    // sau này gọi API ở đây
     console.log("Change privacy to:", value);
   };
 
   return (
-    <section style={{ marginTop: 24 }}>
+    <section>
       <h4>Quyền riêng tư</h4>
-      <p style={{ fontSize: 14, color: "#555" }}>
-        Công khai: ai cũng có thể xem bài viết. <br />
+      <p>
+        Công khai: ai cũng có thể xem bài viết.
+        <br />
         Riêng tư: chỉ thành viên trong cộng đồng mới xem được bài viết.
       </p>
 
-      <div style={{ marginTop: 8 }}>
-        <label style={{ marginRight: 16 }}>
+      <div className="community-radio-group">
+        <label>
           <input
             type="radio"
             value="public"

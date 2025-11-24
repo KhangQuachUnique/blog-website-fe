@@ -1,18 +1,40 @@
 import { NavLink, Outlet } from "react-router-dom";
+import "../../styles/community.css";
 
 const ManageLayout = () => {
   return (
-    <div style={{ padding: 24 }}>
-      <h2>Community Management</h2>
+    <div className="community-page">
+      <header className="community-header">
+        <h2 className="community-header-title">Community Management</h2>
+        <p className="community-header-sub">
+          Quản lý cài đặt, bài viết và thành viên trong cộng đồng của bạn.
+        </p>
+      </header>
 
-      <nav style={{ margin: "16px 0" }}>
-        <NavLink to="/community/manage" end style={{ marginRight: 12 }}>
+      <nav className="community-tabs">
+        <NavLink
+          to="/community/manage"
+          end
+          className={({ isActive }) =>
+            "community-tab " + (isActive ? "community-tab-active" : "")
+          }
+        >
           Settings
         </NavLink>
-        <NavLink to="/community/manage/posts" style={{ marginRight: 12 }}>
+        <NavLink
+          to="/community/manage/posts"
+          className={({ isActive }) =>
+            "community-tab " + (isActive ? "community-tab-active" : "")
+          }
+        >
           Posts
         </NavLink>
-        <NavLink to="/community/manage/members">
+        <NavLink
+          to="/community/manage/members"
+          className={({ isActive }) =>
+            "community-tab " + (isActive ? "community-tab-active" : "")
+          }
+        >
           Members
         </NavLink>
       </nav>

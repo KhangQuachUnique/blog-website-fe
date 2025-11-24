@@ -1,0 +1,153 @@
+/* ============ COMMUNITY SETTINGS ============ */
+
+.community-page {
+  max-width: 960px;
+  margin: 40px auto;
+  padding: 24px 32px;
+}
+
+.community-header {
+  margin-bottom: 16px;
+}
+
+.community-header-title {
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.community-header-sub {
+  font-size: 14px;
+  color: #777;
+}
+
+/* Tabs */
+.community-tabs {
+  display: inline-flex;
+  padding: 4px;
+  border-radius: 999px;
+  background: #fce4ec;
+  margin-bottom: 24px;
+  gap: 4px;
+}
+
+.community-tab {
+  border: none;
+  border-radius: 999px;
+  padding: 8px 18px;
+  font-size: 14px;
+  cursor: pointer;
+  background: transparent;
+  color: #c06292;
+  text-decoration: none;
+}
+
+.community-tab-active {
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  font-weight: 600;
+  color: #d81b60;
+}
+
+/* Cards */
+.community-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 18px 22px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 12px rgba(255, 105, 180, 0.08);
+  border: 1px solid #ffe4f1;
+}
+
+.community-card h4 {
+  margin: 0 0 6px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.community-card p {
+  margin: 0 0 10px;
+  font-size: 13px;
+  color: #666;
+}
+
+/* Form fields */
+.community-field-label {
+  font-size: 14px;
+  font-weight: 500;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.community-input,
+.community-textarea {
+  width: 100%;
+  max-width: 420px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid #e0d7ff;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.community-input:focus,
+.community-textarea:focus {
+  border-color: #f48fb1;
+  box-shadow: 0 0 0 2px rgba(244, 143, 177, 0.25);
+}
+
+.community-textarea {
+  min-height: 90px;
+  resize: vertical;
+}
+
+/* Toggles / radio */
+.community-radio-group,
+.community-toggle {
+  font-size: 14px;
+}
+
+.community-radio-group label,
+.community-toggle label {
+  margin-right: 20px;
+  cursor: pointer;
+}
+
+/* Save button */
+.community-save-btn {
+  margin-top: 8px;
+  padding: 10px 22px;
+  background: linear-gradient(90deg, #ff9eb5, #ffaed8);
+  border: none;
+  border-radius: 999px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(255, 105, 180, 0.35);
+  transition: transform 0.08s ease, box-shadow 0.08s ease;
+}
+
+.community-save-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(255, 105, 180, 0.45);
+}
+
+.community-save-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(255, 105, 180, 0.3);
+}
+
+/* Avatar preview */
+.community-avatar-preview {
+  margin-top: 10px;
+}
+
+.community-avatar-preview img {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #ffb6c1;
+}
