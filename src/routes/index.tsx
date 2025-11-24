@@ -6,6 +6,7 @@ import adminUserRoutes from "./admin/user.route";
 import adminPostRoutes from "./admin/post.route";
 import adminReportRoutes from "./admin/report.route";
 import authRoutes from "./auth/auth.route";
+import communityRoutes from "./community.route";
 
 export const router = createBrowserRouter([
   {
@@ -24,6 +25,8 @@ export const router = createBrowserRouter([
         path: "groups",
         element: <div>Groups Page</div>,
       },
+
+      ...communityRoutes,
     ],
   },
   {
