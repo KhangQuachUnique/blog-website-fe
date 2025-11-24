@@ -151,3 +151,44 @@
   object-fit: cover;
   border: 2px solid #ffb6c1;
 }
+
+/* ============ COMMUNITY MODAL ============ */
+
+.community-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+
+.community-modal {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 20px 22px;
+  width: 480px;
+  max-width: calc(100% - 32px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+  position: relative;
+}
+
+.community-modal-small {
+  width: 380px;
+}
+
+.community-modal-close {
+  position: absolute;
+  right: 14px;
+  top: 10px;
+  border: none;
+  background: transparent;
+  font-size: 22px;
+  cursor: pointer;
+  color: #999;
+}
+
+.community-modal-close:hover {
+  color: #555;
+}
