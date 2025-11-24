@@ -5,6 +5,9 @@ import { getNewsfeed } from '../../config/api';
 import { useEffect, useRef } from 'react';
 import { Loader2 } from 'lucide-react';
 import { useCallback } from 'react';
+import '../../styles/newsfeed/Newsfeed.css';
+
+
 export default function Newsfeed() {
   const {
     data,

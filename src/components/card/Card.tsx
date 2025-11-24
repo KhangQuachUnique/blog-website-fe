@@ -2,7 +2,7 @@
 import { ArrowUp, ArrowDown, MessageCircle, Heart } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import type { PostItem } from '../../types/post';
-// import './Card.css';
+import '../../styles/newsfeed/Card.css';
 
 const Card = ({ post }: { post: PostItem }) => {
   const formatDate = (dateString: string) => {

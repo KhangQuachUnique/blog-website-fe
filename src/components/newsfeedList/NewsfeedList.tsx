@@ -2,7 +2,7 @@
 import Card from '../card/Card';
 import type  { PostItem } from '../../types/post';
 import { Loader2 } from 'lucide-react';
-
+import '../../styles/newsfeed/NewsfeedList.css';
 
 interface Props {
   posts: PostItem[];
