@@ -11,21 +11,17 @@ interface Props {
   loadMoreRef?: (node: HTMLDivElement) => void;
 }
 
-const NewsfeedList = ({ posts, isFetchingNextPage, loadMoreRef }: Props) => {
+// NewsfeedList.tsx
+const NewsfeedList = ({ posts, loadMoreRef }: Props) => {
   return (
-    <div className="space-y-6">
-      {posts.map((post, index) => (
-        <div key={post.id} ref={index === posts.length - 1 ? loadMoreRef : null}>
-          <Card post={post} />
-        </div>
-      ))}
-      {isFetchingNextPage && (
-        <div className="flex justify-center py-8">
-          <Loader2 className="h-8 w-8 animate-spin" />
-        </div>
-      )}
-    </div>
+    <div className="newsfeed-list justify-start" ref={loadMoreRef}>
+  {posts.map((post) => (
+    <Card key={post.id} post={post} />
+  ))}
+</div>
+
   );
 };
+
 
 export default NewsfeedList;

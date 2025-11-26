@@ -18,11 +18,12 @@ export default function Newsfeed() {
     error,           // ← thêm dòng này
     isError,         // ← thêm dòng này
   } = useInfiniteQuery({
-    queryKey: ['newsfeed'],
-    queryFn: ({ pageParam }) => getNewsfeed(pageParam),
-    initialPageParam: null,
-    getNextPageParam: (lastPage) => lastPage.pagination?.nextCursor || undefined,
-  });
+  queryKey: ['newsfeed'],
+  queryFn: ({ pageParam }) => getNewsfeed(pageParam ?? undefined),
+  initialPageParam: undefined,
+  getNextPageParam: (lastPage) => lastPage.pagination?.nextCursor ?? undefined,
+});
+
 
   const posts = data?.pages.flatMap(page => page.items) ?? [];
 
@@ -49,7 +50,7 @@ export default function Newsfeed() {
   }
 
   if (isError) {
-    console.error('Lỗi chi tiết:', error); // ← xem trong DevTools Console
+    console.error('Lỗi chi tiết:', error); 
     return (
       <div className="max-w-4xl mx-auto px-4 py-20 text-center">
         <p className="text-red-500 text-xl mb-4">Không tải được dữ liệu</p>
@@ -62,10 +63,11 @@ export default function Newsfeed() {
       </div>
     );
   }
+  
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8">Newsfeed</h1>
+    <div className=" mx-auto px-4 py-8">
+      <h1 className="text-3xl text-[#F295B6] font-bold mb-8 ">Newsfeed</h1>
       
       <NewsfeedList posts={posts} loadMoreRef={lastPostRef} />
       
