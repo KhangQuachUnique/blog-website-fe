@@ -17,7 +17,7 @@ interface SideBarProps {
 const SideBar = ({ navLinks, collapsed, setCollapsed }: SideBarProps) => {
   return (
     <div
-      className={`w-[240px] h-[100vh] bg-[#FAF5F7] px-4 primary-text transition-transform duration-300 ${
+      className={`sticky top-0 w-[240px] h-screen bg-[#FAF5F7] px-4 primary-text transition-transform duration-300 ${
         collapsed ? "translate-x-[-100%]" : "translate-x-0"
       }`}
     >
