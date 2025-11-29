@@ -10,6 +10,7 @@ interface ImageBlockEditProps {
   imageUrl?: string;
   caption?: string;
   objectFit?: ObjectFitType;
+  style?: React.CSSProperties;
   onImageChange?: (id: string, imageUrl: string) => void;
   onCaptionChange?: (id: string, caption: string) => void;
   onObjectFitChange?: (id: string, objectFit: ObjectFitType) => void;
@@ -20,6 +21,7 @@ const ImageBlockEdit = ({
   imageUrl: initialImageUrl,
   caption: initialCaption = "",
   objectFit: initialObjectFit = "cover",
+  style,
   onImageChange,
   onCaptionChange,
   onObjectFitChange,
@@ -109,6 +111,7 @@ const ImageBlockEdit = ({
         className={`w-full h-full rounded-lg flex flex-col items-center justify-center cursor-pointer transition-colors ${
           isDragging ? "bg-pink-50 border-pink-400" : ""
         }`}
+        style={style}
         onDrop={handleDrop}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}

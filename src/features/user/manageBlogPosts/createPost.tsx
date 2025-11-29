@@ -4,6 +4,7 @@ import { InputBase } from "@mui/material";
 
 import TextBlock from "../../../components/blocks/textBlockEdit";
 import ImageBlock from "../../../components/blocks/imageBlockEdit";
+import DeleteConfirmButton from "../../../components/deleteConfirmButton";
 
 interface LayoutItem {
   i: string;
@@ -72,6 +73,11 @@ const CreatePost = () => {
     );
   };
 
+  const handleDeleteBlock = (id: string) => {
+    setBlocks((prevBlocks) => prevBlocks.filter((block) => block.id !== id));
+    setLayout((prevLayout) => prevLayout.filter((item) => item.i !== id));
+  };
+
   const handleBlockObjectFitChange = (id: string, objectFit: ObjectFitType) => {
     setBlocks((prevBlocks) =>
       prevBlocks.map((block) =>
@@ -138,18 +144,21 @@ const CreatePost = () => {
       <div className="w-[900px]">
         <GridLayout
           layout={layout}
-          onLayoutChange={setLayout}
+          onLayoutChange={(newLayout) => setLayout(newLayout as LayoutItem[])}
           cols={16}
           rowHeight={30}
           width={900}
           isDraggable={isCtrlPressed}
           isResizable={true}
+          draggableCancel={".rgl-no-drag"}
         >
           {blocks.map((block) => (
             <div
               key={block.id}
               className={`border-dashed border-2 rounded-lg border-gray-300 relative   ${
-                isCtrlPressed ? "cursor-move border-pink-400" : "cursor-default"
+                isCtrlPressed
+                  ? "cursor-move border-pink-400 select-none"
+                  : "cursor-default"
               }`}
             >
               {block.type === "text" ? (
@@ -159,6 +168,7 @@ const CreatePost = () => {
                   onContentChange={(newContent) =>
                     handleBlockContentChange(block.id, newContent)
                   }
+                  style={isCtrlPressed ? { pointerEvents: "none" } : {}}
                 />
               ) : (
                 <ImageBlock
@@ -173,8 +183,20 @@ const CreatePost = () => {
                   onObjectFitChange={(id, objectFit) =>
                     handleBlockObjectFitChange(id, objectFit)
                   }
+                  style={isCtrlPressed ? { pointerEvents: "none" } : {}}
                 />
               )}
+              <div
+                className={`absolute top-2 right-2 z-10 opacity-0 rgl-no-drag ${
+                  isCtrlPressed ? "opacity-100" : "opacity-0"
+                } transition-all`}
+              >
+                <DeleteConfirmButton
+                  className="rgl-no-drag"
+                  title="Bạn có chắc chắn muốn xóa khối này?"
+                  onConfirm={() => handleDeleteBlock(block.id)}
+                />
+              </div>
             </div>
           ))}
         </GridLayout>

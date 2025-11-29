@@ -22,6 +22,7 @@ interface TextBlockProps {
   content?: string;
   onContentChange?: (newContent: string) => void;
   isEditMode?: boolean;
+  style?: React.CSSProperties;
 }
 
 const TextBlockEdit = ({
@@ -29,6 +30,7 @@ const TextBlockEdit = ({
   content,
   onContentChange,
   isEditMode = true,
+  style,
 }: TextBlockProps) => {
   const [showPopover, setShowPopover] = useState(false);
   const [popoverPosition, setPopoverPosition] = useState({ top: 0, left: 0 });
@@ -173,6 +175,7 @@ const TextBlockEdit = ({
       className="text-block h-full flex flex-col relative"
       id={id}
       ref={editorRef}
+      style={style}
     >
       {/* Floating Toolbar - Rendered via Portal */}
       {showPopover &&
