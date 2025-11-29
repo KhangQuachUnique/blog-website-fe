@@ -202,13 +202,25 @@ const CreatePost = () => {
         </GridLayout>
       </div>
       <div className="flex w-[900px] justify-center gap-4 items-center p-4">
-        <button className="px-4 py-2 border-2 border-[#F295B6] rounded-lg text-[#F295B6] font-semibold hover:translate-y-[-2px] hover:border-[#FEB2CD] hover:text-[#FEB2CD] transition-all duration-200">
+        <CustomButton
+          variant="outline"
+          style={{
+            color: "#F295B6",
+            border: "2px solid #F295B6",
+            fontWeight: "600",
+          }}
+        >
           Lưu nháp
-        </button>
-        <button className="px-4 py-2 bg-[#F295B6] text-white rounded-lg font-semibold hover:translate-y-[-2px] hover:bg-[#FEB2CD] transition-all duration-200">
+        </CustomButton>
+        <CustomButton
+          style={{
+            backgroundColor: "#F295B6",
+            color: "white",
+            fontWeight: "600",
+          }}
+        >
           Đăng bài
-        </button>
-        <CustomButton variant="default" />
+        </CustomButton>
       </div>
     </div>
   );

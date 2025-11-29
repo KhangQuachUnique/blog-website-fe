@@ -6,6 +6,7 @@ interface ButtonProps {
   variant?: "default" | "outline";
   title?: string;
   className?: string;
+  children?: React.ReactNode;
 }
 
 const CustomButton = ({
@@ -13,7 +14,7 @@ const CustomButton = ({
   style,
   variant = "default",
   className,
-  title,
+  children,
 }: ButtonProps) => {
   const classes = [className];
   if (variant === "outline") classes.push("btn-outline");
@@ -24,7 +25,7 @@ const CustomButton = ({
       style={style}
       className={classes.filter(Boolean).join(" ")}
     >
-      {title ? title : "Button"}
+      {children ? children : "Button"}
     </button>
   );
 };

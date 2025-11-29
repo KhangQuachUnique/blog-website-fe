@@ -36,7 +36,7 @@
 
 .btn-default:hover {
   background-color: rgba(140, 29, 53, 0.9);
-  transform: translateY(-1px);
+  transform: translateY(-2px);
 }
 
 .btn-default:active {
@@ -46,7 +46,7 @@
 .btn-outline:hover {
   border-color: rgba(140, 29, 53, 0.9);
   color: rgba(140, 29, 53, 0.9);
-  transform: translateY(-1px);
+  transform: translateY(-2px);
 }
 
 .btn-outline:active {

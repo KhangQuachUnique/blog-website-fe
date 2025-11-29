@@ -83,17 +83,20 @@ const DeleteConfirmButton = ({
               justifyContent: "center",
             }}
           >
-            <CustomButton onClick={handleClose} variant="outline" title="Hủy" />
+            <CustomButton onClick={handleClose} variant="outline">
+              Hủy
+            </CustomButton>
             <CustomButton
               onClick={() => {
                 onConfirm();
                 handleClose();
               }}
               variant="default"
-              title="Xóa"
               className="flex items-center justify-center gap-2"
               style={{ width: "100px" }}
-            />
+            >
+              Xóa
+            </CustomButton>
           </DialogActions>
         </div>
       </Dialog>
