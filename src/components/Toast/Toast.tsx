@@ -1,56 +1,116 @@
-import React, { useEffect } from 'react';
-import { AiOutlineCheckCircle, AiOutlineCloseCircle } from 'react-icons/ai';
+import React from 'react';
+import { Snackbar } from '@mui/material';
 
 interface ToastProps {
-  type: 'success' | 'error';
+  open: boolean;
+  type: 'success' | 'error' | 'info' | 'warning';
   message: string;
   onClose: () => void;
   duration?: number;
+  position?: { vertical: 'top' | 'bottom'; horizontal: 'left' | 'center' | 'right' };
 }
 
-const Toast: React.FC<ToastProps> = ({ type, message, onClose, duration = 3000 }) => {
-  useEffect(() => {
-    const timer = setTimeout(onClose, duration);
-    return () => clearTimeout(timer);
-  }, [onClose, duration]);
+// Bloogie theme colors
+const colorMap = {
+  success: {
+    bg: '#10B981',
+    icon: '✓',
+  },
+  error: {
+    bg: '#EF4444',
+    icon: '✕',
+  },
+  info: {
+    bg: '#3B82F6',
+    icon: 'ℹ',
+  },
+  warning: {
+    bg: '#F59E0B',
+    icon: '⚠',
+  },
+};
 
-  const bgColor = type === 'success' ? 'bg-green-500' : 'bg-red-500';
-  const icon = type === 'success' ? (
-    <AiOutlineCheckCircle size={20} />
-  ) : (
-    <AiOutlineCloseCircle size={20} />
-  );
+const Toast: React.FC<ToastProps> = ({
+  open,
+  type,
+  message,
+  onClose,
+  duration = 3000,
+  position = { vertical: 'top', horizontal: 'right' },
+}) => {
 
   return (
-    <div
-      className={`fixed top-6 right-6 ${bgColor} text-white px-6 py-4 rounded-lg shadow-lg flex items-center gap-3 animate-slide-in-out z-50`}
-      style={{
-        animation: 'slideInOut 3s ease-in-out forwards',
-      }}
-    >
-      {icon}
-      <span className="font-medium">{message}</span>
-      <style>{`
-        @keyframes slideInOut {
-          0% {
-            transform: translateX(400px);
-            opacity: 0;
+    <>
+      <style>
+        {`
+          @keyframes slideInRight {
+            from {
+              transform: translateX(400px);
+              opacity: 0;
+            }
+            to {
+              transform: translateX(0);
+              opacity: 1;
+            }
           }
-          10% {
-            transform: translateX(0);
-            opacity: 1;
+
+          @keyframes slideOutRight {
+            from {
+              transform: translateX(0);
+              opacity: 1;
+            }
+            to {
+              transform: translateX(400px);
+              opacity: 0;
+            }
           }
-          90% {
-            transform: translateX(0);
-            opacity: 1;
+
+          .toast-slide-in {
+            animation: slideInRight 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
           }
-          100% {
-            transform: translateX(400px);
-            opacity: 0;
+
+          .toast-slide-out {
+            animation: slideOutRight 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
           }
-        }
-      `}</style>
-    </div>
+        `}
+      </style>
+      <Snackbar
+        open={open}
+        autoHideDuration={duration}
+        onClose={onClose}
+        anchorOrigin={position}
+        TransitionProps={{
+          onExited: () => {
+            // Remove slide-out class after animation
+          },
+        }}
+        sx={{
+          '& .MuiSnackbarContent-root': {
+            backgroundColor: 'transparent',
+            padding: 0,
+          },
+        }}
+      >
+        <div
+          className="toast-slide-in"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            padding: '12px 16px',
+            backgroundColor: colorMap[type].bg,
+            color: '#ffffff',
+            borderRadius: '8px',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+            fontSize: '14px',
+            fontWeight: '600',
+          }}
+        >
+          <span style={{ fontSize: '18px' }}>{colorMap[type].icon}</span>
+          {message}
+        </div>
+      </Snackbar>
+    </>
   );
 };
 

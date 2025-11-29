@@ -1,22 +1,11 @@
-import React, { useEffect, useState } from 'react';
-import { AiOutlineEye, AiOutlineEyeInvisible, AiOutlineLoading3Quarters } from 'react-icons/ai';
+import { useEffect, useState } from 'react';
 import { BiRefresh, BiChevronLeft, BiChevronRight } from 'react-icons/bi';
+import { AiOutlineLoading3Quarters } from 'react-icons/ai';
 import Toast from '../../../components/Toast/Toast';
+import PostsTable, { type BlogPost } from '../../../components/PostsTable/PostsTable';
 import type { components } from '../../../types/api';
 
-// ✅ Enum lấy trực tiếp từ BE (Swagger)
 type EBlogPostStatus = components['schemas']['EBlogPostStatus'];
-
-// ✅ Kiểu dữ liệu bài viết đồng bộ BE
-interface BlogPost {
-  id: number;
-  title: string;
-  status: EBlogPostStatus;
-  createdAt: string;
-  thumbnailUrl?: string | null;
-  upVotes?: number | null;
-  downVotes?: number | null;
-}
 
 type StatusFilter = 'ALL' | EBlogPostStatus;
 
@@ -28,10 +17,18 @@ const PostListPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [filterStatus, setFilterStatus] = useState<StatusFilter>('ALL');
   const [actionLoading, setActionLoading] = useState<number | null>(null);
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [toastOpen, setToastOpen] = useState<boolean>(false);
+  const [toastConfig, setToastConfig] = useState<{ type: 'success' | 'error' | 'info' | 'warning'; text: string }>({
+    type: 'success',
+    text: '',
+  });
   const [currentPage, setCurrentPage] = useState<number>(1);
 
-  // ✅ Load danh sách bài viết
+  const showToast = (type: 'success' | 'error' | 'info' | 'warning', text: string) => {
+    setToastConfig({ type, text });
+    setToastOpen(true);
+  };
+
   const fetchPosts = async () => {
     try {
       setLoading(true);
@@ -50,7 +47,6 @@ const PostListPage = () => {
     }
   };
 
-  // ✅ Ẩn bài viết
   const handleHide = async (postId: number) => {
     try {
       setActionLoading(postId);
@@ -65,15 +61,14 @@ const PostListPage = () => {
         prev.map(post => (post.id === postId ? { ...post, status: 'HIDDEN' } : post)),
       );
 
-      setMessage({ type: 'success', text: 'Ẩn bài viết thành công!' });
+      showToast('success', 'Ẩn bài viết thành công!');
     } catch (err: any) {
-      setMessage({ type: 'error', text: err.message });
+      showToast('error', err.message);
     } finally {
       setActionLoading(null);
     }
   };
 
-  // ✅ Phục hồi bài viết
   const handleRestore = async (postId: number) => {
     try {
       setActionLoading(postId);
@@ -88,9 +83,9 @@ const PostListPage = () => {
         prev.map(post => (post.id === postId ? { ...post, status: 'ACTIVE' } : post)),
       );
 
-      setMessage({ type: 'success', text: 'Phục hồi bài viết thành công!' });
+      showToast('success', 'Phục hồi bài viết thành công!');
     } catch (err: any) {
-      setMessage({ type: 'error', text: err.message });
+      showToast('error', err.message);
     } finally {
       setActionLoading(null);
     }
@@ -105,51 +100,31 @@ const PostListPage = () => {
     setCurrentPage(1);
   }, [filterStatus]);
 
-  // ✅ Lọc bài viết
+  // Lọc bài viết
   const filteredPosts = posts.filter(post => {
     if (filterStatus === 'ALL') return true;
     return post.status === filterStatus;
   });
 
-  // ✅ Phân trang
+  // Phân trang
   const totalPages = Math.ceil(filteredPosts.length / ITEMS_PER_PAGE);
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const endIndex = startIndex + ITEMS_PER_PAGE;
   const paginatedPosts = filteredPosts.slice(startIndex, endIndex);
 
-  // ✅ Màu trạng thái
-  const getStatusColor = (status: EBlogPostStatus) => {
-    switch (status) {
-      case 'ACTIVE':
-        return { bg: 'bg-emerald-50', border: 'border-emerald-300', text: 'text-emerald-700', badge: 'bg-emerald-100' };
-      case 'HIDDEN':
-        return { bg: 'bg-slate-50', border: 'border-slate-300', text: 'text-slate-700', badge: 'bg-slate-100' };
-      case 'DRAFT':
-        return { bg: 'bg-amber-50', border: 'border-amber-300', text: 'text-amber-700', badge: 'bg-amber-100' };
-    }
-  };
-
-  const getStatusIcon = (status: EBlogPostStatus) => {
-    switch (status) {
-      case 'ACTIVE': return '✓';
-      case 'HIDDEN': return '👁️';
-      case 'DRAFT': return '✎';
-    }
-  };
-
-  // ✅ Loading
+  // Loading
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen bg-gradient-to-t from-pink-100 to-white">
-        <div className="text-center">
+        <div className="text-center flex flex-col items-center gap-4">
           <AiOutlineLoading3Quarters size={50} className="animate-spin text-pink-500" />
-          <p className="mt-4 text-gray-600 font-medium">Đang tải dữ liệu...</p>
+          <p className="text-gray-600 font-medium">Đang tải dữ liệu...</p>
         </div>
       </div>
     );
   }
 
-  // ✅ Error
+  // Error
   if (error) {
     return (
       <div className="flex items-center justify-center h-screen bg-gradient-to-t from-pink-100 to-white">
@@ -210,7 +185,7 @@ const PostListPage = () => {
 
         {/* Filter Buttons */}
         <div className="flex gap-3 overflow-x-auto pb-2">
-          {(['ALL', 'ACTIVE', 'HIDDEN', 'DRAFT'] as StatusFilter[]).map(status => {
+          {(['ALL', 'ACTIVE', 'HIDDEN'] as StatusFilter[]).map(status => {
             const isActive = filterStatus === status;
             return (
               <button
@@ -222,93 +197,25 @@ const PostListPage = () => {
                     : 'bg-white border-2 text-gray-700 hover:border-pink-300 border-gray-200'
                 }`}
               >
-                {status === 'ALL' ? 'Tất cả' : status === 'ACTIVE' ? 'Công khai' : status === 'HIDDEN' ? 'Ẩn' : 'Nháp'}
+                {status === 'ALL' ? 'Tất cả' : status === 'ACTIVE' ? 'Công khai' : status === 'HIDDEN' ? 'Ẩn' : ''}
               </button>
             );
           })}
         </div>
       </div>
 
-      {/* Table */}
-      {paginatedPosts.length > 0 ? (
-        <div className="bg-white rounded-2xl shadow-md overflow-hidden border-2 border-pink-200">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-pink-100">
-                <tr>
-                  <th className="px-6 py-4 text-left font-bold text-rose-900">ID</th>
-                  <th className="px-6 py-4 text-left font-bold text-rose-900">Tiêu đề</th>
-                  <th className="px-6 py-4 text-left font-bold text-rose-900">Ngày tạo</th>
-                  <th className="px-6 py-4 text-center font-bold text-rose-900">Trạng thái</th>
-                  <th className="px-6 py-4 text-center font-bold text-rose-900">Hành động</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {paginatedPosts.map((post) => {
-                  const colors = getStatusColor(post.status);
-                  return (
-                    <tr key={post.id} className="hover:bg-pink-50 transition">
-                      <td className="px-6 py-4 font-semibold text-gray-700">#{post.id}</td>
-                      <td className="px-6 py-4">
-                        <div className="line-clamp-2 font-medium text-gray-900">{post.title}</div>
-                      </td>
-                      <td className="px-6 py-4 text-gray-600">
-                        {new Date(post.createdAt).toLocaleDateString('vi-VN')}
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        <span className={`inline-flex items-center gap-2 px-4 py-2 rounded-full font-semibold text-xs uppercase tracking-wide ${colors?.badge}`} style={{ color: colors?.text }}>
-                          {getStatusIcon(post.status)} {post.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        <div className="flex items-center justify-center gap-2">
-                          {post.status === 'ACTIVE' ? (
-                            <button
-                              onClick={() => handleHide(post.id)}
-                              disabled={actionLoading === post.id}
-                              className="p-2.5 bg-amber-50 rounded-lg border-2 border-amber-200 text-amber-600 hover:bg-amber-100 transition disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
-                              title="Ẩn bài viết"
-                            >
-                              {actionLoading === post.id ? (
-                                <AiOutlineLoading3Quarters className="animate-spin" size={18} />
-                              ) : (
-                                <AiOutlineEyeInvisible size={18} />
-                              )}
-                            </button>
-                          ) : post.status === 'HIDDEN' ? (
-                            <button
-                              onClick={() => handleRestore(post.id)}
-                              disabled={actionLoading === post.id}
-                              className="p-2.5 bg-emerald-50 rounded-lg border-2 border-emerald-200 text-emerald-600 hover:bg-emerald-100 transition disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
-                              title="Phục hồi bài viết"
-                            >
-                              {actionLoading === post.id ? (
-                                <AiOutlineLoading3Quarters className="animate-spin" size={18} />
-                              ) : (
-                                <AiOutlineEye size={18} />
-                              )}
-                            </button>
-                          ) : (
-                            <span className="px-3 py-2 text-gray-400 text-sm">Không thể hành động</span>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      ) : (
-        <div className="text-center py-16 bg-white rounded-2xl border-2 border-pink-200">
-          <div className="text-6xl mb-4">📭</div>
-          <p className="text-gray-600 font-semibold">Không có bài viết nào</p>
-          <p className="text-gray-400 mt-2">
-            {filterStatus !== 'ALL' ? `với trạng thái "${filterStatus}"` : 'Hãy tạo bài viết đầu tiên của bạn'}
-          </p>
-        </div>
-      )}
+      {/* Table Component */}
+      <PostsTable
+        posts={paginatedPosts}
+        onHide={handleHide}
+        onRestore={handleRestore}
+        loadingId={actionLoading}
+        emptyMessage={
+          filterStatus !== 'ALL'
+            ? `Không có bài viết nào với trạng thái "${filterStatus}"`
+            : 'Không có bài viết nào - Hãy tạo bài viết đầu tiên của bạn'
+        }
+      />
 
       {/* Footer Info & Pagination */}
       <div className="mt-8">
@@ -362,8 +269,13 @@ const PostListPage = () => {
         )}
       </div>
 
-      {/* Toast */}
-      {message && <Toast type={message.type} message={message.text} onClose={() => setMessage(null)} />}
+      {/* Toast Notification */}
+      <Toast
+        open={toastOpen}
+        type={toastConfig.type}
+        message={toastConfig.text}
+        onClose={() => setToastOpen(false)}
+      />
     </div>
   );
 };
