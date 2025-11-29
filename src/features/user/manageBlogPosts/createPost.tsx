@@ -2,9 +2,10 @@ import { useState, useEffect } from "react";
 import GridLayout from "react-grid-layout";
 import { InputBase } from "@mui/material";
 
-import TextBlock from "../../../components/blocks/textBlockEdit";
-import ImageBlock from "../../../components/blocks/imageBlockEdit";
+import TextBlock from "../../../components/block/textBlockEdit";
+import ImageBlock from "../../../components/block/imageBlockEdit";
 import DeleteConfirmButton from "../../../components/deleteConfirmButton";
+import CustomButton from "../../../components/button";
 
 interface LayoutItem {
   i: string;
@@ -193,7 +194,6 @@ const CreatePost = () => {
               >
                 <DeleteConfirmButton
                   className="rgl-no-drag"
-                  title="Bạn có chắc chắn muốn xóa khối này?"
                   onConfirm={() => handleDeleteBlock(block.id)}
                 />
               </div>
@@ -208,6 +208,7 @@ const CreatePost = () => {
         <button className="px-4 py-2 bg-[#F295B6] text-white rounded-lg font-semibold hover:translate-y-[-2px] hover:bg-[#FEB2CD] transition-all duration-200">
           Đăng bài
         </button>
+        <CustomButton variant="default" />
       </div>
     </div>
   );

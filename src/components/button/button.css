@@ -1,0 +1,54 @@
+.btn-outline {
+  font-family: Quicksand, "Mona Sans", "Open Sans", Outfit, sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  color: #8c1d35;
+  display: flex;
+  width: 100px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  text-transform: none;
+  padding: 10px 12px;
+  border: 2px solid #8c1d35;
+  background-color: #fff;
+  transition: all 0.1s ease-in-out;
+  cursor: pointer;
+}
+
+.btn-default {
+  font-family: Quicksand, "Mona Sans", "Open Sans", Outfit, sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  color: #ffffff;
+  display: flex;
+  width: 100px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  text-transform: none;
+  padding: 10px 12px;
+  border: none;
+  background-color: #8c1d35;
+  transition: all 0.1s ease-in-out;
+  cursor: pointer;
+}
+
+.btn-default:hover {
+  background-color: rgba(140, 29, 53, 0.9);
+  transform: translateY(-1px);
+}
+
+.btn-default:active {
+  transform: translateY(0);
+}
+
+.btn-outline:hover {
+  border-color: rgba(140, 29, 53, 0.9);
+  color: rgba(140, 29, 53, 0.9);
+  transform: translateY(-1px);
+}
+
+.btn-outline:active {
+  transform: translateY(0);
+}

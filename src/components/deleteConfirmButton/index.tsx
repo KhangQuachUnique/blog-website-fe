@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { Dialog, DialogActions, DialogTitle, Button } from "@mui/material";
+import { Dialog, DialogActions, DialogTitle } from "@mui/material";
 import { IoMdTrash } from "react-icons/io";
+import CustomButton from "../button";
 
 interface DeleteConfirmButtonProps {
   title?: string;
@@ -82,66 +83,17 @@ const DeleteConfirmButton = ({
               justifyContent: "center",
             }}
           >
-            <Button
-              onClick={handleClose}
-              variant="outlined"
-              sx={{
-                fontFamily:
-                  "Quicksand, Mona Sans, Open Sans, Outfit, sans-serif",
-                fontWeight: "700",
-                fontSize: 16,
-                color: "#8c1d35",
-                display: "flex",
-                width: "100px",
-                alignItems: "center",
-                justifyItems: "center",
-                borderRadius: 2,
-                textTransform: "none",
-                py: 1,
-                border: "2px solid",
-                borderColor: "#8c1d35",
-                bgcolor: "#fff",
-                transition: "all 0.1s ease-in-out",
-                "&:hover": {
-                  borderColor: "rgba(140, 29, 53, 0.9)",
-                  color: "rgba(140, 29, 53, 0.9)",
-                  transform: "translateY(-1px)",
-                },
-              }}
-            >
-              Hủy
-            </Button>
-            <Button
+            <CustomButton onClick={handleClose} variant="outline" title="Hủy" />
+            <CustomButton
               onClick={() => {
                 onConfirm();
                 handleClose();
               }}
-              variant="contained"
-              sx={{
-                fontFamily:
-                  "Quicksand, Mona Sans, Open Sans, Outfit, sans-serif",
-                fontWeight: "600",
-                fontSize: 16,
-                display: "flex",
-                alignItems: "center",
-                justifyItems: "center",
-                borderRadius: 2,
-                textTransform: "none",
-                width: "100px",
-                py: 1,
-                bgcolor: "#8c1d35",
-                boxShadow: "none",
-                transition: "all 0.1s ease-in-out",
-                "&:hover": {
-                  bgcolor: "rgba(140, 29, 53, 0.9)",
-                  boxShadow: "none",
-                  transform: "translateY(-1px)",
-                },
-              }}
-              startIcon={<IoMdTrash />}
-            >
-              Xóa
-            </Button>
+              variant="default"
+              title="Xóa"
+              className="flex items-center justify-center gap-2"
+              style={{ width: "100px" }}
+            />
           </DialogActions>
         </div>
       </Dialog>
