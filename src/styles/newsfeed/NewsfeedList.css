@@ -1,22 +1,35 @@
-.newsfeed-list {
-  /* use column-based masonry so items stack vertically and fill gaps
-     when some cards are shorter (no thumbnail) */
-  column-width: 300px;
-  column-gap: 1.5rem;
+.newsfeed-list-wrapper {
   padding: 0;
-  list-style: none;
+}
+
+/* react-masonry-css classes */
+.newsfeed-masonry-grid {
+  display: flex;
+  margin-left: -1.5rem; /* gutter offset */
+  width: auto;
+}
+.newsfeed-masonry-grid_column {
+  padding-left: 1.5rem; /* gutter */
+  background-clip: padding-box;
+}
+
+.newsfeed-masonry-item {
+  margin-bottom: 1.5rem;
 }
 
 
 @media (max-width: 768px) {
-  .newsfeed-list {
-    column-width: 100%;
-    column-gap: 1rem;
+  .newsfeed-masonry-grid {
+    margin-left: -1rem;
+  }
+  .newsfeed-masonry-grid_column {
+    padding-left: 1rem;
+  }
+  .newsfeed-masonry-item {
+    margin-bottom: 1rem;
   }
 }
 
 @media (min-width: 1400px) {
-  .newsfeed-list {
-    column-width: 260px;
-  }
+  /* no-op, masonry will handle columns via breakpointCols in JS */
 }
