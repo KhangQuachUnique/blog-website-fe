@@ -1,7 +1,7 @@
 
 import { useInfiniteQuery } from '@tanstack/react-query';
 import NewsfeedList from '../../components/newsfeedList/NewsfeedList';
-import { getNewsfeed } from '../../config/api';
+import { getNewsfeed } from '../../services/newsfeed/newsfeed_api';
 import { useEffect, useRef } from 'react';
 import { Loader2 } from 'lucide-react';
 import { useCallback } from 'react';

@@ -20,14 +20,16 @@ const Card = ({ post }: { post: PostItem }) => {
   return (
     <Link to={`/post/${post.id}`} className="block">
       <article className="newsfeed-card hover:shadow-lg transition-shadow cursor-pointer">
-        <div className="newsfeed-card__thumbnail">
-          <img
-            src={post.thumbnailUrl}
-            alt={post.title}
-            className="newsfeed-card__image"
-            loading="lazy"
-          />
-        </div>
+        {post.thumbnailUrl && (
+          <div className="newsfeed-card__thumbnail">
+            <img
+              src={post.thumbnailUrl}
+              alt={post.title}
+              className="newsfeed-card__image"
+              loading="lazy"
+            />
+          </div>
+        )}
         <div className="newsfeed-card__content">
           <div className="newsfeed-card__header">
             <div className="newsfeed-card__author">
@@ -39,13 +41,22 @@ const Card = ({ post }: { post: PostItem }) => {
               <div className="newsfeed-card__author-info">
                 <span className="newsfeed-card__username">{post.author.username}</span>
                 {post.community && (
-                  <span className="newsfeed-card__community">trong {post.community}</span>
+                  <span className="newsfeed-card__community">
+                    trong {typeof post.community === 'string' ? post.community : post.community.name}
+                  </span>
                 )}
               </div>
             </div>
             <time className="newsfeed-card__time">{formatDate(post.createdAt)}</time>
           </div>
           <h2 className="newsfeed-card__title">{post.title}</h2>
+          {post.hashtags && post.hashtags.length > 0 && (
+            <div className="newsfeed-card__hashtags">
+              {post.hashtags.map((h) => (
+                <span key={h.id} className="newsfeed-card__hashtag">#{h.name}</span>
+              ))}
+            </div>
+          )}
           <div className="newsfeed-card__footer">
             <div className="newsfeed-card__stats">
               <div className="newsfeed-card__votes">
@@ -53,9 +64,9 @@ const Card = ({ post }: { post: PostItem }) => {
                   <ArrowUp size={18} />
                   <span>{post.upVotes}</span>
                 </button>
-                <span className="newsfeed-card__score font-bold">
+                {/* <span className="newsfeed-card__score font-bold">
                   {post.score || post.upVotes - post.downVotes}
-                </span>
+                </span> */}
                 <button className="newsfeed-card__vote-btn newsfeed-card__vote-btn--down">
                   <ArrowDown size={18} />
                   <span>{post.downVotes}</span>

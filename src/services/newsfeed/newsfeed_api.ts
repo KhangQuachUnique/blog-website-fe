@@ -1,5 +1,5 @@
 
-import axiosCustomize from './axiosCustomize';
+import axiosCustomize from '../../config/axiosCustomize';
 
 
 const unwrap = (res: any) => {

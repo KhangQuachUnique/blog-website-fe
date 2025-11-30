@@ -12,7 +12,8 @@ export interface PostItem {
   downVotes: number;
   createdAt: string;
   author: PostAuthor;
-  community: string | null;
+  community: string | { id: number; name: string; thumbnailUrl?: string } | null;
+  hashtags?: Array<{ id: number; name: string }>;
   score: number;
   totalReacts: number;
   totalComments: number;

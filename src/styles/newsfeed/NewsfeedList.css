@@ -1,22 +1,22 @@
 .newsfeed-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 1.5rem;
+  /* use column-based masonry so items stack vertically and fill gaps
+     when some cards are shorter (no thumbnail) */
+  column-width: 300px;
+  column-gap: 1.5rem;
   padding: 0;
   list-style: none;
-  justify-content: start; /* thêm dòng này để dính trái */
 }
 
 
 @media (max-width: 768px) {
   .newsfeed-list {
-    grid-template-columns: 1fr;
-    gap: 1rem;
+    column-width: 100%;
+    column-gap: 1rem;
   }
 }
 
 @media (min-width: 1400px) {
   .newsfeed-list {
-    grid-template-columns: repeat(6, 1fr);
+    column-width: 260px;
   }
 }
