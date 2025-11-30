@@ -7,7 +7,7 @@ import adminPostRoutes from "./admin/post.route";
 import adminReportRoutes from "./admin/report.route";
 import authRoutes from "./auth/auth.route";
 import manageBlogPostsRoutes from "./user/manageBlogPosts.route";
-
+import newsfeedRoutes from "./newsfeed/newsfeed.route";
 export const router = createBrowserRouter([
   {
     path: "/",
@@ -18,6 +18,7 @@ export const router = createBrowserRouter([
         element: <div>Home Page</div>,
       },
       ...manageBlogPostsRoutes,
+      ...newsfeedRoutes,
     ],
   },
   {
