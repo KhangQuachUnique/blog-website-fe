@@ -7,7 +7,10 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "update-types": "openapi-typescript http://localhost:8080/api-json --output src/api/schema.ts",
+    "prestart": "npm run update-types",
+    "start": "npm run dev"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
@@ -47,6 +50,7 @@
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.24",
     "globals": "^16.5.0",
+    "openapi-typescript": "^7.10.1",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.46.4",
     "vite": "^7.2.4"
