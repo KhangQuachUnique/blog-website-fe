@@ -38,7 +38,7 @@ const AdminLayout = () => {
         setCollapsed={setCollapsed}
       ></SideBar>
       <div
-        className={`flex-1 flex flex-col transition-all duration-300 px-15 ${
+        className={`flex-1 flex flex-col transition-all duration-300 ${
           collapsed ? "ml-[-240px]" : "ml-0"
         }`}
       >

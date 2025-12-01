@@ -1,6 +1,6 @@
 import { SearchBar } from "../searchBar/searchBar";
 import { NavLink } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Avatar from "@mui/material/Avatar";
 import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
@@ -35,6 +35,22 @@ const Header = ({
     setSearch(value);
   };
 
+  // Scroll state for background
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 10) {
+        setIsScrolled(true);
+      } else {
+        setIsScrolled(false);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   // User menu state
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
@@ -49,7 +65,11 @@ const Header = ({
 
   return (
     <div
-      className={`w-full h-[70px] flex items-center justify-between transition-all duration-100`}
+      className={`sticky top-0 w-full h-[70px] px-15 flex items-center justify-between transition-all duration-300 z-50 ${
+        isScrolled
+          ? "bg-[#FFFFFF]/20 backdrop-blur-sm border-b-2 border-[#FFE4EC]"
+          : "bg-transparent border-b border-transparent"
+      }`}
     >
       <button
         className="hover:bg-[#FFEFF4] p-1 rounded-lg transition-colors duration-100"

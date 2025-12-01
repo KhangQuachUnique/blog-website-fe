@@ -15,23 +15,25 @@ const ManageLayout = () => {
         <NavLink
           to="/community/manage"
           end
-          className={({ isActive }) =>
+          className={({ isActive }: { isActive: boolean }) =>
             "community-tab " + (isActive ? "community-tab-active" : "")
           }
         >
           Settings
         </NavLink>
+
         <NavLink
           to="/community/manage/posts"
-          className={({ isActive }) =>
+          className={({ isActive }: { isActive: boolean }) =>
             "community-tab " + (isActive ? "community-tab-active" : "")
           }
         >
           Posts
         </NavLink>
+
         <NavLink
           to="/community/manage/members"
-          className={({ isActive }) =>
+          className={({ isActive }: { isActive: boolean }) =>
             "community-tab " + (isActive ? "community-tab-active" : "")
           }
         >

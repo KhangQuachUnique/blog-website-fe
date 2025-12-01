@@ -8,6 +8,8 @@ import adminReportRoutes from "./admin/report.route";
 import authRoutes from "./auth/auth.route";
 import communityRoutes from "./community.route";
 
+import manageBlogPostsRoutes from "./user/manageBlogPosts.route";
+import newsfeedRoutes from "./newsfeed/newsfeed.route";
 export const router = createBrowserRouter([
   {
     path: "/",
@@ -27,6 +29,8 @@ export const router = createBrowserRouter([
       },
 
       ...communityRoutes,
+      ...manageBlogPostsRoutes,
+      ...newsfeedRoutes,
     ],
   },
   {

@@ -15,3 +15,7 @@ body {
 .secondary-text {
   color: #8c1d35;
 }
+
+.text-font {
+  font-family: "Quicksand", "Mona Sans", "Open Sans", "Outfit", sans-serif;
+}
