@@ -1,7 +1,7 @@
-import CreatePost from "../../../features/user/manageBlogPosts/createPost";
+import EditPost from "../../../features/user/manageBlogPosts/editPost";
 
 const CreateBlogPostPage = () => {
-  return <CreatePost />;
+  return <EditPost />;
 };
 
 export default CreateBlogPostPage;

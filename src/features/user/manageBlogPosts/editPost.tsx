@@ -6,6 +6,9 @@ import TextBlock from "../../../components/block/textBlockEdit";
 import ImageBlock from "../../../components/block/imageBlockEdit";
 import DeleteConfirmButton from "../../../components/deleteConfirmButton";
 import CustomButton from "../../../components/button";
+import BlockSidebar from "./components/blockSidebar";
+import ConfigDialog from "./components/configDialog";
+import type { PublishConfig } from "./components/configDialog";
 
 interface LayoutItem {
   i: string;
@@ -32,9 +35,10 @@ interface BlockData {
   objectFit?: ObjectFitType;
 }
 
-const CreatePost = () => {
+const EditPost = () => {
   const [postTitle, setPostTitle] = useState("");
   const [shortDescription, setShortDescription] = useState("");
+  const [isConfigDialogOpen, setIsConfigDialogOpen] = useState(false);
 
   const handlePostTitleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setPostTitle(e.target.value);
@@ -49,7 +53,7 @@ const CreatePost = () => {
   const [layout, setLayout] = useState<LayoutItem[]>(BASE_LAYOUT);
 
   const [blocks, setBlocks] = useState<BlockData[]>([
-    { id: "1", type: "text", content: "<p>Sample Text Block 1</p>" },
+    { id: "1", type: "text", content: "<p>Nhập nội dung...</p>" },
     {
       id: "2",
       type: "image",
@@ -87,6 +91,73 @@ const CreatePost = () => {
     );
   };
 
+  const handleAddBlock = (type: "text" | "image", x?: number, y?: number) => {
+    const newId = String(Date.now());
+    const maxY = layout.reduce(
+      (max, item) => Math.max(max, item.y + item.h),
+      0
+    );
+
+    const newLayoutItem: LayoutItem = {
+      i: newId,
+      x: x ?? 0,
+      y: y ?? maxY,
+      w: 8,
+      h: 6,
+      minW: 3,
+      minH: 4,
+    };
+
+    const newBlock: BlockData = {
+      id: newId,
+      type,
+      content: type === "text" ? "<p>Nhập nội dung...</p>" : undefined,
+      caption: type === "image" ? "" : undefined,
+      objectFit: type === "image" ? "cover" : undefined,
+    };
+
+    setLayout((prev) => [...prev, newLayoutItem]);
+    setBlocks((prev) => [...prev, newBlock]);
+  };
+
+  // Handle drop from external source (BlockSidebar)
+  const handleGridDrop = (
+    newLayout: LayoutItem[],
+    layoutItem: LayoutItem,
+    event: DragEvent
+  ) => {
+    const blockType = event.dataTransfer?.getData("blockType") as
+      | "text"
+      | "image";
+    if (blockType) {
+      const newId = String(Date.now());
+
+      // Replace the dropping placeholder with actual block in the layout
+      const updatedLayout = newLayout
+        .filter((item) => item.i !== "__dropping-elem__")
+        .concat({
+          i: newId,
+          x: layoutItem.x,
+          y: layoutItem.y,
+          w: layoutItem.w,
+          h: layoutItem.h,
+          minW: 3,
+          minH: 4,
+        });
+
+      const newBlock: BlockData = {
+        id: newId,
+        type: blockType,
+        content: blockType === "text" ? "<p>Nhập nội dung...</p>" : undefined,
+        caption: blockType === "image" ? "" : undefined,
+        objectFit: blockType === "image" ? "cover" : undefined,
+      };
+
+      setLayout(updatedLayout);
+      setBlocks((prev) => [...prev, newBlock]);
+    }
+  };
+
   const [isCtrlPressed, setIsCtrlPressed] = useState(false);
 
   // Track Ctrl key press
@@ -114,6 +185,7 @@ const CreatePost = () => {
 
   return (
     <div className="w-full relative p-9 flex flex-col gap-4 items-center justify-center">
+      <BlockSidebar onAddBlock={handleAddBlock} />
       <div className="w-[900px] p-3">
         <InputBase
           placeholder="Nhập tiêu đề bài viết..."
@@ -135,7 +207,8 @@ const CreatePost = () => {
           value={shortDescription}
           onChange={handleShortDescriptionChange}
           sx={{
-            fontSize: "20px",
+            fontSize: "18px",
+            fontStyle: "italic",
             marginTop: "12px",
             color: "#8c1d35",
             fontFamily: "Quicksand, Mona Sans, Open Sans, Outfit, sans-serif",
@@ -152,6 +225,9 @@ const CreatePost = () => {
           isDraggable={isCtrlPressed}
           isResizable={true}
           draggableCancel={".rgl-no-drag"}
+          isDroppable={true}
+          onDrop={handleGridDrop}
+          droppingItem={{ i: "__dropping-elem__", w: 8, h: 6 }}
         >
           {blocks.map((block) => (
             <div
@@ -187,16 +263,14 @@ const CreatePost = () => {
                   style={isCtrlPressed ? { pointerEvents: "none" } : {}}
                 />
               )}
-              <div
-                className={`absolute top-2 right-2 z-10 opacity-0 rgl-no-drag ${
-                  isCtrlPressed ? "opacity-100" : "opacity-0"
-                } transition-all`}
-              >
-                <DeleteConfirmButton
-                  className="rgl-no-drag"
-                  onConfirm={() => handleDeleteBlock(block.id)}
-                />
-              </div>
+              {isCtrlPressed && (
+                <div className="absolute top-2 right-2 z-10 rgl-no-drag transition-all">
+                  <DeleteConfirmButton
+                    className="rgl-no-drag"
+                    onConfirm={() => handleDeleteBlock(block.id)}
+                  />
+                </div>
+              )}
             </div>
           ))}
         </GridLayout>
@@ -213,17 +287,36 @@ const CreatePost = () => {
           Lưu nháp
         </CustomButton>
         <CustomButton
+          onClick={() => setIsConfigDialogOpen(true)}
           style={{
+            width: "auto",
             backgroundColor: "#F295B6",
             color: "white",
             fontWeight: "600",
           }}
         >
-          Đăng bài
+          Bước tiếp theo
         </CustomButton>
       </div>
+
+      <ConfigDialog
+        open={isConfigDialogOpen}
+        onClose={() => setIsConfigDialogOpen(false)}
+        postTitle={postTitle}
+        onPublish={(config: PublishConfig) => {
+          console.log("Publishing with config:", config);
+          console.log("Post data:", {
+            postTitle,
+            shortDescription,
+            blocks,
+            layout,
+          });
+          setIsConfigDialogOpen(false);
+          // TODO: Call API to publish post
+        }}
+      />
     </div>
   );
 };
 
-export default CreatePost;
+export default EditPost;
