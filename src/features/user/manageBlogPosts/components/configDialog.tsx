@@ -8,8 +8,16 @@ import {
   Switch,
   FormControlLabel,
   IconButton,
+  Chip,
+  TextField,
+  InputAdornment,
 } from "@mui/material";
-import { Close, CloudUpload, Image as ImageIcon } from "@mui/icons-material";
+import {
+  Close,
+  CloudUpload,
+  Image as ImageIcon,
+  Tag,
+} from "@mui/icons-material";
 import CustomButton from "../../../../components/button";
 
 interface ConfigDialogProps {
@@ -22,12 +30,34 @@ interface ConfigDialogProps {
 export interface PublishConfig {
   thumbnail: string | null;
   isPublic: boolean;
+  hashtags: string[];
 }
 
 const ConfigDialog: FC<ConfigDialogProps> = ({ open, onClose, onPublish }) => {
   const [thumbnail, setThumbnail] = useState<string | null>(null);
   const [isPublic, setIsPublic] = useState(true);
+  const [hashtags, setHashtags] = useState<string[]>([]);
+  const [hashtagInput, setHashtagInput] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleAddHashtag = () => {
+    const trimmed = hashtagInput.trim().replace(/^#/, "");
+    if (trimmed && !hashtags.includes(trimmed)) {
+      setHashtags([...hashtags, trimmed]);
+    }
+    setHashtagInput("");
+  };
+
+  const handleHashtagKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" || e.key === ",") {
+      e.preventDefault();
+      handleAddHashtag();
+    }
+  };
+
+  const handleRemoveHashtag = (tagToRemove: string) => {
+    setHashtags(hashtags.filter((tag) => tag !== tagToRemove));
+  };
 
   const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -51,6 +81,7 @@ const ConfigDialog: FC<ConfigDialogProps> = ({ open, onClose, onPublish }) => {
     onPublish({
       thumbnail,
       isPublic,
+      hashtags,
     });
   };
 
@@ -145,18 +176,94 @@ const ConfigDialog: FC<ConfigDialogProps> = ({ open, onClose, onPublish }) => {
             }
             label={
               <div>
-                <p className="font-medium text-gray-800">
+                <p
+                  className="font-medium text-gray-800"
+                  style={{ fontFamily: "Quicksand, sans-serif" }}
+                >
                   {isPublic ? "Công khai" : "Riêng tư"}
                 </p>
-                <p className="text-xs text-gray-500">
+                <p
+                  className="text-xs text-gray-500"
+                  style={{ fontFamily: "Quicksand, sans-serif" }}
+                >
                   {isPublic
                     ? "Mọi người đều có thể xem bài viết này"
                     : "Chỉ bạn mới có thể xem bài viết này"}
                 </p>
               </div>
             }
-            sx={{ margin: 0, width: "100%" }}
+            sx={{
+              margin: 0,
+              width: "100%",
+              fontFamily: "Quicksand, sans-serif",
+            }}
           />
+        </div>
+
+        {/* Hashtags */}
+        <div className="mt-4">
+          <p className="text-sm text-gray-500 mb-2">Hashtags</p>
+          <TextField
+            fullWidth
+            size="small"
+            placeholder="Nhập hashtag và nhấn Enter"
+            value={hashtagInput}
+            onChange={(e) => setHashtagInput(e.target.value)}
+            onKeyDown={handleHashtagKeyDown}
+            onBlur={handleAddHashtag}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Tag sx={{ color: "#9CA3AF" }} />
+                </InputAdornment>
+              ),
+            }}
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                borderRadius: "8px",
+                fontFamily: "Quicksand, sans-serif",
+                "&:hover fieldset": {
+                  borderColor: "#F295B6",
+                },
+                "&.Mui-focused fieldset": {
+                  borderColor: "#F295B6",
+                },
+              },
+              "& .MuiInputBase-input": {
+                fontFamily: "Quicksand, sans-serif",
+              },
+              "& .MuiInputBase-input::placeholder": {
+                fontFamily: "Quicksand, sans-serif",
+              },
+            }}
+          />
+          {hashtags.length > 0 && (
+            <div className="flex flex-wrap gap-2 mt-3">
+              {hashtags.map((tag) => (
+                <Chip
+                  key={tag}
+                  label={`#${tag}`}
+                  onDelete={() => handleRemoveHashtag(tag)}
+                  size="small"
+                  sx={{
+                    backgroundColor: "#FDF2F8",
+                    color: "#EC4899",
+                    fontWeight: 500,
+                    fontFamily: "Quicksand, sans-serif",
+                    "& .MuiChip-deleteIcon": {
+                      color: "#F472B6",
+                      "&:hover": {
+                        color: "#EC4899",
+                      },
+                    },
+                  }}
+                />
+              ))}
+            </div>
+          )}
+          <p className="text-xs text-gray-400 mt-2">
+            Thêm hashtag để bài viết dễ tìm kiếm hơn
+          </p>
         </div>
       </DialogContent>
 
