@@ -1,12 +1,13 @@
-import { useState } from "react";
+// src/pages/community/components/ApprovePostToggle.tsx
+interface ApprovePostToggleProps {
+  value: boolean;
+  onChange: (value: boolean) => void;
+}
 
-const ApprovePostToggle = () => {
-  const [requireApproval, setRequireApproval] = useState<boolean>(false);
-
+const ApprovePostToggle = ({ value, onChange }: ApprovePostToggleProps) => {
   const handleToggle = () => {
-    const next = !requireApproval;
-    setRequireApproval(next);
-    console.log("Require post approval:", next);
+    const next = !value;
+    onChange(next);
   };
 
   return (
@@ -21,10 +22,10 @@ const ApprovePostToggle = () => {
         <label>
           <input
             type="checkbox"
-            checked={requireApproval}
+            checked={value}
             onChange={handleToggle}
           />{" "}
-          {requireApproval ? "Đang bật duyệt bài" : "Đang tắt duyệt bài"}
+          {value ? "Đang bật duyệt bài" : "Đang tắt duyệt bài"}
         </label>
       </div>
     </section>

@@ -1,13 +1,16 @@
-import { useState } from "react";
-
+// src/pages/community/components/PrivacySetting.tsx
 type PrivacyType = "public" | "private";
 
-const PrivacySetting = () => {
-  const [privacy, setPrivacy] = useState<PrivacyType>("public");
+interface PrivacySettingProps {
+  isPublic: boolean;
+  onChange: (value: boolean) => void;
+}
+
+const PrivacySetting = ({ isPublic, onChange }: PrivacySettingProps) => {
+  const privacy: PrivacyType = isPublic ? "public" : "private";
 
   const handleChange = (value: PrivacyType) => {
-    setPrivacy(value);
-    console.log("Change privacy to:", value);
+    onChange(value === "public");
   };
 
   return (

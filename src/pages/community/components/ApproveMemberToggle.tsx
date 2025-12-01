@@ -1,12 +1,13 @@
-import { useState } from "react";
+// src/pages/community/components/ApproveMemberToggle.tsx
+interface ApproveMemberToggleProps {
+  value: boolean;
+  onChange: (value: boolean) => void;
+}
 
-const ApproveMemberToggle = () => {
-  const [requireApproval, setRequireApproval] = useState<boolean>(false);
-
+const ApproveMemberToggle = ({ value, onChange }: ApproveMemberToggleProps) => {
   const handleToggle = () => {
-    const next = !requireApproval;
-    setRequireApproval(next);
-    console.log("Require member approval:", next);
+    const next = !value;
+    onChange(next);
   };
 
   return (
@@ -21,10 +22,10 @@ const ApproveMemberToggle = () => {
         <label>
           <input
             type="checkbox"
-            checked={requireApproval}
+            checked={value}
             onChange={handleToggle}
           />{" "}
-          {requireApproval
+          {value
             ? "Đang bật duyệt thành viên"
             : "Đang tắt duyệt thành viên"}
         </label>
