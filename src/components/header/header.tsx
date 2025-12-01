@@ -67,7 +67,7 @@ const Header = ({
     <div
       className={`sticky top-0 w-full h-[70px] px-15 flex items-center justify-between transition-all duration-300 z-50 ${
         isScrolled
-          ? "bg-[#FFFFFF]/20 backdrop-blur-sm border-b border-[#FFE4EC]"
+          ? "bg-[#FFFFFF]/20 backdrop-blur-sm border-b-2 border-[#FFE4EC]"
           : "bg-transparent border-b border-transparent"
       }`}
     >
