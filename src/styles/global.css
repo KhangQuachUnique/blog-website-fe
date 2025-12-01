@@ -1,0 +1,21 @@
+/* Tailwind's Preflight already handles reset */
+/* Add custom global styles here if needed */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Quicksand", "Mona Sans", "Open Sans", "Outfit", sans-serif;
+}
+
+.primary-text {
+  color: #4a3c42;
+}
+
+.secondary-text {
+  color: #8c1d35;
+}
+
+.text-font {
+  font-family: "Quicksand", "Mona Sans", "Open Sans", "Outfit", sans-serif;
+}
