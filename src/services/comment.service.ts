@@ -1,5 +1,5 @@
-import { axiosCustomize } from '../config/axiosCustomize';
-import { 
+import axiosCustomize from '../config/axiosCustomize';
+import type { 
   Comment, 
   CommentsResponse, 
   CreateCommentRequest, 
@@ -11,6 +11,12 @@ class CommentService {
   // Tạo comment gốc
   async createComment(data: CreateCommentRequest): Promise<Comment> {
     const response = await axiosCustomize.post('/comments', data);
+    
+    // Handle backend response structure
+    if (response.data && response.data.data) {
+      return response.data.data;
+    }
+    
     return response.data;
   }
 
@@ -28,6 +34,17 @@ class CommentService {
     const response = await axiosCustomize.get(
       `/comments/post/${postId}?sortBy=${sortBy}`
     );
+    
+    // Handle backend response structure like search API
+    if (response.data && response.data.data) {
+      return {
+        comments: response.data.data || [],
+        totalCount: response.data.totalCount || response.data.data?.length || 0,
+        sortBy: sortBy
+      };
+    }
+    
+    // Fallback for direct response
     return response.data;
   }
 

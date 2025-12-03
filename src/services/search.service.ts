@@ -5,7 +5,7 @@ export interface SearchResultItem {
   id: number | string;
   title?: string;      // Có nếu là Post
   username?: string;   // Có nếu là User
-  name?: string;       // Có nếu là Community
+  name?: string;       // Có nếu là Community/Hashtag
   avatarUrl?: string;
   thumbnailUrl?: string;
 }
@@ -17,7 +17,14 @@ export const searchAPI = {
       const response = await axios.get('/search', {
         params: { q: keyword, type: type }
       });
-      return response.data;
+      
+      // Backend trả về { status, statusCode, data } - lấy data array
+      if (response.data && response.data.data) {
+        return response.data.data;
+      }
+      
+      // Fallback nếu structure khác
+      return response.data || [];
     } catch (error) {
       console.error("Lỗi khi tìm kiếm:", error);
       throw error;

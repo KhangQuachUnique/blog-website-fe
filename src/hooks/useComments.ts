@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { commentService } from '../services/comment.service';
-import { Comment, CommentsResponse, SortType } from '../types/comment.types';
+import type { Comment, CommentsResponse, SortType } from '../types/comment.types';
 
 export const useComments = (postId?: number, blockId?: number) => {
   const [comments, setComments] = useState<Comment[]>([]);
@@ -13,16 +13,19 @@ export const useComments = (postId?: number, blockId?: number) => {
   const loadComments = useCallback(async () => {
     if (!postId && !blockId) return;
     
+    console.log('Loading comments for postId:', postId, 'blockId:', blockId, 'sortBy:', sortBy);
     setLoading(true);
     setError(null);
     
     try {
       if (postId) {
         const response: CommentsResponse = await commentService.getCommentsByPost(postId, sortBy);
+        console.log('Comments response:', response);
         setComments(response.comments);
         setTotalCount(response.totalCount);
       } else if (blockId) {
         const commentsData = await commentService.getCommentsByBlock(blockId);
+        console.log('Block comments data:', commentsData);
         setComments(commentsData);
         setTotalCount(commentsData.length);
       }

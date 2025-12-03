@@ -7,17 +7,23 @@ import adminPostRoutes from "./admin/post.route";
 import adminReportRoutes from "./admin/report.route";
 import authRoutes from "./auth/auth.route";
 import { SearchResultPage } from "../pages/search/searchResultsPage";
+import { TestHomePage } from "../pages/testHomePage";
+import { SimpleTestPage } from "../pages/simpleTestPage";
 
 import manageBlogPostsRoutes from "./user/manageBlogPosts.route";
 import newsfeedRoutes from "./newsfeed/newsfeed.route";
 export const router = createBrowserRouter([
   {
     path: "/",
+    element: <SimpleTestPage />,
+  },
+  {
+    path: "/app",
     element: <UserLayout />,
     children: [
       {
         index: true,
-        element: <div>Home Page</div>,
+        element: <TestHomePage />,
       },
       ...manageBlogPostsRoutes,
       ...newsfeedRoutes,

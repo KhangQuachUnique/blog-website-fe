@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Comment, ChildComment } from '../../types/comment.types';
+import type { Comment, ChildComment } from '../../types/comment.types';
 import { ReplyForm } from './ReplyForm';
 import { ChildCommentItem } from './ChildCommentItem';
 

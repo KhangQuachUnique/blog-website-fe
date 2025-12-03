@@ -79,6 +79,18 @@ export const SearchResultPage = () => {
         </div>
       );
     }
+
+    // Giao diện cho Hashtag
+    if (type === 'hashtag') {
+      return (
+        <div className="p-4 bg-white border rounded-lg shadow-sm hover:shadow-md transition">
+           <h3 className="font-bold text-lg flex items-center gap-2">
+             #️⃣ <span className="text-blue-600">#{item.name}</span>
+           </h3>
+           <Link to={`/hashtag/${item.name}`} className="text-blue-500 text-sm hover:underline">Xem các bài viết với hashtag này</Link>
+        </div>
+      );
+    }
   };
 
   return (

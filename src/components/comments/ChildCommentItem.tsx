@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChildComment } from '../../types/comment.types';
+import type { ChildComment } from '../../types/comment.types';
 import { ReplyForm } from './ReplyForm';
 
 interface ChildCommentItemProps {

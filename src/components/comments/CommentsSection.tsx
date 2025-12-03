@@ -2,7 +2,7 @@ import React from 'react';
 import { useComments } from '../../hooks/useComments';
 import { CommentForm } from './CommentForm';
 import { CommentItem } from './CommentItem';
-import { SortType } from '../../types/comment.types';
+import type { SortType } from '../../types/comment.types';
 
 interface CommentsSectionProps {
   postId?: number;

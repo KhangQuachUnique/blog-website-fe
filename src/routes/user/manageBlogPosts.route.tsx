@@ -3,11 +3,11 @@ import UpdateBlogPostPage from "../../pages/user/manageBlogPosts/updatePostPage"
 
 const manageBlogPostsRoutes = [
   {
-    path: "/post/create",
+    path: "post/create",
     element: <CreateBlogPostPage />,
   },
   {
-    path: "/post/edit/:id",
+    path: "post/edit/:id",
     element: <UpdateBlogPostPage />,
   },
 ];
