@@ -15,11 +15,7 @@ interface Props {
 // NewsfeedList.tsx using react-masonry-css
 const NewsfeedList = ({ posts, loadMoreRef }: Props) => {
   const breakpointCols = {
-    default: 4,
-    1400: 4,
-    992: 3,
-    768: 2,
-    0: 1,
+    default:1
   };
 
   return (

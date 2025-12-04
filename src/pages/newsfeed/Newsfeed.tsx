@@ -67,7 +67,7 @@ export default function Newsfeed() {
 
   return (
     <div className=" mx-auto px-4 py-8">
-      <h1 className="text-3xl text-[#F295B6] font-bold mb-8 ">Newsfeed</h1>
+      <h1 className="text-3xl text-[#F295B6] font-bold mb-8 text-center">Newsfeed</h1>
       
       <NewsfeedList posts={posts} loadMoreRef={lastPostRef} />
       
