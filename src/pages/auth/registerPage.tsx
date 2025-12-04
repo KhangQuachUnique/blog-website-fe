@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
-import axios from "../../config/axiosCustomize";
+import { useAuth } from "../../contexts/AuthContext";
 
 // decorative GIF: try local `public/assets/auth-decor.gif`, fallback to external
 const LOCAL_GIF = "/assets/auth-decor.gif";
@@ -8,6 +8,7 @@ const FALLBACK_GIF = "https://media.giphy.com/media/l0MYt5jPR6QX5pnqM/giphy.gif"
 
 const RegisterPage = () => {
   const navigate = useNavigate();
+  const { register } = useAuth();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -41,13 +42,11 @@ const RegisterPage = () => {
     e.preventDefault();
     if (!validate()) return;
     setLoading(true);
+    setError(null);
     try {
-      await axios.post("/auth/register", {
-        name,
-        email,
-        password,
-      });
-      // on success, navigate to verify page if backend requires
+      await register(name, email, password);
+      // on success, navigate to verify page if backend requires email verification
+      // otherwise navigate to home
       navigate("/verify-email", { replace: true });
     } catch (err: any) {
       setError(
