@@ -20,30 +20,48 @@ import {
 } from "@mui/icons-material";
 import CustomButton from "../../../../components/button";
 
-interface ConfigDialogProps {
-  open: boolean;
-  onClose: () => void;
-  onPublish: (config: PublishConfig) => void;
-  postTitle: string;
-}
-
 export interface PublishConfig {
   thumbnail: string | null;
   isPublic: boolean;
   hashtags: string[];
 }
 
-const ConfigDialog: FC<ConfigDialogProps> = ({ open, onClose, onPublish }) => {
-  const [thumbnail, setThumbnail] = useState<string | null>(null);
-  const [isPublic, setIsPublic] = useState(true);
-  const [hashtags, setHashtags] = useState<string[]>([]);
+interface ConfigDialogProps {
+  open: boolean;
+  onClose: () => void;
+  onPublish: () => void;
+  confirmButtonText?: string;
+  // Config values
+  thumbnail: string | null;
+  isPublic: boolean;
+  hashtags: string[];
+  // Config handlers
+  onThumbnailChange: (url: string | null) => void;
+  onIsPublicChange: (value: boolean) => void;
+  onAddHashtag: (tag: string) => void;
+  onRemoveHashtag: (tag: string) => void;
+}
+
+const ConfigDialog: FC<ConfigDialogProps> = ({
+  open,
+  onClose,
+  onPublish,
+  confirmButtonText,
+  thumbnail,
+  isPublic,
+  hashtags,
+  onThumbnailChange,
+  onIsPublicChange,
+  onAddHashtag,
+  onRemoveHashtag,
+}) => {
   const [hashtagInput, setHashtagInput] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleAddHashtag = () => {
     const trimmed = hashtagInput.trim().replace(/^#/, "");
     if (trimmed && !hashtags.includes(trimmed)) {
-      setHashtags([...hashtags, trimmed]);
+      onAddHashtag(trimmed);
     }
     setHashtagInput("");
   };
@@ -56,33 +74,25 @@ const ConfigDialog: FC<ConfigDialogProps> = ({ open, onClose, onPublish }) => {
   };
 
   const handleRemoveHashtag = (tagToRemove: string) => {
-    setHashtags(hashtags.filter((tag) => tag !== tagToRemove));
+    onRemoveHashtag(tagToRemove);
   };
 
-  const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleThumbnailUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setThumbnail(reader.result as string);
+        onThumbnailChange(reader.result as string);
       };
       reader.readAsDataURL(file);
     }
   };
 
   const handleRemoveThumbnail = () => {
-    setThumbnail(null);
+    onThumbnailChange(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
-  };
-
-  const handlePublish = () => {
-    onPublish({
-      thumbnail,
-      isPublic,
-      hashtags,
-    });
   };
 
   return (
@@ -120,7 +130,7 @@ const ConfigDialog: FC<ConfigDialogProps> = ({ open, onClose, onPublish }) => {
           <input
             type="file"
             accept="image/*"
-            onChange={handleThumbnailChange}
+            onChange={handleThumbnailUpload}
             ref={fileInputRef}
             className="hidden"
             id="thumbnail-upload"
@@ -163,7 +173,7 @@ const ConfigDialog: FC<ConfigDialogProps> = ({ open, onClose, onPublish }) => {
             control={
               <Switch
                 checked={isPublic}
-                onChange={(e) => setIsPublic(e.target.checked)}
+                onChange={(e) => onIsPublicChange(e.target.checked)}
                 sx={{
                   "& .MuiSwitch-switchBase.Mui-checked": {
                     color: "#F295B6",
@@ -280,14 +290,14 @@ const ConfigDialog: FC<ConfigDialogProps> = ({ open, onClose, onPublish }) => {
           Hủy
         </CustomButton>
         <CustomButton
-          onClick={handlePublish}
+          onClick={onPublish}
           style={{
             backgroundColor: "#F295B6",
             color: "white",
             fontWeight: "600",
           }}
         >
-          Đăng bài
+          {confirmButtonText || "Đăng bài"}
         </CustomButton>
       </DialogActions>
     </Dialog>

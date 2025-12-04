@@ -1,25 +1,26 @@
 import { type FC } from "react";
 import { TextFields, Image } from "@mui/icons-material";
+import { EBlockType } from "../../../../types/block";
 
 interface BlockType {
-  type: "text" | "image";
+  type: EBlockType;
   label: string;
   icon: React.ReactNode;
 }
 
 const BLOCK_TYPES: BlockType[] = [
-  { type: "text", label: "Text", icon: <TextFields /> },
-  { type: "image", label: "Image", icon: <Image /> },
+  { type: EBlockType.TEXT, label: "Text", icon: <TextFields /> },
+  { type: EBlockType.IMAGE, label: "Image", icon: <Image /> },
 ];
 
 interface BlockSidebarProps {
-  onAddBlock: (type: "text" | "image") => void;
+  onAddBlock: (type: EBlockType) => void;
 }
 
 const BlockSidebar: FC<BlockSidebarProps> = ({ onAddBlock }) => {
   const handleDragStart = (
     e: React.DragEvent<HTMLDivElement>,
-    type: "text" | "image"
+    type: EBlockType
   ) => {
     e.dataTransfer.setData("blockType", type);
     e.dataTransfer.effectAllowed = "copy";
