@@ -8,6 +8,8 @@ import adminReportRoutes from "./admin/report.route";
 import authRoutes from "./auth/auth.route";
 import manageBlogPostsRoutes from "./user/manageBlogPosts.route";
 import newsfeedRoutes from "./newsfeed/newsfeed.route";
+import HomePage from "../pages/home/HomePage";
+
 export const router = createBrowserRouter([
   {
     path: "/",
@@ -15,7 +17,7 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <div>Home Page</div>,
+        element: <HomePage />,
       },
       ...manageBlogPostsRoutes,
       ...newsfeedRoutes,
