@@ -1,5 +1,5 @@
 import { SearchBar } from "../searchBar/searchBar";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import Avatar from "@mui/material/Avatar";
 import Box from "@mui/material/Box";
@@ -14,20 +14,23 @@ import { HiMenuAlt2 } from "react-icons/hi";
 import { RiNotification4Line } from "react-icons/ri";
 import { IoSettingsOutline } from "react-icons/io5";
 import { IoExitOutline } from "react-icons/io5";
+import { useAuth } from "../../contexts/AuthContext";
 
 interface HeaderProps {
   layout: "admin" | "user";
-  isLoggedIn?: boolean;
   collapsed?: boolean;
   setCollapsed?: (collapsed: boolean) => void;
+  isLoggedIn?: boolean; // Optional, kept for backwards compatibility
 }
 
 const Header = ({
   layout,
-  isLoggedIn,
   collapsed,
   setCollapsed,
 }: HeaderProps) => {
+  const navigate = useNavigate();
+  const { user, isAuthenticated, logout } = useAuth();
+  
   // Search state
   const [search, setSearch] = useState("");
 
@@ -63,6 +66,15 @@ const Header = ({
     setAnchorEl(null);
   };
 
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate("/login", { replace: true });
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+  };
+
   return (
     <div
       className={`sticky top-0 w-full h-[70px] px-15 flex items-center justify-between transition-all duration-300 z-50 ${
@@ -81,16 +93,16 @@ const Header = ({
         {layout === "user" && (
           <SearchBar value={search} onChange={onSearchChange} />
         )}
-        {!isLoggedIn ? (
+        {!isAuthenticated ? (
           <div className="flex items-center gap-4">
             <NavLink
-              to=""
+              to="/login"
               className="font-bold py-2 px-4 text-[#F295B6] bg-white rounded-lg hover:bg-[#FFEFF4] transition-background duration-200"
             >
               Login
             </NavLink>
             <NavLink
-              to=""
+              to="/register"
               className="font-bold py-2 px-4 text-white bg-[#F295B6] rounded-lg hover:bg-[#FFB8D1] transition-background duration-200"
             >
               Register
@@ -103,7 +115,7 @@ const Header = ({
             </button>
             <Box>
               <IconButton onClick={handleOpen} size="small">
-                <Avatar alt="User Avatar" src="https://i.pravatar.cc/300" />
+                <Avatar alt="User Avatar" src={user?.avatarUrl || "https://i.pravatar.cc/300"} />
               </IconButton>
 
               <Menu
@@ -170,7 +182,7 @@ const Header = ({
 
                 <Divider />
 
-                <MenuItem>
+                <MenuItem onClick={handleLogout}>
                   <ListItemIcon>
                     <IoExitOutline style={{ fontSize: 20, color: "#F295B6" }} />
                   </ListItemIcon>
