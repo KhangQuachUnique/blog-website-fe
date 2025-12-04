@@ -38,10 +38,25 @@ const PostListPage = () => {
       if (!response.ok) throw new Error('Lỗi khi tải dữ liệu');
 
       const data = await response.json();
-      const postsArray = Array.isArray(data) ? data : data.data || [];
+      // Xử lý API response - có thể là array hoặc object với data property
+      let postsArray: BlogPost[] = [];
+      
+      if (Array.isArray(data)) {
+        postsArray = data;
+      } else if (data && typeof data === 'object') {
+        if (Array.isArray(data.data)) {
+          postsArray = data.data;
+        } else if (data.items && Array.isArray(data.items)) {
+          postsArray = data.items;
+        } else if (data.posts && Array.isArray(data.posts)) {
+          postsArray = data.posts;
+        }
+      }
+      
       setPosts(postsArray);
     } catch (err: any) {
       setError(err.message);
+      setPosts([]); // Set empty array on error
     } finally {
       setLoading(false);
     }
@@ -101,10 +116,10 @@ const PostListPage = () => {
   }, [filterStatus]);
 
   // Lọc bài viết
-  const filteredPosts = posts.filter(post => {
+  const filteredPosts = Array.isArray(posts) ? posts.filter(post => {
     if (filterStatus === 'ALL') return true;
     return post.status === filterStatus;
-  });
+  }) : [];
 
   // Phân trang
   const totalPages = Math.ceil(filteredPosts.length / ITEMS_PER_PAGE);
@@ -115,7 +130,7 @@ const PostListPage = () => {
   // Loading
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen bg-gradient-to-t from-pink-100 to-white">
+      <div className="flex items-center justify-center h-screen bg-linear-to-t from-pink-100 to-white">
         <div className="text-center flex flex-col items-center gap-4">
           <AiOutlineLoading3Quarters size={50} className="animate-spin text-pink-500" />
           <p className="text-gray-600 font-medium">Đang tải dữ liệu...</p>
@@ -127,7 +142,7 @@ const PostListPage = () => {
   // Error
   if (error) {
     return (
-      <div className="flex items-center justify-center h-screen bg-gradient-to-t from-pink-100 to-white">
+      <div className="flex items-center justify-center h-screen bg-linear-to-t from-pink-100 to-white">
         <div className="text-center bg-white p-8 rounded-2xl shadow-lg border-2 border-pink-100">
           <p className="text-2xl mb-2">⚠️</p>
           <p className="text-red-600 font-semibold mb-4">{error}</p>
@@ -143,7 +158,7 @@ const PostListPage = () => {
   }
 
   return (
-    <div className="py-8 px-6 bg-gradient-to-t from-pink-50 via-white to-white min-h-screen">
+    <div className="py-8 px-6 bg-linear-to-t from-pink-50 via-white to-white min-h-screen">
       {/* Header */}
       <div className="mb-8">
         <div className="flex justify-between items-start mb-6">
