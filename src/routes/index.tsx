@@ -7,6 +7,7 @@ import adminPostRoutes from "./admin/post.route";
 import adminReportRoutes from "./admin/report.route";
 import authRoutes from "./auth/auth.route";
 import manageBlogPostsRoutes from "./user/manageBlogPosts.route";
+import profileRoutes from "./user/profile.route";
 
 export const router = createBrowserRouter([
   {
@@ -18,6 +19,15 @@ export const router = createBrowserRouter([
         element: <div>Home Page</div>,
       },
       ...manageBlogPostsRoutes,
+      {
+        path: "saved",
+        element: <div>Saved Posts</div>,
+      },
+      {
+        path: "groups",
+        element: <div>Groups Page</div>,
+      },
+      ...profileRoutes,
     ],
   },
   {

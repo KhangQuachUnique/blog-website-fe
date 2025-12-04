@@ -152,20 +152,20 @@ const Header = ({
                 transformOrigin={{ horizontal: "right", vertical: "top" }}
                 anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
               >
-                <MenuItem>
+                <MenuItem onClick={() => window.location.href = "/profile/1"}>
                   <ListItemIcon>
                     <GoPerson style={{ fontSize: 20, color: "#F295B6" }} />
                   </ListItemIcon>
                   Xem trang cá nhân
                 </MenuItem>
 
-                <MenuItem>
+                <MenuItem onClick={() => window.location.href = "/profile/edit"}>
                   <ListItemIcon>
                     <IoSettingsOutline
                       style={{ fontSize: 20, color: "#F295B6" }}
                     />
                   </ListItemIcon>
-                  Cài đặt
+                  Quản lý hồ sơ
                 </MenuItem>
 
                 <Divider />

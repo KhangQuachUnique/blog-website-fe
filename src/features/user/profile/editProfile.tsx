@@ -1,0 +1,470 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import type { UpdateProfileData, ChangePasswordData, BlockedUser } from "../../../types/user.types";
+import { IoArrowBack, IoSaveOutline, IoCloseOutline } from "react-icons/io5";
+import { AiOutlineUser, AiOutlineLock, AiOutlineEye, AiOutlineUserDelete } from "react-icons/ai";
+import { MdBlock } from "react-icons/md";
+
+type TabType = "profile" | "password" | "privacy" | "blocked" | "delete";
+
+const EditProfile = () => {
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState<TabType>("profile");
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  // Profile data
+  const [profileData, setProfileData] = useState<UpdateProfileData>({
+    username: "johndoe",
+    firstName: "John",
+    lastName: "Doe",
+    email: "john@example.com",
+    phone: "0123456789",
+    bio: "Passionate blogger and tech enthusiast.",
+    avatar: "https://i.pravatar.cc/300",
+    isPrivate: false,
+  });
+
+  // Password data
+  const [passwordData, setPasswordData] = useState<ChangePasswordData>({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+
+  // Blocked users
+  const [blockedUsers, setBlockedUsers] = useState<BlockedUser[]>([
+    {
+      id: "1",
+      username: "blockeduser1",
+      fullName: "Blocked User 1",
+      avatar: "https://i.pravatar.cc/300?img=1",
+      blockedAt: new Date().toISOString(),
+    },
+  ]);
+
+  // Avatar upload
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+
+  const handleProfileChange = (field: keyof UpdateProfileData, value: any) => {
+    setProfileData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handlePasswordChange = (field: keyof ChangePasswordData, value: string) => {
+    setPasswordData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setAvatarPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleSaveProfile = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      // TODO: Replace with actual API call
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      setSuccess("Cập nhật hồ sơ thành công!");
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (err: any) {
+      setError(err.message || "Có lỗi xảy ra");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleChangePassword = async () => {
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      setError("Mật khẩu mới không khớp");
+      return;
+    }
+    if (passwordData.newPassword.length < 6) {
+      setError("Mật khẩu phải có ít nhất 6 ký tự");
+      return;
+    }
+    
+    setLoading(true);
+    setError(null);
+    try {
+      // TODO: Replace with actual API call
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      setSuccess("Đổi mật khẩu thành công!");
+      setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" });
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (err: any) {
+      setError(err.message || "Có lỗi xảy ra");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUnblockUser = async (userId: string) => {
+    try {
+      // TODO: Replace with actual API call
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      setBlockedUsers((prev) => prev.filter((user) => user.id !== userId));
+      setSuccess("Đã bỏ chặn người dùng");
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (err: any) {
+      setError(err.message || "Có lỗi xảy ra");
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    const confirmed = window.confirm(
+      "Bạn có chắc chắn muốn xóa tài khoản? Hành động này không thể hoàn tác!"
+    );
+    if (!confirmed) return;
+
+    try {
+      // TODO: Replace with actual API call
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      alert("Tài khoản đã được xóa");
+      navigate("/");
+    } catch (err: any) {
+      setError(err.message || "Có lỗi xảy ra");
+    }
+  };
+
+  const tabs = [
+    { id: "profile" as TabType, label: "Thông tin cá nhân", icon: <AiOutlineUser fontSize={20} /> },
+    { id: "password" as TabType, label: "Đổi mật khẩu", icon: <AiOutlineLock fontSize={20} /> },
+    { id: "privacy" as TabType, label: "Quyền riêng tư", icon: <AiOutlineEye fontSize={20} /> },
+    { id: "blocked" as TabType, label: "Quản lý chặn", icon: <MdBlock fontSize={20} /> },
+    { id: "delete" as TabType, label: "Xóa tài khoản", icon: <AiOutlineUserDelete fontSize={20} /> },
+  ];
+
+  return (
+    <div className="max-w-6xl mx-auto px-4 py-8">
+      {/* Header */}
+      <div className="flex items-center gap-4 mb-6">
+        <button
+          onClick={() => navigate(-1)}
+          className="p-2 hover:bg-[#FFEFF4] rounded-lg transition-colors duration-200"
+        >
+          <IoArrowBack fontSize={24} style={{ color: "#F295B6" }} />
+        </button>
+        <h1 className="text-3xl font-bold" style={{ color: "#8C1D35" }}>
+          Quản lý hồ sơ
+        </h1>
+      </div>
+
+      {/* Success/Error Messages */}
+      {success && (
+        <div className="mb-6 p-4 bg-green-50 border border-green-200 text-green-800 rounded-lg">
+          {success}
+        </div>
+      )}
+      {error && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-800 rounded-lg">
+          {error}
+        </div>
+      )}
+
+      <div className="flex flex-col lg:flex-row gap-6">
+        {/* Sidebar Tabs */}
+        <div className="lg:w-64 bg-white rounded-2xl border border-[#FFE4EC] shadow-sm p-4">
+          <div className="space-y-2">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-semibold transition-all duration-200 ${
+                  activeTab === tab.id
+                    ? "bg-[#FFEFF4] text-[#F295B6]"
+                    : "text-gray-600 hover:bg-[#FFF8FB]"
+                }`}
+              >
+                {tab.icon}
+                {tab.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 bg-white rounded-2xl border border-[#FFE4EC] shadow-sm p-8">
+          {/* Profile Tab */}
+          {activeTab === "profile" && (
+            <div className="space-y-6">
+              <h2 className="text-2xl font-bold" style={{ color: "#8C1D35" }}>
+                Thông tin cá nhân
+              </h2>
+
+              {/* Avatar */}
+              <div className="flex items-center gap-6">
+                <img
+                  src={avatarPreview || profileData.avatar}
+                  alt="Avatar"
+                  className="w-24 h-24 rounded-full object-cover border-4 border-[#FFE4EC]"
+                />
+                <div>
+                  <label className="px-4 py-2 bg-[#F295B6] text-white font-semibold rounded-lg hover:bg-[#FFB8D1] cursor-pointer transition-colors duration-200">
+                    Chọn ảnh mới
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleAvatarChange}
+                      className="hidden"
+                    />
+                  </label>
+                  <p className="text-sm text-gray-500 mt-2">JPG, PNG, tối đa 5MB</p>
+                </div>
+              </div>
+
+              {/* Form Fields */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-semibold mb-2">Tên</label>
+                  <input
+                    type="text"
+                    value={profileData.firstName}
+                    onChange={(e) => handleProfileChange("firstName", e.target.value)}
+                    className="w-full px-4 py-2 border border-[#FFE4EC] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F295B6]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold mb-2">Họ</label>
+                  <input
+                    type="text"
+                    value={profileData.lastName}
+                    onChange={(e) => handleProfileChange("lastName", e.target.value)}
+                    className="w-full px-4 py-2 border border-[#FFE4EC] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F295B6]"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold mb-2">Username</label>
+                <input
+                  type="text"
+                  value={profileData.username}
+                  onChange={(e) => handleProfileChange("username", e.target.value)}
+                  className="w-full px-4 py-2 border border-[#FFE4EC] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F295B6]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold mb-2">Email</label>
+                <input
+                  type="email"
+                  value={profileData.email}
+                  onChange={(e) => handleProfileChange("email", e.target.value)}
+                  className="w-full px-4 py-2 border border-[#FFE4EC] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F295B6]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold mb-2">Số điện thoại</label>
+                <input
+                  type="tel"
+                  value={profileData.phone}
+                  onChange={(e) => handleProfileChange("phone", e.target.value)}
+                  className="w-full px-4 py-2 border border-[#FFE4EC] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F295B6]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold mb-2">Tiểu sử</label>
+                <textarea
+                  value={profileData.bio}
+                  onChange={(e) => handleProfileChange("bio", e.target.value)}
+                  rows={4}
+                  className="w-full px-4 py-2 border border-[#FFE4EC] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F295B6]"
+                  placeholder="Viết vài dòng về bản thân..."
+                />
+              </div>
+
+              <div className="flex gap-4">
+                <button
+                  onClick={handleSaveProfile}
+                  disabled={loading}
+                  className="flex items-center gap-2 px-6 py-3 bg-[#F295B6] text-white font-bold rounded-lg hover:bg-[#FFB8D1] transition-colors duration-200 disabled:opacity-50"
+                >
+                  <IoSaveOutline fontSize={20} />
+                  {loading ? "Đang lưu..." : "Lưu thay đổi"}
+                </button>
+                <button
+                  onClick={() => navigate(-1)}
+                  className="flex items-center gap-2 px-6 py-3 bg-gray-100 text-gray-700 font-bold rounded-lg hover:bg-gray-200 transition-colors duration-200"
+                >
+                  <IoCloseOutline fontSize={20} />
+                  Hủy
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Password Tab */}
+          {activeTab === "password" && (
+            <div className="space-y-6">
+              <h2 className="text-2xl font-bold" style={{ color: "#8C1D35" }}>
+                Đổi mật khẩu
+              </h2>
+
+              <div>
+                <label className="block text-sm font-semibold mb-2">Mật khẩu hiện tại</label>
+                <input
+                  type="password"
+                  value={passwordData.currentPassword}
+                  onChange={(e) => handlePasswordChange("currentPassword", e.target.value)}
+                  className="w-full px-4 py-2 border border-[#FFE4EC] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F295B6]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold mb-2">Mật khẩu mới</label>
+                <input
+                  type="password"
+                  value={passwordData.newPassword}
+                  onChange={(e) => handlePasswordChange("newPassword", e.target.value)}
+                  className="w-full px-4 py-2 border border-[#FFE4EC] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F295B6]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold mb-2">Xác nhận mật khẩu mới</label>
+                <input
+                  type="password"
+                  value={passwordData.confirmPassword}
+                  onChange={(e) => handlePasswordChange("confirmPassword", e.target.value)}
+                  className="w-full px-4 py-2 border border-[#FFE4EC] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F295B6]"
+                />
+              </div>
+
+              <button
+                onClick={handleChangePassword}
+                disabled={loading}
+                className="flex items-center gap-2 px-6 py-3 bg-[#F295B6] text-white font-bold rounded-lg hover:bg-[#FFB8D1] transition-colors duration-200 disabled:opacity-50"
+              >
+                <IoSaveOutline fontSize={20} />
+                {loading ? "Đang lưu..." : "Đổi mật khẩu"}
+              </button>
+            </div>
+          )}
+
+          {/* Privacy Tab */}
+          {activeTab === "privacy" && (
+            <div className="space-y-6">
+              <h2 className="text-2xl font-bold" style={{ color: "#8C1D35" }}>
+                Quyền riêng tư
+              </h2>
+
+              <div className="border border-[#FFE4EC] rounded-lg p-6">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <h3 className="text-lg font-bold mb-2">Hồ sơ riêng tư</h3>
+                    <p className="text-gray-600 text-sm">
+                      Khi bật chế độ riêng tư, chỉ bạn mới có thể xem hồ sơ và bài viết của mình.
+                      Người khác sẽ không thể xem thông tin cá nhân của bạn.
+                    </p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer ml-4">
+                    <input
+                      type="checkbox"
+                      checked={profileData.isPrivate}
+                      onChange={(e) => handleProfileChange("isPrivate", e.target.checked)}
+                      className="sr-only peer"
+                    />
+                    <div className="w-14 h-7 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-pink-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-[#F295B6]"></div>
+                  </label>
+                </div>
+              </div>
+
+              <button
+                onClick={handleSaveProfile}
+                disabled={loading}
+                className="flex items-center gap-2 px-6 py-3 bg-[#F295B6] text-white font-bold rounded-lg hover:bg-[#FFB8D1] transition-colors duration-200 disabled:opacity-50"
+              >
+                <IoSaveOutline fontSize={20} />
+                {loading ? "Đang lưu..." : "Lưu thay đổi"}
+              </button>
+            </div>
+          )}
+
+          {/* Blocked Users Tab */}
+          {activeTab === "blocked" && (
+            <div className="space-y-6">
+              <h2 className="text-2xl font-bold" style={{ color: "#8C1D35" }}>
+                Người dùng đã chặn
+              </h2>
+
+              {blockedUsers.length === 0 ? (
+                <div className="text-center py-12 text-gray-500">
+                  Bạn chưa chặn người dùng nào
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {blockedUsers.map((user) => (
+                    <div
+                      key={user.id}
+                      className="flex items-center justify-between p-4 border border-[#FFE4EC] rounded-lg"
+                    >
+                      <div className="flex items-center gap-4">
+                        <img
+                          src={user.avatar || "https://i.pravatar.cc/300"}
+                          alt={user.username}
+                          className="w-12 h-12 rounded-full object-cover"
+                        />
+                        <div>
+                          <div className="font-bold">{user.fullName || user.username}</div>
+                          <div className="text-sm text-gray-500">@{user.username}</div>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => handleUnblockUser(user.id)}
+                        className="px-4 py-2 bg-gray-100 text-gray-700 font-semibold rounded-lg hover:bg-gray-200 transition-colors duration-200"
+                      >
+                        Bỏ chặn
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Delete Account Tab */}
+          {activeTab === "delete" && (
+            <div className="space-y-6">
+              <h2 className="text-2xl font-bold text-red-600">Xóa tài khoản</h2>
+
+              <div className="border border-red-200 rounded-lg p-6 bg-red-50">
+                <h3 className="text-lg font-bold text-red-800 mb-2">⚠️ Cảnh báo</h3>
+                <p className="text-red-700 mb-4">
+                  Hành động này sẽ xóa vĩnh viễn tài khoản của bạn cùng với tất cả dữ liệu:
+                </p>
+                <ul className="list-disc list-inside text-red-700 space-y-1 mb-4">
+                  <li>Tất cả bài viết và bình luận</li>
+                  <li>Thông tin cá nhân</li>
+                  <li>Danh sách người theo dõi và đang theo dõi</li>
+                  <li>Lịch sử hoạt động</li>
+                </ul>
+                <p className="text-red-700 font-bold">
+                  Hành động này không thể hoàn tác!
+                </p>
+              </div>
+
+              <button
+                onClick={handleDeleteAccount}
+                className="px-6 py-3 bg-red-600 text-white font-bold rounded-lg hover:bg-red-700 transition-colors duration-200"
+              >
+                Xóa tài khoản của tôi
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default EditProfile;
