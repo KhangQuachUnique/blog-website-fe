@@ -61,6 +61,7 @@ export interface paths {
         };
         get: operations["BlogPostsController_findAll"];
         put?: never;
+        /** Tạo bài viết mới */
         post: operations["BlogPostsController_create"];
         delete?: never;
         options?: never;
@@ -81,6 +82,7 @@ export interface paths {
         delete: operations["BlogPostsController_remove"];
         options?: never;
         head?: never;
+        /** Cập nhật bài viết theo ID */
         patch: operations["BlogPostsController_update"];
         trace?: never;
     };
@@ -97,6 +99,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
+        /** Cập nhật trạng thái bài viết */
         patch: operations["BlogPostsController_updateStatus"];
         trace?: never;
     };
@@ -162,22 +165,6 @@ export interface paths {
         options?: never;
         head?: never;
         patch: operations["CommentsController_update"];
-        trace?: never;
-    };
-    "/comments/post/{postId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["CommentsController_findByPost"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
         trace?: never;
     };
     "/hashtags": {
@@ -404,22 +391,6 @@ export interface paths {
         patch: operations["SavedPostListController_update"];
         trace?: never;
     };
-    "/search": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["SearchController_search"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/viewed-history/posts/{postId}/view": {
         parameters: {
             query?: never;
@@ -474,10 +445,113 @@ export interface components {
     schemas: {
         CreateUserDto: Record<string, never>;
         UpdateUserDto: Record<string, never>;
-        CreateBlogPostDto: Record<string, never>;
-        UpdateBlogPostDto: Record<string, never>;
-        UpdateBlogStatusDto: Record<string, never>;
-        CreateBlockDto: Record<string, never>;
+        CreateBlockDto: {
+            /**
+             * @description Vị trí x
+             * @example 0
+             */
+            x: number;
+            /**
+             * @description Vị trí y
+             * @example 0
+             */
+            y: number;
+            /**
+             * @description Chiều rộng
+             * @example 12
+             */
+            width: number;
+            /**
+             * @description Chiều cao
+             * @example 100
+             */
+            height: number;
+            /**
+             * @description Loại block
+             * @example TEXT
+             * @enum {string}
+             */
+            type: "TEXT" | "IMAGE";
+            /**
+             * @description Nội dung block (text hoặc URL ảnh)
+             * @example Đây là nội dung block text
+             */
+            content: string;
+        };
+        CreateBlogPostDto: {
+            /**
+             * @description Tiêu đề bài viết
+             * @example Hướng dẫn NestJS cơ bản
+             */
+            title: string;
+            /**
+             * @description URL ảnh thumbnail
+             * @example https://example.com/thumbnail.jpg
+             */
+            thumbnailUrl?: string;
+            /**
+             * @description Bài viết công khai hay riêng tư
+             * @default true
+             * @example true
+             */
+            isPublic: boolean;
+            /**
+             * @description Loại bài viết
+             * @example PERSONAL
+             * @enum {string}
+             */
+            type: "PERSONAL" | "COMMUNITY" | "REPOST";
+            /**
+             * @description ID của tác giả
+             * @example 1
+             */
+            authorId: number;
+            /**
+             * @description ID community (bắt buộc nếu type = COMMUNITY)
+             * @example 1
+             */
+            communityId?: number;
+            /**
+             * @description ID bài viết gốc (bắt buộc nếu type = REPOST)
+             * @example 1
+             */
+            originalPostId?: number;
+            /** @description Danh sách blocks nội dung */
+            blocks?: components["schemas"]["CreateBlockDto"][];
+            /**
+             * @description Danh sách hashtags
+             * @example [
+             *       "nestjs",
+             *       "typescript",
+             *       "backend"
+             *     ]
+             */
+            hashtags?: string[];
+        };
+        UpdateBlogPostDto: {
+            /** @example Tiêu đề đã cập nhật */
+            title?: string;
+            /** @example https://example.com/new-thumbnail.jpg */
+            thumbnailUrl?: string;
+            /** @example true */
+            isPublic?: boolean;
+            blocks?: components["schemas"]["CreateBlockDto"][];
+            /**
+             * @example [
+             *       "nestjs",
+             *       "updated"
+             *     ]
+             */
+            hashtags?: string[];
+        };
+        UpdateBlogStatusDto: {
+            /**
+             * @description Trạng thái bài viết
+             * @example ACTIVE
+             * @enum {string}
+             */
+            status: "ACTIVE" | "HIDDEN" | "DRAFT";
+        };
         UpdateBlockDto: Record<string, never>;
         CreateCommentDto: Record<string, never>;
         UpdateCommentDto: Record<string, never>;
@@ -650,7 +724,15 @@ export interface operations {
             };
         };
         responses: {
+            /** @description Tạo bài viết thành công */
             201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Dữ liệu không hợp lệ */
+            400: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -711,7 +793,15 @@ export interface operations {
             };
         };
         responses: {
+            /** @description Cập nhật bài viết thành công */
             200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Không tìm thấy bài viết */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -734,7 +824,15 @@ export interface operations {
             };
         };
         responses: {
+            /** @description Cập nhật trạng thái thành công */
             200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Không tìm thấy bài viết */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -931,25 +1029,6 @@ export interface operations {
                 "application/json": components["schemas"]["UpdateCommentDto"];
             };
         };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    CommentsController_findByPost: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                postId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
         responses: {
             200: {
                 headers: {
@@ -1643,23 +1722,6 @@ export interface operations {
                 "application/json": components["schemas"]["UpdateSavedPostListDto"];
             };
         };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    SearchController_search: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
         responses: {
             200: {
                 headers: {

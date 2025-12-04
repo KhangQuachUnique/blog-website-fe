@@ -6,24 +6,18 @@ import adminUserRoutes from "./admin/user.route";
 import adminPostRoutes from "./admin/post.route";
 import adminReportRoutes from "./admin/report.route";
 import authRoutes from "./auth/auth.route";
-import { SearchResultPage } from "../pages/search/searchResultsPage";
-import { TestHomePage } from "../pages/testHomePage";
-import { SimpleTestPage } from "../pages/simpleTestPage";
-
 import manageBlogPostsRoutes from "./user/manageBlogPosts.route";
 import newsfeedRoutes from "./newsfeed/newsfeed.route";
+import HomePage from "../pages/home/HomePage";
+
 export const router = createBrowserRouter([
   {
     path: "/",
-    element: <SimpleTestPage />,
-  },
-  {
-    path: "/app",
     element: <UserLayout />,
     children: [
       {
         index: true,
-        element: <TestHomePage />,
+        element: <HomePage />,
       },
       ...manageBlogPostsRoutes,
       ...newsfeedRoutes,
@@ -33,10 +27,6 @@ export const router = createBrowserRouter([
     path: "/admin",
     element: <AdminLayout />,
     children: [...adminUserRoutes, ...adminPostRoutes, ...adminReportRoutes],
-  },
-  {
-    path: "/search",
-    element: <SearchResultPage />,
   },
   ...authRoutes,
 ]);
