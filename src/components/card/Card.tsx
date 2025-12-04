@@ -1,10 +1,12 @@
 
-import { ArrowUp, ArrowDown, MessageCircle, Heart } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import type { PostItem } from '../../types/post';
+import InteractBar from '../InteractBar';
+import { useAuth } from '../../contexts/AuthContext';
 import '../../styles/newsfeed/Card.css';
 
 const Card = ({ post }: { post: PostItem }) => {
+  const { user } = useAuth();
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
@@ -18,8 +20,8 @@ const Card = ({ post }: { post: PostItem }) => {
   };
 
   return (
-    <Link to={`/post/${post.id}`} className="block">
-      <article className="newsfeed-card hover:shadow-lg transition-shadow cursor-pointer">
+    <article className="newsfeed-card hover:shadow-lg transition-shadow">
+      <Link to={`/post/${post.id}`} className="block cursor-pointer">
         {post.thumbnailUrl && (
           <div className="newsfeed-card__thumbnail">
             <img
@@ -57,36 +59,20 @@ const Card = ({ post }: { post: PostItem }) => {
               ))}
             </div>
           )}
-          <div className="newsfeed-card__footer">
-            <div className="newsfeed-card__stats">
-              <div className="newsfeed-card__votes">
-                <button className="newsfeed-card__vote-btn newsfeed-card__vote-btn--up">
-                  <ArrowUp size={18} />
-                  <span>{post.upVotes}</span>
-                </button>
-                {/* <span className="newsfeed-card__score font-bold">
-                  {post.score || post.upVotes - post.downVotes}
-                </span> */}
-                <button className="newsfeed-card__vote-btn newsfeed-card__vote-btn--down">
-                  <ArrowDown size={18} />
-                  <span>{post.downVotes}</span>
-                </button>
-              </div>
-              <div className="newsfeed-card__interactions">
-                <div className="newsfeed-card__interaction">
-                  <MessageCircle size={18} />
-                  <span>{post.totalComments}</span>
-                </div>
-                <div className="newsfeed-card__interaction">
-                  <Heart size={18} />
-                  <span>{post.totalReacts}</span>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
-      </article>
-    </Link>
+      </Link>
+      
+      {/* InteractBar - Blookie Style */}
+      <div className="px-4 pb-3" onClick={(e) => e.stopPropagation()}>
+        <InteractBar
+          postId={post.id}
+          userId={user?.id ?? 0}
+          initialUpVotes={post.upVotes}
+          initialDownVotes={post.downVotes}
+          totalComments={post.totalComments}
+        />
+      </div>
+    </article>
   );
 };
 

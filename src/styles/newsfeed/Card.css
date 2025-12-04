@@ -2,7 +2,7 @@
   background: hsl(var(--card));
   border: 1px solid #ffe7f0; /* màu nhạt làm viền */
   border-radius: 15px;
-  overflow: hidden;
+  overflow: visible;
   transition: all 0.3s ease;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   display: block;
