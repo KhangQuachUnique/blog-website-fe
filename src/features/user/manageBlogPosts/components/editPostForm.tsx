@@ -133,7 +133,7 @@ const EditPostForm = ({
   return (
     <div className="w-full relative p-9 flex flex-col gap-4 items-center justify-center">
       <BlockSidebar onAddBlock={handleAddBlock} />
-      <div className="w-[900px] p-3">
+      <div className="w-[800px] p-3">
         <InputBase
           placeholder="Nhập tiêu đề bài viết..."
           className="w-full"
@@ -162,7 +162,7 @@ const EditPostForm = ({
           }}
         />
       </div>
-      <div className="w-[900px]">
+      <div className="w-[800px]">
         <GridLayout
           layout={layout}
           onLayoutChange={(newLayout) =>
@@ -170,7 +170,7 @@ const EditPostForm = ({
           }
           cols={16}
           rowHeight={30}
-          width={900}
+          width={800}
           isDraggable={isCtrlPressed}
           isResizable={true}
           draggableCancel={".rgl-no-drag"}
