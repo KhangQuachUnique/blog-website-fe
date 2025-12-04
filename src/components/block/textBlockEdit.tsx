@@ -15,7 +15,14 @@ import {
   CiTextAlignJustify,
   CiLink,
 } from "react-icons/ci";
-import { FaList, FaListOl, FaCheck, FaAngleDown } from "react-icons/fa6";
+import {
+  FaList,
+  FaListOl,
+  FaCheck,
+  FaAngleDown,
+  FaQuoteLeft,
+  FaCode,
+} from "react-icons/fa6";
 
 interface TextBlockProps {
   id: string;
@@ -109,7 +116,7 @@ const TextBlockEdit = ({
     editorProps: {
       attributes: {
         class:
-          "prose prose-lg max-w-none focus:outline-none min-h-[100px] p-4 text-lg [&_h1]:text-4xl [&_h1]:font-bold [&_h2]:text-3xl [&_h2]:font-bold [&_h3]:text-2xl [&_h3]:font-semibold [&_h3]:my-2 [&_ul]:list-disc [&_ul]:ml-6 [&_ol]:list-decimal [&_ol]:ml-6 [&_li]:my-1 [&::selection]:bg-[#F295B6]/30 [&::selection]:text-inherit",
+          "prose prose-lg max-w-none focus:outline-none min-h-[100px] p-4 text-lg [&_h1]:text-4xl [&_h1]:font-bold [&_h2]:text-3xl [&_h2]:font-bold [&_h3]:text-2xl [&_h3]:font-semibold [&_h3]:my-2 [&_ul]:list-disc [&_ul]:ml-6 [&_ol]:list-decimal [&_ol]:ml-6 [&_li]:my-1 [&_blockquote]:border-l-4 [&_blockquote]:border-[#F295B6] [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-gray-600 [&_blockquote]:my-4 [&_pre]:bg-gray-900 [&_pre]:text-gray-100 [&_pre]:rounded-lg [&_pre]:p-4 [&_pre]:my-4 [&_pre]:overflow-x-auto [&_code]:font-mono [&_code]:text-sm [&::selection]:bg-[#F295B6]/30 [&::selection]:text-inherit",
         spellcheck: "false",
       },
     },
@@ -183,7 +190,7 @@ const TextBlockEdit = ({
         createPortal(
           <div
             ref={popoverRef}
-            className="fixed z-[9999] bg-white border-2 border-gray-300 rounded-lg shadow-xl px-4 py-3 flex items-center gap-2"
+            className="fixed z-[9999] bg-white border-2 border-gray-300 rounded-lg shadow-md px-4 py-3 flex items-center gap-2"
             style={{
               backdropFilter: "blur(10px)",
               backgroundColor: "rgba(255, 255, 255, 0.98)",
@@ -286,6 +293,28 @@ const TextBlockEdit = ({
               title="Numbered List"
             >
               <FaListOl />
+            </button>
+            <button
+              onClick={() => editor.chain().focus().toggleBlockquote().run()}
+              className={`flex h-7 w-7 items-center justify-center rounded transition-colors text-base ${
+                editor.isActive("blockquote")
+                  ? "bg-[#F295B6] text-white"
+                  : "hover:bg-gray-200"
+              }`}
+              title="Quote"
+            >
+              <FaQuoteLeft />
+            </button>
+            <button
+              onClick={() => editor.chain().focus().toggleCodeBlock().run()}
+              className={`flex h-7 w-7 items-center justify-center rounded transition-colors text-base ${
+                editor.isActive("codeBlock")
+                  ? "bg-[#F295B6] text-white"
+                  : "hover:bg-gray-200"
+              }`}
+              title="Code Block"
+            >
+              <FaCode />
             </button>
 
             <div className="w-px h-5 bg-gray-300 mx-1.5"></div>

@@ -1,12 +1,12 @@
 // src/components/NewsfeedList.tsx
 import Card from '../card/Card';
-import type  { PostItem } from '../../types/post';
+import type  { IPostItem } from '../../types/post';
 import { Loader2 } from 'lucide-react';
 import Masonry from 'react-masonry-css';
 import '../../styles/newsfeed/NewsfeedList.css';
 
 interface Props {
-  posts: PostItem[];
+  posts: IPostItem[];
   isFetchingNextPage?: boolean;
   hasNextPage?: boolean;
   loadMoreRef?: (node: HTMLDivElement | null) => void;
@@ -37,5 +37,6 @@ const NewsfeedList = ({ posts, loadMoreRef }: Props) => {
     </div>
   );
 };
+
 
 export default NewsfeedList;

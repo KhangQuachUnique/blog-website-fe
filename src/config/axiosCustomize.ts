@@ -20,6 +20,8 @@ instance.interceptors.request.use(
 
 instance.interceptors.response.use(
   (response) => {
+    if (response && response?.data && response?.data?.data)
+      return response.data.data;
     return response;
   },
   (error) => {

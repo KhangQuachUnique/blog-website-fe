@@ -1,10 +1,10 @@
 
 import { ArrowUp, ArrowDown, MessageCircle, Heart } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import type { PostItem } from '../../types/post';
+import type { IPostItem } from '../../types/post';
 import '../../styles/newsfeed/Card.css';
 
-const Card = ({ post }: { post: PostItem }) => {
+const Card = ({ post }: { post: IPostItem }) => {
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
