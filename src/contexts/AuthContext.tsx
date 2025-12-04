@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import * as authService from '../services/auth';
+import { ACCESS_TOKEN_KEY } from '../constants/auth';
 
 interface User {
   id: number;
@@ -38,14 +39,28 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Load user on mount if token exists
+  // On mount: try to restore session from refresh token cookie
   useEffect(() => {
-    const token = localStorage.getItem('accessToken');
-    if (token) {
-      loadUser();
-    } else {
-      setIsLoading(false);
-    }
+    const initAuth = async () => {
+      try {
+        // Try to refresh token using HttpOnly cookie
+        const refreshResponse = await authService.refresh();
+        if (refreshResponse.accessToken) {
+          localStorage.setItem(ACCESS_TOKEN_KEY, refreshResponse.accessToken);
+          // Load user data
+          const userData = await authService.getCurrentUser();
+          setUser(userData);
+        }
+      } catch (error) {
+        // No valid refresh token - user not logged in
+        localStorage.removeItem(ACCESS_TOKEN_KEY);
+        setUser(null);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initAuth();
   }, []);
 
   const loadUser = async () => {
@@ -54,17 +69,15 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       setUser(userData);
     } catch (error) {
       // Token invalid or expired
-      localStorage.removeItem('accessToken');
+      localStorage.removeItem(ACCESS_TOKEN_KEY);
       setUser(null);
-    } finally {
-      setIsLoading(false);
     }
   };
 
   const login = async (email: string, password: string) => {
     const response = await authService.login({ email, password });
     if (response.accessToken) {
-      localStorage.setItem('accessToken', response.accessToken);
+      localStorage.setItem(ACCESS_TOKEN_KEY, response.accessToken);
     }
     if (response.user) {
       setUser(response.user);
@@ -77,7 +90,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const register = async (name: string, email: string, password: string) => {
     const response = await authService.register({ name, email, password });
     if (response.accessToken) {
-      localStorage.setItem('accessToken', response.accessToken);
+      localStorage.setItem(ACCESS_TOKEN_KEY, response.accessToken);
     }
     if (response.user) {
       setUser(response.user);
@@ -88,7 +101,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const logout = async () => {
     await authService.logout();
-    localStorage.removeItem('accessToken');
+    localStorage.removeItem(ACCESS_TOKEN_KEY);
     setUser(null);
   };
 
