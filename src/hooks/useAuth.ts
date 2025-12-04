@@ -9,3 +9,5 @@ export const useAuthActions = () => {
   const { login, register, logout, refreshUser } = useAuth();
   return { login, register, logout, refreshUser };
 };
+export { useAuth };
+
