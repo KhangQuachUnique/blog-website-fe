@@ -1,9 +1,9 @@
 // src/components/NewsfeedList.tsx
-import Card from '../card/Card';
-import type  { PostItem } from '../../types/post';
-import { Loader2 } from 'lucide-react';
-import Masonry from 'react-masonry-css';
-import '../../styles/newsfeed/NewsfeedList.css';
+import Card from "../card/Card";
+import type { PostItem } from "../../types/post";
+import { Loader2 } from "lucide-react";
+import Masonry from "react-masonry-css";
+import "../../styles/newsfeed/NewsfeedList.css";
 
 interface Props {
   posts: PostItem[];
@@ -15,7 +15,7 @@ interface Props {
 // NewsfeedList.tsx using react-masonry-css
 const NewsfeedList = ({ posts, loadMoreRef }: Props) => {
   const breakpointCols = {
-    default: 4,
+    default: 3,
     1400: 4,
     992: 3,
     768: 2,
