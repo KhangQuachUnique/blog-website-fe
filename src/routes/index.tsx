@@ -9,6 +9,7 @@ import authRoutes from "./auth/auth.route";
 import manageBlogPostsRoutes from "./user/manageBlogPosts.route";
 import profileRoutes from "./user/profile.route";
 
+import newsfeedRoutes from "./newsfeed/newsfeed.route";
 export const router = createBrowserRouter([
   {
     path: "/",
@@ -19,6 +20,7 @@ export const router = createBrowserRouter([
         element: <div>Home Page</div>,
       },
       ...manageBlogPostsRoutes,
+      ...newsfeedRoutes,
       {
         path: "saved",
         element: <div>Saved Posts</div>,
