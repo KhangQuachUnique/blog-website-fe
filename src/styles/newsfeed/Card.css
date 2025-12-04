@@ -1,7 +1,7 @@
 .newsfeed-card {
   background: hsl(var(--card));
-  border: 1px solid #FFB8D1;                    /* màu nhạt làm viền */
-  border-radius: 50px;
+  border: 1px solid #ffe7f0; /* màu nhạt làm viền */
+  border-radius: 15px;
   overflow: hidden;
   transition: all 0.3s ease;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
@@ -17,7 +17,7 @@
   width: 100%;
   height: 200px;
   overflow: hidden;
-  background: #FFB8D1;                          /* nền thumbnail khi ảnh lỗi */
+  background: #ffdbe7; /* nền thumbnail khi ảnh lỗi */
 }
 
 .newsfeed-card__image {
@@ -53,7 +53,7 @@
   height: 40px;
   border-radius: 50%;
   object-fit: cover;
-  border: 2px solid #F295B6;                    /* viền avatar hồng đậm */
+  border: 2px solid #f295b6; /* viền avatar hồng đậm */
 }
 
 .newsfeed-card__author-info {
@@ -70,7 +70,7 @@
 
 .newsfeed-card__community {
   font-size: 0.75rem;
-  color: #F295B6;                               /* tên cộng đồng màu hồng */
+  color: #f295b6; /* tên cộng đồng màu hồng */
 }
 
 .newsfeed-card__time {
@@ -98,15 +98,15 @@
 }
 
 .newsfeed-card__hashtag {
-  background: rgba(242,149,182,0.08);
-  color: #F295B6;
+  background: rgba(242, 149, 182, 0.08);
+  color: #f295b6;
   padding: 0.2rem 0.5rem;
   border-radius: 999px;
   font-size: 0.75rem;
 }
 
 .newsfeed-card__footer {
-  border-top: 1px solid #FFB8D1;                 /* viền footer màu hồng nhạt */
+  border-top: 1px solid #ffb8d1; /* viền footer màu hồng nhạt */
   padding-top: 1rem;
 }
 
@@ -127,7 +127,7 @@
   align-items: center;
   gap: 0.25rem;
   padding: 0.375rem 0.625rem;
-  border: 1px solid #FFB8D1;                    /* viền nút vote hồng nhạt */
+  border: 1px solid #ffb8d1; /* viền nút vote hồng nhạt */
   background: transparent;
   border-radius: 50px;
   cursor: pointer;
@@ -137,25 +137,25 @@
 }
 
 .newsfeed-card__vote-btn:hover {
-  background: #FFB8D1;                          /* hover nền hồng nhạt */
+  background: #ffb8d1; /* hover nền hồng nhạt */
   color: #fff;
 }
 
 .newsfeed-card__vote-btn--up:hover {
-  background: #F295B6;                          /* upvote hover hồng đậm */
-  border-color: #F295B6;
+  background: #f295b6; /* upvote hover hồng đậm */
+  border-color: #f295b6;
   color: white;
 }
 
 .newsfeed-card__vote-btn--down:hover {
-  color: #F295B6;                               /* downvote vẫn giữ tone hồng */
-  border-color: #F295B6;
+  color: #f295b6; /* downvote vẫn giữ tone hồng */
+  border-color: #f295b6;
 }
 
 .newsfeed-card__score {
   font-weight: 700;
   font-size: 1rem;
-  color: #F295B6;                               /* điểm số màu hồng nổi bật */
+  color: #f295b6; /* điểm số màu hồng nổi bật */
   min-width: 40px;
   text-align: center;
 }
@@ -169,13 +169,13 @@
   display: flex;
   align-items: center;
   gap: 0.375rem;
-  color: #F295B6;                               /* icon comment, heart màu hồng */
+  color: #f295b6; /* icon comment, heart màu hồng */
   font-size: 0.875rem;
   transition: all 0.2s ease;
 }
 
 .newsfeed-card__interaction:hover {
-  color: #F295B6;
+  color: #f295b6;
   transform: translateY(-1px);
 }
 
