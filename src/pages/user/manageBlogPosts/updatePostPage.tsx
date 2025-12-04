@@ -1,70 +1,42 @@
+import { useParams } from "react-router-dom";
+
 import EditPostForm from "../../../features/user/manageBlogPosts/components/editPostForm";
-import { usePostForm } from "../../../features/user/manageBlogPosts/usePostForm";
-import { EPostType } from "../../../types/post";
+import { useGetPostById, useUpdatePost } from "../../../hooks/usePost";
+import { EPostType, type IUpdateBlogPostDto } from "../../../types/post";
 
 const UpdatePostPage = () => {
-  const {
-    // Title
-    title,
-    handleTitleChange,
-    // Short Description
-    shortDescription,
-    handleShortDescriptionChange,
-    // Layout
-    layout,
-    handleLayoutChange,
-    // Blocks
-    blocks,
-    handleBlockContentChange,
-    handleBlockCaptionChange,
-    handleBlockObjectFitChange,
-    handleDeleteBlock,
-    handleAddBlock,
-    handleGridDrop,
-    // Config
-    thumbnailUrl,
-    isPublic,
-    hashtags,
-    handleThumbnailChange,
-    handleIsPublicChange,
-    addHashtag,
-    removeHashtag,
-    // DTO Getters
-    getUpdateDto,
-  } = usePostForm();
+  const { id } = useParams<{ id: string }>();
+  const postId = Number(id);
+  const { data: post, isLoading, error } = useGetPostById(postId);
+  const { mutate } = useUpdatePost();
 
-  const handleUpdate = () => {
-    const dto = getUpdateDto(0, EPostType.PERSONAL);
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (error || !post) {
+    return <div>Error loading post.</div>;
+  }
+
+  const handleUpdate = (dto: IUpdateBlogPostDto) => {
     console.log("Updating Post:", dto);
-    // TODO: Call API to update post
+    mutate(dto, {
+      onSuccess: () => {
+        console.log("Post updated successfully.");
+      },
+      onError: (err) => {
+        console.error("Error updating post:", err);
+      },
+    });
   };
 
   return (
     <EditPostForm
       mode="update"
-      title={title}
-      onTitleChange={handleTitleChange}
-      shortDescription={shortDescription}
-      onShortDescriptionChange={handleShortDescriptionChange}
-      layout={layout}
-      blocks={blocks}
-      onLayoutChange={handleLayoutChange}
-      onBlockContentChange={handleBlockContentChange}
-      onBlockCaptionChange={handleBlockCaptionChange}
-      onBlockObjectFitChange={handleBlockObjectFitChange}
-      onDeleteBlock={handleDeleteBlock}
-      onAddBlock={handleAddBlock}
-      onGridDrop={handleGridDrop}
-      // Config
-      thumbnailUrl={thumbnailUrl}
-      isPublic={isPublic}
-      hashtags={hashtags}
-      onThumbnailChange={handleThumbnailChange}
-      onIsPublicChange={handleIsPublicChange}
-      onAddHashtag={addHashtag}
-      onRemoveHashtag={removeHashtag}
-      // Actions
-      onPublish={handleUpdate}
+      post={post}
+      authorId={3}
+      postType={EPostType.PERSONAL}
+      onPublish={handleUpdate as (dto: unknown) => void}
     />
   );
 };

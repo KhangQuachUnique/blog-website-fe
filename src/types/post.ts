@@ -1,16 +1,21 @@
-import type { ICreateBlockDto } from "./block";
+import type { EBlockType, ICreateBlockDto } from "./block";
 
-export enum EPostType {
-  PERSONAL = "PERSONAL",
-  COMMUNITY = "COMMUNITY",
-  REPOST = "REPOST",
-}
+export const EPostType = {
+  PERSONAL: "PERSONAL",
+  COMMUNITY: "COMMUNITY",
+  REPOST: "REPOST",
+} as const;
 
-export enum EBlogPostStatus {
-  ACTIVE = "ACTIVE",
-  HIDDEN = "HIDDEN",
-  DRAFT = "DRAFT",
-}
+export type EPostType = (typeof EPostType)[keyof typeof EPostType];
+
+export const EBlogPostStatus = {
+  ACTIVE: "ACTIVE",
+  HIDDEN: "HIDDEN",
+  DRAFT: "DRAFT",
+} as const;
+
+export type EBlogPostStatus =
+  (typeof EBlogPostStatus)[keyof typeof EBlogPostStatus];
 
 export interface ICreateBlogPostDto {
   title: string;

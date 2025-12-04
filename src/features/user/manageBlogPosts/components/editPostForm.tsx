@@ -9,79 +9,67 @@ import CustomButton from "../../../../components/button";
 import BlockSidebar from "./blockSidebar";
 import ConfigDialog from "./configDialog";
 import { EBlockType } from "../../../../types/block";
-import type { LayoutItem, BlockData, ObjectFitType } from "../usePostForm";
+import { usePostForm, type LayoutItem } from "../usePostForm";
+import type { IPostResponseDto, EPostType } from "../../../../types/post";
 
 export interface EditPostFormProps {
   mode: "create" | "update";
-
-  // Title
-  title: string;
-  onTitleChange: (
-    e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>
+  post?: IPostResponseDto;
+  onSaveDraft?: (
+    dto: ReturnType<ReturnType<typeof usePostForm>["getCreateDto"]>
   ) => void;
-
-  // Short Description
-  shortDescription: string;
-  onShortDescriptionChange: (
-    e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>
+  onPublish?: (
+    dto:
+      | ReturnType<ReturnType<typeof usePostForm>["getCreateDto"]>
+      | ReturnType<ReturnType<typeof usePostForm>["getUpdateDto"]>
   ) => void;
-
-  // Layout & Blocks
-  layout: LayoutItem[];
-  blocks: BlockData[];
-  onLayoutChange: (layout: LayoutItem[]) => void;
-  onBlockContentChange: (id: string, content: string) => void;
-  onBlockCaptionChange: (id: string, caption: string) => void;
-  onBlockObjectFitChange: (id: string, objectFit: ObjectFitType) => void;
-  onDeleteBlock: (id: string) => void;
-  onAddBlock: (type: EBlockType, x?: number, y?: number) => void;
-  onGridDrop: (
-    newLayout: LayoutItem[],
-    layoutItem: LayoutItem,
-    event: DragEvent
-  ) => void;
-
-  // Config (for ConfigDialog)
-  thumbnailUrl: string | null;
-  isPublic: boolean;
-  hashtags: string[];
-  onThumbnailChange: (url: string | null) => void;
-  onIsPublicChange: (value: boolean) => void;
-  onAddHashtag: (tag: string) => void;
-  onRemoveHashtag: (tag: string) => void;
-
-  // Actions
-  onSaveDraft?: () => void;
-  onPublish?: () => void;
+  authorId: number;
+  postType: EPostType;
+  communityId?: number;
+  originalPostId?: number;
 }
 
 const EditPostForm = ({
   mode,
-  title,
-  onTitleChange,
-  shortDescription,
-  onShortDescriptionChange,
-  layout,
-  blocks,
-  onLayoutChange,
-  onBlockContentChange,
-  onBlockCaptionChange,
-  onBlockObjectFitChange,
-  onDeleteBlock,
-  onAddBlock,
-  onGridDrop,
-  // Config
-  thumbnailUrl,
-  isPublic,
-  hashtags,
-  onThumbnailChange,
-  onIsPublicChange,
-  onAddHashtag,
-  onRemoveHashtag,
-  // Actions
+  post,
   onSaveDraft,
   onPublish,
+  authorId,
+  postType,
+  communityId,
+  originalPostId,
 }: EditPostFormProps) => {
+  const {
+    // Title
+    title,
+    handleTitleChange,
+    // Short Description
+    shortDescription,
+    handleShortDescriptionChange,
+    // Layout
+    layout,
+    handleLayoutChange,
+    // Blocks
+    blocks,
+    handleBlockContentChange,
+    handleBlockCaptionChange,
+    handleBlockObjectFitChange,
+    handleDeleteBlock,
+    handleAddBlock,
+    handleGridDrop,
+    // Config
+    thumbnailUrl,
+    isPublic,
+    hashtags,
+    handleThumbnailChange,
+    handleIsPublicChange,
+    addHashtag,
+    removeHashtag,
+    // DTO Getters
+    getCreateDto,
+    getUpdateDto,
+  } = usePostForm({ post });
+
   const [isCtrlPressed, setIsCtrlPressed] = useState(false);
   const [isConfigDialogOpen, setIsConfigDialogOpen] = useState(false);
 
@@ -114,21 +102,44 @@ const EditPostForm = ({
 
   const handlePublish = () => {
     if (onPublish) {
-      onPublish();
+      if (mode === "create") {
+        const dto = getCreateDto(
+          authorId,
+          postType,
+          communityId,
+          originalPostId
+        );
+        onPublish(dto);
+      } else {
+        const dto = getUpdateDto(
+          post?.id ?? 0,
+          postType,
+          communityId,
+          originalPostId
+        );
+        onPublish(dto);
+      }
     }
     setIsConfigDialogOpen(false);
   };
 
+  const handleSaveDraft = () => {
+    if (onSaveDraft) {
+      const dto = getCreateDto(authorId, postType, communityId, originalPostId);
+      onSaveDraft(dto);
+    }
+  };
+
   return (
     <div className="w-full relative p-9 flex flex-col gap-4 items-center justify-center">
-      <BlockSidebar onAddBlock={onAddBlock} />
+      <BlockSidebar onAddBlock={handleAddBlock} />
       <div className="w-[900px] p-3">
         <InputBase
           placeholder="Nhập tiêu đề bài viết..."
           className="w-full"
           multiline
           value={title}
-          onChange={onTitleChange}
+          onChange={handleTitleChange}
           sx={{
             fontSize: "48px",
             fontWeight: "bold",
@@ -141,7 +152,7 @@ const EditPostForm = ({
           className="w-full"
           multiline
           value={shortDescription}
-          onChange={onShortDescriptionChange}
+          onChange={handleShortDescriptionChange}
           sx={{
             fontSize: "18px",
             fontStyle: "italic",
@@ -155,7 +166,7 @@ const EditPostForm = ({
         <GridLayout
           layout={layout}
           onLayoutChange={(newLayout) =>
-            onLayoutChange(newLayout as LayoutItem[])
+            handleLayoutChange(newLayout as LayoutItem[])
           }
           cols={16}
           rowHeight={30}
@@ -164,7 +175,7 @@ const EditPostForm = ({
           isResizable={true}
           draggableCancel={".rgl-no-drag"}
           isDroppable={true}
-          onDrop={onGridDrop}
+          onDrop={handleGridDrop}
           droppingItem={{ i: "__dropping-elem__", w: 8, h: 6 }}
         >
           {blocks.map((block) => (
@@ -181,7 +192,7 @@ const EditPostForm = ({
                   id={block.id}
                   content={block.content || ""}
                   onContentChange={(newContent) =>
-                    onBlockContentChange(block.id, newContent)
+                    handleBlockContentChange(block.id, newContent)
                   }
                   style={isCtrlPressed ? { pointerEvents: "none" } : {}}
                 />
@@ -191,12 +202,12 @@ const EditPostForm = ({
                   imageUrl={block.content}
                   caption={block.caption}
                   objectFit={block.objectFit}
-                  onImageChange={(id, url) => onBlockContentChange(id, url)}
+                  onImageChange={(id, url) => handleBlockContentChange(id, url)}
                   onCaptionChange={(id, caption) =>
-                    onBlockCaptionChange(id, caption)
+                    handleBlockCaptionChange(id, caption)
                   }
                   onObjectFitChange={(id, objectFit) =>
-                    onBlockObjectFitChange(id, objectFit)
+                    handleBlockObjectFitChange(id, objectFit)
                   }
                   style={isCtrlPressed ? { pointerEvents: "none" } : {}}
                 />
@@ -205,7 +216,7 @@ const EditPostForm = ({
                 <div className="absolute top-2 right-2 z-10 rgl-no-drag transition-all">
                   <DeleteConfirmButton
                     className="rgl-no-drag"
-                    onConfirm={() => onDeleteBlock(block.id)}
+                    onConfirm={() => handleDeleteBlock(block.id)}
                   />
                 </div>
               )}
@@ -217,7 +228,7 @@ const EditPostForm = ({
         <div className="flex w-[900px] justify-center gap-4 items-center p-4">
           <CustomButton
             variant="outline"
-            onClick={onSaveDraft}
+            onClick={handleSaveDraft}
             style={{
               color: "#F295B6",
               border: "2px solid #F295B6",
@@ -259,10 +270,10 @@ const EditPostForm = ({
         thumbnail={thumbnailUrl}
         isPublic={isPublic}
         hashtags={hashtags}
-        onThumbnailChange={onThumbnailChange}
-        onIsPublicChange={onIsPublicChange}
-        onAddHashtag={onAddHashtag}
-        onRemoveHashtag={onRemoveHashtag}
+        onThumbnailChange={handleThumbnailChange}
+        onIsPublicChange={handleIsPublicChange}
+        onAddHashtag={addHashtag}
+        onRemoveHashtag={removeHashtag}
         confirmButtonText={mode === "create" ? "Đăng bài" : "Cập nhật"}
       />
     </div>

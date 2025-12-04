@@ -1,77 +1,34 @@
 import EditPostForm from "../../../features/user/manageBlogPosts/components/editPostForm";
-import { usePostForm } from "../../../features/user/manageBlogPosts/usePostForm";
 import { EPostType, type ICreateBlogPostDto } from "../../../types/post";
+import { useCreatePost } from "../../../hooks/usePost";
 
 const CreateBlogPostPage = () => {
-  const {
-    // Title
-    title,
-    handleTitleChange,
-    // Short Description
-    shortDescription,
-    handleShortDescriptionChange,
-    // Layout
-    layout,
-    handleLayoutChange,
-    // Blocks
-    blocks,
-    handleBlockContentChange,
-    handleBlockCaptionChange,
-    handleBlockObjectFitChange,
-    handleDeleteBlock,
-    handleAddBlock,
-    handleGridDrop,
-    // Config
-    thumbnailUrl,
-    isPublic,
-    hashtags,
-    handleThumbnailChange,
-    handleIsPublicChange,
-    addHashtag,
-    removeHashtag,
-    // DTO Getters
-    getCreateDto,
-  } = usePostForm();
+  const { mutate } = useCreatePost();
 
-  const handleSaveDraft = () => {
-    const dto: ICreateBlogPostDto = getCreateDto(0, EPostType.PERSONAL);
+  const handleSaveDraft = (dto: ICreateBlogPostDto) => {
     console.log("Saving Draft:", dto);
     // TODO: Call API to save draft
   };
 
-  const handlePublish = () => {
-    const dto: ICreateBlogPostDto = getCreateDto(0, EPostType.PERSONAL);
+  const handlePublish = (dto: ICreateBlogPostDto) => {
     console.log("Publishing Post:", dto);
-    // TODO: Call API to publish post
+    mutate(dto, {
+      onSuccess: () => {
+        console.log("Post published successfully.");
+      },
+      onError: (err) => {
+        console.error("Error publishing post:", err);
+      },
+    });
   };
 
   return (
     <EditPostForm
       mode="create"
-      title={title}
-      onTitleChange={handleTitleChange}
-      shortDescription={shortDescription}
-      onShortDescriptionChange={handleShortDescriptionChange}
-      layout={layout}
-      blocks={blocks}
-      onLayoutChange={handleLayoutChange}
-      onBlockContentChange={handleBlockContentChange}
-      onBlockCaptionChange={handleBlockCaptionChange}
-      onBlockObjectFitChange={handleBlockObjectFitChange}
-      onDeleteBlock={handleDeleteBlock}
-      onAddBlock={handleAddBlock}
-      onGridDrop={handleGridDrop}
-      // Config
-      thumbnailUrl={thumbnailUrl}
-      isPublic={isPublic}
-      hashtags={hashtags}
-      onThumbnailChange={handleThumbnailChange}
-      onIsPublicChange={handleIsPublicChange}
-      onAddHashtag={addHashtag}
-      onRemoveHashtag={removeHashtag}
-      // Actions
-      onSaveDraft={handleSaveDraft}
-      onPublish={handlePublish}
+      authorId={3}
+      postType={EPostType.PERSONAL}
+      onSaveDraft={handleSaveDraft as (dto: unknown) => void}
+      onPublish={handlePublish as (dto: unknown) => void}
     />
   );
 };
