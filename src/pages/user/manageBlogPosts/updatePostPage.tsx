@@ -1,6 +1,6 @@
 import { useParams } from "react-router-dom";
 
-import EditPostForm from "../../../features/user/manageBlogPosts/components/editPostForm";
+import EditPostForm from "../../../features/user/manageBlogPosts/editPostForm";
 import { useGetPostById, useUpdatePost } from "../../../hooks/usePost";
 import { EPostType, type IUpdateBlogPostDto } from "../../../types/post";
 
