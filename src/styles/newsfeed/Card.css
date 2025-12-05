@@ -1,27 +1,28 @@
 .newsfeed-card {
-  height: 300px;
   background: hsl(var(--card));
-  border: 1px solid #ffe7f0; /* màu nhạt làm viền */
+  border: 1px solid #ffe7f0;
   border-radius: 10px;
-  overflow: hidden;
+  overflow: visible;
   transition: all 0.3s ease;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  display: flex; /* thumbnail left, content right */
-  gap: 1rem;
-  align-items: stretch; /* make thumbnail stretch full card height */
-  height: 260px; /* fixed card height on desktop */
+  display: flex;
+  gap: 0;
+  align-items: stretch;
+  min-height: 200px;
 }
 
 .newsfeed-card:hover {
   transform: translateY(-4px);
-  box-shadow: 4px 4px 24px rgba(126, 126, 126, 0.25); /* hồng nhẹ #F295B6 */
+  box-shadow: 4px 4px 24px rgba(126, 126, 126, 0.25);
 }
 
 .newsfeed-card__thumbnail {
   flex: 0 0 40%;
-  height: 100%;
+  max-width: 40%;
   overflow: hidden;
-  background: #ffdbe7; /* nền thumbnail khi ảnh lỗi */
+  background: #ffdbe7;
+  display: block;
+  border-radius: 10px 0 0 10px;
 }
 
 .newsfeed-card__image {
@@ -36,11 +37,30 @@
   transform: scale(1.05);
 }
 
+/* Right side: content + interact bar */
+.newsfeed-card__right {
+  flex: 1 1 60%;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
 .newsfeed-card__content {
   padding: 1rem 1.25rem;
   flex: 1 1 auto;
   display: flex;
   flex-direction: column;
+  text-decoration: none;
+  color: inherit;
+}
+
+.newsfeed-card__content:hover {
+  text-decoration: none;
+}
+
+/* InteractBar container */
+.newsfeed-card__interact {
+  margin-top: auto;
 }
 
 .newsfeed-card__header {
@@ -105,7 +125,6 @@
 }
 
 .newsfeed-card__hashtag {
-  background: rgba(242, 149, 182, 0.08);
   color: #f295b6;
   padding: 0.2rem 0.5rem;
   border-radius: 999px;
