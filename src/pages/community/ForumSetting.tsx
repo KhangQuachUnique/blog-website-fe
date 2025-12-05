@@ -28,16 +28,24 @@ const ForumSetting = () => {
     async function fetchData() {
       try {
         const data = await getCommunitySettings();
-        setForm({
-          name: data.name,
-          description: data.description,
-          thumbnailUrl: data.thumbnailUrl,
-          isPublic: data.isPublic,
-          requirePostApproval: data.requirePostApproval,
-          requireMemberApproval: data.requireMemberApproval,
-        });
+        
+        if (data) {
+          // Filter out invalid blob URLs from database
+          const thumbnailUrl = data.thumbnailUrl?.startsWith('blob:') 
+            ? '' 
+            : (data.thumbnailUrl || '');
+          
+          setForm({
+            name: data.name || "",
+            description: data.description || "",
+            thumbnailUrl: thumbnailUrl,
+            isPublic: data.isPublic ?? true,
+            requirePostApproval: data.requirePostApproval ?? false,
+            requireMemberApproval: data.requireMemberApproval ?? false,
+          });
+        }
       } catch (err) {
-        console.error(err);
+        console.error('Error fetching community:', err);
         alert("Không tải được dữ liệu cộng đồng!");
       } finally {
         setLoading(false);

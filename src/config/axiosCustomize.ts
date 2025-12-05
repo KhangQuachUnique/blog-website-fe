@@ -22,9 +22,12 @@ instance.interceptors.request.use(
 // Response interceptor for handling 401 and auto-refresh
 instance.interceptors.response.use(
   (response) => {
-    if (response && response?.data && response?.data?.data)
+    // If response has nested data.data structure, unwrap it
+    if (response && response?.data && response?.data?.data) {
       return response.data.data;
-    return response;
+    }
+    // Otherwise return just response.data (the actual data)
+    return response.data;
   },
   async (error) => {
     const originalRequest = error.config;
