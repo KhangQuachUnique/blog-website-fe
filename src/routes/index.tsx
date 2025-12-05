@@ -7,7 +7,8 @@ import adminPostRoutes from "./admin/post.route";
 import adminReportRoutes from "./admin/report.route";
 import authRoutes from "./auth/auth.route";
 import manageBlogPostsRoutes from "./user/manageBlogPosts.route";
-import profileRoutes from "./profile/profile.route";
+import profileRoutes from "./user/profile.route";
+
 import newsfeedRoutes from "./newsfeed/newsfeed.route";
 import HomePage from "../pages/home/HomePage";
 
