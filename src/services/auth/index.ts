@@ -1,9 +1,9 @@
 import axiosCustomize from '../../config/axiosCustomize';
 
 const unwrap = (res: any) => {
-  if (res?.data?.data?.data) return res.data.data.data;
-  if (res?.data?.data) return res.data.data;
-  return res?.data || res;
+  // Backend wraps response in { status, statusCode, data }
+  if (res?.data) return res.data;
+  return res;
 };
 
 export interface LoginRequest {
@@ -47,6 +47,11 @@ export const logout = async (): Promise<void> => {
 
 export const getCurrentUser = async () => {
   const response = await axiosCustomize.get('/auth/me');
+  return unwrap(response);
+};
+
+export const refresh = async (): Promise<{ accessToken: string }> => {
+  const response = await axiosCustomize.post('/auth/refresh');
   return unwrap(response);
 };
 

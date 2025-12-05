@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import * as authService from '../services/auth';
+import { ACCESS_TOKEN_KEY } from '../constants/auth';
 
 interface User {
   id: number;
@@ -38,14 +39,53 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Load user on mount if token exists
+  // On mount: try to restore session from localStorage token first
   useEffect(() => {
-    const token = localStorage.getItem('accessToken');
-    if (token) {
-      loadUser();
-    } else {
-      setIsLoading(false);
-    }
+    const initAuth = async () => {
+      console.log('[AuthContext] Initializing auth...');
+      
+      // First check if we have a token in localStorage
+      const existingToken = localStorage.getItem(ACCESS_TOKEN_KEY);
+      
+      if (existingToken) {
+        console.log('[AuthContext] Found existing token, loading user...');
+        try {
+          // Try to get current user with existing token
+          const userData = await authService.getCurrentUser();
+          console.log('[AuthContext] User loaded:', userData);
+          setUser(userData);
+          setIsLoading(false);
+          return;
+        } catch (error) {
+          console.log('[AuthContext] Token expired or invalid, trying refresh...');
+          // Token expired, try refresh below
+        }
+      }
+
+      // If no token or token expired, try refresh
+      try {
+        console.log('[AuthContext] Calling /auth/refresh...');
+        const refreshResponse = await authService.refresh();
+        console.log('[AuthContext] Refresh response:', refreshResponse);
+        
+        if (refreshResponse.accessToken) {
+          localStorage.setItem(ACCESS_TOKEN_KEY, refreshResponse.accessToken);
+          console.log('[AuthContext] Token saved, loading user data...');
+          const userData = await authService.getCurrentUser();
+          console.log('[AuthContext] User data loaded:', userData);
+          setUser(userData);
+        }
+      } catch (error) {
+        // No valid refresh token - user not logged in
+        console.log('[AuthContext] Refresh failed:', error);
+        localStorage.removeItem(ACCESS_TOKEN_KEY);
+        setUser(null);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initAuth();
   }, []);
 
   const loadUser = async () => {
@@ -54,17 +94,15 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       setUser(userData);
     } catch (error) {
       // Token invalid or expired
-      localStorage.removeItem('accessToken');
+      localStorage.removeItem(ACCESS_TOKEN_KEY);
       setUser(null);
-    } finally {
-      setIsLoading(false);
     }
   };
 
   const login = async (email: string, password: string) => {
     const response = await authService.login({ email, password });
     if (response.accessToken) {
-      localStorage.setItem('accessToken', response.accessToken);
+      localStorage.setItem(ACCESS_TOKEN_KEY, response.accessToken);
     }
     if (response.user) {
       setUser(response.user);
@@ -77,7 +115,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const register = async (name: string, email: string, password: string) => {
     const response = await authService.register({ name, email, password });
     if (response.accessToken) {
-      localStorage.setItem('accessToken', response.accessToken);
+      localStorage.setItem(ACCESS_TOKEN_KEY, response.accessToken);
     }
     if (response.user) {
       setUser(response.user);
@@ -88,7 +126,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const logout = async () => {
     await authService.logout();
-    localStorage.removeItem('accessToken');
+    localStorage.removeItem(ACCESS_TOKEN_KEY);
     setUser(null);
   };
 

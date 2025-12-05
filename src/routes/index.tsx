@@ -9,8 +9,8 @@ import authRoutes from "./auth/auth.route";
 import manageBlogPostsRoutes from "./user/manageBlogPosts.route";
 import profileRoutes from "./user/profile.route";
 
-import newsfeedRoutes from "./newsfeed/newsfeed.route";
 import HomePage from "../pages/home/HomePage";
+import newsfeedRoutes from "./user/newsfeed.route";
 
 export const router = createBrowserRouter([
   {

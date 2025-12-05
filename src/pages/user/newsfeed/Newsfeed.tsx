@@ -1,10 +1,11 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
-import NewsfeedList from "../../components/newsfeedList/NewsfeedList";
-import { getNewsfeed } from "../../services/newsfeed/newsfeed_api";
+import NewsfeedList from "../../../components/newsfeedList/NewsfeedList";
+import { getNewsfeed } from "../../../services/user/newsfeed_api";
 import { useEffect, useRef } from "react";
 import { Loader2 } from "lucide-react";
 import { useCallback } from "react";
-import "../../styles/newsfeed/Newsfeed.css";
+// import "../../styles/newsfeed/Newsfeed.css";
+
 
 export default function Newsfeed() {
   const {
@@ -74,9 +75,9 @@ export default function Newsfeed() {
   }
 
   return (
-    <div className=" mx-auto px-[90px] py-8">
-      <h1 className="text-3xl text-[#F295B6] font-bold mb-8 ">Newsfeed</h1>
-
+    <div className=" mx-auto px-4 py-8">
+      <h1 className="text-3xl text-[#F295B6] font-bold mb-8 text-center">Newsfeed</h1>
+      
       <NewsfeedList posts={posts} loadMoreRef={lastPostRef} />
 
       {isFetchingNextPage && (

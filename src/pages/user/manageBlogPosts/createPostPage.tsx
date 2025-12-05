@@ -1,4 +1,4 @@
-import EditPostForm from "../../../features/user/manageBlogPosts/components/editPostForm";
+import EditPostForm from "../../../features/user/manageBlogPosts/editPostForm";
 import { EPostType, type ICreateBlogPostDto } from "../../../types/post";
 import { useCreatePost } from "../../../hooks/usePost";
 
