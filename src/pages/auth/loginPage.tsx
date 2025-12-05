@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
-import axios from "../../config/axiosCustomize";
+import { useAuth } from "../../contexts/AuthContext";
 
 // decorative GIF: try local `public/assets/auth-decor.gif`, fallback to external
 const LOCAL_GIF = "/assets/auth-decor.gif";
@@ -8,10 +8,12 @@ const FALLBACK_GIF = "https://media.giphy.com/media/3oEjI6SIIHBdRxXI40/giphy.gif
 
 const LoginPage = () => {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [gifSrc, setGifSrc] = useState(LOCAL_GIF);
 
   const validate = () => {
     if (!email) {
@@ -30,12 +32,9 @@ const LoginPage = () => {
     e.preventDefault();
     if (!validate()) return;
     setLoading(true);
+    setError(null);
     try {
-      const res = await axios.post("/auth/login", { email, password });
-      // store token if returned
-      if (res?.data?.accessToken) {
-        localStorage.setItem("accessToken", res.data.accessToken);
-      }
+      await login(email, password);
       navigate("/", { replace: true });
     } catch (err: any) {
       setError(
@@ -45,8 +44,6 @@ const LoginPage = () => {
       setLoading(false);
     }
   };
-
-  const [gifSrc, setGifSrc] = useState(LOCAL_GIF);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-white px-4">

@@ -10,6 +10,8 @@ import communityRoutes from "./community.route";
 
 import manageBlogPostsRoutes from "./user/manageBlogPosts.route";
 import newsfeedRoutes from "./newsfeed/newsfeed.route";
+import HomePage from "../pages/home/HomePage";
+
 export const router = createBrowserRouter([
   {
     path: "/",
@@ -17,7 +19,7 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <div>Home Page</div>,
+        element: <HomePage />,
       },
       {
         path: "saved",
