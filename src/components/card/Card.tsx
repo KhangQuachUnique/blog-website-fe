@@ -13,9 +13,11 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
     const diff = Math.floor((now.getTime() - date.getTime()) / 1000);
 
     if (diff < 60) return "vừa xong";
+    if (diff < 60) return "vừa xong";
     if (diff < 3600) return `${Math.floor(diff / 60)} phút trước`;
     if (diff < 86400) return `${Math.floor(diff / 3600)} giờ trước`;
     if (diff < 604800) return `${Math.floor(diff / 86400)} ngày trước`;
+    return date.toLocaleDateString("vi-VN");
     return date.toLocaleDateString("vi-VN");
   };
 
@@ -48,8 +50,15 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
                 <span className="newsfeed-card__username">
                   {post.author.username}
                 </span>
+                <span className="newsfeed-card__username">
+                  {post.author.username}
+                </span>
                 {post.community && (
                   <span className="newsfeed-card__community">
+                    trong{" "}
+                    {typeof post.community === "string"
+                      ? post.community
+                      : post.community.name}
                     trong{" "}
                     {typeof post.community === "string"
                       ? post.community
@@ -61,11 +70,16 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
             <time className="newsfeed-card__time">
               {formatDate(post.createdAt)}
             </time>
+            <time className="newsfeed-card__time">
+              {formatDate(post.createdAt)}
+            </time>
           </div>
           {post.hashtags && post.hashtags.length > 0 && (
             <div className="newsfeed-card__hashtags">
               {post.hashtags.map((h) => (
-                <span key={h.id} className="newsfeed-card__hashtag">#{h.name}</span>
+                <span key={h.id} className="newsfeed-card__hashtag">
+                  #{h.name}
+                </span>
               ))}
             </div>
           )}
