@@ -31,6 +31,7 @@ const Card = ({ post }: { post: IPostItem }) => {
           </div>
         )}
         <div className="newsfeed-card__content">
+          <h2 className="newsfeed-card__title">{post.title}</h2>
           <div className="newsfeed-card__header">
             <div className="newsfeed-card__author">
               <img
@@ -49,7 +50,6 @@ const Card = ({ post }: { post: IPostItem }) => {
             </div>
             <time className="newsfeed-card__time">{formatDate(post.createdAt)}</time>
           </div>
-          <h2 className="newsfeed-card__title">{post.title}</h2>
           {post.hashtags && post.hashtags.length > 0 && (
             <div className="newsfeed-card__hashtags">
               {post.hashtags.map((h) => (
