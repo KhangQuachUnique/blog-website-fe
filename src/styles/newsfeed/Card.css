@@ -2,7 +2,7 @@
   background: hsl(var(--card));
   border: 1px solid #ffe7f0;
   border-radius: 10px;
-  overflow: hidden;
+  overflow: visible;
   transition: all 0.3s ease;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   display: flex;
@@ -22,6 +22,7 @@
   overflow: hidden;
   background: #ffdbe7;
   display: block;
+  border-radius: 10px 0 0 10px;
 }
 
 .newsfeed-card__image {
