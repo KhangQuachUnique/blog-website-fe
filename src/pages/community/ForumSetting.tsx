@@ -9,9 +9,9 @@ import {
   getCommunitySettings,
   updateCommunitySettings,
 } from "./community.api";
+import { useGetCommunitySettings } from "../../hooks/useCommunity";
 
 const ForumSetting = () => {
-  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
   const [form, setForm] = useState({
@@ -23,37 +23,20 @@ const ForumSetting = () => {
     requireMemberApproval: false,
   });
 
-  // Load community settings
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const data = await getCommunitySettings();
-        
-        if (data) {
-          // Filter out invalid blob URLs from database
-          const thumbnailUrl = data.thumbnailUrl?.startsWith('blob:') 
-            ? '' 
-            : (data.thumbnailUrl || '');
-          
-          setForm({
-            name: data.name || "",
-            description: data.description || "",
-            thumbnailUrl: thumbnailUrl,
-            isPublic: data.isPublic ?? true,
-            requirePostApproval: data.requirePostApproval ?? false,
-            requireMemberApproval: data.requireMemberApproval ?? false,
-          });
-        }
-      } catch (err) {
-        console.error('Error fetching community:', err);
-        alert("Không tải được dữ liệu cộng đồng!");
-      } finally {
-        setLoading(false);
-      }
-    }
+  const { data, isLoading, isSuccess, isError } = useGetCommunitySettings(1);
 
-    fetchData();
-  }, []);
+  useEffect(() => {
+    if (isSuccess && data) {
+      setForm({
+        name: data.name,
+        description: data.description,
+        thumbnailUrl: data.thumbnailUrl ? data.thumbnailUrl : "",
+        isPublic: data.isPublic,
+        requirePostApproval: data.requirePostApproval,
+        requireMemberApproval: data.requireMemberApproval,
+      });
+    }
+  }, [isSuccess, data]);
 
   const updateField = (field: string, value: any) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -72,7 +55,9 @@ const ForumSetting = () => {
     }
   };
 
-  if (loading) return <div>Đang tải dữ liệu...</div>;
+  if (isLoading) return <div>Đang tải dữ liệu...</div>;
+
+  if (isError) return <div>Lỗi khi tải dữ liệu.</div>;
 
   return (
     <div>

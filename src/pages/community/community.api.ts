@@ -5,7 +5,9 @@ const COMMUNITY_ID = 1; // tạm thời fix id
 
 // ====== Settings (giữ như cũ) ======
 export async function getCommunitySettings() {
-  return await axios.get(`/communities/${COMMUNITY_ID}`);
+  const response = await axios.get(`/communities/${COMMUNITY_ID}`);
+  console.log("getCommunitySettings response:", response);
+  return response;
 }
 
 export async function updateCommunitySettings(payload: any) {
