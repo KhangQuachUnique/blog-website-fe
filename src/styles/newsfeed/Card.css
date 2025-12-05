@@ -1,21 +1,24 @@
 .newsfeed-card {
+  height: 300px;
   background: hsl(var(--card));
   border: 1px solid #ffe7f0; /* màu nhạt làm viền */
-  border-radius: 15px;
+  border-radius: 10px;
   overflow: hidden;
   transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  display: block;
+  /* box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); */
+  display: flex;
+  flex-direction: row;
 }
 
 .newsfeed-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(242, 149, 182, 0.25); /* hồng nhẹ #F295B6 */
+  box-shadow: 4px 4px 24px rgba(126, 126, 126, 0.25); /* hồng nhẹ #F295B6 */
 }
 
 .newsfeed-card__thumbnail {
-  width: 100%;
-  height: 200px;
+  width: 280px;
+  min-width: 280px;
+  height: 100%;
   overflow: hidden;
   background: #ffdbe7; /* nền thumbnail khi ảnh lỗi */
 }
@@ -33,13 +36,16 @@
 
 .newsfeed-card__content {
   padding: 1.25rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 .newsfeed-card__header {
-  /* display: flex; */
-  justify-content: space-between;
+  display: flex;
+  gap: 2rem;
   align-items: center;
-  margin-bottom: 1rem;
 }
 
 .newsfeed-card__author {
@@ -82,7 +88,6 @@
   font-size: 1.125rem;
   font-weight: 700;
   color: hsl(var(--foreground));
-  margin-bottom: 1rem;
   line-height: 1.4;
   display: -webkit-box;
   -webkit-line-clamp: 3;
@@ -91,7 +96,6 @@
 }
 
 .newsfeed-card__hashtags {
-  margin-bottom: 0.75rem;
   display: flex;
   gap: 0.5rem;
   flex-wrap: wrap;
@@ -185,8 +189,15 @@
 
 /* Responsive */
 @media (max-width: 768px) {
+  .newsfeed-card {
+    flex-direction: column;
+  }
+
   .newsfeed-card__thumbnail {
+    width: 100%;
+    min-width: unset;
     height: 180px;
+    min-height: unset;
   }
 
   .newsfeed-card__content {
