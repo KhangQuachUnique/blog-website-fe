@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { EBlockType } from "../../../types/block";
 import type { ICreateBlockDto } from "../../../types/block";
 import type {
@@ -292,6 +292,64 @@ export const usePostForm = (options: UsePostFormOptions = {}) => {
   );
 
   /**
+   * FormData để upload ảnh (nếu có)
+   * Sử dụng useRef để giữ FormData và mảng keys qua các lần render
+   * - imageFormRef: chứa các file với field name là "files"
+   * - imageKeysRef: mảng các key tương ứng ("thumbnail" hoặc block id)
+   */
+  const imageFormRef = useRef(new FormData());
+  const imageKeysRef = useRef<string[]>([]);
+
+  const handleAppendImageForm = useCallback((key: string, file: File) => {
+    // Tìm index của key cũ nếu có
+    const existingIndex = imageKeysRef.current.indexOf(key);
+
+    if (existingIndex !== -1) {
+      // Nếu key đã tồn tại, cần rebuild FormData vì không thể update file tại index cụ thể
+      const files = imageFormRef.current.getAll("files") as File[];
+      files[existingIndex] = file;
+
+      // Rebuild FormData
+      imageFormRef.current = new FormData();
+      files.forEach((f) => imageFormRef.current.append("files", f));
+    } else {
+      // Thêm file mới
+      imageFormRef.current.append("files", file);
+      imageKeysRef.current.push(key);
+    }
+  }, []);
+
+  const handleRemoveImageForm = useCallback((key: string) => {
+    const index = imageKeysRef.current.indexOf(key);
+    if (index !== -1) {
+      // Rebuild FormData mà không có file bị xóa
+      const files = imageFormRef.current.getAll("files") as File[];
+      files.splice(index, 1);
+      imageKeysRef.current.splice(index, 1);
+
+      imageFormRef.current = new FormData();
+      files.forEach((f) => imageFormRef.current.append("files", f));
+    }
+  }, []);
+
+  const getImageForm = useCallback(() => {
+    return imageFormRef.current;
+  }, []);
+
+  const getImageKeys = useCallback(() => {
+    return imageKeysRef.current;
+  }, []);
+
+  /**
+   * Reset FormData sau khi upload thành công
+   * Gọi hàm này sau khi publish/update thành công để tránh upload trùng
+   */
+  const clearImageForm = useCallback(() => {
+    imageFormRef.current = new FormData();
+    imageKeysRef.current = [];
+  }, []);
+
+  /**
    * Map blocks và layout thành ICreateBlockDto[]
    */
   const mapBlocksToDto = useCallback((): ICreateBlockDto[] => {
@@ -401,6 +459,13 @@ export const usePostForm = (options: UsePostFormOptions = {}) => {
     handleDeleteBlock,
     handleAddBlock,
     handleGridDrop,
+
+    // Image FormData
+    getImageForm,
+    getImageKeys,
+    handleAppendImageForm,
+    handleRemoveImageForm,
+    clearImageForm,
 
     // DTO Getters
     getCreateDto,

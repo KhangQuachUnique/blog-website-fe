@@ -11,6 +11,7 @@ import ConfigDialog from "./configDialog";
 import { EBlockType } from "../../../../types/block";
 import { usePostForm, type LayoutItem } from "../usePostForm";
 import type { IPostResponseDto, EPostType } from "../../../../types/post";
+import { uploadMultipleFiles } from "../../../../services/upload/uploadImageService";
 
 export interface EditPostFormProps {
   mode: "create" | "update";
@@ -57,6 +58,12 @@ const EditPostForm = ({
     handleDeleteBlock,
     handleAddBlock,
     handleGridDrop,
+    // Image FormData
+    getImageForm,
+    getImageKeys,
+    handleAppendImageForm,
+    handleRemoveImageForm,
+    clearImageForm,
     // Config
     thumbnailUrl,
     isPublic,
@@ -67,11 +74,11 @@ const EditPostForm = ({
     removeHashtag,
     // DTO Getters
     getCreateDto,
-    getUpdateDto,
   } = usePostForm({ post });
 
   const [isCtrlPressed, setIsCtrlPressed] = useState(false);
   const [isConfigDialogOpen, setIsConfigDialogOpen] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
 
   // Track Ctrl key press
   useEffect(() => {
@@ -100,24 +107,104 @@ const EditPostForm = ({
     setIsConfigDialogOpen(true);
   };
 
-  const handlePublish = () => {
+  /**
+   * Kiểm tra URL có phải là blob URL (ảnh local chưa upload) hay không
+   */
+  const isBlobUrl = (url: string | undefined): boolean => {
+    return !!url && url.startsWith("blob:");
+  };
+
+  const handlePublish = async () => {
+    // Tránh click nhiều lần
+    if (isPublishing) return;
+
     if (onPublish) {
-      if (mode === "create") {
-        const dto = getCreateDto(
-          authorId,
-          postType,
-          communityId,
-          originalPostId
-        );
-        onPublish(dto);
-      } else {
-        const dto = getUpdateDto(
-          post?.id ?? 0,
-          postType,
-          communityId,
-          originalPostId
-        );
-        onPublish(dto);
+      setIsPublishing(true);
+
+      try {
+        // Upload images và lấy URLs từ S3
+        const imageKeys = getImageKeys();
+        let imageUrls: Record<string, string> = {};
+
+        if (imageKeys.length > 0) {
+          imageUrls = await uploadMultipleFiles(getImageForm(), imageKeys);
+          // Clear FormData sau khi upload thành công để tránh upload trùng
+          clearImageForm();
+        }
+
+        // Lấy thumbnail URL:
+        // - Nếu có URL mới upload -> dùng URL mới
+        // - Nếu thumbnail hiện tại là blob URL -> undefined (không gửi blob lên server)
+        // - Nếu thumbnail hiện tại là S3 URL -> giữ nguyên
+        let finalThumbnailUrl: string | undefined;
+        if (imageUrls["thumbnail"]) {
+          finalThumbnailUrl = imageUrls["thumbnail"];
+        } else if (thumbnailUrl && !isBlobUrl(thumbnailUrl)) {
+          finalThumbnailUrl = thumbnailUrl;
+        } else {
+          finalThumbnailUrl = undefined;
+        }
+
+        // Tạo blocks DTO với URL đã được cập nhật
+        // - Nếu block có URL mới upload -> dùng URL mới
+        // - Nếu block content là S3 URL (không phải blob) -> giữ nguyên
+        // - Nếu block content là blob URL nhưng không có trong imageUrls -> bỏ qua (content = "")
+        const blocksDto = blocks.map((block) => {
+          const layoutItem = layout.find((item) => item.i === block.id);
+
+          let content = block.content || "";
+          if (block.type === EBlockType.IMAGE) {
+            if (imageUrls[block.id]) {
+              // Có URL mới upload
+              content = imageUrls[block.id];
+            } else if (isBlobUrl(block.content)) {
+              // Blob URL nhưng chưa upload -> không gửi blob lên server
+              content = "";
+            }
+            // Nếu không phải blob URL -> giữ nguyên S3 URL cũ
+          }
+
+          return {
+            x: layoutItem?.x ?? 0,
+            y: layoutItem?.y ?? 0,
+            width: layoutItem?.w ?? 8,
+            height: layoutItem?.h ?? 6,
+            type: block.type,
+            content,
+          };
+        });
+
+        if (mode === "create") {
+          const dto = {
+            title,
+            shortDescription,
+            thumbnailUrl: finalThumbnailUrl,
+            isPublic,
+            type: postType,
+            authorId,
+            communityId,
+            originalPostId,
+            blocks: blocksDto,
+            hashtags,
+          };
+          onPublish(dto);
+        } else {
+          // Update không cần gửi type, communityId, originalPostId
+          const dto = {
+            id: post?.id ?? 0,
+            title,
+            shortDescription,
+            thumbnailUrl: finalThumbnailUrl,
+            isPublic,
+            blocks: blocksDto,
+            hashtags,
+          };
+          onPublish(dto);
+        }
+      } catch (error) {
+        console.error("Error uploading images:", error);
+      } finally {
+        setIsPublishing(false);
       }
     }
     setIsConfigDialogOpen(false);
@@ -202,6 +289,8 @@ const EditPostForm = ({
                   imageUrl={block.content}
                   caption={block.caption}
                   objectFit={block.objectFit}
+                  handleAppendImageForm={handleAppendImageForm}
+                  handleRemoveImageForm={handleRemoveImageForm}
                   onImageChange={(id, url) => handleBlockContentChange(id, url)}
                   onCaptionChange={(id, caption) =>
                     handleBlockCaptionChange(id, caption)
@@ -265,8 +354,9 @@ const EditPostForm = ({
 
       <ConfigDialog
         open={isConfigDialogOpen}
-        onClose={() => setIsConfigDialogOpen(false)}
+        onClose={() => !isPublishing && setIsConfigDialogOpen(false)}
         onPublish={handlePublish}
+        isLoading={isPublishing}
         thumbnail={thumbnailUrl}
         isPublic={isPublic}
         hashtags={hashtags}
@@ -274,6 +364,8 @@ const EditPostForm = ({
         onIsPublicChange={handleIsPublicChange}
         onAddHashtag={addHashtag}
         onRemoveHashtag={removeHashtag}
+        onAppendImageForm={handleAppendImageForm}
+        onRemoveImageForm={handleRemoveImageForm}
         confirmButtonText={mode === "create" ? "Đăng bài" : "Cập nhật"}
       />
     </div>

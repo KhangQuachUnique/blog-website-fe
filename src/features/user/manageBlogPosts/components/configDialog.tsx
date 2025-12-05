@@ -31,11 +31,15 @@ interface ConfigDialogProps {
   onClose: () => void;
   onPublish: () => void;
   confirmButtonText?: string;
+  isLoading?: boolean;
   // Config values
   thumbnail: string | null;
   isPublic: boolean;
   hashtags: string[];
+  imageForm?: FormData;
   // Config handlers
+  onAppendImageForm?: (key: string, file: File) => void;
+  onRemoveImageForm?: (key: string) => void;
   onThumbnailChange: (url: string | null) => void;
   onIsPublicChange: (value: boolean) => void;
   onAddHashtag: (tag: string) => void;
@@ -47,6 +51,7 @@ const ConfigDialog: FC<ConfigDialogProps> = ({
   onClose,
   onPublish,
   confirmButtonText,
+  isLoading = false,
   thumbnail,
   isPublic,
   hashtags,
@@ -54,6 +59,8 @@ const ConfigDialog: FC<ConfigDialogProps> = ({
   onIsPublicChange,
   onAddHashtag,
   onRemoveHashtag,
+  onAppendImageForm,
+  onRemoveImageForm,
 }) => {
   const [hashtagInput, setHashtagInput] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -80,11 +87,11 @@ const ConfigDialog: FC<ConfigDialogProps> = ({
   const handleThumbnailUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        onThumbnailChange(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+      const url = URL.createObjectURL(file);
+      onThumbnailChange(url);
+      if (onAppendImageForm) {
+        onAppendImageForm("thumbnail", file);
+      }
     }
   };
 
@@ -92,6 +99,9 @@ const ConfigDialog: FC<ConfigDialogProps> = ({
     onThumbnailChange(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
+      if (onRemoveImageForm) {
+        onRemoveImageForm("thumbnail");
+      }
     }
   };
 
@@ -281,6 +291,7 @@ const ConfigDialog: FC<ConfigDialogProps> = ({
         <CustomButton
           variant="outline"
           onClick={onClose}
+          disabled={isLoading}
           style={{
             color: "#6B7280",
             border: "2px solid #E5E7EB",
@@ -291,13 +302,14 @@ const ConfigDialog: FC<ConfigDialogProps> = ({
         </CustomButton>
         <CustomButton
           onClick={onPublish}
+          disabled={isLoading}
           style={{
-            backgroundColor: "#F295B6",
+            backgroundColor: isLoading ? "#D1D5DB" : "#F295B6",
             color: "white",
             fontWeight: "600",
           }}
         >
-          {confirmButtonText || "Đăng bài"}
+          {isLoading ? "Đang xử lý..." : confirmButtonText || "Đăng bài"}
         </CustomButton>
       </DialogActions>
     </Dialog>
