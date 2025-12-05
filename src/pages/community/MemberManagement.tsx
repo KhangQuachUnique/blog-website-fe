@@ -1,79 +1,102 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import {
+  getCommunityMembers,
+  updateMemberRole,
+  updateMemberStatus,
+  deleteMember,
+  // ApiRole,
+  // ApiStatus,
+  // ApiCommunityMember,
+} from "./community.api"; // chỉnh lại path đúng với dự án của bạn
 
-type Role = "admin" | "moderator" | "member";
-type Status = "active" | "pending";
+import type {
+  ApiRole,
+  ApiStatus,
+  ApiCommunityMember,
+} from "./community.api";
+
+type Role = ApiRole;
+type Status = ApiStatus;
+type Filter = "all" | Role | "PENDING";
 
 interface Member {
-  id: number;
-  name: string;
+  id: number;       // id của community_members
+  name: string;     // user.username
   avatar: string;
   role: Role;
-  joinDate: string;
+  joinDate: string; // format yyyy-mm-dd
   status: Status;
 }
 
-const mockMembers: Member[] = [
-  {
-    id: 1,
-    name: "Nguyễn Văn A",
-    avatar: "https://i.pravatar.cc/60?img=1",
-    role: "admin",
-    joinDate: "2024-12-18",
-    status: "active",
-  },
-  {
-    id: 2,
-    name: "Trần Thị B",
-    avatar: "https://i.pravatar.cc/60?img=2",
-    role: "moderator",
-    joinDate: "2024-12-20",
-    status: "active",
-  },
-  {
-    id: 3,
-    name: "Đặng Minh C",
-    avatar: "https://i.pravatar.cc/60?img=3",
-    role: "member",
-    joinDate: "2024-12-25",
-    status: "active",
-  },
-  {
-    id: 4,
-    name: "Phạm Thị D",
-    avatar: "https://i.pravatar.cc/60?img=4",
-    role: "member",
-    joinDate: "2025-01-10",
-    status: "pending",
-  },
-];
-
 const MemberManagement = () => {
-  const [members, setMembers] = useState<Member[]>(mockMembers);
-  const [filter, setFilter] = useState<"all" | Role | "pending">("all");
+  const [members, setMembers] = useState<Member[]>([]);
+  const [filter, setFilter] = useState<Filter>("all");
 
+  const [loading, setLoading] = useState<boolean>(true);
   const [memberToKick, setMemberToKick] = useState<Member | null>(null);
+
+  // Map từ API sang UI
+  const mapApiToMember = (m: ApiCommunityMember): Member => ({
+    id: m.id,
+    name: m.user.username,
+    avatar:
+      m.user.avatarUrl ||
+      "https://i.pravatar.cc/60?img=1", // fallback nhẹ nhàng
+    role: m.role,
+    joinDate: m.joinedAt?.slice(0, 10) || "",
+    status: m.status,
+  });
+
+  const fetchMembers = async () => {
+    try {
+      setLoading(true);
+      const data = await getCommunityMembers();
+      setMembers(data.map(mapApiToMember));
+    } catch (err) {
+      console.error(err);
+      alert("Không tải được danh sách thành viên!");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchMembers();
+  }, []);
 
   const filteredMembers =
     filter === "all"
       ? members
-      : filter === "pending"
-      ? members.filter((m) => m.status === "pending")
-      : members.filter((m) => m.role === filter && m.status === "active");
+      : filter === "PENDING"
+      ? members.filter((m) => m.status === "PENDING")
+      : members.filter((m) => m.role === filter && m.status === "ACTIVE");
 
-  const handleApprove = (id: number) => {
-    setMembers((prev) =>
-      prev.map((m) =>
-        m.id === id ? { ...m, status: "active" } : m
-      )
-    );
+  const handleApprove = async (id: number) => {
+    try {
+      await updateMemberStatus(id, "ACTIVE");
+      setMembers((prev) =>
+        prev.map((m) =>
+          m.id === id ? { ...m, status: "ACTIVE" } : m
+        )
+      );
+    } catch (err) {
+      console.error(err);
+      alert("Không duyệt được thành viên!");
+    }
   };
 
-  const handleChangeRole = (id: number, newRole: Role) => {
-    setMembers((prev) =>
-      prev.map((m) =>
-        m.id === id ? { ...m, role: newRole } : m
-      )
-    );
+  const handleChangeRole = async (id: number, newRole: Role) => {
+    try {
+      await updateMemberRole(id, newRole);
+      setMembers((prev) =>
+        prev.map((m) =>
+          m.id === id ? { ...m, role: newRole } : m
+        )
+      );
+    } catch (err) {
+      console.error(err);
+      alert("Không cập nhật được vai trò!");
+    }
   };
 
   const handleOpenKick = (member: Member) => {
@@ -84,10 +107,16 @@ const MemberManagement = () => {
     setMemberToKick(null);
   };
 
-  const handleConfirmKick = () => {
+  const handleConfirmKick = async () => {
     if (!memberToKick) return;
-    setMembers((prev) => prev.filter((m) => m.id !== memberToKick.id));
-    setMemberToKick(null);
+    try {
+      await deleteMember(memberToKick.id);
+      setMembers((prev) => prev.filter((m) => m.id !== memberToKick.id));
+      setMemberToKick(null);
+    } catch (err) {
+      console.error(err);
+      alert("Kick thành viên thất bại!");
+    }
   };
 
   return (
@@ -100,118 +129,131 @@ const MemberManagement = () => {
       {/* Tabs filter */}
       <div className="community-tabs" style={{ marginBottom: 24 }}>
         <button
-          className={`community-tab ${filter === "all" ? "community-tab-active" : ""}`}
+          className={`community-tab ${
+            filter === "all" ? "community-tab-active" : ""
+          }`}
           onClick={() => setFilter("all")}
         >
           Tất cả
         </button>
 
         <button
-          className={`community-tab ${filter === "admin" ? "community-tab-active" : ""}`}
-          onClick={() => setFilter("admin")}
+          className={`community-tab ${
+            filter === "ADMIN" ? "community-tab-active" : ""
+          }`}
+          onClick={() => setFilter("ADMIN")}
         >
           Admin
         </button>
 
         <button
-          className={`community-tab ${filter === "moderator" ? "community-tab-active" : ""}`}
-          onClick={() => setFilter("moderator")}
+          className={`community-tab ${
+            filter === "MODERATOR" ? "community-tab-active" : ""
+          }`}
+          onClick={() => setFilter("MODERATOR")}
         >
           Mod
         </button>
 
         <button
-          className={`community-tab ${filter === "member" ? "community-tab-active" : ""}`}
-          onClick={() => setFilter("member")}
+          className={`community-tab ${
+            filter === "MEMBER" ? "community-tab-active" : ""
+          }`}
+          onClick={() => setFilter("MEMBER")}
         >
           Thành viên
         </button>
 
         <button
-          className={`community-tab ${filter === "pending" ? "community-tab-active" : ""}`}
-          onClick={() => setFilter("pending")}
+          className={`community-tab ${
+            filter === "PENDING" ? "community-tab-active" : ""
+          }`}
+          onClick={() => setFilter("PENDING")}
         >
           Chờ duyệt
         </button>
       </div>
 
+      {loading && <p style={{ color: "#888" }}>Đang tải danh sách...</p>}
+
       {/* Member list */}
-      {filteredMembers.map((member) => (
-        <div
-          key={member.id}
-          className="community-card"
-          style={{ display: "flex", alignItems: "center", gap: 16 }}
-        >
-          <img
-            src={member.avatar}
-            alt=""
-            style={{
-              width: 50,
-              height: 50,
-              borderRadius: "50%",
-              objectFit: "cover",
-            }}
-          />
-
-          <div style={{ flex: 1 }}>
-            <div style={{ fontWeight: 600 }}>{member.name}</div>
-            <div style={{ fontSize: 13, color: "#666" }}>
-              {member.joinDate}
-              {member.status === "pending" && " · Chờ duyệt"}
-            </div>
-          </div>
-
-          {/* Role */}
-          {member.status === "active" && (
-            <select
-              value={member.role}
-              onChange={(e) =>
-                handleChangeRole(member.id, e.target.value as Role)
-              }
+      {!loading &&
+        filteredMembers.map((member) => (
+          <div
+            key={member.id}
+            className="community-card"
+            style={{ display: "flex", alignItems: "center", gap: 16 }}
+          >
+            <img
+              src={member.avatar}
+              alt=""
               style={{
-                padding: "6px 10px",
-                borderRadius: 12,
-                border: "1px solid #f7bad0",
-                background: "#fff",
-                cursor: "pointer",
+                width: 50,
+                height: 50,
+                borderRadius: "50%",
+                objectFit: "cover",
               }}
-            >
-              <option value="admin">Admin</option>
-              <option value="moderator">Moderator</option>
-              <option value="member">Member</option>
-            </select>
-          )}
+            />
 
-          {/* Buttons */}
-          <div style={{ display: "flex", gap: 10 }}>
-            {member.status === "pending" && (
-              <button
-                className="community-save-btn"
-                style={{ padding: "6px 14px" }}
-                onClick={() => handleApprove(member.id)}
+            <div style={{ flex: 1 }}>
+              <div style={{ fontWeight: 600 }}>{member.name}</div>
+              <div style={{ fontSize: 13, color: "#666" }}>
+                {member.joinDate}
+                {member.status === "PENDING" && " · Chờ duyệt"}
+              </div>
+            </div>
+
+            {/* Role */}
+            {member.status === "ACTIVE" && (
+              <select
+                value={member.role}
+                onChange={(e) =>
+                  handleChangeRole(member.id, e.target.value as Role)
+                }
+                style={{
+                  padding: "6px 10px",
+                  borderRadius: 12,
+                  border: "1px solid #f7bad0",
+                  background: "#fff",
+                  cursor: "pointer",
+                }}
               >
-                Duyệt
-              </button>
+                <option value="ADMIN">Admin</option>
+                <option value="MODERATOR">Moderator</option>
+                <option value="MEMBER">Member</option>
+              </select>
             )}
 
-            <button
-              style={{
-                padding: "6px 14px",
-                background: "#ff5370",
-                color: "white",
-                border: "none",
-                borderRadius: 999,
-                cursor: "pointer",
-              }}
-              onClick={() => handleOpenKick(member)}
-            >
-              Kick
-            </button>
-          </div>
-        </div>
-      ))}
+            {/* Buttons */}
+            <div style={{ display: "flex", gap: 10 }}>
+              {member.status === "PENDING" && (
+                <button
+                  className="community-save-btn"
+                  style={{ padding: "6px 14px" }}
+                  onClick={() => handleApprove(member.id)}
+                >
+                  Duyệt
+                </button>
+              )}
 
-      {filteredMembers.length === 0 && (
+              <button
+                style={{
+                  padding: "6px 14px",
+                  background: "#ff5370",
+                  color: "white",
+                  border: "none",
+                  borderRadius: 999,
+                  cursor: "pointer",
+                }}
+                onClick={() => handleOpenKick(member)}
+              >
+                Kick
+              </button>
+            </div>
+          </div>
+        ))}
+
+      {!loading && filteredMembers.length === 0 && (
         <p style={{ color: "#888", marginTop: 20 }}>
           Không có thành viên nào trong mục này.
         </p>
@@ -224,7 +266,10 @@ const MemberManagement = () => {
             className="community-modal community-modal-small"
             onClick={(e) => e.stopPropagation()}
           >
-            <button className="community-modal-close" onClick={handleCloseKick}>
+            <button
+              className="community-modal-close"
+              onClick={handleCloseKick}
+            >
               ×
             </button>
 
@@ -235,7 +280,9 @@ const MemberManagement = () => {
               <strong>{memberToKick.name}</strong> khỏi cộng đồng không?
             </p>
 
-            <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
+            <div
+              style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}
+            >
               <button
                 style={{
                   padding: "8px 16px",
