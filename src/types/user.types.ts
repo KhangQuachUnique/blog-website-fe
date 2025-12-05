@@ -1,64 +1,57 @@
 export interface User {
-  id: string;
+  id: number;
   username: string;
-  email: string;
-  phone?: string;
-  firstName?: string;
-  lastName?: string;
-  fullName?: string;
+  email?: string; // Optional: chỉ hiện nếu user cho phép
+  phoneNumber?: string; // Optional: chỉ hiện nếu user cho phép
   bio?: string;
-  avatar?: string;
+  avatarUrl?: string;
+  dob?: string; // Date of birth
+  gender?: 'MALE' | 'FEMALE' | 'OTHER';
   isPrivate: boolean;
-  isBlocked?: boolean;
-  createdAt: string;
-  updatedAt: string;
+  joinAt: string;
 }
 
 export interface Community {
-  id: string;
+  id: number;
   name: string;
-  description?: string;
-  avatar?: string;
-  memberCount: number;
-  createdAt: string;
+  thumbnailUrl?: string;
 }
 
 export interface BlogPost {
-  id: string;
+  id: number;
   title: string;
-  content: string;
-  excerpt?: string;
-  coverImage?: string;
-  authorId: string;
-  author: User;
-  status: 'draft' | 'published' | 'private';
-  viewCount: number;
-  likeCount: number;
-  commentCount: number;
+  thumbnailUrl?: string;
+  isPublic: boolean;
   createdAt: string;
-  updatedAt: string;
+  upVotes: number;
+  downVotes: number;
 }
 
+// Response từ API GET /users/:id/profile
 export interface UserProfile {
-  user: User;
+  id: number;
+  username: string;
+  email?: string;
+  phoneNumber?: string;
+  bio?: string;
+  avatarUrl?: string;
+  dob?: string;
+  gender?: 'MALE' | 'FEMALE' | 'OTHER';
+  isPrivate: boolean;
+  joinAt: string;
   communities: Community[];
-  followers: User[];
-  following: User[];
-  posts: BlogPost[];
-  followerCount: number;
+  followersCount: number;
   followingCount: number;
-  postCount: number;
+  posts: BlogPost[];
 }
 
 export interface UpdateProfileData {
   username?: string;
-  firstName?: string;
-  lastName?: string;
-  email?: string;
-  phone?: string;
   bio?: string;
-  avatar?: string;
-  isPrivate?: boolean;
+  avatarUrl?: string;
+  phoneNumber?: string;
+  dob?: string;
+  gender?: 'MALE' | 'FEMALE' | 'OTHER';
 }
 
 export interface ChangePasswordData {
@@ -68,9 +61,16 @@ export interface ChangePasswordData {
 }
 
 export interface BlockedUser {
-  id: string;
+  id: number;
   username: string;
-  fullName?: string;
-  avatar?: string;
-  blockedAt: string;
+  avatarUrl?: string;
+}
+
+export interface ChangeEmailRequest {
+  newEmail: string;
+}
+
+export interface VerifyEmailRequest {
+  newEmail: string;
+  verificationCode: string;
 }

@@ -1,4 +1,4 @@
-import type { User } from "../../../../types/user.types";
+import type { User } from "../../types/user.types";
 
 interface ProfileHeaderProps {
   user: User;
@@ -23,8 +23,8 @@ const ProfileHeader = ({
         {/* Avatar */}
         <div className="flex-shrink-0">
           <img
-            src={user.avatar || "https://i.pravatar.cc/300"}
-            alt={user.fullName}
+            src={user.avatarUrl || "https://i.pravatar.cc/300"}
+            alt={user.username}
             className="w-32 h-32 rounded-full object-cover border-4 border-[#FFE4EC]"
           />
         </div>
@@ -33,7 +33,7 @@ const ProfileHeader = ({
         <div className="flex-1">
           <div className="flex items-center gap-3 mb-2">
             <h1 className="text-3xl font-bold" style={{ color: "#8C1D35" }}>
-              {user.fullName || user.username}
+              {user.username}
             </h1>
             {user.isPrivate && (
               <span className="px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-full">

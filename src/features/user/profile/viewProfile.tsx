@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import type { UserProfile } from "../../../types/user.types";
 import { IoSettingsOutline } from "react-icons/io5";
-import { FiUsers } from "react-icons/fi";
 import { MdGroup } from "react-icons/md";
 import { BsFileText } from "react-icons/bs";
 
@@ -15,88 +14,76 @@ const ViewProfile = () => {
   const [isOwnProfile, setIsOwnProfile] = useState(false);
 
   useEffect(() => {
-    // TODO: Replace with actual API call
     const fetchProfile = async () => {
       setLoading(true);
       try {
-        // Mock data - replace with actual API call
+        // TODO: Get viewerId from auth context
+        const viewerId = 1; // Mock current user ID
+        const targetUserId = userId || viewerId;
+        
+        // TODO: Replace with actual API call
+        const response = await fetch(`http://localhost:3000/users/${targetUserId}/profile?viewerId=${viewerId}`);
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch profile');
+        }
+        
+        const data: UserProfile = await response.json();
+        setProfile(data);
+        
+        // Check if this is the current user's profile
+        setIsOwnProfile(Number(targetUserId) === viewerId);
+      } catch (error) {
+        console.error("Failed to fetch profile:", error);
+        
+        // Fallback to mock data for development
         const mockProfile: UserProfile = {
-          user: {
-            id: userId || "1",
-            username: "johndoe",
-            email: "john@example.com",
-            phone: "0123456789",
-            firstName: "John",
-            lastName: "Doe",
-            fullName: "John Doe",
-            bio: "Passionate blogger and tech enthusiast. Love sharing knowledge about web development, design patterns, and software architecture.",
-            avatar: "https://i.pravatar.cc/300",
-            isPrivate: false,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-          },
+          id: Number(userId) || 1,
+          username: "johndoe",
+          email: "john@example.com",
+          phoneNumber: "0123456789",
+          bio: "Passionate blogger and tech enthusiast. Love sharing knowledge about web development, design patterns, and software architecture.",
+          avatarUrl: "https://i.pravatar.cc/300",
+          isPrivate: false,
+          joinAt: new Date().toISOString(),
           communities: [
             {
-              id: "1",
+              id: 1,
               name: "Web Development",
-              description: "Community for web developers",
-              avatar: "https://via.placeholder.com/100",
-              memberCount: 1200,
-              createdAt: new Date().toISOString(),
+              thumbnailUrl: "https://via.placeholder.com/100",
             },
             {
-              id: "2",
+              id: 2,
               name: "React Enthusiasts",
-              description: "All about React.js",
-              avatar: "https://via.placeholder.com/100",
-              memberCount: 850,
-              createdAt: new Date().toISOString(),
+              thumbnailUrl: "https://via.placeholder.com/100",
             },
           ],
-          followers: [],
-          following: [],
+          followersCount: 342,
+          followingCount: 128,
           posts: [
             {
-              id: "1",
+              id: 1,
               title: "Getting Started with React TypeScript",
-              content: "Full content here...",
-              excerpt: "Learn how to set up a React project with TypeScript from scratch.",
-              coverImage: "https://via.placeholder.com/400x200",
-              authorId: userId || "1",
-              author: {} as any,
-              status: "published",
-              viewCount: 1250,
-              likeCount: 89,
-              commentCount: 23,
+              thumbnailUrl: "https://via.placeholder.com/400x200",
+              isPublic: true,
+              upVotes: 89,
+              downVotes: 5,
               createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString(),
             },
             {
-              id: "2",
+              id: 2,
               title: "Advanced State Management Patterns",
-              content: "Full content here...",
-              excerpt: "Explore advanced patterns for managing state in large React applications.",
-              coverImage: "https://via.placeholder.com/400x200",
-              authorId: userId || "1",
-              author: {} as any,
-              status: "published",
-              viewCount: 980,
-              likeCount: 67,
-              commentCount: 15,
+              thumbnailUrl: "https://via.placeholder.com/400x200",
+              isPublic: true,
+              upVotes: 67,
+              downVotes: 3,
               createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString(),
             },
           ],
-          followerCount: 342,
-          followingCount: 128,
-          postCount: 25,
         };
         
         setProfile(mockProfile);
-        // Check if this is the current user's profile
-        setIsOwnProfile(true); // TODO: Compare with actual logged-in user ID
-      } catch (error) {
-        console.error("Failed to fetch profile:", error);
+        setIsOwnProfile(true);
       } finally {
         setLoading(false);
       }
@@ -121,7 +108,7 @@ const ViewProfile = () => {
     );
   }
 
-  if (profile.user.isPrivate && !isOwnProfile) {
+  if (profile.isPrivate && !isOwnProfile) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
@@ -145,8 +132,8 @@ const ViewProfile = () => {
           {/* Avatar */}
           <div className="flex-shrink-0">
             <img
-              src={profile.user.avatar || "https://i.pravatar.cc/300"}
-              alt={profile.user.fullName}
+              src={profile.avatarUrl || "https://i.pravatar.cc/300"}
+              alt={profile.username}
               className="w-32 h-32 rounded-full object-cover border-4 border-[#FFE4EC]"
             />
           </div>
@@ -155,30 +142,36 @@ const ViewProfile = () => {
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-2">
               <h1 className="text-3xl font-bold" style={{ color: "#8C1D35" }}>
-                {profile.user.fullName || profile.user.username}
+                {profile.username}
               </h1>
-              {profile.user.isPrivate && (
+              {profile.isPrivate && (
                 <span className="px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-full">
                   🔒 Riêng tư
                 </span>
               )}
             </div>
-            <p className="text-gray-600 mb-1">@{profile.user.username}</p>
-            {profile.user.bio && (
-              <p className="text-gray-700 mt-3 max-w-2xl">{profile.user.bio}</p>
+            <p className="text-gray-600 mb-1">@{profile.username}</p>
+            {profile.email && isOwnProfile && (
+              <p className="text-gray-600 mb-1">📧 {profile.email}</p>
+            )}
+            {profile.phoneNumber && isOwnProfile && (
+              <p className="text-gray-600 mb-1">📱 {profile.phoneNumber}</p>
+            )}
+            {profile.bio && (
+              <p className="text-gray-700 mt-3 max-w-2xl">{profile.bio}</p>
             )}
 
             {/* Stats */}
             <div className="flex gap-6 mt-4">
               <div className="text-center">
                 <div className="font-bold text-xl" style={{ color: "#F295B6" }}>
-                  {profile.postCount}
+                  {profile.posts.length}
                 </div>
                 <div className="text-sm text-gray-600">Bài viết</div>
               </div>
               <div className="text-center">
                 <div className="font-bold text-xl" style={{ color: "#F295B6" }}>
-                  {profile.followerCount}
+                  {profile.followersCount}
                 </div>
                 <div className="text-sm text-gray-600">Người theo dõi</div>
               </div>
@@ -216,7 +209,7 @@ const ViewProfile = () => {
             }`}
           >
             <BsFileText fontSize={18} />
-            Bài viết ({profile.postCount})
+            Bài viết ({profile.posts.length})
           </button>
           <button
             onClick={() => setActiveTab("communities")}
@@ -246,24 +239,28 @@ const ViewProfile = () => {
                     className="border border-[#FFE4EC] rounded-xl p-6 hover:shadow-md transition-shadow duration-200 cursor-pointer"
                   >
                     <div className="flex gap-4">
-                      {post.coverImage && (
+                      {post.thumbnailUrl && (
                         <img
-                          src={post.coverImage}
+                          src={post.thumbnailUrl}
                           alt={post.title}
                           className="w-48 h-32 object-cover rounded-lg flex-shrink-0"
                         />
                       )}
                       <div className="flex-1">
-                        <h3 className="text-xl font-bold mb-2 hover:text-[#F295B6] transition-colors">
-                          {post.title}
-                        </h3>
-                        <p className="text-gray-600 text-sm mb-3 line-clamp-2">
-                          {post.excerpt}
-                        </p>
-                        <div className="flex items-center gap-4 text-sm text-gray-500">
-                          <span>👁️ {post.viewCount} lượt xem</span>
-                          <span>❤️ {post.likeCount} thích</span>
-                          <span>💬 {post.commentCount} bình luận</span>
+                        <div className="flex items-center gap-2 mb-2">
+                          <h3 className="text-xl font-bold hover:text-[#F295B6] transition-colors">
+                            {post.title}
+                          </h3>
+                          {!post.isPublic && (
+                            <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">
+                              🔒 Riêng tư
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-4 text-sm text-gray-500 mt-3">
+                          <span>👍 {post.upVotes} upvotes</span>
+                          <span>👎 {post.downVotes} downvotes</span>
+                          <span>📅 {new Date(post.createdAt).toLocaleDateString('vi-VN')}</span>
                         </div>
                       </div>
                     </div>
@@ -285,9 +282,9 @@ const ViewProfile = () => {
                     key={community.id}
                     className="border border-[#FFE4EC] rounded-xl p-6 hover:shadow-md transition-shadow duration-200 cursor-pointer"
                   >
-                    <div className="flex items-center gap-4 mb-3">
+                    <div className="flex items-center gap-4">
                       <img
-                        src={community.avatar || "https://via.placeholder.com/100"}
+                        src={community.thumbnailUrl || "https://via.placeholder.com/100"}
                         alt={community.name}
                         className="w-16 h-16 rounded-full object-cover"
                       />
@@ -295,16 +292,8 @@ const ViewProfile = () => {
                         <h4 className="font-bold text-lg hover:text-[#F295B6] transition-colors">
                           {community.name}
                         </h4>
-                        <p className="text-sm text-gray-500 flex items-center gap-1">
-                          <FiUsers /> {community.memberCount} thành viên
-                        </p>
                       </div>
                     </div>
-                    {community.description && (
-                      <p className="text-gray-600 text-sm line-clamp-2">
-                        {community.description}
-                      </p>
-                    )}
                   </div>
                 ))
               )}

@@ -17,14 +17,14 @@ const EditProfile = () => {
   // Profile data
   const [profileData, setProfileData] = useState<UpdateProfileData>({
     username: "johndoe",
-    firstName: "John",
-    lastName: "Doe",
-    email: "john@example.com",
-    phone: "0123456789",
     bio: "Passionate blogger and tech enthusiast.",
-    avatar: "https://i.pravatar.cc/300",
-    isPrivate: false,
+    avatarUrl: "https://i.pravatar.cc/300",
+    phoneNumber: "0123456789",
+    dob: "",
+    gender: undefined,
   });
+  
+  const [isPrivate, setIsPrivate] = useState(false);
 
   // Password data
   const [passwordData, setPasswordData] = useState<ChangePasswordData>({
@@ -36,11 +36,9 @@ const EditProfile = () => {
   // Blocked users
   const [blockedUsers, setBlockedUsers] = useState<BlockedUser[]>([
     {
-      id: "1",
+      id: 1,
       username: "blockeduser1",
-      fullName: "Blocked User 1",
-      avatar: "https://i.pravatar.cc/300?img=1",
-      blockedAt: new Date().toISOString(),
+      avatarUrl: "https://i.pravatar.cc/300?img=1",
     },
   ]);
 
@@ -106,9 +104,9 @@ const EditProfile = () => {
     }
   };
 
-  const handleUnblockUser = async (userId: string) => {
+  const handleUnblockUser = async (userId: number) => {
     try {
-      // TODO: Replace with actual API call
+      // TODO: Replace with actual API call DELETE /users/:id/block
       await new Promise((resolve) => setTimeout(resolve, 500));
       setBlockedUsers((prev) => prev.filter((user) => user.id !== userId));
       setSuccess("Đã bỏ chặn người dùng");
@@ -202,7 +200,7 @@ const EditProfile = () => {
               {/* Avatar */}
               <div className="flex items-center gap-6">
                 <img
-                  src={avatarPreview || profileData.avatar}
+                  src={avatarPreview || profileData.avatarUrl}
                   alt="Avatar"
                   className="w-24 h-24 rounded-full object-cover border-4 border-[#FFE4EC]"
                 />
@@ -221,27 +219,6 @@ const EditProfile = () => {
               </div>
 
               {/* Form Fields */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-semibold mb-2">Tên</label>
-                  <input
-                    type="text"
-                    value={profileData.firstName}
-                    onChange={(e) => handleProfileChange("firstName", e.target.value)}
-                    className="w-full px-4 py-2 border border-[#FFE4EC] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F295B6]"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold mb-2">Họ</label>
-                  <input
-                    type="text"
-                    value={profileData.lastName}
-                    onChange={(e) => handleProfileChange("lastName", e.target.value)}
-                    className="w-full px-4 py-2 border border-[#FFE4EC] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F295B6]"
-                  />
-                </div>
-              </div>
-
               <div>
                 <label className="block text-sm font-semibold mb-2">Username</label>
                 <input
@@ -253,23 +230,38 @@ const EditProfile = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold mb-2">Email</label>
+                <label className="block text-sm font-semibold mb-2">Số điện thoại</label>
                 <input
-                  type="email"
-                  value={profileData.email}
-                  onChange={(e) => handleProfileChange("email", e.target.value)}
+                  type="tel"
+                  value={profileData.phoneNumber}
+                  onChange={(e) => handleProfileChange("phoneNumber", e.target.value)}
+                  className="w-full px-4 py-2 border border-[#FFE4EC] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F295B6]"
+                  placeholder="0123456789"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold mb-2">Ngày sinh</label>
+                <input
+                  type="date"
+                  value={profileData.dob}
+                  onChange={(e) => handleProfileChange("dob", e.target.value)}
                   className="w-full px-4 py-2 border border-[#FFE4EC] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F295B6]"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold mb-2">Số điện thoại</label>
-                <input
-                  type="tel"
-                  value={profileData.phone}
-                  onChange={(e) => handleProfileChange("phone", e.target.value)}
+                <label className="block text-sm font-semibold mb-2">Giới tính</label>
+                <select
+                  value={profileData.gender || ""}
+                  onChange={(e) => handleProfileChange("gender", e.target.value as any)}
                   className="w-full px-4 py-2 border border-[#FFE4EC] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F295B6]"
-                />
+                >
+                  <option value="">Chọn giới tính</option>
+                  <option value="MALE">Nam</option>
+                  <option value="FEMALE">Nữ</option>
+                  <option value="OTHER">Khác</option>
+                </select>
               </div>
 
               <div>
@@ -370,23 +362,24 @@ const EditProfile = () => {
                   <label className="relative inline-flex items-center cursor-pointer ml-4">
                     <input
                       type="checkbox"
-                      checked={profileData.isPrivate}
-                      onChange={(e) => handleProfileChange("isPrivate", e.target.checked)}
+                      checked={isPrivate}
+                      onChange={async (e) => {
+                        try {
+                          // TODO: Call API PATCH /users/me/privacy
+                          await new Promise((resolve) => setTimeout(resolve, 500));
+                          setIsPrivate(e.target.checked);
+                          setSuccess(e.target.checked ? "Đã chuyển sang chế độ riêng tư" : "Đã công khai hồ sơ");
+                          setTimeout(() => setSuccess(null), 3000);
+                        } catch (err: any) {
+                          setError(err.message || "Có lỗi xảy ra");
+                        }
+                      }}
                       className="sr-only peer"
                     />
                     <div className="w-14 h-7 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-pink-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-[#F295B6]"></div>
                   </label>
                 </div>
               </div>
-
-              <button
-                onClick={handleSaveProfile}
-                disabled={loading}
-                className="flex items-center gap-2 px-6 py-3 bg-[#F295B6] text-white font-bold rounded-lg hover:bg-[#FFB8D1] transition-colors duration-200 disabled:opacity-50"
-              >
-                <IoSaveOutline fontSize={20} />
-                {loading ? "Đang lưu..." : "Lưu thay đổi"}
-              </button>
             </div>
           )}
 
@@ -410,12 +403,12 @@ const EditProfile = () => {
                     >
                       <div className="flex items-center gap-4">
                         <img
-                          src={user.avatar || "https://i.pravatar.cc/300"}
+                          src={user.avatarUrl || "https://i.pravatar.cc/300"}
                           alt={user.username}
                           className="w-12 h-12 rounded-full object-cover"
                         />
                         <div>
-                          <div className="font-bold">{user.fullName || user.username}</div>
+                          <div className="font-bold">{user.username}</div>
                           <div className="text-sm text-gray-500">@{user.username}</div>
                         </div>
                       </div>
