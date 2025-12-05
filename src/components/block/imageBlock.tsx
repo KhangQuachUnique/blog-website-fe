@@ -5,7 +5,12 @@ interface ImageBlockProps {
   objectFit?: "contain" | "cover" | "fill";
 }
 
-const ImageBlock = ({ id, imageUrl, caption, objectFit = "cover" }: ImageBlockProps) => {
+const ImageBlock = ({
+  id,
+  imageUrl,
+  caption,
+  objectFit = "cover",
+}: ImageBlockProps) => {
   if (!imageUrl) {
     return (
       <div
