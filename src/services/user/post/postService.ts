@@ -9,6 +9,7 @@ export const getPostById = async (
   postId: number
 ): Promise<IPostResponseDto> => {
   const response = await axios.get<IPostResponseDto>(`/blog-posts/${postId}`);
+  console.log("Fetched Post:", response);
   return response;
 };
 
@@ -22,9 +23,10 @@ export const createPost = async (
 export const updatePost = async (
   data: IUpdateBlogPostDto
 ): Promise<IPostResponseDto> => {
-  const response = await axios.put<IPostResponseDto>(
-    `/blog-posts/${data.id}`,
-    data
+  const { id, ...updateData } = data;
+  const response = await axios.patch<IPostResponseDto>(
+    `/blog-posts/${id}`,
+    updateData
   );
   return response;
 };

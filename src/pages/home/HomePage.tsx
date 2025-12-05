@@ -1,4 +1,5 @@
 import { useAuth } from "../../hooks/useAuth";
+import { ACCESS_TOKEN_KEY } from "../../constants/auth";
 
 const HomePage = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -13,6 +14,8 @@ const HomePage = () => {
       </div>
     );
   }
+
+  const accessToken = localStorage.getItem(ACCESS_TOKEN_KEY);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 via-white to-purple-50 p-8">
@@ -55,11 +58,11 @@ const HomePage = () => {
             <div className="flex items-center">
               <span className="font-medium text-gray-700 w-40">Token in localStorage:</span>
               <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
-                localStorage.getItem('token') 
+                accessToken
                   ? 'bg-blue-100 text-blue-800' 
                   : 'bg-gray-100 text-gray-800'
               }`}>
-                {localStorage.getItem('token') ? '✓ Present' : '✗ None'}
+                {accessToken ? '✓ Present' : '✗ None'}
               </span>
             </div>
           </div>
@@ -125,7 +128,7 @@ const HomePage = () => {
         )}
 
         {/* Token Preview */}
-        {localStorage.getItem('token') && (
+        {accessToken && (
           <div className="bg-white rounded-lg shadow-lg p-6 mt-6 border-l-4 border-blue-500">
             <h2 className="text-2xl font-semibold text-gray-800 mb-4 flex items-center">
               <span className="mr-2">🎫</span>
@@ -133,7 +136,7 @@ const HomePage = () => {
             </h2>
             <div className="bg-gray-50 rounded-lg p-4">
               <p className="text-xs font-mono break-all text-gray-700">
-                {localStorage.getItem('token')}
+                {accessToken}
               </p>
             </div>
             <p className="text-sm text-gray-500 mt-2">

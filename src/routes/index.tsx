@@ -7,8 +7,8 @@ import adminPostRoutes from "./admin/post.route";
 import adminReportRoutes from "./admin/report.route";
 import authRoutes from "./auth/auth.route";
 import manageBlogPostsRoutes from "./user/manageBlogPosts.route";
-import newsfeedRoutes from "./newsfeed/newsfeed.route";
 import HomePage from "../pages/home/HomePage";
+import newsfeedRoutes from "./user/newsfeed.route";
 
 export const router = createBrowserRouter([
   {
