@@ -1,22 +1,19 @@
+import { ArrowUp, ArrowDown, MessageCircle, Heart } from "lucide-react";
+import { Link } from "react-router-dom";
+import type { IPostItem } from "../../types/post";
+import "../../styles/newsfeed/Card.css";
 
-import { Link } from 'react-router-dom';
-import type { PostItem } from '../../types/post';
-import InteractBar from '../InteractBar';
-import { useAuth } from '../../contexts/AuthContext';
-import '../../styles/newsfeed/Card.css';
-
-const Card = ({ post }: { post: PostItem }) => {
-  const { user } = useAuth();
+const Card = ({ post }: { post: IPostItem }) => {
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
     const diff = Math.floor((now.getTime() - date.getTime()) / 1000);
 
-    if (diff < 60) return 'vừa xong';
+    if (diff < 60) return "vừa xong";
     if (diff < 3600) return `${Math.floor(diff / 60)} phút trước`;
     if (diff < 86400) return `${Math.floor(diff / 3600)} giờ trước`;
     if (diff < 604800) return `${Math.floor(diff / 86400)} ngày trước`;
-    return date.toLocaleDateString('vi-VN');
+    return date.toLocaleDateString("vi-VN");
   };
 
   return (
@@ -33,6 +30,7 @@ const Card = ({ post }: { post: PostItem }) => {
           </div>
         )}
         <div className="newsfeed-card__content">
+          <h2 className="newsfeed-card__title">{post.title}</h2>
           <div className="newsfeed-card__header">
             <div className="newsfeed-card__author">
               <img
@@ -41,17 +39,23 @@ const Card = ({ post }: { post: PostItem }) => {
                 className="newsfeed-card__avatar"
               />
               <div className="newsfeed-card__author-info">
-                <span className="newsfeed-card__username">{post.author.username}</span>
+                <span className="newsfeed-card__username">
+                  {post.author.username}
+                </span>
                 {post.community && (
                   <span className="newsfeed-card__community">
-                    trong {typeof post.community === 'string' ? post.community : post.community.name}
+                    trong{" "}
+                    {typeof post.community === "string"
+                      ? post.community
+                      : post.community.name}
                   </span>
                 )}
               </div>
             </div>
-            <time className="newsfeed-card__time">{formatDate(post.createdAt)}</time>
+            <time className="newsfeed-card__time">
+              {formatDate(post.createdAt)}
+            </time>
           </div>
-          <h2 className="newsfeed-card__title">{post.title}</h2>
           {post.hashtags && post.hashtags.length > 0 && (
             <div className="newsfeed-card__hashtags">
               {post.hashtags.map((h) => (
