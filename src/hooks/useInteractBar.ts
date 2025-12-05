@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   votePost,
   getVoteStatus,
@@ -93,9 +93,24 @@ export const useInteractBar = ({
   // ============================================
   // VOTE HANDLER
   // ============================================
+  // Track last vote time to debounce rapid clicks
+  const lastVoteTimeRef = useRef<number>(0);
+  const VOTE_DEBOUNCE_MS = 500; // Minimum time between votes
+  
   const handleVote = useCallback(
     async (type: VoteType) => {
       if (!userId) return; // Don't vote if not logged in
+      if (isVoting) return; // Already processing a vote
+
+      // Debounce rapid clicks
+      const now = Date.now();
+      if (now - lastVoteTimeRef.current < VOTE_DEBOUNCE_MS) {
+        console.log('Vote debounced - too fast');
+        return;
+      }
+      lastVoteTimeRef.current = now;
+
+      setIsVoting(true);
 
       // Save previous state for rollback
       const prevVoteType = voteType;
@@ -117,7 +132,7 @@ export const useInteractBar = ({
         else setDownVotes((v) => v + 1);
       }
 
-      // API call in background - don't wait
+      // API call in background
       try {
         const response = await votePost(userId, postId, type);
 
@@ -131,9 +146,11 @@ export const useInteractBar = ({
         setUpVotes(prevUpVotes);
         setDownVotes(prevDownVotes);
         console.error('Vote failed:', error);
+      } finally {
+        setIsVoting(false);
       }
     },
-    [userId, postId, voteType, upVotes, downVotes]
+    [userId, postId, voteType, upVotes, downVotes, isVoting]
   );
 
   // ============================================

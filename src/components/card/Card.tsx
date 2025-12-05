@@ -1,9 +1,12 @@
-import { ArrowUp, ArrowDown, MessageCircle, Heart } from "lucide-react";
 import { Link } from "react-router-dom";
 import type { IPostItem } from "../../types/post";
+import { InteractBar } from "../InteractBar";
+import { useAuth } from "../../contexts/AuthContext";
 import "../../styles/newsfeed/Card.css";
 
 const Card = ({ post }: { post: IPostItem }) => {
+  const { user } = useAuth();
+  
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
@@ -18,18 +21,21 @@ const Card = ({ post }: { post: IPostItem }) => {
 
   return (
     <article className="newsfeed-card hover:shadow-lg transition-shadow">
-      <Link to={`/post/${post.id}`} className="block cursor-pointer">
-        {post.thumbnailUrl && (
-          <div className="newsfeed-card__thumbnail">
-            <img
-              src={post.thumbnailUrl}
-              alt={post.title}
-              className="newsfeed-card__image"
-              loading="lazy"
-            />
-          </div>
-        )}
-        <div className="newsfeed-card__content">
+      {/* Thumbnail bên trái */}
+      {post.thumbnailUrl && (
+        <Link to={`/post/${post.id}`} className="newsfeed-card__thumbnail">
+          <img
+            src={post.thumbnailUrl}
+            alt={post.title}
+            className="newsfeed-card__image"
+            loading="lazy"
+          />
+        </Link>
+      )}
+      
+      {/* Content + InteractBar bên phải */}
+      <div className="newsfeed-card__right">
+        <Link to={`/post/${post.id}`} className="newsfeed-card__content">
           <h2 className="newsfeed-card__title">{post.title}</h2>
           <div className="newsfeed-card__header">
             <div className="newsfeed-card__author">
@@ -63,18 +69,18 @@ const Card = ({ post }: { post: IPostItem }) => {
               ))}
             </div>
           )}
+        </Link>
+        
+        {/* InteractBar nằm dưới content */}
+        <div className="newsfeed-card__interact" onClick={(e) => e.stopPropagation()}>
+          <InteractBar
+            postId={post.id}
+            userId={user?.id ?? 0}
+            initialUpVotes={post.upVotes}
+            initialDownVotes={post.downVotes}
+            totalComments={post.totalComments}
+          />
         </div>
-      </Link>
-      
-      {/* InteractBar - Blookie Style */}
-      <div className="px-4 pb-3" onClick={(e) => e.stopPropagation()}>
-        <InteractBar
-          postId={post.id}
-          userId={user?.id ?? 0}
-          initialUpVotes={post.upVotes}
-          initialDownVotes={post.downVotes}
-          totalComments={post.totalComments}
-        />
       </div>
     </article>
   );

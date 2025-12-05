@@ -52,6 +52,7 @@ const InteractBar: React.FC<InteractBarProps> = ({
   const navigate = useNavigate();
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
+  const [showLoginToast, setShowLoginToast] = useState(false);
   const moreMenuRef = useRef<HTMLDivElement>(null);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
 
@@ -72,6 +73,33 @@ const InteractBar: React.FC<InteractBarProps> = ({
   });
 
   const netVotes = upVotes - downVotes;
+  const isLoggedIn = userId > 0;
+
+  // Show login required toast
+  const showLoginRequired = () => {
+    setShowLoginToast(true);
+    setTimeout(() => setShowLoginToast(false), 2500);
+  };
+
+  // Handle vote with login check
+  const onVoteClick = (type: 'upvote' | 'downvote') => {
+    if (!isLoggedIn) {
+      showLoginRequired();
+      return;
+    }
+    handleVote(type);
+  };
+
+  // Handle emoji with login check
+  const onEmojiClick = (emojiId: number) => {
+    if (!isLoggedIn) {
+      showLoginRequired();
+      setShowEmojiPicker(false);
+      return;
+    }
+    handleEmojiReact(emojiId);
+    setShowEmojiPicker(false);
+  };
 
   // Close dropdowns on outside click
   useEffect(() => {
@@ -115,12 +143,41 @@ const InteractBar: React.FC<InteractBarProps> = ({
 
   return (
     <div
-      className="w-full flex items-center justify-between gap-3 py-3 px-4 overflow-visible"
+      className="w-full flex items-center justify-between gap-2 py-2 px-3 overflow-visible relative"
       style={{ borderTop: `1px solid ${COLORS.lightPink}` }}
     >
+      {/* Login Required Toast */}
+      {showLoginToast && (
+        <div
+          className="absolute left-1/2 -translate-x-1/2 -top-12 z-50 px-4 py-2 rounded-full shadow-lg"
+          style={{
+            background: COLORS.primaryPink,
+            color: COLORS.white,
+            fontSize: '0.8rem',
+            fontWeight: 500,
+            whiteSpace: 'nowrap',
+            animation: 'fadeInUp 0.3s ease-out',
+          }}
+        >
+          Vui lòng đăng nhập để tương tác 💖
+        </div>
+      )}
+      <style>{`
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateX(-50%) translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+          }
+        }
+      `}</style>
+
       {/* Vote Box */}
       <div
-        className="flex-shrink-0 flex items-center gap-1 px-3 py-2 transition-all duration-150 hover:shadow-[0_4px_12px_rgba(242,149,182,0.25)]"
+        className="flex-shrink-0 flex items-center gap-0.5 px-2 py-1.5 transition-all duration-150 hover:shadow-[0_4px_12px_rgba(242,149,182,0.25)]"
         style={{
           border: `1.5px solid ${COLORS.lightPink}`,
           borderRadius: '50px',
@@ -129,17 +186,17 @@ const InteractBar: React.FC<InteractBarProps> = ({
       >
         {/* Upvote */}
         <button
-          onClick={() => handleVote('upvote')}
+          onClick={() => onVoteClick('upvote')}
           disabled={isVoting}
-          className="group p-1 transition-all duration-150 hover:scale-110 disabled:opacity-50 active:scale-95"
-          title="Upvote"
+          className="group p-0.5 transition-all duration-150 hover:scale-110 disabled:opacity-50 active:scale-95"
+          title={isLoggedIn ? "Upvote" : "Đăng nhập để vote"}
         >
-          <UpvoteIcon active={voteType === 'upvote'} size={18} />
+          <UpvoteIcon active={voteType === 'upvote'} size={16} />
         </button>
 
         {/* Vote Count */}
         <span
-          className="min-w-[36px] text-center font-medium text-sm select-none"
+          className="min-w-[28px] text-center font-medium text-xs select-none"
           style={{ color: COLORS.primaryText }}
         >
           {netVotes}
@@ -147,30 +204,30 @@ const InteractBar: React.FC<InteractBarProps> = ({
 
         {/* Downvote */}
         <button
-          onClick={() => handleVote('downvote')}
+          onClick={() => onVoteClick('downvote')}
           disabled={isVoting}
-          className="group p-1 transition-all duration-150 hover:scale-110 disabled:opacity-50 active:scale-95"
-          title="Downvote"
+          className="group p-0.5 transition-all duration-150 hover:scale-110 disabled:opacity-50 active:scale-95"
+          title={isLoggedIn ? "Downvote" : "Đăng nhập để vote"}
         >
-          <DownvoteIcon active={voteType === 'downvote'} size={18} />
+          <DownvoteIcon active={voteType === 'downvote'} size={16} />
         </button>
       </div>
 
       {/* Right Actions */}
-      <div className="flex items-center gap-3 flex-shrink-0 overflow-visible">
+      <div className="flex items-center gap-2 flex-shrink-0 overflow-visible">
         {/* Emoji Reaction */}
         <div className="relative flex-shrink-0 overflow-visible" ref={emojiPickerRef}>
           <button
             onClick={() => setShowEmojiPicker(!showEmojiPicker)}
             disabled={isReacting}
-            className="p-3 rounded-full transition-all duration-150 hover:scale-110 hover:shadow-[0_4px_12px_rgba(242,149,182,0.25)] disabled:opacity-50 active:scale-95 flex items-center justify-center"
+            className="w-8 h-8 rounded-full transition-all duration-150 hover:scale-110 hover:shadow-[0_4px_12px_rgba(242,149,182,0.25)] disabled:opacity-50 active:scale-95 flex items-center justify-center"
             style={{
               background: COLORS.lighterPink,
               border: `1px solid ${COLORS.lightPink}`,
             }}
             title="React"
           >
-            {getDisplayedEmoji()}
+            <span className="text-base leading-none">{selectedEmojiId ? EMOJI_LIST.find(e => e.id === selectedEmojiId)?.emoji || '😊' : '😊'}</span>
           </button>
 
           {/* Emoji Picker Dropdown */}
@@ -187,10 +244,7 @@ const InteractBar: React.FC<InteractBarProps> = ({
               {EMOJI_LIST.map((item) => (
                 <button
                   key={item.id}
-                  onClick={() => {
-                    handleEmojiReact(item.id);
-                    setShowEmojiPicker(false);
-                  }}
+                  onClick={() => onEmojiClick(item.id)}
                   className="w-9 h-9 flex items-center justify-center rounded-full transition-all duration-150 hover:scale-125 active:scale-95"
                   style={{
                     background:
@@ -210,7 +264,7 @@ const InteractBar: React.FC<InteractBarProps> = ({
         {/* Comment */}
         <button
           onClick={() => navigate(`/post/${postId}`)}
-          className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2 transition-all duration-150 hover:scale-105 hover:shadow-[0_4px_12px_rgba(242,149,182,0.25)] active:scale-95"
+          className="flex-shrink-0 flex items-center gap-1 px-2 py-1.5 transition-all duration-150 hover:scale-105 hover:shadow-[0_4px_12px_rgba(242,149,182,0.25)] active:scale-95"
           style={{
             border: `1.5px solid ${COLORS.lightPink}`,
             borderRadius: '50px',
@@ -219,8 +273,8 @@ const InteractBar: React.FC<InteractBarProps> = ({
           }}
           title="Comment"
         >
-          <MessageCircle size={20} strokeWidth={2} />
-          <span className="text-sm font-medium" style={{ color: COLORS.primaryText }}>
+          <MessageCircle size={16} strokeWidth={2} />
+          <span className="text-xs font-medium" style={{ color: COLORS.primaryText }}>
             {totalComments}
           </span>
         </button>
@@ -229,14 +283,14 @@ const InteractBar: React.FC<InteractBarProps> = ({
         <div className="relative flex-shrink-0 overflow-visible" ref={moreMenuRef}>
           <button
             onClick={() => setShowMoreMenu(!showMoreMenu)}
-            className="w-9 h-9 flex items-center justify-center rounded-full transition-all duration-150 hover:scale-110 hover:shadow-[0_4px_12px_rgba(242,149,182,0.25)] active:scale-95"
+            className="w-7 h-7 flex items-center justify-center rounded-full transition-all duration-150 hover:scale-110 hover:shadow-[0_4px_12px_rgba(242,149,182,0.25)] active:scale-95"
             style={{
               background: showMoreMenu ? COLORS.lighterPink : 'transparent',
               color: COLORS.primaryPink,
             }}
             title="More"
           >
-            <MoreHorizontal size={18} strokeWidth={2} />
+            <MoreHorizontal size={16} strokeWidth={2} />
           </button>
 
           {/* More Menu Dropdown */}
