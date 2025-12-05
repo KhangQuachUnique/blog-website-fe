@@ -1,12 +1,12 @@
 // src/components/NewsfeedList.tsx
 import Card from '../card/Card';
-import type  { IPostItem } from '../../types/post';
+import type  { IPostResponseDto } from '../../types/post';
 import { Loader2 } from 'lucide-react';
 import Masonry from 'react-masonry-css';
 import '../../styles/newsfeed/NewsfeedList.css';
 
 interface Props {
-  posts: IPostItem[];
+  posts: IPostResponseDto[];
   isFetchingNextPage?: boolean;
   hasNextPage?: boolean;
   loadMoreRef?: (node: HTMLDivElement | null) => void;

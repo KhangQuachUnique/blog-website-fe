@@ -85,24 +85,8 @@ export interface IPostResponseDto {
   community?: ICommunityDto;
   originalPost?: IPostResponseDto;
   blocks?: IBlockResponseDto[];
-}
-export interface IPostItem {
-  id: number;
-  title: string;
-  shortDescription: string;
-  thumbnailUrl?: string;
-  isPublic: boolean;
-  author: IAuthorDto;
-  status: EBlogPostStatus;
-  type: EPostType;
-  hashtags: IHashtagDto[];
-  createdAt: Date;
-  community?: ICommunityDto;
-  originalPost?: IPostItem;
-  blocks?: IBlockResponseDto[];
   upVotes: number;
   downVotes: number;
   totalComments: number;
   totalReacts: number;
-
 }
