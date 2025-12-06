@@ -8,6 +8,18 @@ export interface SearchResultItem {
   name?: string;       // Có nếu là Community/Hashtag
   avatarUrl?: string;
   thumbnailUrl?: string;
+  // Thêm các fields cho Post (giống Newsfeed)
+  createdAt?: string;
+  hashtags?: { id: number; name: string }[];
+  upVotes?: number;
+  downVotes?: number;
+  totalComments?: number;
+  totalReacts?: number;
+  author?: {
+    id: number;
+    username: string;
+    avatarUrl?: string;
+  };
 }
 
 export const searchAPI = {

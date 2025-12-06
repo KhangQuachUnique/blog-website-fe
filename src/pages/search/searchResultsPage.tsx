@@ -2,6 +2,10 @@ import { useEffect, useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { searchAPI } from '../../services/search.service';
 import type { SearchResultItem } from '../../services/search.service';
+import { Loader2, ArrowUp, ArrowDown, MessageCircle, Heart } from 'lucide-react';
+import Masonry from 'react-masonry-css';
+import '../../styles/newsfeed/NewsfeedList.css';
+import '../../styles/newsfeed/Card.css';
 
 export const SearchResultPage = () => {
   const [searchParams] = useSearchParams();
@@ -32,93 +36,206 @@ export const SearchResultPage = () => {
     fetchData();
   }, [q, type]);
 
-  // Hàm render giao diện từng item tùy theo loại
-  const renderItem = (item: SearchResultItem) => {
-    // Giao diện cho User
-    if (type === 'user') {
-      return (
-        <div className="flex items-center gap-4 p-4 bg-white border rounded-lg shadow-sm hover:shadow-md transition">
-          <img src={item.avatarUrl || 'https://via.placeholder.com/50'} alt={item.username} className="w-12 h-12 rounded-full object-cover" />
-          <div>
-            <h3 className="font-bold text-lg">{item.username}</h3>
-            {/* Link đến trang cá nhân */}
-            <Link to={`/profile/${item.id}`} className="text-blue-500 text-sm hover:underline">Xem trang cá nhân</Link>
-          </div>
-        </div>
-      );
-    }
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    const now = new Date();
+    const diff = Math.floor((now.getTime() - date.getTime()) / 1000);
 
-    // Giao diện cho Post (hoặc tìm theo hashtag cũng trả về post)
-    if (type === 'post' || type === 'hashtag') {
-      return (
-        <div className="flex gap-4 p-4 bg-white border rounded-lg shadow-sm hover:shadow-md transition">
-          {item.thumbnailUrl && (
-            <img src={item.thumbnailUrl} alt={item.title} className="w-32 h-24 object-cover rounded-md" />
+    if (diff < 60) return 'vừa xong';
+    if (diff < 3600) return `${Math.floor(diff / 60)} phút trước`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)} giờ trước`;
+    if (diff < 604800) return `${Math.floor(diff / 86400)} ngày trước`;
+    return date.toLocaleDateString('vi-VN');
+  };
+
+  const breakpointCols = {
+    default: 3,
+    1400: 4,
+    992: 3,
+    768: 2,
+    0: 1,
+  };
+
+  // Render Post Card (giống Newsfeed)
+  const renderPostCard = (item: SearchResultItem) => (
+    <Link to={`/post/${item.id}`} className="block">
+      <article className="newsfeed-card hover:shadow-lg transition-shadow cursor-pointer">
+        {item.thumbnailUrl && (
+          <div className="newsfeed-card__thumbnail">
+            <img
+              src={item.thumbnailUrl}
+              alt={item.title}
+              className="newsfeed-card__image"
+              loading="lazy"
+            />
+          </div>
+        )}
+        <div className="newsfeed-card__content">
+          <div className="newsfeed-card__header">
+            <div className="newsfeed-card__author">
+              <img
+                src={item.author?.avatarUrl || item.avatarUrl || 'https://via.placeholder.com/40'}
+                alt={item.author?.username || item.username || 'User'}
+                className="newsfeed-card__avatar"
+              />
+              <div className="newsfeed-card__author-info">
+                <span className="newsfeed-card__username">{item.author?.username || item.username || 'Ẩn danh'}</span>
+              </div>
+            </div>
+            <time className="newsfeed-card__time">{formatDate(item.createdAt)}</time>
+          </div>
+          <h2 className="newsfeed-card__title">{item.title}</h2>
+          {item.hashtags && item.hashtags.length > 0 && (
+            <div className="newsfeed-card__hashtags">
+              {item.hashtags.map((h) => (
+                <span key={h.id || h.name} className="newsfeed-card__hashtag">#{h.name}</span>
+              ))}
+            </div>
           )}
-          <div className="flex-1">
-             {/* Link đến chi tiết bài viết */}
-            <Link to={`/post/${item.id}`}>
-              <h3 className="font-bold text-xl mb-2 hover:text-blue-600">{item.title}</h3>
-            </Link>
-            <div className="flex items-center text-sm text-gray-500 gap-2">
-               <span>Tác giả: {item.username || 'Ẩn danh'}</span>
-               <span>•</span>
-               <span>{new Date().toLocaleDateString()}</span>
+          <div className="newsfeed-card__footer">
+            <div className="newsfeed-card__stats">
+              <div className="newsfeed-card__votes">
+                <button className="newsfeed-card__vote-btn newsfeed-card__vote-btn--up">
+                  <ArrowUp size={18} />
+                  <span>{item.upVotes || 0}</span>
+                </button>
+                <button className="newsfeed-card__vote-btn newsfeed-card__vote-btn--down">
+                  <ArrowDown size={18} />
+                  <span>{item.downVotes || 0}</span>
+                </button>
+              </div>
+              <div className="newsfeed-card__interactions">
+                <div className="newsfeed-card__interaction">
+                  <MessageCircle size={18} />
+                  <span>{item.totalComments || 0}</span>
+                </div>
+                <div className="newsfeed-card__interaction">
+                  <Heart size={18} />
+                  <span>{item.totalReacts || 0}</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-      );
-    }
+      </article>
+    </Link>
+  );
 
-    // Giao diện cho Community
-    if (type === 'community') {
-      return (
-        <div className="p-4 bg-white border rounded-lg shadow-sm">
-           <h3 className="font-bold text-lg">Cộng đồng: {item.name}</h3>
-           <Link to={`/community/${item.id}`} className="text-blue-500 text-sm">Tham gia ngay</Link>
+  // Render User Card
+  const renderUserCard = (item: SearchResultItem) => (
+    <Link to={`/profile/${item.id}`} className="block">
+      <article className="newsfeed-card hover:shadow-lg transition-shadow cursor-pointer">
+        <div className="newsfeed-card__content">
+          <div className="flex items-center gap-4 p-2">
+            <img
+              src={item.avatarUrl || 'https://via.placeholder.com/60'}
+              alt={item.username}
+              className="w-16 h-16 rounded-full object-cover"
+            />
+            <div>
+              <h2 className="newsfeed-card__title text-lg">{item.username}</h2>
+              <span className="text-blue-500 text-sm hover:underline">Xem trang cá nhân</span>
+            </div>
+          </div>
         </div>
-      );
-    }
+      </article>
+    </Link>
+  );
 
-    // Giao diện cho Hashtag
-    if (type === 'hashtag') {
-      return (
-        <div className="p-4 bg-white border rounded-lg shadow-sm hover:shadow-md transition">
-           <h3 className="font-bold text-lg flex items-center gap-2">
-             #️⃣ <span className="text-blue-600">#{item.name}</span>
-           </h3>
-           <Link to={`/hashtag/${item.name}`} className="text-blue-500 text-sm hover:underline">Xem các bài viết với hashtag này</Link>
+  // Render Community Card
+  const renderCommunityCard = (item: SearchResultItem) => (
+    <Link to={`/community/${item.id}`} className="block">
+      <article className="newsfeed-card hover:shadow-lg transition-shadow cursor-pointer">
+        <div className="newsfeed-card__content">
+          <div className="p-2">
+            <h2 className="newsfeed-card__title">Cộng đồng: {item.name}</h2>
+            <span className="text-blue-500 text-sm">Tham gia ngay</span>
+          </div>
         </div>
-      );
+      </article>
+    </Link>
+  );
+
+  // Render Hashtag Card
+  const renderHashtagCard = (item: SearchResultItem) => (
+    <Link to={`/hashtag/${item.name}`} className="block">
+      <article className="newsfeed-card hover:shadow-lg transition-shadow cursor-pointer">
+        <div className="newsfeed-card__content">
+          <div className="p-2">
+            <h2 className="newsfeed-card__title flex items-center gap-2">
+              <span className="text-2xl">#️⃣</span>
+              <span className="text-blue-600">#{item.name}</span>
+            </h2>
+            <span className="text-blue-500 text-sm hover:underline">Xem các bài viết với hashtag này</span>
+          </div>
+        </div>
+      </article>
+    </Link>
+  );
+
+  // Chọn render function dựa trên type
+  const renderItem = (item: SearchResultItem) => {
+    switch (type) {
+      case 'user':
+        return renderUserCard(item);
+      case 'community':
+        return renderCommunityCard(item);
+      case 'hashtag':
+        return renderHashtagCard(item);
+      case 'post':
+      default:
+        return renderPostCard(item);
     }
   };
 
-  return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="container mx-auto px-4 max-w-4xl">
-        <h1 className="text-2xl font-bold mb-6 text-gray-800">
-          Kết quả tìm kiếm cho: <span className="text-blue-600">"{q}"</span>
-          <span className="text-sm font-normal text-gray-500 ml-2">
-            (Loại: {type === 'post' ? 'Bài viết' : type === 'user' ? 'Người dùng' : type === 'community' ? 'Cộng đồng' : 'Hashtag'})
-          </span>
-        </h1>
+  const getTypeLabel = () => {
+    switch (type) {
+      case 'post': return 'Bài viết';
+      case 'user': return 'Người dùng';
+      case 'community': return 'Cộng đồng';
+      case 'hashtag': return 'Hashtag';
+      default: return type;
+    }
+  };
 
-        {loading ? (
-          <div className="text-center py-10">Loading...</div>
-        ) : (
-          <div className="space-y-4">
-            {results.length > 0 ? (
-              results.map((item) => (
-                <div key={item.id}>{renderItem(item)}</div>
-              ))
-            ) : (
-              <div className="text-center py-10 text-gray-500 bg-white rounded-lg">
-                Không tìm thấy kết quả nào.
-              </div>
-            )}
-          </div>
-        )}
+  if (loading) {
+    return (
+      <div className="flex justify-center py-20">
+        <Loader2 className="h-12 w-12 animate-spin" />
       </div>
+    );
+  }
+
+  return (
+    <div className="mx-auto px-[90px] py-8">
+      <h1 className="text-3xl text-[#F295B6] font-bold mb-8">
+        Kết quả tìm kiếm cho "{q}"
+        <span className="text-lg font-normal text-gray-500 ml-3">
+          ({getTypeLabel()})
+        </span>
+      </h1>
+
+      {results.length > 0 ? (
+        <div className="newsfeed-list-wrapper">
+          <Masonry
+            breakpointCols={breakpointCols}
+            className="newsfeed-masonry-grid"
+            columnClassName="newsfeed-masonry-grid_column"
+          >
+            {results.map((item) => (
+              <div key={item.id} className="newsfeed-masonry-item">
+                {renderItem(item)}
+              </div>
+            ))}
+          </Masonry>
+        </div>
+      ) : (
+        <div className="text-center py-20 text-gray-500">
+          <p className="text-xl">Không tìm thấy kết quả nào.</p>
+          <p className="mt-2">Thử tìm kiếm với từ khóa khác</p>
+        </div>
+      )}
     </div>
   );
 };

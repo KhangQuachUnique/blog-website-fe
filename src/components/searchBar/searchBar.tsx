@@ -35,12 +35,11 @@ export const SearchBar = () => {
   return (
     <div className="relative w-full max-w-md mr-auto" ref={dropdownRef}>
       {/* 1.1 Input nhập từ khóa */}
-      <div className="flex items-center bg-gray-100 rounded-full px-4 py-2">
-        <span className="text-gray-500 mr-2">🔍</span>
+      <div className="relative">
         <input
           type="text"
-          className="bg-transparent border-none outline-none w-full text-sm"
-          placeholder="Searching on Blog..."
+          className="w-full rounded-full border border-gray-200 bg-white px-6 py-3 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-200"
+          placeholder="Search..."
           value={keyword}
           onChange={(e) => {
             setKeyword(e.target.value);
@@ -49,6 +48,18 @@ export const SearchBar = () => {
           onFocus={() => setShowDropdown(true)}
           onKeyDown={handleKeyDown}
         />
+
+        {/* Search button on the right */}
+        <button
+          type="button"
+          aria-label="Search"
+          onClick={() => handleSearch('post')}
+          className="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full border border-gray-200 bg-white flex items-center justify-center shadow-sm"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z" />
+          </svg>
+        </button>
       </div>
 
       {/* 1.2 Dropdown Menu */}
