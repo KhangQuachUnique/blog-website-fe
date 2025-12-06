@@ -6,6 +6,7 @@ export interface SearchResultItem {
   title?: string;      // Có nếu là Post
   username?: string;   // Có nếu là User
   name?: string;       // Có nếu là Community/Hashtag
+  description?: string; // Có nếu là Community
   avatarUrl?: string;
   thumbnailUrl?: string;
   // Thêm các fields cho Post (giống Newsfeed)
@@ -30,13 +31,9 @@ export const searchAPI = {
         params: { q: keyword, type: type }
       });
       
-      // Backend trả về { status, statusCode, data } - lấy data array
-      if (response.data && response.data.data) {
-        return response.data.data;
-      }
-      
-      // Fallback nếu structure khác
-      return response.data || [];
+      // Axios interceptor đã tự động extract response.data.data
+      // Nên response ở đây chính là array results
+      return response as unknown as SearchResultItem[];
     } catch (error) {
       console.error("Lỗi khi tìm kiếm:", error);
       throw error;

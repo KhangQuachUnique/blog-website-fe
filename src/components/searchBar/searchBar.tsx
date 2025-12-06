@@ -33,7 +33,7 @@ export const SearchBar = () => {
   };
 
   return (
-    <div className="relative w-full max-w-md mr-auto" ref={dropdownRef}>
+    <div className="relative w-full max-w-2xl mr-auto" ref={dropdownRef}>
       {/* 1.1 Input nhập từ khóa */}
       <div className="relative">
         <input

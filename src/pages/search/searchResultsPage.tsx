@@ -2,8 +2,10 @@ import { useEffect, useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { searchAPI } from '../../services/search.service';
 import type { SearchResultItem } from '../../services/search.service';
-import { Loader2, ArrowUp, ArrowDown, MessageCircle, Heart } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import Masonry from 'react-masonry-css';
+import Card from '../../components/card/Card';
+import type { IPostResponseDto } from '../../types/post';
 import '../../styles/newsfeed/NewsfeedList.css';
 import '../../styles/newsfeed/Card.css';
 
@@ -27,7 +29,7 @@ export const SearchResultPage = () => {
         const data = await searchAPI.search(q, type);
         setResults(data);
       } catch (error) {
-        // Xử lý lỗi (ví dụ hiển thị toast)
+        console.error('Search error:', error);
       } finally {
         setLoading(false);
       }
@@ -50,124 +52,103 @@ export const SearchResultPage = () => {
   };
 
   const breakpointCols = {
-    default: 3,
-    1400: 4,
-    992: 3,
-    768: 2,
-    0: 1,
+    default: 1,
   };
 
-  // Render Post Card (giống Newsfeed)
-  const renderPostCard = (item: SearchResultItem) => (
-    <Link to={`/post/${item.id}`} className="block">
+  // Convert SearchResultItem to IPostResponseDto for Card component
+  const convertToPost = (item: SearchResultItem): IPostResponseDto => ({
+    id: Number(item.id),
+    title: item.title || '',
+    shortDescription: '',
+    thumbnailUrl: item.thumbnailUrl,
+    isPublic: true,
+    author: {
+      id: item.author?.id || 0,
+      username: item.author?.username || item.username || 'Ẩn danh',
+      avatarUrl: item.author?.avatarUrl || item.avatarUrl || 'https://via.placeholder.com/40',
+    },
+    status: 'ACTIVE' as const,
+    type: 'PERSONAL' as const,
+    hashtags: item.hashtags || [],
+    createdAt: item.createdAt ? new Date(item.createdAt) : new Date(),
+    upVotes: item.upVotes || 0,
+    downVotes: item.downVotes || 0,
+    totalComments: item.totalComments || 0,
+    totalReacts: item.totalReacts || 0,
+  });
+
+  // Render User Card (cùng style với newsfeed card)
+  const renderUserCard = (item: SearchResultItem) => (
+    <Link to={`/profile/${item.id}`} className="block">
       <article className="newsfeed-card hover:shadow-lg transition-shadow cursor-pointer">
-        {item.thumbnailUrl && (
+        {item.avatarUrl && (
           <div className="newsfeed-card__thumbnail">
             <img
-              src={item.thumbnailUrl}
-              alt={item.title}
+              src={item.avatarUrl}
+              alt={item.username}
               className="newsfeed-card__image"
               loading="lazy"
             />
           </div>
         )}
-        <div className="newsfeed-card__content">
-          <div className="newsfeed-card__header">
-            <div className="newsfeed-card__author">
-              <img
-                src={item.author?.avatarUrl || item.avatarUrl || 'https://via.placeholder.com/40'}
-                alt={item.author?.username || item.username || 'User'}
-                className="newsfeed-card__avatar"
-              />
-              <div className="newsfeed-card__author-info">
-                <span className="newsfeed-card__username">{item.author?.username || item.username || 'Ẩn danh'}</span>
-              </div>
-            </div>
-            <time className="newsfeed-card__time">{formatDate(item.createdAt)}</time>
-          </div>
-          <h2 className="newsfeed-card__title">{item.title}</h2>
-          {item.hashtags && item.hashtags.length > 0 && (
-            <div className="newsfeed-card__hashtags">
-              {item.hashtags.map((h) => (
-                <span key={h.id || h.name} className="newsfeed-card__hashtag">#{h.name}</span>
-              ))}
-            </div>
-          )}
-          <div className="newsfeed-card__footer">
-            <div className="newsfeed-card__stats">
-              <div className="newsfeed-card__votes">
-                <button className="newsfeed-card__vote-btn newsfeed-card__vote-btn--up">
-                  <ArrowUp size={18} />
-                  <span>{item.upVotes || 0}</span>
-                </button>
-                <button className="newsfeed-card__vote-btn newsfeed-card__vote-btn--down">
-                  <ArrowDown size={18} />
-                  <span>{item.downVotes || 0}</span>
-                </button>
-              </div>
-              <div className="newsfeed-card__interactions">
-                <div className="newsfeed-card__interaction">
-                  <MessageCircle size={18} />
-                  <span>{item.totalComments || 0}</span>
-                </div>
-                <div className="newsfeed-card__interaction">
-                  <Heart size={18} />
-                  <span>{item.totalReacts || 0}</span>
+        <div className="newsfeed-card__right">
+          <div className="newsfeed-card__content">
+            <h2 className="newsfeed-card__title">{item.username}</h2>
+            <div className="newsfeed-card__header">
+              <div className="newsfeed-card__author">
+                <img
+                  src={item.avatarUrl || 'https://via.placeholder.com/40'}
+                  alt={item.username}
+                  className="newsfeed-card__avatar"
+                />
+                <div className="newsfeed-card__author-info">
+                  <span className="newsfeed-card__username">@{item.username}</span>
                 </div>
               </div>
             </div>
+            <span className="text-blue-500 text-sm hover:underline mt-2">Xem trang cá nhân</span>
           </div>
         </div>
       </article>
     </Link>
   );
 
-  // Render User Card
-  const renderUserCard = (item: SearchResultItem) => (
-    <Link to={`/profile/${item.id}`} className="block">
-      <article className="newsfeed-card hover:shadow-lg transition-shadow cursor-pointer">
-        <div className="newsfeed-card__content">
-          <div className="flex items-center gap-4 p-2">
-            <img
-              src={item.avatarUrl || 'https://via.placeholder.com/60'}
-              alt={item.username}
-              className="w-16 h-16 rounded-full object-cover"
-            />
-            <div>
-              <h2 className="newsfeed-card__title text-lg">{item.username}</h2>
-              <span className="text-blue-500 text-sm hover:underline">Xem trang cá nhân</span>
-            </div>
-          </div>
-        </div>
-      </article>
-    </Link>
-  );
-
-  // Render Community Card
+  // Render Community Card (cùng style với newsfeed card)
   const renderCommunityCard = (item: SearchResultItem) => (
     <Link to={`/community/${item.id}`} className="block">
       <article className="newsfeed-card hover:shadow-lg transition-shadow cursor-pointer">
-        <div className="newsfeed-card__content">
-          <div className="p-2">
-            <h2 className="newsfeed-card__title">Cộng đồng: {item.name}</h2>
-            <span className="text-blue-500 text-sm">Tham gia ngay</span>
+        {item.thumbnailUrl && (
+          <div className="newsfeed-card__thumbnail">
+            <img
+              src={item.thumbnailUrl}
+              alt={item.name}
+              className="newsfeed-card__image"
+              loading="lazy"
+            />
           </div>
-        </div>
-      </article>
-    </Link>
-  );
-
-  // Render Hashtag Card
-  const renderHashtagCard = (item: SearchResultItem) => (
-    <Link to={`/hashtag/${item.name}`} className="block">
-      <article className="newsfeed-card hover:shadow-lg transition-shadow cursor-pointer">
-        <div className="newsfeed-card__content">
-          <div className="p-2">
-            <h2 className="newsfeed-card__title flex items-center gap-2">
-              <span className="text-2xl">#️⃣</span>
-              <span className="text-blue-600">#{item.name}</span>
-            </h2>
-            <span className="text-blue-500 text-sm hover:underline">Xem các bài viết với hashtag này</span>
+        )}
+        <div className="newsfeed-card__right">
+          <div className="newsfeed-card__content">
+            <h2 className="newsfeed-card__title">{item.name}</h2>
+            <div className="newsfeed-card__header">
+              <div className="newsfeed-card__author">
+                <img
+                  src={item.thumbnailUrl || 'https://via.placeholder.com/40'}
+                  alt={item.name}
+                  className="newsfeed-card__avatar"
+                />
+                <div className="newsfeed-card__author-info">
+                  <span className="newsfeed-card__username">Cộng đồng</span>
+                </div>
+              </div>
+              {item.createdAt && (
+                <time className="newsfeed-card__time">{formatDate(item.createdAt)}</time>
+              )}
+            </div>
+            {item.description && (
+              <p className="text-gray-600 text-sm mt-2 line-clamp-2">{item.description}</p>
+            )}
+            <span className="text-blue-500 text-sm hover:underline mt-2">Tham gia ngay</span>
           </div>
         </div>
       </article>
@@ -182,10 +163,11 @@ export const SearchResultPage = () => {
       case 'community':
         return renderCommunityCard(item);
       case 'hashtag':
-        return renderHashtagCard(item);
+        // Hashtag search trả về bài viết có hashtag đó, hiển thị như post
+        return <Card post={convertToPost(item)} />;
       case 'post':
       default:
-        return renderPostCard(item);
+        return <Card post={convertToPost(item)} />;
     }
   };
 
