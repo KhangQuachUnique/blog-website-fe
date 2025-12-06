@@ -1,11 +1,9 @@
-import { useInfiniteQuery } from "@tanstack/react-query";
 import NewsfeedList from "../../../components/newsfeedList/NewsfeedList";
-import { getNewsfeed } from "../../../services/user/newsfeed_api";
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 import { Loader2 } from "lucide-react";
 import { useCallback } from "react";
+import { useGetNewsFeed } from "../../../hooks/useNewsFeed";
 // import "../../styles/newsfeed/Newsfeed.css";
-
 
 export default function Newsfeed() {
   const {
@@ -16,13 +14,7 @@ export default function Newsfeed() {
     isLoading,
     error, // ← thêm dòng này
     isError, // ← thêm dòng này
-  } = useInfiniteQuery({
-    queryKey: ["newsfeed"],
-    queryFn: ({ pageParam }) => getNewsfeed(pageParam ?? undefined),
-    initialPageParam: undefined,
-    getNextPageParam: (lastPage) =>
-      lastPage.pagination?.nextCursor ?? undefined,
-  });
+  } = useGetNewsFeed();
 
   const posts = data?.pages.flatMap((page) => page.items) ?? [];
 
@@ -76,8 +68,10 @@ export default function Newsfeed() {
 
   return (
     <div className=" mx-auto px-4 py-8">
-      <h1 className="text-3xl text-[#F295B6] font-bold mb-8 text-center">Newsfeed</h1>
-      
+      <h1 className="text-3xl text-[#F295B6] font-bold mb-8 text-center">
+        Newsfeed
+      </h1>
+
       <NewsfeedList posts={posts} loadMoreRef={lastPostRef} />
 
       {isFetchingNextPage && (
