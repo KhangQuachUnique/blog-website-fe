@@ -176,11 +176,12 @@ const InteractBar: React.FC<InteractBarProps> = ({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          gap: 1,
-          p: 1.5,
-          background: THEME.cream,
+          gap: 2,
+          px: 2.5,
+          py: 1.5,
+          background: THEME.white,
           borderTop: `1px solid ${THEME.tertiary}`,
-          borderRadius: '0 0 10px 10px',
+          borderRadius: '0 0 12px 12px',
           position: 'relative',
         }}
       >
@@ -190,35 +191,34 @@ const InteractBar: React.FC<InteractBarProps> = ({
           spacing={0.5}
           alignItems="center"
           sx={{
-            px: 1,
-            py: 0.5,
-            background: THEME.white,
-            borderRadius: '50px',
-            border: `1.5px solid ${THEME.secondary}`,
-            boxShadow: '0 2px 8px rgba(242, 149, 182, 0.15)',
+            px: 1.5,
+            py: 0.75,
+            background: THEME.cream,
+            borderRadius: '12px',
+            border: `1px solid ${THEME.tertiary}`,
           }}
         >
-          <Tooltip title={isLoggedIn ? 'Upvote' : 'Đăng nhập để vote'} arrow>
+          <Tooltip title={isLoggedIn ? 'Upvote' : 'Đăng nhập để vote'} arrow placement="top">
             <span>
               <IconButton
                 size="small"
                 disabled={isVoting}
                 onClick={() => onVoteClick('upvote')}
                 sx={{
-                  width: 28,
-                  height: 28,
-                  backgroundColor: voteType === 'upvote' ? THEME.tertiary : 'transparent',
+                  width: 32,
+                  height: 32,
+                  backgroundColor: voteType === 'upvote' ? THEME.primary : 'transparent',
+                  color: voteType === 'upvote' ? THEME.white : THEME.textMuted,
                   '&:hover': {
-                    backgroundColor: THEME.tertiary,
-                    transform: 'scale(1.08)',
+                    backgroundColor: voteType === 'upvote' ? THEME.upvoteActive : THEME.tertiary,
                   },
                   transition: 'all 0.2s ease',
                 }}
               >
                 <BiUpvote
                   style={{
-                    fontSize: 16,
-                    color: voteType === 'upvote' ? THEME.upvoteActive : THEME.secondary,
+                    fontSize: 18,
+                    color: voteType === 'upvote' ? THEME.white : THEME.text,
                   }}
                 />
               </IconButton>
@@ -228,44 +228,38 @@ const InteractBar: React.FC<InteractBarProps> = ({
           <Typography
             variant="body2"
             sx={{
-              minWidth: 28,
+              minWidth: 36,
               textAlign: 'center',
-              fontWeight: 700,
-              fontSize: '13px',
-              color:
-                voteType === 'upvote'
-                  ? THEME.upvoteActive
-                  : voteType === 'downvote'
-                  ? THEME.downvoteActive
-                  : THEME.text,
-              transition: 'color 0.2s ease',
+              fontWeight: 600,
+              fontSize: '14px',
+              color: THEME.text,
               userSelect: 'none',
             }}
           >
             {netVotes}
           </Typography>
 
-          <Tooltip title={isLoggedIn ? 'Downvote' : 'Đăng nhập để vote'} arrow>
+          <Tooltip title={isLoggedIn ? 'Downvote' : 'Đăng nhập để vote'} arrow placement="top">
             <span>
               <IconButton
                 size="small"
                 disabled={isVoting}
                 onClick={() => onVoteClick('downvote')}
                 sx={{
-                  width: 28,
-                  height: 28,
-                  backgroundColor: voteType === 'downvote' ? '#F0E8EA' : 'transparent',
+                  width: 32,
+                  height: 32,
+                  backgroundColor: voteType === 'downvote' ? THEME.downvoteActive : 'transparent',
+                  color: voteType === 'downvote' ? THEME.white : THEME.textMuted,
                   '&:hover': {
-                    backgroundColor: THEME.tertiary,
-                    transform: 'scale(1.08)',
+                    backgroundColor: voteType === 'downvote' ? '#8B7B82' : THEME.tertiary,
                   },
                   transition: 'all 0.2s ease',
                 }}
               >
                 <BiDownvote
                   style={{
-                    fontSize: 16,
-                    color: voteType === 'downvote' ? THEME.downvoteActive : THEME.secondary,
+                    fontSize: 18,
+                    color: voteType === 'downvote' ? THEME.white : THEME.text,
                   }}
                 />
               </IconButton>
@@ -274,24 +268,23 @@ const InteractBar: React.FC<InteractBarProps> = ({
         </Stack>
 
         {/* Right: Emoji, Comment & More */}
-        <Stack direction="row" spacing={0.75} alignItems="center">
+        <Stack direction="row" spacing={1} alignItems="center">
           {/* Emoji React Button */}
-          <Tooltip title={isLoggedIn ? 'React' : 'Đăng nhập để react'} arrow>
+          <Tooltip title={isLoggedIn ? 'React với emoji' : 'Đăng nhập để react'} arrow placement="top">
             <span>
               <IconButton
                 size="small"
                 disabled={isReacting}
                 onClick={handleEmojiClick}
                 sx={{
-                  width: 32,
-                  height: 32,
-                  fontSize: '16px',
-                  border: `1.5px solid ${selectedEmojiId ? THEME.primary : THEME.secondary}`,
-                  backgroundColor: selectedEmojiId ? THEME.tertiary : THEME.white,
-                  boxShadow: '0 2px 8px rgba(242, 149, 182, 0.15)',
+                  width: 36,
+                  height: 36,
+                  fontSize: '18px',
+                  backgroundColor: selectedEmojiId ? THEME.tertiary : THEME.cream,
+                  border: `1px solid ${selectedEmojiId ? THEME.primary : THEME.tertiary}`,
                   '&:hover': {
-                    transform: 'scale(1.05)',
                     backgroundColor: THEME.tertiary,
+                    borderColor: THEME.primary,
                   },
                   transition: 'all 0.2s ease',
                 }}
@@ -302,55 +295,58 @@ const InteractBar: React.FC<InteractBarProps> = ({
           </Tooltip>
 
           {/* Comment Button */}
-          <Tooltip title="Xem bình luận" arrow>
-            <Chip
-              icon={<BiCommentDetail style={{ fontSize: 16, color: THEME.primary }} />}
-              label={totalComments}
+          <Tooltip title="Xem bình luận" arrow placement="top">
+            <Box
               onClick={() => navigate(`/post/${postId}`)}
-              size="small"
               sx={{
-                height: 32,
-                backgroundColor: THEME.white,
-                border: `1.5px solid ${THEME.secondary}`,
-                boxShadow: '0 2px 8px rgba(242, 149, 182, 0.15)',
-                fontWeight: 600,
-                fontSize: '12px',
-                color: THEME.text,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 0.75,
+                px: 1.5,
+                py: 0.75,
+                backgroundColor: THEME.cream,
+                border: `1px solid ${THEME.tertiary}`,
+                borderRadius: '12px',
+                cursor: 'pointer',
                 '&:hover': {
                   backgroundColor: THEME.tertiary,
-                  transform: 'scale(1.05)',
-                },
-                transition: 'all 0.2s ease',
-                '& .MuiChip-label': {
-                  px: 1,
-                },
-                '& .MuiChip-icon': {
-                  marginLeft: '8px',
-                  marginRight: '-2px',
-                },
-              }}
-            />
-          </Tooltip>
-
-          {/* More Menu Button */}
-          <Tooltip title="Tùy chọn khác" arrow>
-            <IconButton
-              size="small"
-              onClick={handleMoreClick}
-              sx={{
-                width: 32,
-                height: 32,
-                border: `1.5px solid ${moreAnchorEl ? THEME.primary : THEME.secondary}`,
-                backgroundColor: moreAnchorEl ? THEME.tertiary : THEME.white,
-                boxShadow: '0 2px 8px rgba(242, 149, 182, 0.15)',
-                '&:hover': {
-                  backgroundColor: THEME.tertiary,
-                  transform: 'scale(1.05)',
+                  borderColor: THEME.secondary,
                 },
                 transition: 'all 0.2s ease',
               }}
             >
-              <BiDotsHorizontalRounded style={{ fontSize: 18, color: THEME.primary }} />
+              <BiCommentDetail style={{ fontSize: 18, color: THEME.primary }} />
+              <Typography 
+                variant="body2" 
+                sx={{ 
+                  fontWeight: 600, 
+                  fontSize: '13px', 
+                  color: THEME.text 
+                }}
+              >
+                {totalComments}
+              </Typography>
+            </Box>
+          </Tooltip>
+
+          {/* More Menu Button */}
+          <Tooltip title="Tùy chọn khác" arrow placement="top">
+            <IconButton
+              size="small"
+              onClick={handleMoreClick}
+              sx={{
+                width: 36,
+                height: 36,
+                backgroundColor: moreAnchorEl ? THEME.tertiary : THEME.cream,
+                border: `1px solid ${moreAnchorEl ? THEME.primary : THEME.tertiary}`,
+                '&:hover': {
+                  backgroundColor: THEME.tertiary,
+                  borderColor: THEME.primary,
+                },
+                transition: 'all 0.2s ease',
+              }}
+            >
+              <BiDotsHorizontalRounded style={{ fontSize: 20, color: THEME.primary }} />
             </IconButton>
           </Tooltip>
         </Stack>
@@ -369,33 +365,36 @@ const InteractBar: React.FC<InteractBarProps> = ({
           vertical: 'bottom',
           horizontal: 'center',
         }}
-        sx={{
-          mt: -1,
+        sx={{ mt: -1 }}
+        slotProps={{
+          paper: {
+            sx: {
+              borderRadius: '16px',
+              border: `1px solid ${THEME.tertiary}`,
+              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+            }
+          }
         }}
       >
-        <Paper
-          elevation={3}
+        <Box
           sx={{
             display: 'flex',
             gap: 0.5,
-            p: 1.5,
-            borderRadius: '28px',
-            border: `1.5px solid ${THEME.secondary}`,
+            p: 2,
             backgroundColor: THEME.white,
           }}
         >
           {EMOJI_LIST.map((item) => (
-            <Tooltip key={item.id} title={item.label} arrow>
+            <Tooltip key={item.id} title={item.label} arrow placement="top">
               <IconButton
                 onClick={() => onEmojiSelect(item.id)}
                 sx={{
-                  width: 40,
-                  height: 40,
-                  fontSize: '22px',
+                  width: 44,
+                  height: 44,
+                  fontSize: '24px',
                   backgroundColor: selectedEmojiId === item.id ? THEME.tertiary : 'transparent',
                   '&:hover': {
                     backgroundColor: THEME.tertiary,
-                    transform: 'scale(1.15) rotate(-5deg)',
                   },
                   transition: 'all 0.2s ease',
                 }}
@@ -404,7 +403,7 @@ const InteractBar: React.FC<InteractBarProps> = ({
               </IconButton>
             </Tooltip>
           ))}
-        </Paper>
+        </Box>
       </Popover>
 
       {/* More Menu */}
@@ -420,82 +419,114 @@ const InteractBar: React.FC<InteractBarProps> = ({
           vertical: 'top',
           horizontal: 'right',
         }}
-        sx={{
-          mt: 1,
-          '& .MuiPaper-root': {
-            borderRadius: '16px',
-            border: `1.5px solid ${THEME.secondary}`,
-            minWidth: 160,
-          },
+        slotProps={{
+          paper: {
+            sx: {
+              mt: 1,
+              borderRadius: '12px',
+              border: `1px solid ${THEME.tertiary}`,
+              minWidth: 180,
+              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+            }
+          }
         }}
       >
         <MenuItem
           onClick={handleShare}
           sx={{
-            py: 1.5,
+            py: 1.25,
             px: 2,
             gap: 1.5,
+            mx: 1,
+            my: 0.5,
+            borderRadius: '8px',
             '&:hover': {
-              backgroundColor: THEME.tertiary,
+              backgroundColor: THEME.cream,
             },
           }}
         >
-          <BiShareAlt style={{ fontSize: 18, color: THEME.primary }} />
-          <Typography variant="body2" fontWeight={600}>
+          <BiShareAlt style={{ fontSize: 20, color: THEME.primary }} />
+          <Typography variant="body2" fontWeight={600} color={THEME.text}>
             Chia sẻ
           </Typography>
         </MenuItem>
         <MenuItem
           onClick={handleRepost}
           sx={{
-            py: 1.5,
+            py: 1.25,
             px: 2,
             gap: 1.5,
+            mx: 1,
+            my: 0.5,
+            borderRadius: '8px',
             '&:hover': {
-              backgroundColor: THEME.tertiary,
+              backgroundColor: THEME.cream,
             },
           }}
         >
-          <MdOutlineRepeat style={{ fontSize: 18, color: THEME.primary }} />
-          <Typography variant="body2" fontWeight={600}>
+          <MdOutlineRepeat style={{ fontSize: 20, color: THEME.primary }} />
+          <Typography variant="body2" fontWeight={600} color={THEME.text}>
             Đăng lại
           </Typography>
         </MenuItem>
-        <Divider sx={{ my: 0.5, mx: 1.5, backgroundColor: THEME.tertiary }} />
+        <Divider sx={{ my: 0.5 }} />
         <MenuItem
           onClick={handleReport}
           sx={{
-            py: 1.5,
+            py: 1.25,
             px: 2,
             gap: 1.5,
+            mx: 1,
+            my: 0.5,
+            borderRadius: '8px',
             '&:hover': {
-              backgroundColor: '#FFEBEE',
+              backgroundColor: '#FEE',
             },
           }}
         >
-          <BiFlag style={{ fontSize: 18, color: '#E57373' }} />
+          <BiFlag style={{ fontSize: 20, color: '#E57373' }} />
           <Typography variant="body2" fontWeight={600} color="#E57373">
             Báo cáo
           </Typography>
         </MenuItem>
       </Menu>
 
-      {/* Snackbars for Notifications */}
+      {/* Snackbars - Slide from Right */}
       <Snackbar
         open={showLoginToast}
         autoHideDuration={2500}
         onClose={() => setShowLoginToast(false)}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+        TransitionComponent={(props) => <Box {...props} sx={{ 
+          transition: 'transform 0.3s ease-in-out, opacity 0.3s ease-in-out',
+          ...props.sx 
+        }} />}
+        sx={{
+          '& .MuiSnackbar-root': {
+            pointerEvents: 'auto',
+          }
+        }}
       >
         <Alert
           onClose={() => setShowLoginToast(false)}
           severity="info"
+          variant="filled"
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'none';
+            e.currentTarget.style.transition = 'all 0.2s ease';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'none';
+          }}
           sx={{
-            width: '100%',
-            borderRadius: '24px',
-            background: `linear-gradient(135deg, ${THEME.primary} 0%, ${THEME.secondary} 100%)`,
+            minWidth: '300px',
+            borderRadius: '12px',
+            backgroundColor: THEME.primary,
             color: THEME.white,
             fontWeight: 600,
+            fontSize: '14px',
+            boxShadow: '0 4px 20px rgba(242, 149, 182, 0.3)',
+            pointerEvents: 'auto',
             '& .MuiAlert-icon': {
               color: THEME.white,
             },
@@ -509,17 +540,37 @@ const InteractBar: React.FC<InteractBarProps> = ({
         open={showShareToast}
         autoHideDuration={2000}
         onClose={() => setShowShareToast(false)}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+        TransitionComponent={(props) => <Box {...props} sx={{ 
+          transition: 'transform 0.3s ease-in-out, opacity 0.3s ease-in-out',
+          ...props.sx 
+        }} />}
+        sx={{
+          '& .MuiSnackbar-root': {
+            pointerEvents: 'auto',
+          }
+        }}
       >
         <Alert
           onClose={() => setShowShareToast(false)}
           severity="success"
+          variant="filled"
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'none';
+            e.currentTarget.style.transition = 'all 0.2s ease';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'none';
+          }}
           sx={{
-            width: '100%',
-            borderRadius: '24px',
-            background: `linear-gradient(135deg, ${THEME.primary} 0%, ${THEME.secondary} 100%)`,
+            minWidth: '280px',
+            borderRadius: '12px',
+            backgroundColor: '#4CAF50',
             color: THEME.white,
             fontWeight: 600,
+            fontSize: '14px',
+            boxShadow: '0 4px 20px rgba(76, 175, 80, 0.3)',
+            pointerEvents: 'auto',
             '& .MuiAlert-icon': {
               color: THEME.white,
             },
