@@ -85,4 +85,8 @@ export interface IPostResponseDto {
   community?: ICommunityDto;
   originalPost?: IPostResponseDto;
   blocks?: IBlockResponseDto[];
+  upVotes: number;
+  downVotes: number;
+  totalComments: number;
+  totalReacts: number;
 }

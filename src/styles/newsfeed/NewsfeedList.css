@@ -17,6 +17,12 @@
   margin-bottom: 1.5rem;
 }
 
+/* make cards narrower (55% width) and centered inside each column */
+.newsfeed-masonry-item .newsfeed-card {
+  width: 65%;
+  margin-left: auto;
+  margin-right: auto;
+}
 
 @media (max-width: 768px) {
   .newsfeed-masonry-grid {
@@ -27,6 +33,12 @@
   }
   .newsfeed-masonry-item {
     margin-bottom: 1rem;
+  }
+  /* full width cards on small screens */
+  .newsfeed-masonry-item .newsfeed-card {
+    width: 100%;
+    margin-left: 0;
+    margin-right: 0;
   }
 }
 

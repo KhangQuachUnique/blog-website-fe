@@ -11,6 +11,8 @@ interface ImageBlockEditProps {
   caption?: string;
   objectFit?: ObjectFitType;
   style?: React.CSSProperties;
+  handleAppendImageForm?: (key: string, file: File) => void;
+  handleRemoveImageForm?: (key: string) => void;
   onImageChange?: (id: string, imageUrl: string) => void;
   onCaptionChange?: (id: string, caption: string) => void;
   onObjectFitChange?: (id: string, objectFit: ObjectFitType) => void;
@@ -22,6 +24,8 @@ const ImageBlockEdit = ({
   caption: initialCaption = "",
   objectFit: initialObjectFit = "cover",
   style,
+  handleAppendImageForm,
+  handleRemoveImageForm,
   onImageChange,
   onCaptionChange,
   onObjectFitChange,
@@ -42,16 +46,14 @@ const ImageBlockEdit = ({
 
     setIsUploading(true);
 
-    // TODO: Replace với API upload thật
-    // Tạm thời dùng local preview
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const url = e.target?.result as string;
-      setImageUrl(url);
-      onImageChange?.(id, url);
-      setIsUploading(false);
-    };
-    reader.readAsDataURL(file);
+    // Thêm file vào FormData để upload với block id làm key
+    if (handleAppendImageForm) {
+      handleAppendImageForm(id, file);
+    }
+    const url = URL.createObjectURL(file);
+    setImageUrl(url);
+    onImageChange?.(id, url);
+    setIsUploading(false);
   };
 
   const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -99,6 +101,7 @@ const ImageBlockEdit = ({
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
+    handleRemoveImageForm?.(id);
   };
 
   const handleClickUpload = () => {
