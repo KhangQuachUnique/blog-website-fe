@@ -4,6 +4,11 @@ import type { UserProfile } from "../../../types/user.types";
 import { IoSettingsOutline } from "react-icons/io5";
 import { MdGroup } from "react-icons/md";
 import { BsFileText } from "react-icons/bs";
+import { TfiEmail } from "react-icons/tfi";
+import { CiPhone } from "react-icons/ci";
+import { BsGenderMale } from "react-icons/bs";
+import { BsGenderFemale } from "react-icons/bs";
+import { MdOutlineSchedule } from "react-icons/md";
 
 const ViewProfile = () => {
   const { userId } = useParams<{ userId: string }>();
@@ -154,39 +159,74 @@ const ViewProfile = () => {
                 </span>
               )}
             </div>
-            <p className="text-gray-600 mb-1">@{profile.username}</p>
             
-            {/* Hiển thị email nếu: 1) Là chính mình HOẶC 2) User cho phép hiển thị công khai */}
-            {profile.email && (isOwnProfile || profile.showEmail) && (
-              <p className="text-gray-600 mb-1">
-                📧 {profile.email}
-                {!isOwnProfile && <span className="text-xs text-gray-400 ml-2">(Công khai)</span>}
-              </p>
-            )}
-            
-            {/* Hiển thị SĐT nếu: 1) Là chính mình HOẶC 2) User cho phép hiển thị công khai */}
-            {profile.phoneNumber && (isOwnProfile || profile.showPhoneNumber) && (
-              <p className="text-gray-600 mb-1">
-                📱 {profile.phoneNumber}
-                {!isOwnProfile && <span className="text-xs text-gray-400 ml-2">(Công khai)</span>}
-              </p>
-            )}
-            
+            {/* Container chính: Dùng flex-col và gap-2 để mọi dòng cách nhau ĐỀU 8px */}
+            <div className="flex flex-col gap-2 text-sm text-gray-600 mt-2">
+              
+              {/* --- 1. Email --- */}
+              {profile.email && (isOwnProfile || profile.showEmail) && (
+                <div className="flex items-center gap-2">
+                  <TfiEmail className="text-lg shrink-0" />
+                  <span>{profile.email}</span>
+                  {!isOwnProfile && (
+                    <span className="text-xs text-gray-400 italic">(Công khai)</span>
+                  )}
+                </div>
+              )}
+
+              {/* --- 2. Số điện thoại --- */}
+              {profile.phoneNumber && (isOwnProfile || profile.showPhoneNumber) && (
+                <div className="flex items-center gap-2">
+                  <CiPhone className="text-lg shrink-0" />
+                  <span>{profile.phoneNumber}</span>
+                  {!isOwnProfile && (
+                    <span className="text-xs text-gray-400 italic">(Công khai)</span>
+                  )}
+                </div>
+              )}
+
+              {/* --- 3. Hàng chứa Giới tính & Ngày tham gia --- */}
+              {/* Kiểm tra nếu có ít nhất 1 trong 2 thông tin thì mới render hàng này */}
+              {(profile.gender || profile.joinAt) && (
+                <div className="flex flex-wrap items-center gap-4">
+                  
+                  {/* Giới tính */}
+                  {profile.gender && (
+                    <div className="flex items-center gap-1">
+                      {profile.gender === 'MALE' ? (
+                        <>
+                          <BsGenderMale className="text-base text-blue-500" /> 
+                          <span>Nam</span>
+                        </>
+                      ) : profile.gender === 'FEMALE' ? (
+                        <>
+                          <BsGenderFemale className="text-base text-pink-500" /> 
+                          <span>Nữ</span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="text-base">⚧️</span> 
+                          <span>Khác</span>
+                        </>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Ngày tham gia */}
+                  {profile.joinAt && (
+                    <div className="flex items-center gap-1">
+                      <MdOutlineSchedule className="text-lg shrink-0" />
+                      <span>Tham gia {new Date(profile.joinAt).toLocaleDateString('vi-VN')}</span>
+                    </div>
+                  )}
+                </div>
+              )}
+
+            </div>
+
             {profile.bio && (
               <p className="text-gray-700 mt-3 max-w-2xl">{profile.bio}</p>
             )}
-
-            {/* Thông tin cá nhân */}
-            <div className="flex gap-4 mt-3 text-sm text-gray-600">
-              {profile.gender && (
-                <span>
-                  {profile.gender === 'MALE' ? '👨 Nam' : profile.gender === 'FEMALE' ? '👩 Nữ' : '⚧️ Khác'}
-                </span>
-              )}
-              {profile.joinAt && (
-                <span>📅 Tham gia {new Date(profile.joinAt).toLocaleDateString('vi-VN')}</span>
-              )}
-            </div>
 
             {/* Stats */}
             <div className="flex gap-6 mt-4">
@@ -263,25 +303,57 @@ const ViewProfile = () => {
                 profile.posts.map((post) => (
                   <div
                     key={post.id}
-                    className="border border-[#FFE4EC] rounded-xl p-6 hover:shadow-md transition-shadow duration-200 cursor-pointer"
+                    className="border border-[#FFE4EC] rounded-xl p-6 hover:shadow-md transition-shadow duration-200"
                   >
                     <div className="flex gap-4">
                       {post.thumbnailUrl && (
                         <img
                           src={post.thumbnailUrl}
                           alt={post.title}
-                          className="w-48 h-32 object-cover rounded-lg flex-shrink-0"
+                          className="w-48 h-32 object-cover rounded-lg flex-shrink-0 cursor-pointer"
                         />
                       )}
                       <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <h3 className="text-xl font-bold hover:text-[#F295B6] transition-colors">
-                            {post.title}
-                          </h3>
-                          {!post.isPublic && (
-                            <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">
-                              🔒 Riêng tư
-                            </span>
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <h3 className="text-xl font-bold hover:text-[#F295B6] transition-colors cursor-pointer">
+                              {post.title}
+                            </h3>
+                            {!post.isPublic && (
+                              <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">
+                                🔒 Riêng tư
+                              </span>
+                            )}
+                          </div>
+                          
+                          {/* Toggle privacy button - chỉ hiển thị nếu là chính mình */}
+                          {isOwnProfile && (
+                            <button
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                try {
+                                  // TODO: Call API PATCH /blog-posts/:id/toggle-privacy
+                                  const response = await fetch(`http://localhost:8080/blog-posts/${post.id}/toggle-privacy`, {
+                                    method: 'PATCH',
+                                  });
+                                  
+                                  if (response.ok) {
+                                    // Refresh profile data
+                                    window.location.reload();
+                                  }
+                                } catch (error) {
+                                  console.error('Failed to toggle privacy:', error);
+                                }
+                              }}
+                              className={`px-3 py-1 text-xs font-semibold rounded-lg transition-colors duration-200 ${
+                                post.isPublic
+                                  ? 'bg-green-100 text-green-700 hover:bg-green-200'
+                                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                              }`}
+                              title={post.isPublic ? 'Chuyển sang Riêng tư' : 'Chuyển sang Công khai'}
+                            >
+                              {post.isPublic ? '🌐 Công khai' : '🔒 Riêng tư'}
+                            </button>
                           )}
                         </div>
                         <div className="flex items-center gap-4 text-sm text-gray-500 mt-3">
