@@ -1,14 +1,35 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
-import { MessageCircle, MoreHorizontal, Share2, Repeat2, Flag } from 'lucide-react';
 import { useInteractBar } from '../../hooks/useInteractBar';
+import {
+  Box,
+  IconButton,
+  Typography,
+  Tooltip,
+  Menu,
+  MenuItem,
+  Popover,
+  Chip,
+  Snackbar,
+  Alert,
+  Stack,
+  Paper,
+  Divider,
+} from '@mui/material';
+import {
+  BiUpvote,
+  BiDownvote,
+  BiCommentDetail,
+  BiDotsHorizontalRounded,
+  BiShareAlt,
+  BiFlag,
+} from 'react-icons/bi';
+import { MdOutlineRepeat } from 'react-icons/md';
 
 // ============================================
-// 🎨 BLOOKIE DESIGN SYSTEM - PASTEL PINK EDITION
+// 🎨 THEME CONFIGURATION
 // ============================================
 const THEME = {
-  // Core Colors
   primary: '#F295B6',
   secondary: '#FFB8D1', 
   tertiary: '#FFE7F0',
@@ -16,29 +37,10 @@ const THEME = {
   text: '#4A3C42',
   textMuted: '#8B7B82',
   white: '#FFFFFF',
-  
-  // Semantic
-  upvote: '#F295B6',
   upvoteActive: '#E8779F',
-  downvote: '#B8A5AB',
   downvoteActive: '#9B8A90',
-  
-  // Shadows
-  shadowSoft: '0 2px 12px rgba(242, 149, 182, 0.15)',
-  shadowMedium: '0 4px 20px rgba(242, 149, 182, 0.2)',
-  shadowStrong: '0 8px 32px rgba(242, 149, 182, 0.25)',
 };
 
-// Backward compatibility
-const COLORS = {
-  primaryPink: THEME.primary,
-  lightPink: THEME.secondary,
-  lighterPink: THEME.tertiary,
-  pinkBg: THEME.cream,
-  primaryText: THEME.text,
-  secondaryText: THEME.textMuted,
-  white: THEME.white,
-};
 
 // Emoji reactions with pastel vibes
 const EMOJI_LIST = [
@@ -51,325 +53,7 @@ const EMOJI_LIST = [
 ];
 
 // ============================================
-// 🎯 CUSTOM ICONS - Soft Outline Style
-// ============================================
-
-// Upvote Arrow - Soft rounded style
-const UpvoteArrow: React.FC<{ active?: boolean; size?: number }> = ({ 
-  active = false, 
-  size = 18 
-}) => (
-  <svg 
-    width={size} 
-    height={size} 
-    viewBox="0 0 24 24" 
-    fill="none"
-    style={{ transition: 'all 0.2s ease' }}
-  >
-    <path
-      d="M12 4L4 14H9V20H15V14H20L12 4Z"
-      fill={active ? THEME.upvoteActive : 'transparent'}
-      stroke={active ? THEME.upvoteActive : THEME.secondary}
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-  </svg>
-);
-
-// Downvote Arrow - Soft rounded style
-const DownvoteArrow: React.FC<{ active?: boolean; size?: number }> = ({ 
-  active = false, 
-  size = 18 
-}) => (
-  <svg 
-    width={size} 
-    height={size} 
-    viewBox="0 0 24 24" 
-    fill="none"
-    style={{ transition: 'all 0.2s ease' }}
-  >
-    <path
-      d="M12 20L20 10H15V4H9V10H4L12 20Z"
-      fill={active ? THEME.downvoteActive : 'transparent'}
-      stroke={active ? THEME.downvoteActive : THEME.secondary}
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-  </svg>
-);
-
-// ============================================
-// 🧩 SUB-COMPONENTS
-// ============================================
-
-// Floating Toast Notification
-const Toast: React.FC<{ message: string; visible: boolean; anchorRect?: DOMRect | null }> = ({ message, visible, anchorRect }) => {
-  if (!visible) return null;
-
-  const toast = (
-    <>
-      <style>{`
-        @keyframes toastSlideIn {
-          0% { opacity: 0; transform: translateX(-50%) translateY(8px) scale(0.95); }
-          100% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
-        }
-      `}</style>
-      <div
-        style={{
-          position: 'fixed',
-          left: anchorRect ? `${anchorRect.left + anchorRect.width / 2}px` : '50%',
-          top: anchorRect ? `${anchorRect.top - 8}px` : undefined,
-          transform: anchorRect ? 'translateX(-50%) translateY(-100%)' : 'translateX(-50%)',
-          background: `linear-gradient(135deg, ${THEME.primary} 0%, ${THEME.secondary} 100%)`,
-          color: THEME.white,
-          padding: '10px 20px',
-          borderRadius: '24px',
-          fontSize: '13px',
-          fontWeight: 600,
-          fontFamily: "'Quicksand', sans-serif",
-          whiteSpace: 'nowrap',
-          boxShadow: THEME.shadowStrong,
-          animation: 'toastSlideIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
-          zIndex: 1000,
-        }}
-        onMouseDown={(e) => e.stopPropagation()}
-      >
-        {message}
-      </div>
-    </>
-  );
-
-  return createPortal(toast, document.body);
-};
-
-// Vote Button Component
-const VoteButton: React.FC<{
-  direction: 'up' | 'down';
-  active: boolean;
-  disabled: boolean;
-  onClick: () => void;
-}> = ({ direction, active, disabled, onClick }) => {
-  const [isHovered, setIsHovered] = useState(false);
-  
-  return (
-    <button
-      onClick={onClick}
-      disabled={disabled}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        width: '28px',
-        height: '28px',
-        borderRadius: '50px',
-        border: 'none',
-        background: active 
-          ? (direction === 'up' ? THEME.tertiary : '#F0E8EA')
-          : isHovered 
-            ? THEME.tertiary 
-            : 'transparent',
-        cursor: disabled ? 'not-allowed' : 'pointer',
-        opacity: disabled ? 0.5 : 1,
-        transition: 'all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
-        transform: isHovered && !disabled ? 'scale(1.08)' : 'scale(1)',
-      }}
-    >
-      {direction === 'up' 
-        ? <UpvoteArrow active={active} size={14} />
-        : <DownvoteArrow active={active} size={14} />
-      }
-    </button>
-  );
-};
-
-// Emoji Picker Popup
-const EmojiPicker: React.FC<{
-  visible: boolean;
-  selectedId: number | null;
-  onSelect: (id: number) => void;
-  anchorRect?: DOMRect | null;
-}> = ({ visible, selectedId, onSelect, anchorRect }) => {
-  if (!visible) return null;
-
-  const picker = (
-    <>
-      <style>{`
-        @keyframes emojiPickerPop {
-          0% { opacity: 0; transform: translateX(-50%) scale(0.9) translateY(8px); }
-          100% { opacity: 1; transform: translateX(-50%) scale(1) translateY(0); }
-        }
-        @keyframes emojiWiggle {
-          0%, 100% { transform: scale(1) rotate(0deg); }
-          25% { transform: scale(1.15) rotate(-5deg); }
-          75% { transform: scale(1.15) rotate(5deg); }
-        }
-      `}</style>
-      <div
-        style={{
-          position: 'fixed',
-          left: anchorRect ? `${anchorRect.left + anchorRect.width / 2}px` : '50%',
-          top: anchorRect ? `${anchorRect.top}px` : undefined,
-          transform: anchorRect ? 'translateX(-50%) translateY(-8px)' : 'translateX(-50%)',
-          display: 'flex',
-          gap: '4px',
-          padding: '10px 14px',
-          background: THEME.white,
-          borderRadius: '28px',
-          border: `1.5px solid ${THEME.secondary}`,
-          boxShadow: THEME.shadowStrong,
-          animation: 'emojiPickerPop 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)',
-          zIndex: 1000,
-        }}
-        onMouseDown={(e) => e.stopPropagation()}
-      >
-        {EMOJI_LIST.map((item, index) => (
-          <button
-            key={item.id}
-            onClick={() => onSelect(item.id)}
-            title={item.label}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: '40px',
-              height: '40px',
-              borderRadius: '50%',
-              border: 'none',
-              background: selectedId === item.id ? THEME.tertiary : 'transparent',
-              cursor: 'pointer',
-              fontSize: '22px',
-              transition: 'all 0.2s ease',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = THEME.tertiary;
-              e.currentTarget.style.animation = 'emojiWiggle 0.4s ease';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = selectedId === item.id ? THEME.tertiary : 'transparent';
-              e.currentTarget.style.animation = 'none';
-            }}
-          >
-            {item.emoji}
-          </button>
-        ))}
-      </div>
-    </>
-  );
-
-  return createPortal(picker, document.body);
-};
-
-// More Menu Dropdown (rendered in a portal so it overlays without affecting layout)
-const MoreMenu: React.FC<{
-  visible: boolean;
-  onShare: () => void;
-  onRepost: () => void;
-  onReport: () => void;
-  anchorRect?: DOMRect | null;
-}> = ({ visible, onShare, onRepost, onReport, anchorRect }) => {
-  if (!visible) return null;
-
-  const MenuItem: React.FC<{
-    icon: React.ReactNode;
-    label: string;
-    onClick: () => void;
-    danger?: boolean;
-  }> = ({ icon, label, onClick, danger }) => {
-    const [isHovered, setIsHovered] = useState(false);
-    
-    return (
-      <button
-        onClick={onClick}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '12px',
-          width: '100%',
-          padding: '12px 16px',
-          border: 'none',
-          background: isHovered ? THEME.tertiary : 'transparent',
-          cursor: 'pointer',
-          fontFamily: "'Quicksand', sans-serif",
-          fontSize: '14px',
-          fontWeight: 600,
-          color: danger ? '#E57373' : THEME.text,
-          transition: 'all 0.15s ease',
-          textAlign: 'left',
-        }}
-      >
-        <span style={{ 
-          display: 'flex', 
-          color: danger ? '#E57373' : THEME.primary,
-          opacity: 0.9,
-        }}>
-          {icon}
-        </span>
-        {label}
-      </button>
-    );
-  };
-
-  const menu = (
-    <>
-      <style>{`
-        @keyframes menuSlideIn {
-          0% { opacity: 0; transform: translateY(-8px) scale(0.95); }
-          100% { opacity: 1; transform: translateY(0) scale(1); }
-        }
-      `}</style>
-      <div
-        style={{
-          position: 'fixed',
-          top: anchorRect ? `${anchorRect.bottom + 8}px` : undefined,
-          left: anchorRect ? `${anchorRect.right}px` : undefined,
-          transform: anchorRect ? 'translateX(-100%)' : undefined,
-          minWidth: '160px',
-          background: THEME.white,
-          borderRadius: '16px',
-          border: `1.5px solid ${THEME.secondary}`,
-          boxShadow: THEME.shadowStrong,
-          overflow: 'hidden',
-          // animation: 'menuSlideIn 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
-          zIndex: 1000,
-        }}
-        onMouseDown={(e) => e.stopPropagation()}
-      >
-        <MenuItem 
-          icon={<Share2 size={16} strokeWidth={2.5} />} 
-          label="Chia sẻ" 
-          onClick={onShare} 
-        />
-        <MenuItem 
-          icon={<Repeat2 size={16} strokeWidth={2.5} />} 
-          label="Đăng lại" 
-          onClick={onRepost} 
-        />
-        <div style={{ 
-          height: '1px', 
-          background: THEME.tertiary, 
-          margin: '4px 12px',
-        }} />
-        <MenuItem 
-          icon={<Flag size={16} strokeWidth={2.5} />} 
-          label="Báo cáo" 
-          onClick={onReport}
-          danger 
-        />
-      </div>
-    </>
-  );
-
-  return createPortal(menu, document.body);
-};
-
-// ============================================
-// 🎪 MAIN COMPONENT
+// 🎪 MAIN COMPONENT - Material UI Version
 // ============================================
 interface InteractBarProps {
   postId: number;
@@ -387,16 +71,10 @@ const InteractBar: React.FC<InteractBarProps> = ({
   totalComments = 0,
 }) => {
   const navigate = useNavigate();
-  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  const [showMoreMenu, setShowMoreMenu] = useState(false);
+  const [emojiAnchorEl, setEmojiAnchorEl] = useState<HTMLElement | null>(null);
+  const [moreAnchorEl, setMoreAnchorEl] = useState<HTMLElement | null>(null);
   const [showLoginToast, setShowLoginToast] = useState(false);
   const [showShareToast, setShowShareToast] = useState(false);
-  const [commentHovered, setCommentHovered] = useState(false);
-  const [moreHovered, setMoreHovered] = useState(false);
-  const wrapperRef = React.useRef<HTMLDivElement | null>(null);
-  
-  const moreMenuRef = useRef<HTMLDivElement>(null);
-  const emojiPickerRef = useRef<HTMLDivElement>(null);
 
   const {
     voteType,
@@ -420,7 +98,6 @@ const InteractBar: React.FC<InteractBarProps> = ({
   // Toast handler
   const showLoginRequired = () => {
     setShowLoginToast(true);
-    setTimeout(() => setShowLoginToast(false), 2500);
   };
 
   // Vote with login check
@@ -432,32 +109,57 @@ const InteractBar: React.FC<InteractBarProps> = ({
     handleVote(type);
   };
 
-  // Emoji with login check  
-  const onEmojiClick = (emojiId: number) => {
+  // Emoji handlers
+  const handleEmojiClick = (event: React.MouseEvent<HTMLElement>) => {
     if (!isLoggedIn) {
       showLoginRequired();
-      setShowEmojiPicker(false);
       return;
     }
-    handleEmojiReact(emojiId);
-    setShowEmojiPicker(false);
+    setEmojiAnchorEl(event.currentTarget);
   };
 
-  // Close dropdowns on outside click
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (moreMenuRef.current && !moreMenuRef.current.contains(event.target as Node)) {
-        setShowMoreMenu(false);
-      }
-      if (emojiPickerRef.current && !emojiPickerRef.current.contains(event.target as Node)) {
-        setShowEmojiPicker(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  const handleEmojiClose = () => {
+    setEmojiAnchorEl(null);
+  };
 
-  // Get current emoji display
+  const onEmojiSelect = (emojiId: number) => {
+    handleEmojiReact(emojiId);
+    handleEmojiClose();
+  };
+
+  // More menu handlers
+  const handleMoreClick = (event: React.MouseEvent<HTMLElement>) => {
+    setMoreAnchorEl(event.currentTarget);
+  };
+
+  const handleMoreClose = () => {
+    setMoreAnchorEl(null);
+  };
+
+  const handleShare = () => {
+    navigator.clipboard.writeText(`${window.location.origin}/post/${postId}`);
+    setShowShareToast(true);
+    handleMoreClose();
+  };
+
+  const handleRepost = () => {
+    if (!isLoggedIn) {
+      showLoginRequired();
+      handleMoreClose();
+      return;
+    }
+    handleMoreClose();
+  };
+
+  const handleReport = () => {
+    if (!isLoggedIn) {
+      showLoginRequired();
+      handleMoreClose();
+      return;
+    }
+    handleMoreClose();
+  };
+
   const getCurrentEmoji = () => {
     if (selectedEmojiId) {
       const found = EMOJI_LIST.find((e) => e.id === selectedEmojiId);
@@ -466,224 +168,367 @@ const InteractBar: React.FC<InteractBarProps> = ({
     return '💗';
   };
 
-  // Menu handlers
-  const handleShare = () => {
-    navigator.clipboard.writeText(`${window.location.origin}/post/${postId}`);
-    setShowMoreMenu(false);
-    setShowShareToast(true);
-    setTimeout(() => setShowShareToast(false), 2000);
-  };
-
-  const handleRepost = () => {
-    if (!isLoggedIn) {
-      showLoginRequired();
-      setShowMoreMenu(false);
-      return;
-    }
-    setShowMoreMenu(false);
-  };
-
-  const handleReport = () => {
-    if (!isLoggedIn) {
-      showLoginRequired();
-      setShowMoreMenu(false);
-      return;
-    }
-    setShowMoreMenu(false);
-  };
-
-  // When any floating UI is visible, increase bottom padding so the popup
-  // doesn't overlap the next card. This lets the card expand in height
-  // (the card CSS uses min-height) and prevents the interact popups
-  // from covering the following card on small screens.
-  // For portal popups we don't change the card height; keep a small static padding.
-  const computedPaddingBottom = 8; // px
-
   return (
-    <div
-      ref={wrapperRef}
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        gap: '10px',
-        padding: '8px 12px',
-        paddingBottom: `${computedPaddingBottom}px`,
-        background: THEME.cream,
-        borderTop: `1px solid ${THEME.tertiary}`,
-        borderRadius: '0 0 10px 10px',
-        fontFamily: "'Quicksand', sans-serif",
-        position: 'relative',
-      }}
-    >
-      {/* Toast (portal) */}
-      <Toast message="Đăng nhập để tương tác 💕" visible={showLoginToast} anchorRect={wrapperRef.current?.getBoundingClientRect() ?? null} />
-      <Toast message="Đã sao chép link! 📋" visible={showShareToast} anchorRect={wrapperRef.current?.getBoundingClientRect() ?? null} />
-
-      {/* ===== LEFT: Vote Group ===== */}
-      <div
-        style={{
+    <>
+      <Paper
+        elevation={0}
+        sx={{
           display: 'flex',
           alignItems: 'center',
-          gap: '1px',
-          padding: '3px 5px',
-          background: THEME.white,
-          borderRadius: '50px',
-          border: `1.5px solid ${THEME.secondary}`,
-          boxShadow: THEME.shadowSoft,
+          justifyContent: 'space-between',
+          gap: 1,
+          p: 1.5,
+          background: THEME.cream,
+          borderTop: `1px solid ${THEME.tertiary}`,
+          borderRadius: '0 0 10px 10px',
+          position: 'relative',
         }}
       >
-        <VoteButton
-          direction="up"
-          active={voteType === 'upvote'}
-          disabled={isVoting}
-          onClick={() => onVoteClick('upvote')}
-        />
-        
-        <span
-          style={{
-            minWidth: '28px',
-            textAlign: 'center',
-            fontSize: '13px',
-            fontWeight: 700,
-            color: voteType === 'upvote' 
-              ? THEME.upvoteActive 
-              : voteType === 'downvote'
-                ? THEME.downvoteActive
-                : THEME.text,
-            fontFamily: "'Quicksand', sans-serif",
-            userSelect: 'none',
-            transition: 'color 0.2s ease',
-          }}
-        >
-          {netVotes}
-        </span>
-        
-        <VoteButton
-          direction="down"
-          active={voteType === 'downvote'}
-          disabled={isVoting}
-          onClick={() => onVoteClick('downvote')}
-        />
-      </div>
-
-      {/* ===== RIGHT: Emoji, Comment & More ===== */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-        {/* Emoji React */}
-        <div 
-          ref={emojiPickerRef}
-          style={{ position: 'relative' }}
-        >
-          <button
-            onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-            disabled={isReacting}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: '28px',
-              height: '28px',
-              borderRadius: '50px',
-              border: `1.5px solid ${selectedEmojiId ? THEME.primary : THEME.secondary}`,
-              background: selectedEmojiId ? THEME.tertiary : THEME.white,
-              cursor: isReacting ? 'not-allowed' : 'pointer',
-              opacity: isReacting ? 0.5 : 1,
-              fontSize: '14px',
-              boxShadow: THEME.shadowSoft,
-              transition: 'all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
-              transform: showEmojiPicker ? 'scale(1.05)' : 'scale(1)',
-            }}
-            onMouseEnter={(e) => {
-              if (!isReacting) e.currentTarget.style.transform = 'scale(1.05)';
-            }}
-            onMouseLeave={(e) => {
-              if (!showEmojiPicker) e.currentTarget.style.transform = 'scale(1)';
-            }}
-          >
-            {getCurrentEmoji()}
-          </button>
-          
-          <EmojiPicker
-            visible={showEmojiPicker}
-            selectedId={selectedEmojiId}
-            onSelect={onEmojiClick}
-            anchorRect={emojiPickerRef.current?.getBoundingClientRect() ?? null}
-          />
-        </div>
-
-        {/* Comment Button */}
-        <button
-          onClick={() => navigate(`/post/${postId}`)}
-          onMouseEnter={() => setCommentHovered(true)}
-          onMouseLeave={() => setCommentHovered(false)}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '4px',
-            padding: '6px 10px',
-            background: commentHovered ? THEME.tertiary : THEME.white,
-            border: `1.5px solid ${THEME.secondary}`,
+        {/* Left: Vote Group */}
+        <Stack
+          direction="row"
+          spacing={0.5}
+          alignItems="center"
+          sx={{
+            px: 1,
+            py: 0.5,
+            background: THEME.white,
             borderRadius: '50px',
-            cursor: 'pointer',
-            boxShadow: THEME.shadowSoft,
-            transition: 'all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
-            transform: commentHovered ? 'scale(1.05)' : 'scale(1)',
+            border: `1.5px solid ${THEME.secondary}`,
+            boxShadow: '0 2px 8px rgba(242, 149, 182, 0.15)',
           }}
         >
-          <MessageCircle 
-            size={14} 
-            strokeWidth={2.5}
-            style={{ color: THEME.primary }}
-          />
-          <span
-            style={{
-              fontSize: '12px',
-              fontWeight: 600,
-              color: THEME.text,
-              fontFamily: "'Quicksand', sans-serif",
-            }}
-          >
-            {totalComments}
-          </span>
-        </button>
+          <Tooltip title={isLoggedIn ? 'Upvote' : 'Đăng nhập để vote'} arrow>
+            <span>
+              <IconButton
+                size="small"
+                disabled={isVoting}
+                onClick={() => onVoteClick('upvote')}
+                sx={{
+                  width: 28,
+                  height: 28,
+                  backgroundColor: voteType === 'upvote' ? THEME.tertiary : 'transparent',
+                  '&:hover': {
+                    backgroundColor: THEME.tertiary,
+                    transform: 'scale(1.08)',
+                  },
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                <BiUpvote
+                  style={{
+                    fontSize: 16,
+                    color: voteType === 'upvote' ? THEME.upvoteActive : THEME.secondary,
+                  }}
+                />
+              </IconButton>
+            </span>
+          </Tooltip>
 
-        {/* More Menu Button */}
-        <div ref={moreMenuRef} style={{ position: 'relative' }}>
-          <button
-            onClick={() => setShowMoreMenu(!showMoreMenu)}
-            onMouseEnter={() => setMoreHovered(true)}
-            onMouseLeave={() => setMoreHovered(false)}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: '28px',
-              height: '28px',
-              borderRadius: '50px',
-              border: `1.5px solid ${showMoreMenu ? THEME.primary : THEME.secondary}`,
-              background: showMoreMenu ? THEME.tertiary : moreHovered ? THEME.tertiary : THEME.white,
-              cursor: 'pointer',
-              transition: 'all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
-              transform: moreHovered ? 'scale(1.05)' : 'scale(1)',
+          <Typography
+            variant="body2"
+            sx={{
+              minWidth: 28,
+              textAlign: 'center',
+              fontWeight: 700,
+              fontSize: '13px',
+              color:
+                voteType === 'upvote'
+                  ? THEME.upvoteActive
+                  : voteType === 'downvote'
+                  ? THEME.downvoteActive
+                  : THEME.text,
+              transition: 'color 0.2s ease',
+              userSelect: 'none',
             }}
           >
-            <MoreHorizontal 
-              size={14} 
-              strokeWidth={2.5}
-              style={{ color: THEME.primary }}
+            {netVotes}
+          </Typography>
+
+          <Tooltip title={isLoggedIn ? 'Downvote' : 'Đăng nhập để vote'} arrow>
+            <span>
+              <IconButton
+                size="small"
+                disabled={isVoting}
+                onClick={() => onVoteClick('downvote')}
+                sx={{
+                  width: 28,
+                  height: 28,
+                  backgroundColor: voteType === 'downvote' ? '#F0E8EA' : 'transparent',
+                  '&:hover': {
+                    backgroundColor: THEME.tertiary,
+                    transform: 'scale(1.08)',
+                  },
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                <BiDownvote
+                  style={{
+                    fontSize: 16,
+                    color: voteType === 'downvote' ? THEME.downvoteActive : THEME.secondary,
+                  }}
+                />
+              </IconButton>
+            </span>
+          </Tooltip>
+        </Stack>
+
+        {/* Right: Emoji, Comment & More */}
+        <Stack direction="row" spacing={0.75} alignItems="center">
+          {/* Emoji React Button */}
+          <Tooltip title={isLoggedIn ? 'React' : 'Đăng nhập để react'} arrow>
+            <span>
+              <IconButton
+                size="small"
+                disabled={isReacting}
+                onClick={handleEmojiClick}
+                sx={{
+                  width: 32,
+                  height: 32,
+                  fontSize: '16px',
+                  border: `1.5px solid ${selectedEmojiId ? THEME.primary : THEME.secondary}`,
+                  backgroundColor: selectedEmojiId ? THEME.tertiary : THEME.white,
+                  boxShadow: '0 2px 8px rgba(242, 149, 182, 0.15)',
+                  '&:hover': {
+                    transform: 'scale(1.05)',
+                    backgroundColor: THEME.tertiary,
+                  },
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                {getCurrentEmoji()}
+              </IconButton>
+            </span>
+          </Tooltip>
+
+          {/* Comment Button */}
+          <Tooltip title="Xem bình luận" arrow>
+            <Chip
+              icon={<BiCommentDetail style={{ fontSize: 16, color: THEME.primary }} />}
+              label={totalComments}
+              onClick={() => navigate(`/post/${postId}`)}
+              size="small"
+              sx={{
+                height: 32,
+                backgroundColor: THEME.white,
+                border: `1.5px solid ${THEME.secondary}`,
+                boxShadow: '0 2px 8px rgba(242, 149, 182, 0.15)',
+                fontWeight: 600,
+                fontSize: '12px',
+                color: THEME.text,
+                '&:hover': {
+                  backgroundColor: THEME.tertiary,
+                  transform: 'scale(1.05)',
+                },
+                transition: 'all 0.2s ease',
+                '& .MuiChip-label': {
+                  px: 1,
+                },
+                '& .MuiChip-icon': {
+                  marginLeft: '8px',
+                  marginRight: '-2px',
+                },
+              }}
             />
-          </button>
-          
-          <MoreMenu
-            visible={showMoreMenu}
-            onShare={handleShare}
-            onRepost={handleRepost}
-            onReport={handleReport}
-            anchorRect={moreMenuRef.current?.getBoundingClientRect() ?? null}
-          />
-        </div>
-      </div>
-    </div>
+          </Tooltip>
+
+          {/* More Menu Button */}
+          <Tooltip title="Tùy chọn khác" arrow>
+            <IconButton
+              size="small"
+              onClick={handleMoreClick}
+              sx={{
+                width: 32,
+                height: 32,
+                border: `1.5px solid ${moreAnchorEl ? THEME.primary : THEME.secondary}`,
+                backgroundColor: moreAnchorEl ? THEME.tertiary : THEME.white,
+                boxShadow: '0 2px 8px rgba(242, 149, 182, 0.15)',
+                '&:hover': {
+                  backgroundColor: THEME.tertiary,
+                  transform: 'scale(1.05)',
+                },
+                transition: 'all 0.2s ease',
+              }}
+            >
+              <BiDotsHorizontalRounded style={{ fontSize: 18, color: THEME.primary }} />
+            </IconButton>
+          </Tooltip>
+        </Stack>
+      </Paper>
+
+      {/* Emoji Picker Popover */}
+      <Popover
+        open={Boolean(emojiAnchorEl)}
+        anchorEl={emojiAnchorEl}
+        onClose={handleEmojiClose}
+        anchorOrigin={{
+          vertical: 'top',
+          horizontal: 'center',
+        }}
+        transformOrigin={{
+          vertical: 'bottom',
+          horizontal: 'center',
+        }}
+        sx={{
+          mt: -1,
+        }}
+      >
+        <Paper
+          elevation={3}
+          sx={{
+            display: 'flex',
+            gap: 0.5,
+            p: 1.5,
+            borderRadius: '28px',
+            border: `1.5px solid ${THEME.secondary}`,
+            backgroundColor: THEME.white,
+          }}
+        >
+          {EMOJI_LIST.map((item) => (
+            <Tooltip key={item.id} title={item.label} arrow>
+              <IconButton
+                onClick={() => onEmojiSelect(item.id)}
+                sx={{
+                  width: 40,
+                  height: 40,
+                  fontSize: '22px',
+                  backgroundColor: selectedEmojiId === item.id ? THEME.tertiary : 'transparent',
+                  '&:hover': {
+                    backgroundColor: THEME.tertiary,
+                    transform: 'scale(1.15) rotate(-5deg)',
+                  },
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                {item.emoji}
+              </IconButton>
+            </Tooltip>
+          ))}
+        </Paper>
+      </Popover>
+
+      {/* More Menu */}
+      <Menu
+        anchorEl={moreAnchorEl}
+        open={Boolean(moreAnchorEl)}
+        onClose={handleMoreClose}
+        anchorOrigin={{
+          vertical: 'bottom',
+          horizontal: 'right',
+        }}
+        transformOrigin={{
+          vertical: 'top',
+          horizontal: 'right',
+        }}
+        sx={{
+          mt: 1,
+          '& .MuiPaper-root': {
+            borderRadius: '16px',
+            border: `1.5px solid ${THEME.secondary}`,
+            minWidth: 160,
+          },
+        }}
+      >
+        <MenuItem
+          onClick={handleShare}
+          sx={{
+            py: 1.5,
+            px: 2,
+            gap: 1.5,
+            '&:hover': {
+              backgroundColor: THEME.tertiary,
+            },
+          }}
+        >
+          <BiShareAlt style={{ fontSize: 18, color: THEME.primary }} />
+          <Typography variant="body2" fontWeight={600}>
+            Chia sẻ
+          </Typography>
+        </MenuItem>
+        <MenuItem
+          onClick={handleRepost}
+          sx={{
+            py: 1.5,
+            px: 2,
+            gap: 1.5,
+            '&:hover': {
+              backgroundColor: THEME.tertiary,
+            },
+          }}
+        >
+          <MdOutlineRepeat style={{ fontSize: 18, color: THEME.primary }} />
+          <Typography variant="body2" fontWeight={600}>
+            Đăng lại
+          </Typography>
+        </MenuItem>
+        <Divider sx={{ my: 0.5, mx: 1.5, backgroundColor: THEME.tertiary }} />
+        <MenuItem
+          onClick={handleReport}
+          sx={{
+            py: 1.5,
+            px: 2,
+            gap: 1.5,
+            '&:hover': {
+              backgroundColor: '#FFEBEE',
+            },
+          }}
+        >
+          <BiFlag style={{ fontSize: 18, color: '#E57373' }} />
+          <Typography variant="body2" fontWeight={600} color="#E57373">
+            Báo cáo
+          </Typography>
+        </MenuItem>
+      </Menu>
+
+      {/* Snackbars for Notifications */}
+      <Snackbar
+        open={showLoginToast}
+        autoHideDuration={2500}
+        onClose={() => setShowLoginToast(false)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert
+          onClose={() => setShowLoginToast(false)}
+          severity="info"
+          sx={{
+            width: '100%',
+            borderRadius: '24px',
+            background: `linear-gradient(135deg, ${THEME.primary} 0%, ${THEME.secondary} 100%)`,
+            color: THEME.white,
+            fontWeight: 600,
+            '& .MuiAlert-icon': {
+              color: THEME.white,
+            },
+          }}
+        >
+          Đăng nhập để tương tác 💕
+        </Alert>
+      </Snackbar>
+
+      <Snackbar
+        open={showShareToast}
+        autoHideDuration={2000}
+        onClose={() => setShowShareToast(false)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert
+          onClose={() => setShowShareToast(false)}
+          severity="success"
+          sx={{
+            width: '100%',
+            borderRadius: '24px',
+            background: `linear-gradient(135deg, ${THEME.primary} 0%, ${THEME.secondary} 100%)`,
+            color: THEME.white,
+            fontWeight: 600,
+            '& .MuiAlert-icon': {
+              color: THEME.white,
+            },
+          }}
+        >
+          Đã sao chép link! 📋
+        </Alert>
+      </Snackbar>
+    </>
   );
 };
 

@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import type { IPostResponseDto } from "../../types/post";
-import { InteractBar } from "../InteractBar";
+import InteractBar from "../InteractBar/InteractBar";
 import { useAuth } from "../../contexts/AuthContext";
 import "../../styles/newsfeed/Card.css";
 
