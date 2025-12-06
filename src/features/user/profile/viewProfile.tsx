@@ -44,7 +44,11 @@ const ViewProfile = () => {
           phoneNumber: "0123456789",
           bio: "Passionate blogger and tech enthusiast. Love sharing knowledge about web development, design patterns, and software architecture.",
           avatarUrl: "https://i.pravatar.cc/300",
+          dob: "1990-01-01",
+          gender: "MALE",
           isPrivate: false,
+          showEmail: true, // Cho phép hiển thị email công khai
+          showPhoneNumber: false, // Không cho phép hiển thị SĐT công khai
           joinAt: new Date().toISOString(),
           communities: [
             {
@@ -151,15 +155,38 @@ const ViewProfile = () => {
               )}
             </div>
             <p className="text-gray-600 mb-1">@{profile.username}</p>
-            {profile.email && isOwnProfile && (
-              <p className="text-gray-600 mb-1">📧 {profile.email}</p>
+            
+            {/* Hiển thị email nếu: 1) Là chính mình HOẶC 2) User cho phép hiển thị công khai */}
+            {profile.email && (isOwnProfile || profile.showEmail) && (
+              <p className="text-gray-600 mb-1">
+                📧 {profile.email}
+                {!isOwnProfile && <span className="text-xs text-gray-400 ml-2">(Công khai)</span>}
+              </p>
             )}
-            {profile.phoneNumber && isOwnProfile && (
-              <p className="text-gray-600 mb-1">📱 {profile.phoneNumber}</p>
+            
+            {/* Hiển thị SĐT nếu: 1) Là chính mình HOẶC 2) User cho phép hiển thị công khai */}
+            {profile.phoneNumber && (isOwnProfile || profile.showPhoneNumber) && (
+              <p className="text-gray-600 mb-1">
+                📱 {profile.phoneNumber}
+                {!isOwnProfile && <span className="text-xs text-gray-400 ml-2">(Công khai)</span>}
+              </p>
             )}
+            
             {profile.bio && (
               <p className="text-gray-700 mt-3 max-w-2xl">{profile.bio}</p>
             )}
+
+            {/* Thông tin cá nhân */}
+            <div className="flex gap-4 mt-3 text-sm text-gray-600">
+              {profile.gender && (
+                <span>
+                  {profile.gender === 'MALE' ? '👨 Nam' : profile.gender === 'FEMALE' ? '👩 Nữ' : '⚧️ Khác'}
+                </span>
+              )}
+              {profile.joinAt && (
+                <span>📅 Tham gia {new Date(profile.joinAt).toLocaleDateString('vi-VN')}</span>
+              )}
+            </div>
 
             {/* Stats */}
             <div className="flex gap-6 mt-4">

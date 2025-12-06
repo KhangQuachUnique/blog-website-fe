@@ -22,6 +22,8 @@ const EditProfile = () => {
     phoneNumber: "0123456789",
     dob: "",
     gender: undefined,
+    showEmail: true, // Cài đặt hiển thị email công khai
+    showPhoneNumber: false, // Cài đặt hiển thị số điện thoại công khai
   });
   
   const [isPrivate, setIsPrivate] = useState(false);
@@ -273,6 +275,45 @@ const EditProfile = () => {
                   className="w-full px-4 py-2 border border-[#FFE4EC] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F295B6]"
                   placeholder="Viết vài dòng về bản thân..."
                 />
+              </div>
+
+              {/* Cài đặt hiển thị thông tin liên hệ */}
+              <div className="border border-[#FFE4EC] rounded-lg p-4 space-y-4">
+                <h3 className="text-lg font-bold" style={{ color: "#8C1D35" }}>
+                  Cài đặt hiển thị thông tin
+                </h3>
+                
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-semibold">Hiển thị Email công khai</p>
+                    <p className="text-sm text-gray-600">Người khác có thể xem email của bạn</p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={profileData.showEmail}
+                      onChange={(e) => handleProfileChange("showEmail", e.target.checked)}
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-pink-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#F295B6]"></div>
+                  </label>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-semibold">Hiển thị Số điện thoại công khai</p>
+                    <p className="text-sm text-gray-600">Người khác có thể xem số điện thoại của bạn</p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={profileData.showPhoneNumber}
+                      onChange={(e) => handleProfileChange("showPhoneNumber", e.target.checked)}
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-pink-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#F295B6]"></div>
+                  </label>
+                </div>
               </div>
 
               <div className="flex gap-4">

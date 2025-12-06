@@ -8,6 +8,8 @@ export interface User {
   dob?: string; // Date of birth
   gender?: 'MALE' | 'FEMALE' | 'OTHER';
   isPrivate: boolean;
+  showEmail: boolean; // Cài đặt hiển thị email công khai
+  showPhoneNumber: boolean; // Cài đặt hiển thị số điện thoại công khai
   joinAt: string;
 }
 
@@ -38,6 +40,8 @@ export interface UserProfile {
   dob?: string;
   gender?: 'MALE' | 'FEMALE' | 'OTHER';
   isPrivate: boolean;
+  showEmail: boolean; // Cài đặt hiển thị email công khai
+  showPhoneNumber: boolean; // Cài đặt hiển thị số điện thoại công khai
   joinAt: string;
   communities: Community[];
   followersCount: number;
@@ -52,6 +56,8 @@ export interface UpdateProfileData {
   phoneNumber?: string;
   dob?: string;
   gender?: 'MALE' | 'FEMALE' | 'OTHER';
+  showEmail?: boolean; // Cài đặt hiển thị email công khai
+  showPhoneNumber?: boolean; // Cài đặt hiển thị số điện thoại công khai
 }
 
 export interface ChangePasswordData {
