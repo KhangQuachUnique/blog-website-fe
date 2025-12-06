@@ -39,19 +39,34 @@ export const useComments = (postId?: number, blockId?: number) => {
 
   // Tạo comment mới
   const createComment = async (content: string, commenterId: number) => {
+    const commentType: 'POST' | 'BLOCK' = postId ? 'POST' : 'BLOCK';
+    
+    // Chỉ gửi postId hoặc blockId, không gửi cả hai
+    const requestData = {
+      content,
+      type: commentType,
+      commenterId,
+      ...(postId && { postId }),
+      ...(blockId && { blockId }),
+    };
+    console.log('Creating comment with data:', requestData);
+    
     try {
-      const newComment = await commentService.createComment({
-        content,
-        postId,
-        blockId,
-        type: postId ? 'post' : 'block',
-        commenterId
-      });
+      const newComment = await commentService.createComment(requestData);
+      console.log('Comment created successfully:', newComment);
       
-      setComments(prev => [newComment, ...prev]);
+      // Đảm bảo comment có đầy đủ fields
+      const normalizedComment = {
+        ...newComment,
+        childComments: newComment.childComments || [],
+        childCommentsCount: newComment.childCommentsCount || 0
+      };
+      
+      setComments(prev => [normalizedComment, ...prev]);
       setTotalCount(prev => prev + 1);
-      return newComment;
+      return normalizedComment;
     } catch (err) {
+      console.error('Error creating comment:', err);
       setError('Không thể tạo comment');
       throw err;
     }

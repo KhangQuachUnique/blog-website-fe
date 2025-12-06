@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { MessageCircle } from 'lucide-react';
 import type { Comment } from '../../types/comment.types';
 import { ReplyForm } from './ReplyForm';
 import { ChildCommentItem } from './ChildCommentItem';
@@ -96,14 +97,14 @@ export const CommentItem: React.FC<CommentItemProps> = ({
               Trả lời
             </button>
             
-            {comment.childCommentsCount > 0 && (
-              <button
-                onClick={() => setShowReplies(!showReplies)}
-                className="text-gray-600 hover:text-gray-800 text-sm"
-              >
-                {showReplies ? 'Ẩn' : 'Xem'} {comment.childCommentsCount} phản hồi
-              </button>
-            )}
+            {/* Reply count with icon */}
+            <button
+              onClick={() => setShowReplies(!showReplies)}
+              className="flex items-center gap-1 text-gray-600 hover:text-gray-800 text-sm"
+            >
+              <MessageCircle size={16} />
+              <span>{comment.childComments?.length || comment.childCommentsCount || 0}</span>
+            </button>
           </div>
           
           {/* Reply Form */}

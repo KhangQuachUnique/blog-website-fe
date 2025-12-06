@@ -624,7 +624,13 @@ const InteractBar: React.FC<InteractBarProps> = ({
         </button>
 
         {/* More Menu Button */}
-        <div ref={moreMenuRef} style={{ position: 'relative' }}>
+        <div 
+          ref={moreMenuRef} 
+          style={{ 
+            position: 'relative',
+            zIndex: showMoreMenu ? 1000 : 'auto',
+          }}
+        >
           <button
             onClick={() => setShowMoreMenu(!showMoreMenu)}
             onMouseEnter={() => setMoreHovered(true)}

@@ -15,7 +15,7 @@ export interface ChildComment {
 export interface Comment {
   id: number;
   content: string;
-  type: 'post' | 'block';
+  type: 'POST' | 'BLOCK';
   createAt: string;
   commenter: User;
   childComments: ChildComment[];
@@ -32,7 +32,7 @@ export interface CreateCommentRequest {
   content: string;
   postId?: number;
   blockId?: number;
-  type: 'post' | 'block';
+  type: 'POST' | 'BLOCK';
   commenterId: number;
 }
 
