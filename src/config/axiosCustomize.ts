@@ -32,6 +32,12 @@ instance.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
+    // Skip refresh logic for auth endpoints to prevent infinite loops
+    const isAuthEndpoint = originalRequest.url?.includes('/auth/');
+    if (isAuthEndpoint) {
+      return Promise.reject(error);
+    }
+
     // If 401 and not already retrying, try to refresh token
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
@@ -57,11 +63,10 @@ instance.interceptors.response.use(
         // Refresh failed - clear auth state
         localStorage.removeItem(ACCESS_TOKEN_KEY);
         
-        // Only redirect if not already on login/register page and not the refresh endpoint itself
+        // Only redirect if not already on login/register page
         const isAuthPage = window.location.pathname === '/login' || window.location.pathname === '/register';
-        const isRefreshRequest = originalRequest.url?.includes('/auth/refresh');
         
-        if (!isAuthPage && !isRefreshRequest) {
+        if (!isAuthPage) {
           window.location.href = "/login";
         }
         

@@ -14,9 +14,22 @@
 }
 
 .newsfeed-masonry-item {
-  margin-bottom: 1.5rem;
+  margin-bottom: 2rem; /* increased gutter to avoid overlap */
 }
 
+/* make cards narrower (55% width) and centered inside each column */
+.newsfeed-masonry-item .newsfeed-card {
+  width: 65%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* medium screens: make cards a bit wider to use space */
+@media (max-width: 1200px) {
+  .newsfeed-masonry-item .newsfeed-card {
+    width: 85%;
+  }
+}
 
 @media (max-width: 768px) {
   .newsfeed-masonry-grid {
@@ -27,6 +40,12 @@
   }
   .newsfeed-masonry-item {
     margin-bottom: 1rem;
+  }
+  /* full width cards on small screens */
+  .newsfeed-masonry-item .newsfeed-card {
+    width: 100%;
+    margin-left: 0;
+    margin-right: 0;
   }
 }
 

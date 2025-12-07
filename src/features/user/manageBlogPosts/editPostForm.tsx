@@ -1,34 +1,39 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import GridLayout from "react-grid-layout";
 import { InputBase } from "@mui/material";
 
-import TextBlock from "../../../../components/block/textBlockEdit";
-import ImageBlock from "../../../../components/block/imageBlockEdit";
-import DeleteConfirmButton from "../../../../components/deleteConfirmButton";
-import CustomButton from "../../../../components/button";
-import BlockSidebar from "./blockSidebar";
-import ConfigDialog from "./configDialog";
-import { EBlockType } from "../../../../types/block";
-import { usePostForm, type LayoutItem } from "../usePostForm";
-import type { IPostResponseDto, EPostType } from "../../../../types/post";
+import TextBlock from "../../../components/block/textBlockEdit";
+import ImageBlock from "../../../components/block/imageBlockEdit";
+import DeleteConfirmButton from "../../../components/deleteConfirmButton";
+import CustomButton from "../../../components/button";
+import BlockSidebar from "./components/blockSidebar";
+import ConfigDialog from "./components/configDialog";
+import { EBlockType } from "../../../types/block";
+import { usePostForm, type LayoutItem } from "./usePostForm";
+import type {
+  IPostResponseDto,
+  EPostType,
+  ICreateBlogPostDto,
+  IUpdateBlogPostDto,
+} from "../../../types/post";
+import { uploadMultipleFiles } from "../../../services/upload/uploadImageService";
+import { isBlobUrl } from "../../../utils/url";
 
+/**
+ * Props
+ */
 export interface EditPostFormProps {
   mode: "create" | "update";
   post?: IPostResponseDto;
-  onSaveDraft?: (
-    dto: ReturnType<ReturnType<typeof usePostForm>["getCreateDto"]>
-  ) => void;
-  onPublish?: (
-    dto:
-      | ReturnType<ReturnType<typeof usePostForm>["getCreateDto"]>
-      | ReturnType<ReturnType<typeof usePostForm>["getUpdateDto"]>
-  ) => void;
+  onSaveDraft?: (dto: ICreateBlogPostDto) => void;
+  onPublish?: (dto: ICreateBlogPostDto | IUpdateBlogPostDto) => void;
   authorId: number;
   postType: EPostType;
   communityId?: number;
   originalPostId?: number;
 }
 
+// ============ Component ============
 const EditPostForm = ({
   mode,
   post,
@@ -39,17 +44,28 @@ const EditPostForm = ({
   communityId,
   originalPostId,
 }: EditPostFormProps) => {
+  /**
+   * Use Post Form Hook
+   */
   const {
-    // Title
+    // Basic Info
     title,
     handleTitleChange,
-    // Short Description
     shortDescription,
     handleShortDescriptionChange,
-    // Layout
+    thumbnailUrl,
+    handleThumbnailChange,
+    isPublic,
+    handleIsPublicChange,
+
+    // Hashtags
+    hashtags,
+    addHashtag,
+    removeHashtag,
+
+    // Layout & Blocks
     layout,
     handleLayoutChange,
-    // Blocks
     blocks,
     handleBlockContentChange,
     handleBlockCaptionChange,
@@ -57,35 +73,30 @@ const EditPostForm = ({
     handleDeleteBlock,
     handleAddBlock,
     handleGridDrop,
-    // Config
-    thumbnailUrl,
-    isPublic,
-    hashtags,
-    handleThumbnailChange,
-    handleIsPublicChange,
-    addHashtag,
-    removeHashtag,
-    // DTO Getters
-    getCreateDto,
-    getUpdateDto,
+
+    // Image Form
+    getImageForm,
+    getImageKeys,
+    handleAppendImageForm,
+    handleRemoveImageForm,
+    clearImageForm,
   } = usePostForm({ post });
 
+  /**
+   * UI States
+   */
   const [isCtrlPressed, setIsCtrlPressed] = useState(false);
   const [isConfigDialogOpen, setIsConfigDialogOpen] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
 
-  // Track Ctrl key press
+  /**
+   * Keyboard Events
+   */
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.ctrlKey) {
-        setIsCtrlPressed(true);
-      }
-    };
-
-    const handleKeyUp = (e: KeyboardEvent) => {
-      if (!e.ctrlKey) {
-        setIsCtrlPressed(false);
-      }
-    };
+    const handleKeyDown = (e: KeyboardEvent) =>
+      e.ctrlKey && setIsCtrlPressed(true);
+    const handleKeyUp = (e: KeyboardEvent) =>
+      !e.ctrlKey && setIsCtrlPressed(false);
 
     window.addEventListener("keydown", handleKeyDown);
     window.addEventListener("keyup", handleKeyUp);
@@ -96,43 +107,138 @@ const EditPostForm = ({
     };
   }, []);
 
-  const handleNextStepClick = () => {
-    setIsConfigDialogOpen(true);
-  };
+  /**
+   * Build DTOs
+   */
+  const buildBlocksDto = useCallback(
+    (imageUrls: Record<string, string>) => {
+      return blocks.map((block) => {
+        const layoutItem = layout.find((item) => item.i === block.id);
 
-  const handlePublish = () => {
-    if (onPublish) {
-      if (mode === "create") {
-        const dto = getCreateDto(
-          authorId,
-          postType,
-          communityId,
-          originalPostId
-        );
-        onPublish(dto);
-      } else {
-        const dto = getUpdateDto(
-          post?.id ?? 0,
-          postType,
-          communityId,
-          originalPostId
-        );
-        onPublish(dto);
+        let content = block.content || "";
+        if (block.type === EBlockType.IMAGE) {
+          if (imageUrls[block.id]) {
+            content = imageUrls[block.id];
+          } else if (isBlobUrl(block.content)) {
+            content = ""; // Don't send blob URL to server
+          }
+        }
+
+        return {
+          x: layoutItem?.x ?? 0,
+          y: layoutItem?.y ?? 0,
+          width: layoutItem?.w ?? 8,
+          height: layoutItem?.h ?? 6,
+          type: block.type,
+          content,
+        };
+      });
+    },
+    [blocks, layout]
+  );
+
+  const buildThumbnailUrl = useCallback(
+    (imageUrls: Record<string, string>): string | undefined => {
+      if (imageUrls["thumbnail"]) return imageUrls["thumbnail"];
+      if (thumbnailUrl && !isBlobUrl(thumbnailUrl)) return thumbnailUrl;
+      return undefined;
+    },
+    [thumbnailUrl]
+  );
+
+  const buildCreateDto = useCallback(
+    (imageUrls: Record<string, string>): ICreateBlogPostDto => ({
+      title,
+      shortDescription,
+      thumbnailUrl: buildThumbnailUrl(imageUrls),
+      isPublic,
+      type: postType,
+      authorId,
+      communityId,
+      originalPostId,
+      blocks: buildBlocksDto(imageUrls),
+      hashtags,
+    }),
+    [
+      title,
+      shortDescription,
+      isPublic,
+      postType,
+      authorId,
+      communityId,
+      originalPostId,
+      hashtags,
+      buildBlocksDto,
+      buildThumbnailUrl,
+    ]
+  );
+
+  const buildUpdateDto = useCallback(
+    (imageUrls: Record<string, string>): IUpdateBlogPostDto => ({
+      id: post?.id ?? 0,
+      title,
+      shortDescription,
+      thumbnailUrl: buildThumbnailUrl(imageUrls),
+      isPublic,
+      blocks: buildBlocksDto(imageUrls),
+      hashtags,
+    }),
+    [
+      post?.id,
+      title,
+      shortDescription,
+      isPublic,
+      hashtags,
+      buildBlocksDto,
+      buildThumbnailUrl,
+    ]
+  );
+
+  /**
+   * Action Handlers
+   * @returns
+   */
+  const handleNextStepClick = () => setIsConfigDialogOpen(true);
+
+  const handlePublish = async () => {
+    if (isPublishing || !onPublish) return;
+
+    setIsPublishing(true);
+    try {
+      // Upload images
+      const imageKeys = getImageKeys();
+      let imageUrls: Record<string, string> = {};
+
+      if (imageKeys.length > 0) {
+        imageUrls = await uploadMultipleFiles(getImageForm(), imageKeys);
+        clearImageForm();
       }
+
+      // Build and send DTO
+      const dto =
+        mode === "create"
+          ? buildCreateDto(imageUrls)
+          : buildUpdateDto(imageUrls);
+
+      onPublish(dto);
+    } catch (error) {
+      console.error("Error publishing:", error);
+    } finally {
+      setIsPublishing(false);
+      setIsConfigDialogOpen(false);
     }
-    setIsConfigDialogOpen(false);
   };
 
   const handleSaveDraft = () => {
-    if (onSaveDraft) {
-      const dto = getCreateDto(authorId, postType, communityId, originalPostId);
-      onSaveDraft(dto);
-    }
+    if (!onSaveDraft) return;
+    onSaveDraft(buildCreateDto({}));
   };
 
   return (
     <div className="w-full relative p-9 flex flex-col gap-4 items-center justify-center">
       <BlockSidebar onAddBlock={handleAddBlock} />
+
+      {/* Title & Description */}
       <div className="w-[800px] p-3">
         <InputBase
           placeholder="Nhập tiêu đề bài viết..."
@@ -146,7 +252,6 @@ const EditPostForm = ({
             fontFamily: "Quicksand, Mona Sans, Open Sans, Outfit, sans-serif",
           }}
         />
-
         <InputBase
           placeholder="Nhập mô tả ngắn về bài viết..."
           className="w-full"
@@ -162,6 +267,8 @@ const EditPostForm = ({
           }}
         />
       </div>
+
+      {/* Grid Layout */}
       <div className="w-[800px]">
         <GridLayout
           layout={layout}
@@ -173,7 +280,7 @@ const EditPostForm = ({
           width={800}
           isDraggable={isCtrlPressed}
           isResizable={true}
-          draggableCancel={".rgl-no-drag"}
+          draggableCancel=".rgl-no-drag"
           isDroppable={true}
           onDrop={handleGridDrop}
           droppingItem={{ i: "__dropping-elem__", w: 8, h: 6 }}
@@ -181,7 +288,7 @@ const EditPostForm = ({
           {blocks.map((block) => (
             <div
               key={block.id}
-              className={`border-dashed border-2 rounded-lg border-gray-300 relative   ${
+              className={`border-dashed border-2 rounded-lg border-gray-300 relative ${
                 isCtrlPressed
                   ? "cursor-move border-pink-400 select-none"
                   : "cursor-default"
@@ -202,6 +309,8 @@ const EditPostForm = ({
                   imageUrl={block.content}
                   caption={block.caption}
                   objectFit={block.objectFit}
+                  handleAppendImageForm={handleAppendImageForm}
+                  handleRemoveImageForm={handleRemoveImageForm}
                   onImageChange={(id, url) => handleBlockContentChange(id, url)}
                   onCaptionChange={(id, caption) =>
                     handleBlockCaptionChange(id, caption)
@@ -212,6 +321,7 @@ const EditPostForm = ({
                   style={isCtrlPressed ? { pointerEvents: "none" } : {}}
                 />
               )}
+
               {isCtrlPressed && (
                 <div className="absolute top-2 right-2 z-10 rgl-no-drag transition-all">
                   <DeleteConfirmButton
@@ -224,6 +334,8 @@ const EditPostForm = ({
           ))}
         </GridLayout>
       </div>
+
+      {/* Action Buttons */}
       {mode === "create" ? (
         <div className="flex w-[900px] justify-center gap-4 items-center p-4">
           <CustomButton
@@ -263,10 +375,12 @@ const EditPostForm = ({
         </CustomButton>
       )}
 
+      {/* Config Dialog */}
       <ConfigDialog
         open={isConfigDialogOpen}
-        onClose={() => setIsConfigDialogOpen(false)}
+        onClose={() => !isPublishing && setIsConfigDialogOpen(false)}
         onPublish={handlePublish}
+        isLoading={isPublishing}
         thumbnail={thumbnailUrl}
         isPublic={isPublic}
         hashtags={hashtags}
@@ -274,6 +388,8 @@ const EditPostForm = ({
         onIsPublicChange={handleIsPublicChange}
         onAddHashtag={addHashtag}
         onRemoveHashtag={removeHashtag}
+        onAppendImageForm={handleAppendImageForm}
+        onRemoveImageForm={handleRemoveImageForm}
         confirmButtonText={mode === "create" ? "Đăng bài" : "Cập nhật"}
       />
     </div>
