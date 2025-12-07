@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import type { UserProfile } from "../../../types/user.types";
 import { IoSettingsOutline } from "react-icons/io5";
+import * as userService from "../../../services/user/userService";
+import { togglePostPrivacy } from "../../../services/user/post/postService";
 import { MdGroup } from "react-icons/md";
 import { BsFileText } from "react-icons/bs";
 import { TfiEmail } from "react-icons/tfi";
@@ -38,77 +40,23 @@ const ViewProfile = () => {
     const fetchProfile = async () => {
       setLoading(true);
       try {
-        // TODO: Get viewerId from auth context
-        const viewerId = 1; // Mock current user ID
-        const targetUserId = userId || viewerId;
+        let data: UserProfile;
         
-        // TODO: Replace with actual API call
-        const response = await fetch(`http://localhost:3000/users/${targetUserId}/profile?viewerId=${viewerId}`);
-        
-        if (!response.ok) {
-          throw new Error('Failed to fetch profile');
+        if (userId) {
+          // Viewing another user's profile
+          // TODO: Get viewerId from auth context if logged in
+          data = await userService.getUserProfile(Number(userId));
+          setIsOwnProfile(false);
+        } else {
+          // Viewing own profile
+          data = await userService.getMyProfile();
+          setIsOwnProfile(true);
         }
         
-        const data: UserProfile = await response.json();
         setProfile(data);
-        
-        // Check if this is the current user's profile
-        setIsOwnProfile(Number(targetUserId) === viewerId);
       } catch (error) {
         console.error("Failed to fetch profile:", error);
-        
-        // Fallback to mock data for development
-        const mockProfile: UserProfile = {
-          id: Number(userId) || 1,
-          username: "johndoe",
-          email: "john@example.com",
-          phoneNumber: "0123456789",
-          bio: "Passionate blogger and tech enthusiast. Love sharing knowledge about web development, design patterns, and software architecture.",
-          avatarUrl: "https://i.pravatar.cc/300",
-          dob: "1990-01-01",
-          gender: "MALE",
-          isPrivate: false,
-          showEmail: true, // Cho phép hiển thị email công khai
-          showPhoneNumber: false, // Không cho phép hiển thị SĐT công khai
-          joinAt: new Date().toISOString(),
-          communities: [
-            {
-              id: 1,
-              name: "Web Development",
-              thumbnailUrl: "https://via.placeholder.com/100",
-            },
-            {
-              id: 2,
-              name: "React Enthusiasts",
-              thumbnailUrl: "https://via.placeholder.com/100",
-            },
-          ],
-          followersCount: 342,
-          followingCount: 128,
-          posts: [
-            {
-              id: 1,
-              title: "Getting Started with React TypeScript",
-              thumbnailUrl: "https://via.placeholder.com/400x200",
-              isPublic: true,
-              upVotes: 89,
-              downVotes: 5,
-              createdAt: new Date().toISOString(),
-            },
-            {
-              id: 2,
-              title: "Advanced State Management Patterns",
-              thumbnailUrl: "https://via.placeholder.com/400x200",
-              isPublic: true,
-              upVotes: 67,
-              downVotes: 3,
-              createdAt: new Date().toISOString(),
-            },
-          ],
-        };
-        
-        setProfile(mockProfile);
-        setIsOwnProfile(true);
+        setProfile(null);
       } finally {
         setLoading(false);
       }
@@ -366,14 +314,10 @@ const ViewProfile = () => {
                                     <button
                                       onClick={async (e) => {
                                         e.stopPropagation();
-                                        if (!post.isPublic) return; // Đã là công khai
+                                        if (!post.isPublic) return;
                                         try {
-                                          const response = await fetch(`http://localhost:8080/blog-posts/${post.id}/toggle-privacy`, {
-                                            method: 'PATCH',
-                                          });
-                                          if (response.ok) {
-                                            window.location.reload();
-                                          }
+                                          await togglePostPrivacy(post.id);
+                                          window.location.reload();
                                         } catch (error) {
                                           console.error('Failed to toggle privacy:', error);
                                         }
@@ -389,14 +333,10 @@ const ViewProfile = () => {
                                     <button
                                       onClick={async (e) => {
                                         e.stopPropagation();
-                                        if (post.isPublic) { // Chỉ thực hiện nếu đang là công khai
+                                        if (post.isPublic) {
                                           try {
-                                            const response = await fetch(`http://localhost:8080/blog-posts/${post.id}/toggle-privacy`, {
-                                              method: 'PATCH',
-                                            });
-                                            if (response.ok) {
-                                              window.location.reload();
-                                            }
+                                            await togglePostPrivacy(post.id);
+                                            window.location.reload();
                                           } catch (error) {
                                             console.error('Failed to toggle privacy:', error);
                                           }

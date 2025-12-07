@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import type { UpdateProfileData, ChangePasswordData, BlockedUser } from "../../../types/user.types";
 import { IoArrowBack, IoSaveOutline, IoCloseOutline } from "react-icons/io5";
 import { AiOutlineUser, AiOutlineLock, AiOutlineEye, AiOutlineUserDelete } from "react-icons/ai";
 import { MdBlock } from "react-icons/md";
+import * as userService from "../../../services/user/userService";
+import { uploadFile } from "../../../services/upload/uploadImageService";
 
 type TabType = "profile" | "password" | "privacy" | "blocked" | "delete";
 
@@ -26,17 +28,18 @@ const EditProfile = () => {
 
   // Profile data
   const [profileData, setProfileData] = useState<UpdateProfileData>({
-    username: "johndoe",
-    bio: "Passionate blogger and tech enthusiast.",
-    avatarUrl: "https://i.pravatar.cc/300",
-    phoneNumber: "0123456789",
+    username: "",
+    bio: "",
+    avatarUrl: "",
+    phoneNumber: "",
     dob: "",
     gender: undefined,
-    showEmail: true, // Cài đặt hiển thị email công khai
-    showPhoneNumber: false, // Cài đặt hiển thị số điện thoại công khai
+    showEmail: true,
+    showPhoneNumber: false,
   });
   
   const [isPrivate, setIsPrivate] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
 
   // Password data
   const [passwordData, setPasswordData] = useState<ChangePasswordData>({
@@ -46,16 +49,52 @@ const EditProfile = () => {
   });
 
   // Blocked users
-  const [blockedUsers, setBlockedUsers] = useState<BlockedUser[]>([
-    {
-      id: 1,
-      username: "blockeduser1",
-      avatarUrl: "https://i.pravatar.cc/300?img=1",
-    },
-  ]);
+  const [blockedUsers, setBlockedUsers] = useState<BlockedUser[]>([]);
 
   // Avatar upload
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+
+  // Fetch user data on mount
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        setInitialLoading(true);
+        const profile = await userService.getMyProfile();
+        setProfileData({
+          username: profile.username,
+          bio: profile.bio || "",
+          avatarUrl: profile.avatarUrl || "",
+          phoneNumber: profile.phoneNumber || "",
+          dob: profile.dob || "",
+          gender: profile.gender,
+          showEmail: profile.showEmail,
+          showPhoneNumber: profile.showPhoneNumber,
+        });
+        setIsPrivate(profile.isPrivate);
+      } catch (err: any) {
+        setError(err.message || "Không thể tải thông tin người dùng");
+      } finally {
+        setInitialLoading(false);
+      }
+    };
+
+    fetchUserData();
+  }, []);
+
+  // Fetch blocked users when switching to blocked tab
+  useEffect(() => {
+    if (activeTab === "blocked") {
+      const fetchBlockedUsers = async () => {
+        try {
+          const users = await userService.getBlockedUsers();
+          setBlockedUsers(users);
+        } catch (err: any) {
+          setError(err.message || "Không thể tải danh sách người dùng bị chặn");
+        }
+      };
+      fetchBlockedUsers();
+    }
+  }, [activeTab]);
 
   const handleProfileChange = (field: keyof UpdateProfileData, value: any) => {
     setProfileData((prev) => ({ ...prev, [field]: value }));
@@ -65,7 +104,7 @@ const EditProfile = () => {
     setPasswordData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
@@ -73,6 +112,19 @@ const EditProfile = () => {
         setAvatarPreview(reader.result as string);
       };
       reader.readAsDataURL(file);
+
+      // Upload file to server
+      try {
+        setLoading(true);
+        const avatarUrl = await uploadFile(file);
+        handleProfileChange("avatarUrl", avatarUrl);
+        setSuccess("Ảnh đại diện đã được tải lên!");
+        setTimeout(() => setSuccess(null), 3000);
+      } catch (err: any) {
+        setError(err.message || "Không thể tải ảnh lên");
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -80,8 +132,7 @@ const EditProfile = () => {
     setLoading(true);
     setError(null);
     try {
-      // TODO: Replace with actual API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await userService.updateMyProfile(profileData);
       setSuccess("Cập nhật hồ sơ thành công!");
       setTimeout(() => setSuccess(null), 3000);
     } catch (err: any) {
@@ -95,14 +146,7 @@ const EditProfile = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch('http://localhost:8080/users/forgot-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: forgotPasswordEmail })
-      });
-      
-      if (!response.ok) throw new Error('Không thể gửi mã xác thực');
-      
+      await userService.requestPasswordReset(forgotPasswordEmail);
       setForgotPasswordStep('reset');
       setSuccess('Mã xác thực đã được gửi đến email của bạn!');
       setTimeout(() => setSuccess(null), 3000);
@@ -126,17 +170,11 @@ const EditProfile = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch('http://localhost:8080/users/reset-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: forgotPasswordEmail,
-          verificationCode: resetPasswordData.verificationCode,
-          newPassword: resetPasswordData.newPassword
-        })
+      await userService.resetPassword({
+        email: forgotPasswordEmail,
+        verificationCode: resetPasswordData.verificationCode,
+        newPassword: resetPasswordData.newPassword
       });
-      
-      if (!response.ok) throw new Error('Không thể reset mật khẩu');
       
       setSuccess('Mật khẩu đã được đặt lại thành công!');
       setShowForgotPasswordModal(false);
@@ -164,8 +202,7 @@ const EditProfile = () => {
     setLoading(true);
     setError(null);
     try {
-      // TODO: Replace with actual API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await userService.changePassword(passwordData);
       setSuccess("Đổi mật khẩu thành công!");
       setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" });
       setTimeout(() => setSuccess(null), 3000);
@@ -178,8 +215,7 @@ const EditProfile = () => {
 
   const handleUnblockUser = async (userId: number) => {
     try {
-      // TODO: Replace with actual API call DELETE /users/:id/block
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      await userService.unblockUser(userId);
       setBlockedUsers((prev) => prev.filter((user) => user.id !== userId));
       setSuccess("Đã bỏ chặn người dùng");
       setTimeout(() => setSuccess(null), 3000);
@@ -195,9 +231,9 @@ const EditProfile = () => {
     if (!confirmed) return;
 
     try {
-      // TODO: Replace with actual API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await userService.deleteAccount();
       alert("Tài khoản đã được xóa");
+      localStorage.clear();
       navigate("/");
     } catch (err: any) {
       setError(err.message || "Có lỗi xảy ra");
@@ -211,6 +247,19 @@ const EditProfile = () => {
     { id: "blocked" as TabType, label: "Quản lý chặn", icon: <MdBlock fontSize={20} /> },
     { id: "delete" as TabType, label: "Xóa tài khoản", icon: <AiOutlineUserDelete fontSize={20} /> },
   ];
+
+  if (initialLoading) {
+    return (
+      <div className="max-w-6xl mx-auto px-4 py-8">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#F295B6] mx-auto mb-4"></div>
+            <p className="text-gray-600">Đang tải thông tin...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
@@ -483,12 +532,11 @@ const EditProfile = () => {
                     <input
                       type="checkbox"
                       checked={isPrivate}
-                      onChange={async (e) => {
+                      onChange={async () => {
                         try {
-                          // TODO: Call API PATCH /users/me/privacy
-                          await new Promise((resolve) => setTimeout(resolve, 500));
-                          setIsPrivate(e.target.checked);
-                          setSuccess(e.target.checked ? "Đã chuyển sang chế độ riêng tư" : "Đã công khai hồ sơ");
+                          const result = await userService.togglePrivacy();
+                          setIsPrivate(result.isPrivate);
+                          setSuccess(result.isPrivate ? "Đã chuyển sang chế độ riêng tư" : "Đã công khai hồ sơ");
                           setTimeout(() => setSuccess(null), 3000);
                         } catch (err: any) {
                           setError(err.message || "Có lỗi xảy ra");
