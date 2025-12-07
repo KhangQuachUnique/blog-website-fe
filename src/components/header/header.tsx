@@ -164,14 +164,14 @@ const Header = ({
                 transformOrigin={{ horizontal: "right", vertical: "top" }}
                 anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
               >
-                <MenuItem onClick={() => window.location.href = "/profile/1"}>
+                <MenuItem onClick={() => navigate(`/profile/${user?.id}`)}>
                   <ListItemIcon>
                     <GoPerson style={{ fontSize: 20, color: "#F295B6" }} />
                   </ListItemIcon>
                   Xem trang cá nhân
                 </MenuItem>
 
-                <MenuItem onClick={() => window.location.href = "/profile/edit"}>
+                <MenuItem onClick={() => navigate("/profile/edit")}>
                   <ListItemIcon>
                     <IoSettingsOutline
                       style={{ fontSize: 20, color: "#F295B6" }}

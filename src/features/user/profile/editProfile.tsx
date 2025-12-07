@@ -60,19 +60,22 @@ const EditProfile = () => {
       try {
         setInitialLoading(true);
         const profile = await userService.getMyProfile();
+        console.log('Fetched profile:', profile);
         setProfileData({
-          username: profile.username,
+          username: profile.username || "",
           bio: profile.bio || "",
           avatarUrl: profile.avatarUrl || "",
           phoneNumber: profile.phoneNumber || "",
           dob: profile.dob || "",
           gender: profile.gender,
-          showEmail: profile.showEmail,
-          showPhoneNumber: profile.showPhoneNumber,
+          showEmail: profile.showEmail !== undefined ? profile.showEmail : true,
+          showPhoneNumber: profile.showPhoneNumber !== undefined ? profile.showPhoneNumber : false,
         });
-        setIsPrivate(profile.isPrivate);
+        setIsPrivate(profile.isPrivate || false);
       } catch (err: any) {
-        setError(err.message || "Không thể tải thông tin người dùng");
+        console.error('Error fetching profile:', err);
+        console.error('Error response:', err.response?.data);
+        setError(err.response?.data?.message || err.message || "Không thể tải thông tin người dùng");
       } finally {
         setInitialLoading(false);
       }
@@ -132,7 +135,15 @@ const EditProfile = () => {
     setLoading(true);
     setError(null);
     try {
-      await userService.updateMyProfile(profileData);
+      // Clean data: chuyển chuỗi rỗng thành undefined
+      const cleanedData = {
+        ...profileData,
+        avatarUrl: profileData.avatarUrl || undefined,
+        dob: profileData.dob || undefined,
+        phoneNumber: profileData.phoneNumber || undefined,
+        bio: profileData.bio || undefined,
+      };
+      await userService.updateMyProfile(cleanedData);
       setSuccess("Cập nhật hồ sơ thành công!");
       setTimeout(() => setSuccess(null), 3000);
     } catch (err: any) {
