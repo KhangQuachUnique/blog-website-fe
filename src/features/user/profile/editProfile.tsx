@@ -13,6 +13,16 @@ const EditProfile = () => {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  
+  // Forgot password modal
+  const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false);
+  const [forgotPasswordStep, setForgotPasswordStep] = useState<'email' | 'reset'>('email');
+  const [forgotPasswordEmail, setForgotPasswordEmail] = useState('');
+  const [resetPasswordData, setResetPasswordData] = useState({
+    verificationCode: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
 
   // Profile data
   const [profileData, setProfileData] = useState<UpdateProfileData>({
@@ -76,6 +86,66 @@ const EditProfile = () => {
       setTimeout(() => setSuccess(null), 3000);
     } catch (err: any) {
       setError(err.message || "Có lỗi xảy ra");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRequestPasswordReset = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch('http://localhost:8080/users/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: forgotPasswordEmail })
+      });
+      
+      if (!response.ok) throw new Error('Không thể gửi mã xác thực');
+      
+      setForgotPasswordStep('reset');
+      setSuccess('Mã xác thực đã được gửi đến email của bạn!');
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (err: any) {
+      setError(err.message || 'Có lỗi xảy ra');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResetPassword = async () => {
+    if (resetPasswordData.newPassword !== resetPasswordData.confirmPassword) {
+      setError('Mật khẩu xác nhận không khớp');
+      return;
+    }
+    if (resetPasswordData.newPassword.length < 6) {
+      setError('Mật khẩu phải có ít nhất 6 ký tự');
+      return;
+    }
+    
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch('http://localhost:8080/users/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: forgotPasswordEmail,
+          verificationCode: resetPasswordData.verificationCode,
+          newPassword: resetPasswordData.newPassword
+        })
+      });
+      
+      if (!response.ok) throw new Error('Không thể reset mật khẩu');
+      
+      setSuccess('Mật khẩu đã được đặt lại thành công!');
+      setShowForgotPasswordModal(false);
+      setForgotPasswordStep('email');
+      setForgotPasswordEmail('');
+      setResetPasswordData({ verificationCode: '', newPassword: '', confirmPassword: '' });
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (err: any) {
+      setError(err.message || 'Có lỗi xảy ra');
     } finally {
       setLoading(false);
     }
@@ -344,7 +414,16 @@ const EditProfile = () => {
               </h2>
 
               <div>
-                <label className="block text-sm font-semibold mb-2">Mật khẩu hiện tại</label>
+                <div className="flex justify-between items-center mb-2">
+                  <label className="block text-sm font-semibold">Mật khẩu hiện tại</label>
+                  <button
+                    type="button"
+                    onClick={() => setShowForgotPasswordModal(true)}
+                    className="text-xs text-[#F295B6] hover:underline font-semibold"
+                  >
+                    Quên mật khẩu?
+                  </button>
+                </div>
                 <input
                   type="password"
                   value={passwordData.currentPassword}
@@ -497,6 +576,116 @@ const EditProfile = () => {
           )}
         </div>
       </div>
+
+      {/* Forgot Password Modal */}
+      {showForgotPasswordModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-8 max-w-md w-full mx-4 border-2 border-[#F295B6] shadow-xl">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold" style={{ color: "#8C1D35" }}>
+                {forgotPasswordStep === 'email' ? 'Quên mật khẩu' : 'Đặt lại mật khẩu'}
+              </h2>
+              <button
+                onClick={() => {
+                  setShowForgotPasswordModal(false);
+                  setForgotPasswordStep('email');
+                  setError(null);
+                }}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <IoCloseOutline fontSize={28} />
+              </button>
+            </div>
+
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg mb-4 text-sm">
+                {error}
+              </div>
+            )}
+
+            {forgotPasswordStep === 'email' ? (
+              <div className="space-y-4">
+                <p className="text-sm text-gray-600 mb-4">
+                  Nhập email của bạn để nhận mã xác thực
+                </p>
+                <div>
+                  <label className="block text-sm font-semibold mb-2">Email</label>
+                  <input
+                    type="email"
+                    value={forgotPasswordEmail}
+                    onChange={(e) => setForgotPasswordEmail(e.target.value)}
+                    className="w-full px-4 py-2 border border-[#FFE4EC] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F295B6]"
+                    placeholder="your@email.com"
+                  />
+                </div>
+                <button
+                  onClick={handleRequestPasswordReset}
+                  disabled={loading || !forgotPasswordEmail}
+                  className="w-full px-6 py-3 bg-[#F295B6] text-white font-bold rounded-lg hover:bg-[#FFB8D1] transition-colors duration-200 disabled:opacity-50"
+                >
+                  {loading ? 'Đang gửi...' : 'Gửi mã xác thực'}
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <p className="text-sm text-gray-600 mb-4">
+                  Nhập mã xác thực đã được gửi đến email và mật khẩu mới
+                </p>
+                <div>
+                  <label className="block text-sm font-semibold mb-2">Mã xác thực (6 số)</label>
+                  <input
+                    type="text"
+                    value={resetPasswordData.verificationCode}
+                    onChange={(e) => setResetPasswordData({ ...resetPasswordData, verificationCode: e.target.value })}
+                    className="w-full px-4 py-2 border border-[#FFE4EC] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F295B6]"
+                    placeholder="123456"
+                    maxLength={6}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold mb-2">Mật khẩu mới</label>
+                  <input
+                    type="password"
+                    value={resetPasswordData.newPassword}
+                    onChange={(e) => setResetPasswordData({ ...resetPasswordData, newPassword: e.target.value })}
+                    className="w-full px-4 py-2 border border-[#FFE4EC] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F295B6]"
+                    placeholder="Ít nhất 6 ký tự"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold mb-2">Xác nhận mật khẩu</label>
+                  <input
+                    type="password"
+                    value={resetPasswordData.confirmPassword}
+                    onChange={(e) => setResetPasswordData({ ...resetPasswordData, confirmPassword: e.target.value })}
+                    className="w-full px-4 py-2 border border-[#FFE4EC] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F295B6]"
+                    placeholder="Nhập lại mật khẩu"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      setForgotPasswordStep('email');
+                      setResetPasswordData({ verificationCode: '', newPassword: '', confirmPassword: '' });
+                      setError(null);
+                    }}
+                    className="flex-1 px-4 py-3 bg-gray-100 text-gray-700 font-bold rounded-lg hover:bg-gray-200 transition-colors duration-200"
+                  >
+                    Quay lại
+                  </button>
+                  <button
+                    onClick={handleResetPassword}
+                    disabled={loading}
+                    className="flex-1 px-4 py-3 bg-[#F295B6] text-white font-bold rounded-lg hover:bg-[#FFB8D1] transition-colors duration-200 disabled:opacity-50"
+                  >
+                    {loading ? 'Đang xử lý...' : 'Đặt lại mật khẩu'}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

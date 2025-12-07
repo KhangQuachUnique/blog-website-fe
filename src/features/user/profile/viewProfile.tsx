@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import type { UserProfile } from "../../../types/user.types";
 import { IoSettingsOutline } from "react-icons/io5";
@@ -9,6 +9,8 @@ import { CiPhone } from "react-icons/ci";
 import { BsGenderMale } from "react-icons/bs";
 import { BsGenderFemale } from "react-icons/bs";
 import { MdOutlineSchedule } from "react-icons/md";
+import { HiDotsHorizontal } from "react-icons/hi";
+import { MdPublic, MdLock } from "react-icons/md";
 
 const ViewProfile = () => {
   const { userId } = useParams<{ userId: string }>();
@@ -17,6 +19,20 @@ const ViewProfile = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"posts" | "communities">("posts");
   const [isOwnProfile, setIsOwnProfile] = useState(false);
+  const [openDropdownId, setOpenDropdownId] = useState<number | null>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Đóng dropdown khi click bên ngoài
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setOpenDropdownId(null);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -326,34 +342,78 @@ const ViewProfile = () => {
                             )}
                           </div>
                           
-                          {/* Toggle privacy button - chỉ hiển thị nếu là chính mình */}
+                          {/* Dropdown menu 3 chấm - chỉ hiển thị nếu là chính mình */}
                           {isOwnProfile && (
-                            <button
-                              onClick={async (e) => {
-                                e.stopPropagation();
-                                try {
-                                  // TODO: Call API PATCH /blog-posts/:id/toggle-privacy
-                                  const response = await fetch(`http://localhost:8080/blog-posts/${post.id}/toggle-privacy`, {
-                                    method: 'PATCH',
-                                  });
-                                  
-                                  if (response.ok) {
-                                    // Refresh profile data
-                                    window.location.reload();
-                                  }
-                                } catch (error) {
-                                  console.error('Failed to toggle privacy:', error);
-                                }
-                              }}
-                              className={`px-3 py-1 text-xs font-semibold rounded-lg transition-colors duration-200 ${
-                                post.isPublic
-                                  ? 'bg-green-100 text-green-700 hover:bg-green-200'
-                                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                              }`}
-                              title={post.isPublic ? 'Chuyển sang Riêng tư' : 'Chuyển sang Công khai'}
-                            >
-                              {post.isPublic ? '🌐 Công khai' : '🔒 Riêng tư'}
-                            </button>
+                            <div className="relative" ref={openDropdownId === post.id ? dropdownRef : null}>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setOpenDropdownId(openDropdownId === post.id ? null : post.id);
+                                }}
+                                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                                title="Tùy chọn"
+                              >
+                                <HiDotsHorizontal className="text-gray-600" fontSize={20} />
+                              </button>
+                              
+                              {/* Dropdown Menu */}
+                              {openDropdownId === post.id && (
+                                <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
+                                  <div className="py-1">
+                                    <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase">
+                                      Quyền xem
+                                    </div>
+                                    <button
+                                      onClick={async (e) => {
+                                        e.stopPropagation();
+                                        if (!post.isPublic) return; // Đã là công khai
+                                        try {
+                                          const response = await fetch(`http://localhost:8080/blog-posts/${post.id}/toggle-privacy`, {
+                                            method: 'PATCH',
+                                          });
+                                          if (response.ok) {
+                                            window.location.reload();
+                                          }
+                                        } catch (error) {
+                                          console.error('Failed to toggle privacy:', error);
+                                        }
+                                      }}
+                                      className={`w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2 ${
+                                        post.isPublic ? 'bg-green-50 text-green-700' : 'text-gray-700'
+                                      }`}
+                                    >
+                                      <MdPublic fontSize={18} />
+                                      <span>Công khai</span>
+                                      {post.isPublic && <span className="ml-auto text-green-600">✓</span>}
+                                    </button>
+                                    <button
+                                      onClick={async (e) => {
+                                        e.stopPropagation();
+                                        if (post.isPublic) { // Chỉ thực hiện nếu đang là công khai
+                                          try {
+                                            const response = await fetch(`http://localhost:8080/blog-posts/${post.id}/toggle-privacy`, {
+                                              method: 'PATCH',
+                                            });
+                                            if (response.ok) {
+                                              window.location.reload();
+                                            }
+                                          } catch (error) {
+                                            console.error('Failed to toggle privacy:', error);
+                                          }
+                                        }
+                                      }}
+                                      className={`w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2 ${
+                                        !post.isPublic ? 'bg-gray-50 text-gray-700' : 'text-gray-700'
+                                      }`}
+                                    >
+                                      <MdLock fontSize={18} />
+                                      <span>Riêng tư</span>
+                                      {!post.isPublic && <span className="ml-auto text-gray-600">✓</span>}
+                                    </button>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
                           )}
                         </div>
                         <div className="flex items-center gap-4 text-sm text-gray-500 mt-3">
