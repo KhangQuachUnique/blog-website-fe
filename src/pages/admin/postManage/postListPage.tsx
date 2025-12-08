@@ -144,10 +144,10 @@ const PostListPage = () => {
       <div className="mb-8">
         <div className="flex justify-between items-start mb-6">
           <div>
-            <h1 className="text-4xl font-bold text-rose-900">
+            <h1 className="font-heading text-4xl text-rose-900">
               📚 Quản lý Bài Đăng
             </h1>
-            <p className="text-gray-500 mt-2">
+            <p className="font-body text-gray-500 mt-2">
               Quản lý, lọc và kiểm soát các bài viết blog của bạn
             </p>
           </div>

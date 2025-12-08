@@ -71,6 +71,7 @@ const GenericTable = React.forwardRef<HTMLDivElement, GenericTableProps<any>>(
                   fontSize: '14px',
                   textTransform: 'uppercase',
                   letterSpacing: '0.5px',
+                  fontFamily: '"Outfit", "Montserrat", sans-serif',
                 },
               }}
             >
@@ -78,6 +79,9 @@ const GenericTable = React.forwardRef<HTMLDivElement, GenericTableProps<any>>(
                 <TableCell
                   key={String(col.id)}
                   align={col.align || 'left'}
+                  sx={{
+                    fontFamily: '"Outfit", "Montserrat", sans-serif',
+                  }}
                   sx={{ width: col.width }}
                 >
                   {col.label}
@@ -121,6 +125,7 @@ const GenericTable = React.forwardRef<HTMLDivElement, GenericTableProps<any>>(
                         py: 2,
                         verticalAlign: 'middle',
                         maxWidth: col.width === undefined ? '300px' : 'auto',
+                        fontFamily: '"Quicksand", "Open Sans", sans-serif',
                       }}
                     >
                       {col.render ? col.render(row) : String(value)}

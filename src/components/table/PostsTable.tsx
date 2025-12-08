@@ -58,7 +58,7 @@ const PostsTable: React.FC<PostsTableProps> = ({
       width: '80px',
       align: 'left',
       render: (post) => (
-        <Box sx={{ fontWeight: '600', color: colors.text }}>#{post.id}</Box>
+        <Box sx={{ fontWeight: '600', color: colors.text, fontFamily: '"Quicksand", "Open Sans", sans-serif' }}>#{post.id}</Box>
       ),
     },
     {
@@ -77,6 +77,7 @@ const PostsTable: React.FC<PostsTableProps> = ({
             WebkitLineClamp: 2,
             WebkitBoxOrient: 'vertical',
             wordBreak: 'break-word',
+            fontFamily: '"Quicksand", "Open Sans", sans-serif',
           }}
         >
           {post.title}
@@ -88,7 +89,7 @@ const PostsTable: React.FC<PostsTableProps> = ({
       label: 'Ngày tạo',
       align: 'left',
       render: (post) => (
-        <Box sx={{ fontSize: '14px', color: colors.textSecondary }}>
+        <Box sx={{ fontSize: '14px', color: colors.textSecondary, fontFamily: '"Quicksand", "Open Sans", sans-serif' }}>
           {new Date(post.createdAt).toLocaleDateString('vi-VN')}
         </Box>
       ),
@@ -117,6 +118,7 @@ const PostsTable: React.FC<PostsTableProps> = ({
               backgroundColor: statusColors.badge,
               color: statusColors.text,
               border: `1px solid ${statusColors.border}`,
+              fontFamily: '"Outfit", "Montserrat", sans-serif',
             }}
           >
             <span>{icon}</span>
