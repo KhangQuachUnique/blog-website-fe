@@ -1,0 +1,61 @@
+import axiosCustomize from '../../config/axiosCustomize';
+
+const unwrap = (res: any) => {
+  // Backend wraps response in { status, statusCode, data }
+  if (res?.data) return res.data;
+  return res;
+};
+
+export interface LoginRequest {
+  email: string;
+  password: string;
+}
+
+export interface RegisterRequest {
+  name: string;
+  email: string;
+  password: string;
+}
+
+export interface AuthResponse {
+  accessToken: string;
+  user?: {
+    id: number;
+    username: string;
+    email: string;
+    role?: string;
+  };
+}
+
+export const login = async (data: LoginRequest): Promise<AuthResponse> => {
+  const response = await axiosCustomize.post('/auth/login', data);
+  return unwrap(response);
+};
+
+export const register = async (data: RegisterRequest): Promise<AuthResponse> => {
+  const response = await axiosCustomize.post('/auth/register', data);
+  return unwrap(response);
+};
+
+export const logout = async (): Promise<void> => {
+  try {
+    await axiosCustomize.post('/auth/logout');
+  } catch (error) {
+    // Ignore errors on logout
+  }
+};
+
+export const getCurrentUser = async () => {
+  const response = await axiosCustomize.get('/auth/me');
+  return unwrap(response);
+};
+
+export const refresh = async (): Promise<{ accessToken: string }> => {
+  const response = await axiosCustomize.post('/auth/refresh');
+  return unwrap(response);
+};
+
+export const verifyEmail = async (token: string) => {
+  const response = await axiosCustomize.post('/auth/verify-email', { token });
+  return unwrap(response);
+};

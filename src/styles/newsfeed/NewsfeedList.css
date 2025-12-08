@@ -1,0 +1,54 @@
+.newsfeed-list-wrapper {
+  padding: 0;
+}
+
+/* react-masonry-css classes */
+.newsfeed-masonry-grid {
+  display: flex;
+  margin-left: -1.5rem; /* gutter offset */
+  width: auto;
+}
+.newsfeed-masonry-grid_column {
+  padding-left: 1.5rem; /* gutter */
+  background-clip: padding-box;
+}
+
+.newsfeed-masonry-item {
+  margin-bottom: 2rem; /* increased gutter to avoid overlap */
+}
+
+/* make cards narrower (55% width) and centered inside each column */
+.newsfeed-masonry-item .newsfeed-card {
+  width: 65%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* medium screens: make cards a bit wider to use space */
+@media (max-width: 1200px) {
+  .newsfeed-masonry-item .newsfeed-card {
+    width: 85%;
+  }
+}
+
+@media (max-width: 768px) {
+  .newsfeed-masonry-grid {
+    margin-left: -1rem;
+  }
+  .newsfeed-masonry-grid_column {
+    padding-left: 1rem;
+  }
+  .newsfeed-masonry-item {
+    margin-bottom: 1rem;
+  }
+  /* full width cards on small screens */
+  .newsfeed-masonry-item .newsfeed-card {
+    width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+  }
+}
+
+@media (min-width: 1400px) {
+  /* no-op, masonry will handle columns via breakpointCols in JS */
+}
