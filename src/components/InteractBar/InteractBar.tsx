@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { MessageCircle, MoreHorizontal, Share2, Repeat2, Flag } from 'lucide-react';
 import { useInteractBar } from '../../hooks/useInteractBar';
@@ -104,10 +105,10 @@ const DownvoteArrow: React.FC<{ active?: boolean; size?: number }> = ({
 // ============================================
 
 // Floating Toast Notification
-const Toast: React.FC<{ message: string; visible: boolean }> = ({ message, visible }) => {
+const Toast: React.FC<{ message: string; visible: boolean; anchorRect?: DOMRect | null }> = ({ message, visible, anchorRect }) => {
   if (!visible) return null;
-  
-  return (
+
+  const toast = (
     <>
       <style>{`
         @keyframes toastSlideIn {
@@ -117,10 +118,10 @@ const Toast: React.FC<{ message: string; visible: boolean }> = ({ message, visib
       `}</style>
       <div
         style={{
-          position: 'absolute',
-          left: '50%',
-          bottom: 'calc(100% + 12px)',
-          transform: 'translateX(-50%)',
+          position: 'fixed',
+          left: anchorRect ? `${anchorRect.left + anchorRect.width / 2}px` : '50%',
+          top: anchorRect ? `${anchorRect.top - 8}px` : undefined,
+          transform: anchorRect ? 'translateX(-50%) translateY(-100%)' : 'translateX(-50%)',
           background: `linear-gradient(135deg, ${THEME.primary} 0%, ${THEME.secondary} 100%)`,
           color: THEME.white,
           padding: '10px 20px',
@@ -131,13 +132,16 @@ const Toast: React.FC<{ message: string; visible: boolean }> = ({ message, visib
           whiteSpace: 'nowrap',
           boxShadow: THEME.shadowStrong,
           animation: 'toastSlideIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
-          zIndex: 100,
+          zIndex: 1000,
         }}
+        onMouseDown={(e) => e.stopPropagation()}
       >
         {message}
       </div>
     </>
   );
+
+  return createPortal(toast, document.body);
 };
 
 // Vote Button Component
@@ -187,10 +191,11 @@ const EmojiPicker: React.FC<{
   visible: boolean;
   selectedId: number | null;
   onSelect: (id: number) => void;
-}> = ({ visible, selectedId, onSelect }) => {
+  anchorRect?: DOMRect | null;
+}> = ({ visible, selectedId, onSelect, anchorRect }) => {
   if (!visible) return null;
 
-  return (
+  const picker = (
     <>
       <style>{`
         @keyframes emojiPickerPop {
@@ -205,10 +210,10 @@ const EmojiPicker: React.FC<{
       `}</style>
       <div
         style={{
-          position: 'absolute',
-          bottom: 'calc(100% + 12px)',
-          left: '50%',
-          transform: 'translateX(-50%)',
+          position: 'fixed',
+          left: anchorRect ? `${anchorRect.left + anchorRect.width / 2}px` : '50%',
+          top: anchorRect ? `${anchorRect.top}px` : undefined,
+          transform: anchorRect ? 'translateX(-50%) translateY(-8px)' : 'translateX(-50%)',
           display: 'flex',
           gap: '4px',
           padding: '10px 14px',
@@ -217,8 +222,9 @@ const EmojiPicker: React.FC<{
           border: `1.5px solid ${THEME.secondary}`,
           boxShadow: THEME.shadowStrong,
           animation: 'emojiPickerPop 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)',
-          zIndex: 100,
+          zIndex: 1000,
         }}
+        onMouseDown={(e) => e.stopPropagation()}
       >
         {EMOJI_LIST.map((item, index) => (
           <button
@@ -253,15 +259,18 @@ const EmojiPicker: React.FC<{
       </div>
     </>
   );
+
+  return createPortal(picker, document.body);
 };
 
-// More Menu Dropdown
+// More Menu Dropdown (rendered in a portal so it overlays without affecting layout)
 const MoreMenu: React.FC<{
   visible: boolean;
   onShare: () => void;
   onRepost: () => void;
   onReport: () => void;
-}> = ({ visible, onShare, onRepost, onReport }) => {
+  anchorRect?: DOMRect | null;
+}> = ({ visible, onShare, onRepost, onReport, anchorRect }) => {
   if (!visible) return null;
 
   const MenuItem: React.FC<{
@@ -306,7 +315,7 @@ const MoreMenu: React.FC<{
     );
   };
 
-  return (
+  const menu = (
     <>
       <style>{`
         @keyframes menuSlideIn {
@@ -316,18 +325,20 @@ const MoreMenu: React.FC<{
       `}</style>
       <div
         style={{
-          position: 'absolute',
-          top: 'calc(100% + 8px)',
-          right: 0,
+          position: 'fixed',
+          top: anchorRect ? `${anchorRect.bottom + 8}px` : undefined,
+          left: anchorRect ? `${anchorRect.right}px` : undefined,
+          transform: anchorRect ? 'translateX(-100%)' : undefined,
           minWidth: '160px',
           background: THEME.white,
           borderRadius: '16px',
           border: `1.5px solid ${THEME.secondary}`,
           boxShadow: THEME.shadowStrong,
           overflow: 'hidden',
-          animation: 'menuSlideIn 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
-          zIndex: 100,
+          // animation: 'menuSlideIn 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
+          zIndex: 1000,
         }}
+        onMouseDown={(e) => e.stopPropagation()}
       >
         <MenuItem 
           icon={<Share2 size={16} strokeWidth={2.5} />} 
@@ -353,6 +364,8 @@ const MoreMenu: React.FC<{
       </div>
     </>
   );
+
+  return createPortal(menu, document.body);
 };
 
 // ============================================
@@ -380,6 +393,7 @@ const InteractBar: React.FC<InteractBarProps> = ({
   const [showShareToast, setShowShareToast] = useState(false);
   const [commentHovered, setCommentHovered] = useState(false);
   const [moreHovered, setMoreHovered] = useState(false);
+  const wrapperRef = React.useRef<HTMLDivElement | null>(null);
   
   const moreMenuRef = useRef<HTMLDivElement>(null);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
@@ -478,14 +492,23 @@ const InteractBar: React.FC<InteractBarProps> = ({
     setShowMoreMenu(false);
   };
 
+  // When any floating UI is visible, increase bottom padding so the popup
+  // doesn't overlap the next card. This lets the card expand in height
+  // (the card CSS uses min-height) and prevents the interact popups
+  // from covering the following card on small screens.
+  // For portal popups we don't change the card height; keep a small static padding.
+  const computedPaddingBottom = 8; // px
+
   return (
     <div
+      ref={wrapperRef}
       style={{
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
         gap: '10px',
         padding: '8px 12px',
+        paddingBottom: `${computedPaddingBottom}px`,
         background: THEME.cream,
         borderTop: `1px solid ${THEME.tertiary}`,
         borderRadius: '0 0 10px 10px',
@@ -493,9 +516,9 @@ const InteractBar: React.FC<InteractBarProps> = ({
         position: 'relative',
       }}
     >
-      {/* Toast */}
-      <Toast message="Đăng nhập để tương tác 💕" visible={showLoginToast} />
-      <Toast message="Đã sao chép link! 📋" visible={showShareToast} />
+      {/* Toast (portal) */}
+      <Toast message="Đăng nhập để tương tác 💕" visible={showLoginToast} anchorRect={wrapperRef.current?.getBoundingClientRect() ?? null} />
+      <Toast message="Đã sao chép link! 📋" visible={showShareToast} anchorRect={wrapperRef.current?.getBoundingClientRect() ?? null} />
 
       {/* ===== LEFT: Vote Group ===== */}
       <div
@@ -584,6 +607,7 @@ const InteractBar: React.FC<InteractBarProps> = ({
             visible={showEmojiPicker}
             selectedId={selectedEmojiId}
             onSelect={onEmojiClick}
+            anchorRect={emojiPickerRef.current?.getBoundingClientRect() ?? null}
           />
         </div>
 
@@ -661,6 +685,7 @@ const InteractBar: React.FC<InteractBarProps> = ({
             onShare={handleShare}
             onRepost={handleRepost}
             onReport={handleReport}
+            anchorRect={moreMenuRef.current?.getBoundingClientRect() ?? null}
           />
         </div>
       </div>
