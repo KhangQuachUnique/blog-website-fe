@@ -8,9 +8,10 @@
 
 ```
 src/
-  components/PostsTable/
+  components/table/
     ├── GenericTable.tsx       # Core table component
-    └── PostsTable.tsx         # Wrapper example for blog posts
+    ├── PostsTable.tsx         # Wrapper example for blog posts
+    └── GENERICTABLE_GUIDE.md  # This documentation
   types/
     ├── table.ts               # Table interfaces & colors
     └── post.ts                # Post-specific types
@@ -62,7 +63,7 @@ interface TableAction<T extends ITableRow> {
 ### Ví Dụ 1: Bảng Users
 
 ```typescript
-import GenericTable from '@/components/PostsTable/GenericTable';
+import GenericTable from '@/components/table/GenericTable';
 import type { TableColumn, TableAction } from '@/types/table';
 
 interface User {
@@ -215,7 +216,7 @@ return (
 `PostsTable` là một wrapper xung quanh `GenericTable` cấu hình cho blog posts. Nó duy trì tương thích ngược với code cũ:
 
 ```typescript
-import PostsTable from '@/components/PostsTable/PostsTable';
+import PostsTable from '@/components/table/PostsTable';
 import type { BlogPost } from '@/types/post';
 
 const PostListPage = () => {
@@ -380,7 +381,7 @@ A: Pass query results vào `data` prop, handle refetch/mutations ở component c
 ---
 
 **File References**:
-- GenericTable: `src/components/PostsTable/GenericTable.tsx`
-- PostsTable Wrapper: `src/components/PostsTable/PostsTable.tsx`
+- GenericTable: `src/components/table/GenericTable.tsx`
+- PostsTable Wrapper: `src/components/table/PostsTable.tsx`
 - Types: `src/types/table.ts`
 - Post Types: `src/types/post.ts`

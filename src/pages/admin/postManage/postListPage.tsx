@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
-import { BiRefresh, BiChevronLeft, BiChevronRight } from "react-icons/bi";
-
-import { AiOutlineLoading3Quarters } from "react-icons/ai";
+import { MdRefresh } from "react-icons/md";
+import { BiChevronLeft, BiChevronRight } from "react-icons/bi";
+import { MdAutorenew } from "react-icons/md";
 import { useGetAllPosts } from "../../../hooks/usePost";
 import { useQueryClient } from '@tanstack/react-query';
 import { useToast } from "../../../contexts/toast";
-import PostsTable from "../../../components/PostsTable/PostsTable";
+import { PostsTable } from "../../../components/table";
 import type { BlogPost, EBlogPostStatus } from "../../../types/post";
 
 type StatusFilter = "ALL" | EBlogPostStatus;
@@ -108,9 +108,9 @@ const PostListPage = () => {
   // Loading
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-screen bg-linear-to-t from-pink-100 to-white">
+      <div className="flex items-center justify-center h-screen bg-white">
         <div className="text-center flex flex-col items-center gap-4">
-          <AiOutlineLoading3Quarters
+          <MdAutorenew
             size={50}
             className="animate-spin text-pink-500"
           />
@@ -123,7 +123,7 @@ const PostListPage = () => {
   // Error
   if (isError) {
     return (
-      <div className="flex items-center justify-center h-screen bg-linear-to-t from-pink-100 to-white">
+      <div className="flex items-center justify-center h-screen bg-white">
         <div className="text-center bg-white p-8 rounded-2xl shadow-lg border-2 border-pink-100">
           <p className="text-2xl mb-2">⚠️</p>
           <p className="text-red-600 font-semibold mb-4"> Có lỗi xảy ra khi tải dữ liệu </p>
@@ -139,7 +139,7 @@ const PostListPage = () => {
   }
 
   return (
-    <div className="py-8 px-6 bg-linear-to-t from-pink-50 via-white to-white min-h-screen">
+    <div className="py-8 px-6 bg-white min-h-screen">
       {/* Header */}
       <div className="mb-8">
         <div className="flex justify-between items-start mb-6">
@@ -160,7 +160,7 @@ const PostListPage = () => {
                       bg-[#e96996] hover:bg-[#F295B6]
             `}
           >
-            <BiRefresh
+            <MdRefresh
               size={20}
               className={isFetching ? "animate-spin" : ""}
             />

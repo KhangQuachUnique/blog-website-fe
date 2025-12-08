@@ -1,5 +1,5 @@
 import React from 'react';
-import { AiOutlineEye, AiOutlineEyeInvisible, AiOutlineLoading3Quarters } from 'react-icons/ai';
+import { MdVisibilityOff, MdVisibility, MdAutorenew } from 'react-icons/md';
 import { Box } from '@mui/material';
 import GenericTable from './GenericTable';
 import type { TableColumn, TableAction } from '../../types/table';
@@ -154,9 +154,9 @@ const PostsTable: React.FC<PostsTableProps> = ({
               }}
             >
               {isLoading ? (
-                <AiOutlineLoading3Quarters className="animate-spin" size={18} />
+                <MdAutorenew className="animate-spin" size={18} />
               ) : (
-                <AiOutlineEyeInvisible size={18} />
+                <MdVisibilityOff size={18} />
               )}
             </Box>
           );
@@ -180,9 +180,9 @@ const PostsTable: React.FC<PostsTableProps> = ({
               }}
             >
               {isLoading ? (
-                <AiOutlineLoading3Quarters className="animate-spin" size={18} />
+                <MdAutorenew className="animate-spin" size={18} />
               ) : (
-                <AiOutlineEye size={18} />
+                <MdVisibility size={18} />
               )}
             </Box>
           );
