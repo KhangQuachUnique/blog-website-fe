@@ -1,16 +1,9 @@
 import React from 'react';
 import { AiOutlineEye, AiOutlineEyeInvisible, AiOutlineLoading3Quarters } from 'react-icons/ai';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  Button,
-  Box,
-} from '@mui/material';
+import { Box } from '@mui/material';
+import GenericTable from './GenericTable';
+import type { TableColumn, TableAction } from '../../types/table';
+import { BLOOGIE_COLORS as colors } from '../../types/table';
 import type { BlogPost, EBlogPostStatus } from '../../types/post';
 
 interface PostsTableProps {
@@ -21,33 +14,10 @@ interface PostsTableProps {
   emptyMessage?: string;
 }
 
-// ✅ Màu trạng thái
-  const getStatusColor = (status: EBlogPostStatus) => {
-  switch (status) {
-    case 'ACTIVE':
-      return { bg: '#ecfdf5', border: '#a7f3d0', text: '#059669', badge: '#d1fae5' };
-    case 'HIDDEN':
-      return { bg: '#f8fafc', border: '#cbd5e1', text: '#475569', badge: '#e2e8f0' };
-    case 'DRAFT':
-      return { bg: '#fffbeb', border: '#fde68a', text: '#b45309', badge: '#fef3c7' };
-    default:
-      return { bg: '#f8fafc', border: '#cbd5e1', text: '#475569', badge: '#e2e8f0' };
-  }
-};
-
-  const getStatusIcon = (status: EBlogPostStatus) => {
-  switch (status) {
-    case 'ACTIVE':
-      return '✓';
-    case 'HIDDEN':
-      return '👁️';
-    case 'DRAFT':
-      return '✎';
-    default:
-      return '';
-  }
-};
-
+/**
+ * PostsTable - A wrapper around GenericTable customized for blog posts
+ * Provides backward compatibility while leveraging GenericTable's flexibility
+ */
 const PostsTable: React.FC<PostsTableProps> = ({
   posts,
   onHide,
@@ -55,266 +25,186 @@ const PostsTable: React.FC<PostsTableProps> = ({
   loadingId,
   emptyMessage = 'Không có bài viết nào',
 }) => {
-  // ✅ Nếu không có bài viết
-  if (posts.length === 0) {
-    return (
-      <Paper
-        sx={{
-          textAlign: 'center',
-          py: 8,
-          borderRadius: '16px',
-          border: '2px solid #fce7f3',
-          backgroundColor: '#ffffff',
-        }}
-      >
-        <Box sx={{ fontSize: '48px', mb: 2 }}>📭</Box>
-        <Box sx={{ color: '#4b5563', fontWeight: '600' }}>{emptyMessage}</Box>
-      </Paper>
-    );
-  }
+  const getStatusColor = (status: EBlogPostStatus) => {
+    switch (status) {
+      case 'ACTIVE':
+        return colors.statusActive;
+      case 'HIDDEN':
+        return colors.statusHidden;
+      case 'DRAFT':
+        return colors.statusDraft;
+      default:
+        return colors.statusHidden;
+    }
+  };
 
-  // ✅ Render bảng
-  return (
-    <TableContainer
-      component={Paper}
-      sx={{
-        borderRadius: '16px',
-        border: '2px solid #fce7f3',
-        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-        overflow: 'hidden',
-      }}
-    >
-      <Table sx={{ minWidth: 650, borderCollapse: 'collapse' }}>
-        {/* Header */}
-        <TableHead>
-          <TableRow
-            sx={{
-              backgroundColor: '#fce7f3',
-              '& th': {
-                color: '#8c1d35',
-                fontWeight: 'bold',
-                fontSize: '14px',
-                textTransform: 'uppercase',
-                letterSpacing: '0.5px',
-              },
-            }}
-          >
-            <TableCell align="left">ID</TableCell>
-            <TableCell align="left">Tiêu đề</TableCell>
-            <TableCell align="left">Ngày tạo</TableCell>
-            <TableCell align="center">Trạng thái</TableCell>
-            <TableCell align="center">Hành động</TableCell>
-          </TableRow>
-        </TableHead>
+  const getStatusIcon = (status: EBlogPostStatus) => {
+    switch (status) {
+      case 'ACTIVE':
+        return '✓';
+      case 'HIDDEN':
+        return '👁️';
+      case 'DRAFT':
+        return '✎';
+      default:
+        return '';
+    }
+  };
 
-        {/* Body */}
-        <TableBody
+  const columns: TableColumn<BlogPost>[] = [
+    {
+      id: 'id',
+      label: 'ID',
+      width: '80px',
+      align: 'left',
+      render: (post) => (
+        <Box sx={{ fontWeight: '600', color: colors.text }}>#{post.id}</Box>
+      ),
+    },
+    {
+      id: 'title',
+      label: 'Tiêu đề',
+      align: 'left',
+      render: (post) => (
+        <Box
           sx={{
-            '& tr:hover': {
-              backgroundColor: '#faf5f7',
-              transition: 'background-color 0.2s ease-in-out',
-            },
-            '& tr:nth-of-type(odd)': {
-              backgroundColor: '#ffffff',
-            },
-            '& tr:nth-of-type(even)': {
-              backgroundColor: '#fffbfc',
-            },
+            fontSize: '14px',
+            fontWeight: '500',
+            color: colors.text,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            display: '-webkit-box',
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: 'vertical',
+            wordBreak: 'break-word',
           }}
         >
-          {posts.map((post) => {
-            const colors = getStatusColor(post.status);
-            const isActionLoading = loadingId === post.id;
+          {post.title}
+        </Box>
+      ),
+    },
+    {
+      id: 'createdAt',
+      label: 'Ngày tạo',
+      align: 'left',
+      render: (post) => (
+        <Box sx={{ fontSize: '14px', color: colors.textSecondary }}>
+          {new Date(post.createdAt).toLocaleDateString('vi-VN')}
+        </Box>
+      ),
+    },
+    {
+      id: 'status',
+      label: 'Trạng thái',
+      align: 'center',
+      render: (post) => {
+        const statusColors = getStatusColor(post.status);
+        const icon = getStatusIcon(post.status);
+        return (
+          <Box
+            component="span"
+            sx={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              px: 3,
+              py: 1,
+              borderRadius: '9999px',
+              fontSize: '11px',
+              fontWeight: '600',
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px',
+              backgroundColor: statusColors.badge,
+              color: statusColors.text,
+              border: `1px solid ${statusColors.border}`,
+            }}
+          >
+            <span>{icon}</span>
+            {post.status}
+          </Box>
+        );
+      },
+    },
+  ];
 
-            return (
-              <TableRow key={post.id}>
-                {/* ID */}
-                <TableCell
-                  align="left"
-                  sx={{
-                    fontSize: '14px',
-                    fontWeight: '600',
-                    color: '#374151',
-                    px: 3,
-                    py: 2,
-                    verticalAlign: 'middle', // Căn giữa theo chiều dọc
-                  }}
-                >
-                  #{post.id}
-                </TableCell>
+  const actions: TableAction<BlogPost>[] = [
+    {
+      id: 'hide-restore',
+      visible: (post) => post.status === 'ACTIVE' || post.status === 'HIDDEN',
+      disabled: (post) => loadingId === post.id,
+      icon: (post) => {
+        const isLoading = loadingId === post.id;
+        if (post.status === 'ACTIVE') {
+          return (
+            <Box
+              sx={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '8px',
+                color: '#b45309',
+                backgroundColor: '#fffbeb',
+                border: '2px solid #fde68a',
+                borderRadius: '6px',
+                cursor: isLoading ? 'not-allowed' : 'pointer',
+                '&:hover': {
+                  backgroundColor: '#fef3c7',
+                  borderColor: '#fcd34d',
+                },
+              }}
+            >
+              {isLoading ? (
+                <AiOutlineLoading3Quarters className="animate-spin" size={18} />
+              ) : (
+                <AiOutlineEyeInvisible size={18} />
+              )}
+            </Box>
+          );
+        } else {
+          return (
+            <Box
+              sx={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '8px',
+                color: '#059669',
+                backgroundColor: '#ecfdf5',
+                border: '2px solid #a7f3d0',
+                borderRadius: '6px',
+                cursor: isLoading ? 'not-allowed' : 'pointer',
+                '&:hover': {
+                  backgroundColor: '#d1fae5',
+                  borderColor: '#6ee7b7',
+                },
+              }}
+            >
+              {isLoading ? (
+                <AiOutlineLoading3Quarters className="animate-spin" size={18} />
+              ) : (
+                <AiOutlineEye size={18} />
+              )}
+            </Box>
+          );
+        }
+      },
+      onClick: (post) => {
+        if (post.status === 'ACTIVE') {
+          onHide(post.id);
+        } else if (post.status === 'HIDDEN') {
+          onRestore(post.id);
+        }
+      },
+    },
+  ];
 
-                {/* Title - Đã sửa lỗi lệch dòng kẻ */}
-                <TableCell
-                  align="left"
-                  sx={{
-                    px: 3,
-                    py: 2,
-                    verticalAlign: 'middle', // Căn giữa theo chiều dọc
-                    maxWidth: '300px', // Đặt giới hạn chiều rộng cho cột
-                  }}
-                >
-                  {/* Bọc text trong Box để xử lý truncate mà không ảnh hưởng đến display: table-cell của td */}
-                  <Box
-                    sx={{
-                      fontSize: '14px',
-                      fontWeight: '500',
-                      color: '#111827',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      display: '-webkit-box',
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: 'vertical',
-                      wordBreak: 'break-word',
-                    }}
-                  >
-                    {post.title}
-                  </Box>
-                </TableCell>
-
-                {/* Created Date */}
-                <TableCell
-                  align="left"
-                  sx={{
-                    fontSize: '14px',
-                    color: '#4b5563',
-                    px: 3,
-                    py: 2,
-                    verticalAlign: 'middle',
-                  }}
-                >
-                  {new Date(post.createdAt).toLocaleDateString('vi-VN')}
-                </TableCell>
-
-                {/* Status */}
-                <TableCell
-                  align="center"
-                  sx={{
-                    px: 3,
-                    py: 2,
-                    verticalAlign: 'middle',
-                  }}
-                >
-                  <Box
-                    component="span"
-                    sx={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '8px',
-                      px: 3,
-                      py: 1,
-                      borderRadius: '9999px',
-                      fontSize: '11px',
-                      fontWeight: '600',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.5px',
-                      backgroundColor: colors.badge,
-                      color: colors.text,
-                      border: `1px solid ${colors.border}`,
-                    }}
-                  >
-                    <span>{getStatusIcon(post.status)}</span>
-                    {post.status}
-                  </Box>
-                </TableCell>
-
-                {/* Actions */}
-                <TableCell
-                  align="center"
-                  sx={{
-                    px: 3,
-                    py: 2,
-                    verticalAlign: 'middle',
-                  }}
-                >
-                  <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
-                    {post.status === 'ACTIVE' ? (
-                      <Button
-                        type="button"
-                        onClick={() => onHide(post.id)}
-                        disabled={isActionLoading}
-                        variant="outlined"
-                        size="small"
-                        sx={{
-                          p: '10px',
-                          minWidth: 'auto',
-                          color: '#b45309',
-                          backgroundColor: '#fffbeb',
-                          borderColor: '#fde68a',
-                          borderWidth: '2px',
-                          '&:hover': {
-                            backgroundColor: '#fef3c7',
-                            borderColor: '#fcd34d',
-                          },
-                          '&:disabled': {
-                            opacity: 0.5,
-                            cursor: 'not-allowed',
-                          },
-                        }}
-                        title="Ẩn bài viết"
-                      >
-                        {isActionLoading ? (
-                          <AiOutlineLoading3Quarters
-                            className="animate-spin"
-                            size={18}
-                          />
-                        ) : (
-                          <AiOutlineEyeInvisible size={18} />
-                        )}
-                      </Button>
-                    ) : post.status === 'HIDDEN' ? (
-                      <Button
-                        type="button"
-                        onClick={() => onRestore(post.id)}
-                        disabled={isActionLoading}
-                        variant="outlined"
-                        size="small"
-                        sx={{
-                          p: '10px',
-                          minWidth: 'auto',
-                          color: '#059669',
-                          backgroundColor: '#ecfdf5',
-                          borderColor: '#a7f3d0',
-                          borderWidth: '2px',
-                          '&:hover': {
-                            backgroundColor: '#d1fae5',
-                            borderColor: '#6ee7b7',
-                          },
-                          '&:disabled': {
-                            opacity: 0.5,
-                            cursor: 'not-allowed',
-                          },
-                        }}
-                        title="Phục hồi bài viết"
-                      >
-                        {isActionLoading ? (
-                          <AiOutlineLoading3Quarters
-                            className="animate-spin"
-                            size={18}
-                          />
-                        ) : (
-                          <AiOutlineEye size={18} />
-                        )}
-                      </Button>
-                    ) : (
-                      <Box
-                        sx={{
-                          px: 2,
-                          py: 1,
-                          color: '#d1d5db',
-                          fontSize: '12px',
-                        }}
-                      >
-                        Không thể hành động
-                      </Box>
-                    )}
-                  </Box>
-                </TableCell>
-              </TableRow>
-            );
-          })}
-        </TableBody>
-      </Table>
-    </TableContainer>
+  return (
+    <GenericTable
+      data={posts}
+      columns={columns}
+      actions={actions}
+      emptyMessage={emptyMessage}
+    />
   );
 };
 
