@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useSnackbar } from 'notistack';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+
 import {
   Box,
   IconButton,
@@ -12,7 +12,7 @@ import {
   Stack,
   Paper,
   Divider,
-} from '@mui/material';
+} from "@mui/material";
 import {
   BiUpvote,
   BiDownvote,
@@ -20,32 +20,33 @@ import {
   BiDotsHorizontalRounded,
   BiShareAlt,
   BiFlag,
-} from 'react-icons/bi';
-import { MdOutlineRepeat } from 'react-icons/md';
-import { useInteractBar } from '../../hooks/useInteractBar';
+} from "react-icons/bi";
+import { MdOutlineRepeat } from "react-icons/md";
+import { useInteractBar } from "../../hooks/useInteractBar";
+import { useToast } from "../../contexts/toast";
 
 // ============================================
 // 🎨 THEME CONFIGURATION
 // ============================================
 const THEME = {
-  primary: '#F295B6',
-  secondary: '#FFB8D1',
-  tertiary: '#FFE7F0',
-  cream: '#FFF8FA',
-  text: '#4A3C42',
-  textMuted: '#8B7B82',
-  white: '#FFFFFF',
-  upvoteActive: '#E8779F',
-  downvoteActive: '#9B8A90',
+  primary: "#F295B6",
+  secondary: "#FFB8D1",
+  tertiary: "#FFE7F0",
+  cream: "#FFF8FA",
+  text: "#4A3C42",
+  textMuted: "#8B7B82",
+  white: "#FFFFFF",
+  upvoteActive: "#E8779F",
+  downvoteActive: "#9B8A90",
 } as const;
 
 const EMOJI_LIST = [
-  { id: 1, emoji: '💖', label: 'Love' },
-  { id: 2, emoji: '😊', label: 'Happy' },
-  { id: 3, emoji: '🥺', label: 'Cute' },
-  { id: 4, emoji: '😂', label: 'Haha' },
-  { id: 5, emoji: '😮', label: 'Wow' },
-  { id: 6, emoji: '🎀', label: 'Pretty' },
+  { id: 1, emoji: "💖", label: "Love" },
+  { id: 2, emoji: "😊", label: "Happy" },
+  { id: 3, emoji: "🥺", label: "Cute" },
+  { id: 4, emoji: "😂", label: "Haha" },
+  { id: 5, emoji: "😮", label: "Wow" },
+  { id: 6, emoji: "🎀", label: "Pretty" },
 ] as const;
 
 // ============================================
@@ -71,8 +72,8 @@ const InteractBar: React.FC<InteractBarProps> = ({
 }) => {
   // ========== Hooks ==========
   const navigate = useNavigate();
-  const { enqueueSnackbar } = useSnackbar();
-  
+  const { showToast } = useToast();
+
   // ========== State ==========
   const [emojiAnchorEl, setEmojiAnchorEl] = useState<HTMLElement | null>(null);
   const [moreAnchorEl, setMoreAnchorEl] = useState<HTMLElement | null>(null);
@@ -100,23 +101,23 @@ const InteractBar: React.FC<InteractBarProps> = ({
 
   // ========== Notification Helpers ==========
   const showLoginRequired = () => {
-    enqueueSnackbar('Đăng nhập để tương tác 💕', {
-      variant: 'info',
-      anchorOrigin: { vertical: 'bottom', horizontal: 'left' },
-      autoHideDuration: 2500,
+    showToast({
+      type: "info",
+      message: "Vui lòng đăng nhập để thực hiện thao tác này.",
+      duration: 3000,
     });
   };
 
   const showSuccessMessage = (message: string) => {
-    enqueueSnackbar(message, {
-      variant: 'success',
-      anchorOrigin: { vertical: 'bottom', horizontal: 'left' },
-      autoHideDuration: 2000,
+    showToast({
+      type: "success",
+      message,
+      duration: 3000,
     });
   };
 
   // ========== Vote Handlers ==========
-  const onVoteClick = (type: 'upvote' | 'downvote') => {
+  const onVoteClick = (type: "upvote" | "downvote") => {
     if (!isLoggedIn) {
       showLoginRequired();
       return;
@@ -147,7 +148,7 @@ const InteractBar: React.FC<InteractBarProps> = ({
       const found = EMOJI_LIST.find((e) => e.id === selectedEmojiId);
       if (found) return found.emoji;
     }
-    return '💗';
+    return "💗";
   };
 
   // ========== More Menu Handlers ==========
@@ -161,7 +162,7 @@ const InteractBar: React.FC<InteractBarProps> = ({
 
   const handleShare = () => {
     navigator.clipboard.writeText(`${window.location.origin}/post/${postId}`);
-    showSuccessMessage('Đã sao chép link! 📋');
+    showSuccessMessage("Đã sao chép link!");
     handleMoreClose();
   };
 
@@ -171,7 +172,7 @@ const InteractBar: React.FC<InteractBarProps> = ({
       handleMoreClose();
       return;
     }
-    showSuccessMessage('Đã repost bài viết! 🔄');
+    showSuccessMessage("Đã repost bài viết!");
     handleMoreClose();
   };
 
@@ -191,16 +192,16 @@ const InteractBar: React.FC<InteractBarProps> = ({
       <Paper
         elevation={0}
         sx={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
           gap: 1.5,
           px: 2,
           py: 1,
           background: THEME.white,
           borderTop: `1px solid ${THEME.tertiary}`,
-          borderRadius: '0 0 50px 50px',
-          position: 'relative',
+          borderRadius: "0 0 50px 50px",
+          position: "relative",
         }}
       >
         {/* Left: Vote Group */}
@@ -230,7 +231,10 @@ const InteractBar: React.FC<InteractBarProps> = ({
           />
 
           {/* More Menu Button */}
-          <MoreButton isOpen={Boolean(moreAnchorEl)} onClick={handleMoreClick} />
+          <MoreButton
+            isOpen={Boolean(moreAnchorEl)}
+            onClick={handleMoreClick}
+          />
         </Stack>
       </Paper>
 
@@ -261,10 +265,10 @@ const InteractBar: React.FC<InteractBarProps> = ({
 // Vote Section Component
 interface VoteSectionProps {
   netVotes: number;
-  voteType: 'upvote' | 'downvote' | null;
+  voteType: "upvote" | "downvote" | null;
   isVoting: boolean;
   isLoggedIn: boolean;
-  onVoteClick: (type: 'upvote' | 'downvote') => void;
+  onVoteClick: (type: "upvote" | "downvote") => void;
 }
 
 const VoteSection: React.FC<VoteSectionProps> = ({
@@ -282,30 +286,36 @@ const VoteSection: React.FC<VoteSectionProps> = ({
       px: 1.25,
       py: 0.5,
       background: THEME.cream,
-      borderRadius: '50px',
+      borderRadius: "50px",
       border: `1px solid ${THEME.tertiary}`,
     }}
   >
-    <Tooltip title={isLoggedIn ? 'Upvote' : 'Đăng nhập để vote'} arrow placement="top">
+    <Tooltip
+      title={isLoggedIn ? "Upvote" : "Đăng nhập để vote"}
+      arrow
+      placement="top"
+    >
       <span>
         <IconButton
           size="small"
           disabled={isVoting}
-          onClick={() => onVoteClick('upvote')}
+          onClick={() => onVoteClick("upvote")}
           sx={{
             width: 28,
             height: 28,
-            backgroundColor: voteType === 'upvote' ? THEME.primary : 'transparent',
-            '&:hover': {
-              backgroundColor: voteType === 'upvote' ? THEME.upvoteActive : THEME.tertiary,
+            backgroundColor:
+              voteType === "upvote" ? THEME.primary : "transparent",
+            "&:hover": {
+              backgroundColor:
+                voteType === "upvote" ? THEME.upvoteActive : THEME.tertiary,
             },
-            transition: 'all 0.2s ease',
+            transition: "all 0.2s ease",
           }}
         >
           <BiUpvote
             style={{
               fontSize: 16,
-              color: voteType === 'upvote' ? THEME.white : THEME.text,
+              color: voteType === "upvote" ? THEME.white : THEME.text,
             }}
           />
         </IconButton>
@@ -316,36 +326,42 @@ const VoteSection: React.FC<VoteSectionProps> = ({
       variant="body2"
       sx={{
         minWidth: 32,
-        textAlign: 'center',
+        textAlign: "center",
         fontWeight: 600,
-        fontSize: '13px',
+        fontSize: "13px",
         color: THEME.text,
-        userSelect: 'none',
+        userSelect: "none",
       }}
     >
       {netVotes}
     </Typography>
 
-    <Tooltip title={isLoggedIn ? 'Downvote' : 'Đăng nhập để vote'} arrow placement="top">
+    <Tooltip
+      title={isLoggedIn ? "Downvote" : "Đăng nhập để vote"}
+      arrow
+      placement="top"
+    >
       <span>
         <IconButton
           size="small"
           disabled={isVoting}
-          onClick={() => onVoteClick('downvote')}
+          onClick={() => onVoteClick("downvote")}
           sx={{
             width: 28,
             height: 28,
-            backgroundColor: voteType === 'downvote' ? THEME.downvoteActive : 'transparent',
-            '&:hover': {
-              backgroundColor: voteType === 'downvote' ? '#8B7B82' : THEME.tertiary,
+            backgroundColor:
+              voteType === "downvote" ? THEME.downvoteActive : "transparent",
+            "&:hover": {
+              backgroundColor:
+                voteType === "downvote" ? "#8B7B82" : THEME.tertiary,
             },
-            transition: 'all 0.2s ease',
+            transition: "all 0.2s ease",
           }}
         >
           <BiDownvote
             style={{
               fontSize: 16,
-              color: voteType === 'downvote' ? THEME.white : THEME.text,
+              color: voteType === "downvote" ? THEME.white : THEME.text,
             }}
           />
         </IconButton>
@@ -370,7 +386,11 @@ const EmojiButton: React.FC<EmojiButtonProps> = ({
   currentEmoji,
   onClick,
 }) => (
-  <Tooltip title={isLoggedIn ? 'React với emoji' : 'Đăng nhập để react'} arrow placement="top">
+  <Tooltip
+    title={isLoggedIn ? "React với emoji" : "Đăng nhập để react"}
+    arrow
+    placement="top"
+  >
     <span>
       <IconButton
         size="small"
@@ -379,15 +399,17 @@ const EmojiButton: React.FC<EmojiButtonProps> = ({
         sx={{
           width: 32,
           height: 32,
-          fontSize: '16px',
+          fontSize: "16px",
           backgroundColor: selectedEmojiId ? THEME.tertiary : THEME.cream,
-          border: `1px solid ${selectedEmojiId ? THEME.primary : THEME.tertiary}`,
-          borderRadius: '50px',
-          '&:hover': {
+          border: `1px solid ${
+            selectedEmojiId ? THEME.primary : THEME.tertiary
+          }`,
+          borderRadius: "50px",
+          "&:hover": {
             backgroundColor: THEME.tertiary,
             borderColor: THEME.primary,
           },
-          transition: 'all 0.2s ease',
+          transition: "all 0.2s ease",
         }}
       >
         {currentEmoji}
@@ -402,25 +424,28 @@ interface CommentButtonProps {
   onClick: () => void;
 }
 
-const CommentButton: React.FC<CommentButtonProps> = ({ totalComments, onClick }) => (
+const CommentButton: React.FC<CommentButtonProps> = ({
+  totalComments,
+  onClick,
+}) => (
   <Tooltip title="Xem bình luận" arrow placement="top">
     <Box
       onClick={onClick}
       sx={{
-        display: 'flex',
-        alignItems: 'center',
+        display: "flex",
+        alignItems: "center",
         gap: 0.5,
         px: 1.25,
         py: 0.5,
         backgroundColor: THEME.cream,
         border: `1px solid ${THEME.tertiary}`,
-        borderRadius: '50px',
-        cursor: 'pointer',
-        '&:hover': {
+        borderRadius: "50px",
+        cursor: "pointer",
+        "&:hover": {
           backgroundColor: THEME.tertiary,
           borderColor: THEME.secondary,
         },
-        transition: 'all 0.2s ease',
+        transition: "all 0.2s ease",
       }}
     >
       <BiCommentDetail style={{ fontSize: 16, color: THEME.primary }} />
@@ -428,7 +453,7 @@ const CommentButton: React.FC<CommentButtonProps> = ({ totalComments, onClick })
         variant="body2"
         sx={{
           fontWeight: 600,
-          fontSize: '12px',
+          fontSize: "12px",
           color: THEME.text,
         }}
       >
@@ -454,12 +479,12 @@ const MoreButton: React.FC<MoreButtonProps> = ({ isOpen, onClick }) => (
         height: 32,
         backgroundColor: isOpen ? THEME.tertiary : THEME.cream,
         border: `1px solid ${isOpen ? THEME.primary : THEME.tertiary}`,
-        borderRadius: '50px',
-        '&:hover': {
+        borderRadius: "50px",
+        "&:hover": {
           backgroundColor: THEME.tertiary,
           borderColor: THEME.primary,
         },
-        transition: 'all 0.2s ease',
+        transition: "all 0.2s ease",
       }}
     >
       <BiDotsHorizontalRounded style={{ fontSize: 18, color: THEME.primary }} />
@@ -486,27 +511,27 @@ const EmojiPickerPopover: React.FC<EmojiPickerPopoverProps> = ({
     anchorEl={anchorEl}
     onClose={onClose}
     anchorOrigin={{
-      vertical: 'top',
-      horizontal: 'center',
+      vertical: "top",
+      horizontal: "center",
     }}
     transformOrigin={{
-      vertical: 'bottom',
-      horizontal: 'center',
+      vertical: "bottom",
+      horizontal: "center",
     }}
     sx={{ mt: -1 }}
     slotProps={{
       paper: {
         sx: {
-          borderRadius: '16px',
+          borderRadius: "16px",
           border: `1px solid ${THEME.tertiary}`,
-          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+          boxShadow: "0 4px 20px rgba(0, 0, 0, 0.08)",
         },
       },
     }}
   >
     <Box
       sx={{
-        display: 'flex',
+        display: "flex",
         gap: 0.5,
         p: 2,
         backgroundColor: THEME.white,
@@ -519,12 +544,13 @@ const EmojiPickerPopover: React.FC<EmojiPickerPopoverProps> = ({
             sx={{
               width: 44,
               height: 44,
-              fontSize: '24px',
-              backgroundColor: selectedEmojiId === item.id ? THEME.tertiary : 'transparent',
-              '&:hover': {
+              fontSize: "24px",
+              backgroundColor:
+                selectedEmojiId === item.id ? THEME.tertiary : "transparent",
+              "&:hover": {
                 backgroundColor: THEME.tertiary,
               },
-              transition: 'all 0.2s ease',
+              transition: "all 0.2s ease",
             }}
           >
             {item.emoji}
@@ -556,21 +582,21 @@ const MoreMenu: React.FC<MoreMenuProps> = ({
     open={Boolean(anchorEl)}
     onClose={onClose}
     anchorOrigin={{
-      vertical: 'bottom',
-      horizontal: 'right',
+      vertical: "bottom",
+      horizontal: "right",
     }}
     transformOrigin={{
-      vertical: 'top',
-      horizontal: 'right',
+      vertical: "top",
+      horizontal: "right",
     }}
     slotProps={{
       paper: {
         sx: {
           mt: 1,
-          borderRadius: '12px',
+          borderRadius: "12px",
           border: `1px solid ${THEME.tertiary}`,
           minWidth: 180,
-          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+          boxShadow: "0 4px 20px rgba(0, 0, 0, 0.08)",
         },
       },
     }}
@@ -583,8 +609,8 @@ const MoreMenu: React.FC<MoreMenuProps> = ({
         gap: 1.5,
         mx: 1,
         my: 0.5,
-        borderRadius: '8px',
-        '&:hover': {
+        borderRadius: "8px",
+        "&:hover": {
           backgroundColor: THEME.cream,
         },
       }}
@@ -602,8 +628,8 @@ const MoreMenu: React.FC<MoreMenuProps> = ({
         gap: 1.5,
         mx: 1,
         my: 0.5,
-        borderRadius: '8px',
-        '&:hover': {
+        borderRadius: "8px",
+        "&:hover": {
           backgroundColor: THEME.cream,
         },
       }}
@@ -622,13 +648,13 @@ const MoreMenu: React.FC<MoreMenuProps> = ({
         gap: 1.5,
         mx: 1,
         my: 0.5,
-        borderRadius: '8px',
-        '&:hover': {
-          backgroundColor: '#FEE',
+        borderRadius: "8px",
+        "&:hover": {
+          backgroundColor: "#FEE",
         },
       }}
     >
-      <BiFlag style={{ fontSize: 20, color: '#E57373' }} />
+      <BiFlag style={{ fontSize: 20, color: "#E57373" }} />
       <Typography variant="body2" fontWeight={600} color="#E57373">
         Báo cáo
       </Typography>
