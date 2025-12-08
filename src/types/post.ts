@@ -91,12 +91,12 @@ export interface IPostResponseDto {
   totalReacts: number;
 }
 
-export interface BlogPosts {
+export interface BlogPost {
   id: number;
   title: string;
-  shortDescription?: string | null;
-  thumbnailUrl?: string | null;
-  isPublic: boolean;
-  createdAt: string;
   status: EBlogPostStatus;
+  createdAt: string;
+  thumbnailUrl?: string | null;
+  upVotes?: number | null;
+  downVotes?: number | null;
 }

@@ -11,7 +11,7 @@ import {
   Button,
   Box,
 } from '@mui/material';
-import type { BlogPost, EBlogPostStatus } from '../../types/table';
+import type { BlogPost, EBlogPostStatus } from '../../types/post';
 
 interface PostsTableProps {
   posts: BlogPost[];
@@ -229,6 +229,7 @@ const PostsTable: React.FC<PostsTableProps> = ({
                   <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
                     {post.status === 'ACTIVE' ? (
                       <Button
+                        type="button"
                         onClick={() => onHide(post.id)}
                         disabled={isActionLoading}
                         variant="outlined"
@@ -262,6 +263,7 @@ const PostsTable: React.FC<PostsTableProps> = ({
                       </Button>
                     ) : post.status === 'HIDDEN' ? (
                       <Button
+                        type="button"
                         onClick={() => onRestore(post.id)}
                         disabled={isActionLoading}
                         variant="outlined"

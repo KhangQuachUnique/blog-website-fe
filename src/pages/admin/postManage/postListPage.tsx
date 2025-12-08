@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { BiRefresh, BiChevronLeft, BiChevronRight } from "react-icons/bi";
+
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import { useGetAllPosts } from "../../../hooks/usePost";
+import { useQueryClient } from '@tanstack/react-query';
 import { useToast } from "../../../contexts/toast";
 import PostsTable from "../../../components/PostsTable/PostsTable";
-import type { BlogPost, EBlogPostStatus } from "../../../types/table";
+import type { BlogPost, EBlogPostStatus } from "../../../types/post";
 
 type StatusFilter = "ALL" | EBlogPostStatus;
 
@@ -19,6 +21,8 @@ const PostListPage = () => {
     refetch 
   } = useGetAllPosts();
   
+  const queryClient = useQueryClient();
+
   const { showToast } = useToast();
   const [filterStatus, setFilterStatus] = useState<StatusFilter>("ALL");
   const [actionLoading, setActionLoading] = useState<number | null>(null);
@@ -28,18 +32,19 @@ const PostListPage = () => {
     try {
       setActionLoading(postId);
 
-      const response = await fetch(
-        `http://localhost:8080/blog-posts/${postId}/hide`,
-        {
-          method: "PATCH",
-        }
-      );
+      const response = await fetch(`http://localhost:8080/blog-posts/${postId}/hide`, {
+        method: 'PATCH',
+      });
 
-      if (!response.ok) throw new Error("Lỗi khi ẩn bài viết");
+      if (!response.ok) throw new Error('Lỗi khi ẩn bài viết');
 
-      await refetch();
+      // Update react-query cache locally to avoid a full refetch/refresh UI
+      queryClient.setQueryData(['posts'], (old: any) => {
+        if (!Array.isArray(old)) return old;
+        return old.map((p: any) => (p.id === postId ? { ...p, status: 'HIDDEN' } : p));
+      });
 
-      showToast({ type: "success", message: "Ẩn bài viết thành công!" });
+      showToast({ type: 'success', message: 'Ẩn bài viết thành công!' });
     } catch (err: any) {
       showToast({ type: "error", message: err.message });
     } finally {
@@ -51,18 +56,19 @@ const PostListPage = () => {
     try {
       setActionLoading(postId);
 
-      const response = await fetch(
-        `http://localhost:8080/blog-posts/${postId}/restore`,
-        {
-          method: "PATCH",
-        }
-      );
+      const response = await fetch(`http://localhost:8080/blog-posts/${postId}/restore`, {
+        method: 'PATCH',
+      });
 
-      if (!response.ok) throw new Error("Lỗi khi phục hồi bài viết");
+      if (!response.ok) throw new Error('Lỗi khi phục hồi bài viết');
 
-      await refetch();
+      // Update react-query cache locally to avoid a full refetch/refresh UI
+      queryClient.setQueryData(['posts'], (old: any) => {
+        if (!Array.isArray(old)) return old;
+        return old.map((p: any) => (p.id === postId ? { ...p, status: 'ACTIVE' } : p));
+      });
 
-      showToast({ type: "success", message: "Phục hồi bài viết thành công!" });
+      showToast({ type: 'success', message: 'Phục hồi bài viết thành công!' });
     } catch (err: any) {
       showToast({ type: "error", message: err.message });
     } finally {
@@ -146,11 +152,12 @@ const PostListPage = () => {
             </p>
           </div>
           <button
+            type="button"
             onClick={() => refetch()}
             disabled={isFetching}
             className={`flex items-center gap-2 px-6 py-3 text-white rounded-full font-semibold transition
-  hover:shadow-lg hover:scale-105
-    bg-[#e96996] hover:bg-[#F295B6]
+                        hover:shadow-lg hover:scale-105
+                      bg-[#e96996] hover:bg-[#F295B6]
             `}
           >
             <BiRefresh
