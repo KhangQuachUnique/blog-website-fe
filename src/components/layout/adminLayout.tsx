@@ -14,7 +14,9 @@ const navLinks = [
     href: "#",
     icon: <MdOutlineSpaceDashboard fontSize={18} />,
   },
-  { name: "Quản lí người dùng", href: "#", icon: <FiUser fontSize={18} /> },
+  { name: "Quản lí người dùng", 
+    href: "/admin/users/list",
+    icon: <FiUser fontSize={18} /> },
   {
     name: "Quản lí bài đăng",
     href: "#",

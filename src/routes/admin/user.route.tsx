@@ -12,7 +12,7 @@ const adminUserRoutes = [
     element: <UserCreatePage />,
   },
   {
-    path: "/admin/users/detail",
+    path: "/admin/users/detail/:id",
     element: <UserDetailPage />,
   },
 ];
