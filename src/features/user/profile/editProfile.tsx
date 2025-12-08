@@ -6,15 +6,20 @@ import { AiOutlineUser, AiOutlineLock, AiOutlineEye, AiOutlineUserDelete } from 
 import { MdBlock } from "react-icons/md";
 import * as userService from "../../../services/user/userService";
 import { uploadFile } from "../../../services/upload/uploadImageService";
+import { useAuth } from "../../../hooks/useAuth";
 
 type TabType = "profile" | "password" | "privacy" | "blocked" | "delete";
 
 const EditProfile = () => {
   const navigate = useNavigate();
+  const { logout } = useAuth();
   const [activeTab, setActiveTab] = useState<TabType>("profile");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  
+  // Delete account modal
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   
   // Forgot password modal
   const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false);
@@ -236,18 +241,16 @@ const EditProfile = () => {
   };
 
   const handleDeleteAccount = async () => {
-    const confirmed = window.confirm(
-      "Bạn có chắc chắn muốn xóa tài khoản? Hành động này không thể hoàn tác!"
-    );
-    if (!confirmed) return;
-
+    setLoading(true);
+    setError(null);
     try {
       await userService.deleteAccount();
-      alert("Tài khoản đã được xóa");
-      localStorage.clear();
+      await logout();
+      setShowDeleteModal(false);
       navigate("/");
     } catch (err: any) {
       setError(err.message || "Có lỗi xảy ra");
+      setLoading(false);
     }
   };
 
@@ -626,7 +629,7 @@ const EditProfile = () => {
               </div>
 
               <button
-                onClick={handleDeleteAccount}
+                onClick={() => setShowDeleteModal(true)}
                 className="px-6 py-3 bg-red-600 text-white font-bold rounded-lg hover:bg-red-700 transition-colors duration-200"
               >
                 Xóa tài khoản của tôi
@@ -742,6 +745,67 @@ const EditProfile = () => {
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Delete Account Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-8 max-w-md w-full mx-4 border-2 border-red-500 shadow-xl">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold text-red-600">
+                ⚠️ Xác nhận xóa tài khoản
+              </h2>
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+                disabled={loading}
+              >
+                <IoCloseOutline size={28} />
+              </button>
+            </div>
+
+            <div className="mb-6">
+              <p className="text-gray-700 mb-4 font-semibold">
+                Bạn có chắc chắn muốn xóa tài khoản của mình?
+              </p>
+              <p className="text-red-600 mb-4">
+                Hành động này sẽ xóa vĩnh viễn:
+              </p>
+              <ul className="list-disc list-inside text-gray-700 space-y-2 mb-4 ml-2">
+                <li>Tất cả bài viết và bình luận của bạn</li>
+                <li>Thông tin cá nhân</li>
+                <li>Danh sách người theo dõi và đang theo dõi</li>
+                <li>Lịch sử hoạt động</li>
+              </ul>
+              <p className="text-red-700 font-bold text-center bg-red-50 p-3 rounded-lg">
+                ⚠️ Hành động này không thể hoàn tác!
+              </p>
+            </div>
+
+            {error && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
+                {error}
+              </div>
+            )}
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                disabled={loading}
+                className="flex-1 px-4 py-3 bg-gray-100 text-gray-700 font-bold rounded-lg hover:bg-gray-200 transition-colors duration-200 disabled:opacity-50"
+              >
+                Hủy
+              </button>
+              <button
+                onClick={handleDeleteAccount}
+                disabled={loading}
+                className="flex-1 px-4 py-3 bg-red-600 text-white font-bold rounded-lg hover:bg-red-700 transition-colors duration-200 disabled:opacity-50"
+              >
+                {loading ? 'Đang xóa...' : 'Xác nhận xóa'}
+              </button>
+            </div>
           </div>
         </div>
       )}
