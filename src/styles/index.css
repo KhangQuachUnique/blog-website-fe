@@ -6,6 +6,7 @@
 
 @import "react-grid-layout/css/styles.css";
 @import "react-resizable/css/styles.css";
+@import "./toast/toast.css";
 
 /* Custom placeholder color - pink instead of red */
 .react-grid-placeholder {
