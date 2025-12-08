@@ -1,4 +1,4 @@
-import PostListPage from "../../pages/admin/postManage/PostListPage";
+import PostListPage from "../../pages/admin/postManage/postListPage";
 import PostDetailPage from "../../pages/admin/postManage/postDetailPage";
 
 const adminPostRoutes = [
