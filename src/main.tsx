@@ -6,6 +6,7 @@ import "./styles/index.css";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider } from "./contexts/AuthContext.tsx";
+import { SnackbarProvider } from 'notistack';
 
 // Tạo QueryClient
 const queryClient = new QueryClient();
@@ -14,7 +15,9 @@ createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <App />
+        <SnackbarProvider maxSnack={3}>
+          <App />
+        </SnackbarProvider>
       </AuthProvider>
     </QueryClientProvider>
   </StrictMode>

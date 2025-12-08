@@ -1,13 +1,13 @@
 import { Link } from "react-router-dom";
 import type { IPostResponseDto } from "../../types/post";
-import InteractBar from "../InteractBar/InteractBar";
+import InteractBar from "../interactBar/interactBar";
 import { useAuth } from "../../contexts/AuthContext";
 import "../../styles/newsfeed/Card.css";
 
 const Card = ({ post }: { post: IPostResponseDto }) => {
   const { user } = useAuth();
   
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: Date) => {
     const date = new Date(dateString);
     const now = new Date();
     const diff = Math.floor((now.getTime() - date.getTime()) / 1000);
