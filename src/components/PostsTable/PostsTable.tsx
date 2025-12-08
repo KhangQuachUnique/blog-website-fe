@@ -11,19 +11,7 @@ import {
   Button,
   Box,
 } from '@mui/material';
-import type { components } from '../../types/api';
-
-type EBlogPostStatus = components['schemas']['EBlogPostStatus'];
-
-export interface BlogPost {
-  id: number;
-  title: string;
-  status: EBlogPostStatus;
-  createdAt: string;
-  thumbnailUrl?: string | null;
-  upVotes?: number | null;
-  downVotes?: number | null;
-}
+import type { BlogPost, EBlogPostStatus } from '../../types/table';
 
 interface PostsTableProps {
   posts: BlogPost[];
@@ -34,7 +22,7 @@ interface PostsTableProps {
 }
 
 // ✅ Màu trạng thái
-const getStatusColor = (status: EBlogPostStatus) => {
+  const getStatusColor = (status: EBlogPostStatus) => {
   switch (status) {
     case 'ACTIVE':
       return { bg: '#ecfdf5', border: '#a7f3d0', text: '#059669', badge: '#d1fae5' };
@@ -47,7 +35,7 @@ const getStatusColor = (status: EBlogPostStatus) => {
   }
 };
 
-const getStatusIcon = (status: EBlogPostStatus) => {
+  const getStatusIcon = (status: EBlogPostStatus) => {
   switch (status) {
     case 'ACTIVE':
       return '✓';

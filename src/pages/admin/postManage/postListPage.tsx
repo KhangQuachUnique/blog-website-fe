@@ -1,59 +1,28 @@
 import { useEffect, useState } from "react";
 import { BiRefresh, BiChevronLeft, BiChevronRight } from "react-icons/bi";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
+import { useGetAllPosts } from "../../../hooks/usePost";
 import { useToast } from "../../../contexts/toast";
-import PostsTable, {
-  type BlogPost,
-} from "../../../components/PostsTable/PostsTable";
-import type { components } from "../../../types/api";
-
-type EBlogPostStatus = components["schemas"]["EBlogPostStatus"];
+import PostsTable from "../../../components/PostsTable/PostsTable";
+import type { BlogPost, EBlogPostStatus } from "../../../types/table";
 
 type StatusFilter = "ALL" | EBlogPostStatus;
 
 const ITEMS_PER_PAGE = 10;
 
 const PostListPage = () => {
+  const { 
+    data: posts = [], 
+    isLoading, 
+    isFetching, 
+    isError, 
+    refetch 
+  } = useGetAllPosts();
+  
   const { showToast } = useToast();
-  const [posts, setPosts] = useState<BlogPost[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
   const [filterStatus, setFilterStatus] = useState<StatusFilter>("ALL");
   const [actionLoading, setActionLoading] = useState<number | null>(null);
   const [currentPage, setCurrentPage] = useState<number>(1);
-
-  const fetchPosts = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      const response = await fetch("http://localhost:8080/blog-posts");
-      if (!response.ok) throw new Error("Lỗi khi tải dữ liệu");
-
-      const data = await response.json();
-      // Xử lý API response - có thể là array hoặc object với data property
-      let postsArray: BlogPost[] = [];
-
-      if (Array.isArray(data)) {
-        postsArray = data;
-      } else if (data && typeof data === "object") {
-        if (Array.isArray(data.data)) {
-          postsArray = data.data;
-        } else if (data.items && Array.isArray(data.items)) {
-          postsArray = data.items;
-        } else if (data.posts && Array.isArray(data.posts)) {
-          postsArray = data.posts;
-        }
-      }
-
-      setPosts(postsArray);
-    } catch (err: any) {
-      setError(err.message);
-      setPosts([]); // Set empty array on error
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleHide = async (postId: number) => {
     try {
@@ -68,11 +37,7 @@ const PostListPage = () => {
 
       if (!response.ok) throw new Error("Lỗi khi ẩn bài viết");
 
-      setPosts((prev) =>
-        prev.map((post) =>
-          post.id === postId ? { ...post, status: "HIDDEN" } : post
-        )
-      );
+      await refetch();
 
       showToast({ type: "success", message: "Ẩn bài viết thành công!" });
     } catch (err: any) {
@@ -95,11 +60,7 @@ const PostListPage = () => {
 
       if (!response.ok) throw new Error("Lỗi khi phục hồi bài viết");
 
-      setPosts((prev) =>
-        prev.map((post) =>
-          post.id === postId ? { ...post, status: "ACTIVE" } : post
-        )
-      );
+      await refetch();
 
       showToast({ type: "success", message: "Phục hồi bài viết thành công!" });
     } catch (err: any) {
@@ -108,11 +69,6 @@ const PostListPage = () => {
       setActionLoading(null);
     }
   };
-
-  useEffect(() => {
-    fetchPosts();
-    setCurrentPage(1);
-  }, []);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -132,8 +88,19 @@ const PostListPage = () => {
   const endIndex = startIndex + ITEMS_PER_PAGE;
   const paginatedPosts = filteredPosts.slice(startIndex, endIndex);
 
+  // Chuẩn hoá dữ liệu trả về cho PostsTable (convert createdAt -> string)
+  const normalizedPosts: BlogPost[] = paginatedPosts.map((p: any) => ({
+    id: p.id,
+    title: p.title,
+    status: p.status,
+    createdAt: typeof p.createdAt === 'string' ? p.createdAt : new Date(p.createdAt).toISOString(),
+    thumbnailUrl: p.thumbnailUrl ?? null,
+    upVotes: p.upVotes ?? null,
+    downVotes: p.downVotes ?? null,
+  }));
+
   // Loading
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen bg-linear-to-t from-pink-100 to-white">
         <div className="text-center flex flex-col items-center gap-4">
@@ -148,14 +115,14 @@ const PostListPage = () => {
   }
 
   // Error
-  if (error) {
+  if (isError) {
     return (
       <div className="flex items-center justify-center h-screen bg-linear-to-t from-pink-100 to-white">
         <div className="text-center bg-white p-8 rounded-2xl shadow-lg border-2 border-pink-100">
           <p className="text-2xl mb-2">⚠️</p>
-          <p className="text-red-600 font-semibold mb-4">{error}</p>
+          <p className="text-red-600 font-semibold mb-4"> Có lỗi xảy ra khi tải dữ liệu </p>
           <button
-            onClick={fetchPosts}
+            onClick={() => refetch()}
             className="px-6 py-2 text-white rounded-lg transition hover:opacity-90 bg-pink-500"
           >
             Thử lại
@@ -179,11 +146,20 @@ const PostListPage = () => {
             </p>
           </div>
           <button
-            onClick={fetchPosts}
-            className="flex items-center gap-2 px-6 py-3 text-white rounded-full font-semibold transition hover:shadow-lg hover:scale-105 bg-pink-500"
+            onClick={() => refetch()}
+            disabled={isFetching}
+            className={`flex items-center gap-2 px-6 py-3 text-white rounded-full font-semibold transition
+  hover:shadow-lg hover:scale-105
+    bg-[#e96996] hover:bg-[#F295B6]
+            `}
           >
-            <BiRefresh size={20} /> Làm mới
+            <BiRefresh
+              size={20}
+              className={isFetching ? "animate-spin" : ""}
+            />
+            {isFetching ? "Đang tải..." : "Làm mới"}
           </button>
+
         </div>
 
         {/* Stats */}
@@ -240,7 +216,7 @@ const PostListPage = () => {
                 onClick={() => setFilterStatus(status)}
                 className={`px-5 py-2.5 rounded-full font-semibold transition whitespace-nowrap ${
                   isActive
-                    ? "text-white shadow-md bg-pink-500 border-2 border-pink-500"
+                    ? "text-white shadow-md bg-[#e96996] border-2 border-pink-500"
                     : "bg-white border-2 text-gray-700 hover:border-pink-300 border-gray-200"
                 }`}
               >
@@ -259,7 +235,7 @@ const PostListPage = () => {
 
       {/* Table Component */}
       <PostsTable
-        posts={paginatedPosts}
+        posts={normalizedPosts}
         onHide={handleHide}
         onRestore={handleRestore}
         loadingId={actionLoading}
