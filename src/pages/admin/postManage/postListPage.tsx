@@ -3,24 +3,25 @@ import { MdRefresh } from "react-icons/md";
 import { BiChevronLeft, BiChevronRight } from "react-icons/bi";
 import { MdAutorenew } from "react-icons/md";
 import { useGetAllPosts } from "../../../hooks/usePost";
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "../../../contexts/toast";
-import { PostsTable } from "../../../components/table";
+import PostsTable from "../../../features/admin/postManage/PostsTable";
 import type { BlogPost, EBlogPostStatus } from "../../../types/post";
+import { FaBookmark } from "react-icons/fa";
 
 type StatusFilter = "ALL" | EBlogPostStatus;
 
 const ITEMS_PER_PAGE = 10;
 
 const PostListPage = () => {
-  const { 
-    data: posts = [], 
-    isLoading, 
-    isFetching, 
-    isError, 
-    refetch 
+  const {
+    data: posts = [],
+    isLoading,
+    isFetching,
+    isError,
+    refetch,
   } = useGetAllPosts();
-  
+
   const queryClient = useQueryClient();
 
   const { showToast } = useToast();
@@ -32,19 +33,24 @@ const PostListPage = () => {
     try {
       setActionLoading(postId);
 
-      const response = await fetch(`http://localhost:8080/blog-posts/${postId}/hide`, {
-        method: 'PATCH',
-      });
+      const response = await fetch(
+        `http://localhost:8080/blog-posts/${postId}/hide`,
+        {
+          method: "PATCH",
+        }
+      );
 
-      if (!response.ok) throw new Error('Lỗi khi ẩn bài viết');
+      if (!response.ok) throw new Error("Lỗi khi ẩn bài viết");
 
       // Update react-query cache locally to avoid a full refetch/refresh UI
-      queryClient.setQueryData(['posts'], (old: any) => {
+      queryClient.setQueryData(["posts"], (old: any) => {
         if (!Array.isArray(old)) return old;
-        return old.map((p: any) => (p.id === postId ? { ...p, status: 'HIDDEN' } : p));
+        return old.map((p: any) =>
+          p.id === postId ? { ...p, status: "HIDDEN" } : p
+        );
       });
 
-      showToast({ type: 'success', message: 'Ẩn bài viết thành công!' });
+      showToast({ type: "success", message: "Ẩn bài viết thành công!" });
     } catch (err: any) {
       showToast({ type: "error", message: err.message });
     } finally {
@@ -56,19 +62,24 @@ const PostListPage = () => {
     try {
       setActionLoading(postId);
 
-      const response = await fetch(`http://localhost:8080/blog-posts/${postId}/restore`, {
-        method: 'PATCH',
-      });
+      const response = await fetch(
+        `http://localhost:8080/blog-posts/${postId}/restore`,
+        {
+          method: "PATCH",
+        }
+      );
 
-      if (!response.ok) throw new Error('Lỗi khi phục hồi bài viết');
+      if (!response.ok) throw new Error("Lỗi khi phục hồi bài viết");
 
       // Update react-query cache locally to avoid a full refetch/refresh UI
-      queryClient.setQueryData(['posts'], (old: any) => {
+      queryClient.setQueryData(["posts"], (old: any) => {
         if (!Array.isArray(old)) return old;
-        return old.map((p: any) => (p.id === postId ? { ...p, status: 'ACTIVE' } : p));
+        return old.map((p: any) =>
+          p.id === postId ? { ...p, status: "ACTIVE" } : p
+        );
       });
 
-      showToast({ type: 'success', message: 'Phục hồi bài viết thành công!' });
+      showToast({ type: "success", message: "Phục hồi bài viết thành công!" });
     } catch (err: any) {
       showToast({ type: "error", message: err.message });
     } finally {
@@ -99,7 +110,10 @@ const PostListPage = () => {
     id: p.id,
     title: p.title,
     status: p.status,
-    createdAt: typeof p.createdAt === 'string' ? p.createdAt : new Date(p.createdAt).toISOString(),
+    createdAt:
+      typeof p.createdAt === "string"
+        ? p.createdAt
+        : new Date(p.createdAt).toISOString(),
     thumbnailUrl: p.thumbnailUrl ?? null,
     upVotes: p.upVotes ?? null,
     downVotes: p.downVotes ?? null,
@@ -110,10 +124,7 @@ const PostListPage = () => {
     return (
       <div className="flex items-center justify-center h-screen bg-white">
         <div className="text-center flex flex-col items-center gap-4">
-          <MdAutorenew
-            size={50}
-            className="animate-spin text-pink-500"
-          />
+          <MdAutorenew size={50} className="animate-spin text-pink-500" />
           <p className="text-gray-600 font-medium">Đang tải dữ liệu...</p>
         </div>
       </div>
@@ -126,7 +137,10 @@ const PostListPage = () => {
       <div className="flex items-center justify-center h-screen bg-white">
         <div className="text-center bg-white p-8 rounded-2xl shadow-lg border-2 border-pink-100">
           <p className="text-2xl mb-2">⚠️</p>
-          <p className="text-red-600 font-semibold mb-4"> Có lỗi xảy ra khi tải dữ liệu </p>
+          <p className="text-red-600 font-semibold mb-4">
+            {" "}
+            Có lỗi xảy ra khi tải dữ liệu{" "}
+          </p>
           <button
             onClick={() => refetch()}
             className="px-6 py-2 text-white rounded-lg transition hover:opacity-90 bg-pink-500"
@@ -139,13 +153,14 @@ const PostListPage = () => {
   }
 
   return (
-    <div className="py-8 px-6 bg-white min-h-screen">
+    <div className="py-8 px-6 bg-white min-h-screen px-[80px]">
       {/* Header */}
       <div className="mb-8">
         <div className="flex justify-between items-start mb-6">
           <div>
-            <h1 className="font-heading text-4xl text-rose-900">
-              📚 Quản lý Bài Đăng
+            <h1 className="text-4xl text-[#6E344D] font-extrabold mb-2 flex items-center">
+              <FaBookmark className="inline-block mr-2 text-[#6E344D]" />
+              Quản lý Bài Đăng
             </h1>
             <p className="font-body text-gray-500 mt-2">
               Quản lý, lọc và kiểm soát các bài viết blog của bạn
@@ -155,18 +170,14 @@ const PostListPage = () => {
             type="button"
             onClick={() => refetch()}
             disabled={isFetching}
-            className={`flex items-center gap-2 px-6 py-3 text-white rounded-full font-semibold transition
-                        hover:shadow-lg hover:scale-105
-                      bg-[#e96996] hover:bg-[#F295B6]
+            className={`flex items-center gap-2 px-4 py-3 text-white rounded-lg font-semibold transition
+                         hover:scale-102
+                      bg-[#F295B6] hover:bg-[#F295B6]/80
             `}
           >
-            <MdRefresh
-              size={20}
-              className={isFetching ? "animate-spin" : ""}
-            />
+            <MdRefresh size={20} className={isFetching ? "animate-spin" : ""} />
             {isFetching ? "Đang tải..." : "Làm mới"}
           </button>
-
         </div>
 
         {/* Stats */}
@@ -221,10 +232,10 @@ const PostListPage = () => {
               <button
                 key={status}
                 onClick={() => setFilterStatus(status)}
-                className={`px-5 py-2.5 rounded-full font-semibold transition whitespace-nowrap ${
+                className={`px-5 py-2.5 rounded-lg font-semibold transition whitespace-nowrap ${
                   isActive
-                    ? "text-white shadow-md bg-[#e96996] border-2 border-pink-500"
-                    : "bg-white border-2 text-gray-700 hover:border-pink-300 border-gray-200"
+                    ? "text-white bg-[#F295B6] border-2 border-[#F295B6]"
+                    : "bg-white border-2 text-gray-700 hover:border-[#F295B6] border-gray-200"
                 }`}
               >
                 {status === "ALL"
@@ -258,12 +269,12 @@ const PostListPage = () => {
         <div className="flex justify-between items-center mb-6">
           <p className="text-gray-600">
             Hiển thị{" "}
-            <span className="font-bold text-pink-500">
+            <span className="font-bold text-[#F295B6]">
               {paginatedPosts.length > 0 ? startIndex + 1 : 0}-
               {Math.min(endIndex, filteredPosts.length)}
             </span>{" "}
             trên{" "}
-            <span className="font-bold text-pink-500">
+            <span className="font-bold text-[#F295B6]">
               {filteredPosts.length}
             </span>{" "}
             bài viết
@@ -276,7 +287,7 @@ const PostListPage = () => {
             <button
               onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
               disabled={currentPage === 1}
-              className="p-2.5 rounded-lg border-2 border-pink-200 hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              className="p-2.5 rounded-lg border-2 border-[#F295B6] hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <BiChevronLeft size={20} />
             </button>
@@ -301,8 +312,8 @@ const PostListPage = () => {
                   onClick={() => setCurrentPage(page)}
                   className={`px-4 py-2 rounded-lg font-semibold transition ${
                     currentPage === page
-                      ? "text-white shadow-md bg-pink-500 border-2 border-pink-500"
-                      : "bg-white border-2 text-gray-700 hover:bg-pink-50 border-pink-200"
+                      ? "text-white bg-[#F295B6] border-2 border-[#F295B6]"
+                      : "bg-white border-2 text-gray-700 hover:bg-[#F295B6]/10 border-[#F295B6]"
                   }`}
                 >
                   {page}
@@ -315,7 +326,7 @@ const PostListPage = () => {
                 setCurrentPage(Math.min(totalPages, currentPage + 1))
               }
               disabled={currentPage === totalPages}
-              className="p-2.5 rounded-lg border-2 border-pink-200 hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              className="p-2.5 rounded-lg border-2 border-[#F295B6] hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <BiChevronRight size={20} />
             </button>

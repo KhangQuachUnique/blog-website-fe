@@ -14,7 +14,7 @@ export interface TableColumn<T extends ITableRow> {
   id: keyof T;
   label: string;
   width?: string;
-  align?: 'left' | 'center' | 'right';
+  align?: "left" | "center" | "right";
   sortable?: boolean;
   searchable?: boolean;
   render?: (row: T) => ReactNode;
@@ -37,15 +37,30 @@ export interface TableAction<T extends ITableRow> {
  * Bloogie theme color palette for tables
  */
 export const BLOOGIE_COLORS = {
-  primary: '#8c1d35',
-  accent: '#fce7f3',
-  background: '#ffffff',
-  backgroundAlt: '#fffbfc',
-  backgroundHover: '#faf5f7',
-  text: '#111827',
-  textSecondary: '#4b5563',
-  border: '#cbd5e1',
-  statusActive: { bg: '#ecfdf5', border: '#a7f3d0', text: '#059669', badge: '#d1fae5' },
-  statusHidden: { bg: '#f8fafc', border: '#cbd5e1', text: '#475569', badge: '#e2e8f0' },
-  statusDraft: { bg: '#fffbeb', border: '#fde68a', text: '#b45309', badge: '#fef3c7' },
+  primary: "#6E344D",
+  accent: "#FFECF7",
+  background: "#ffffff",
+  backgroundAlt: "#fffbfc",
+  backgroundHover: "#faf5f7",
+  text: "#111827",
+  textSecondary: "#4b5563",
+  border: "#cbd5e1",
+  statusActive: {
+    bg: "#ecfdf5",
+    border: "#a7f3d0",
+    text: "#059669",
+    badge: "#d1fae5",
+  },
+  statusHidden: {
+    bg: "#f8fafc",
+    border: "#cbd5e1",
+    text: "#475569",
+    badge: "#e2e8f0",
+  },
+  statusDraft: {
+    bg: "#fffbeb",
+    border: "#fde68a",
+    text: "#b45309",
+    badge: "#fef3c7",
+  },
 } as const;
