@@ -7,6 +7,8 @@ import { MdBlock } from "react-icons/md";
 import * as userService from "../../../services/user/userService";
 import { uploadFile } from "../../../services/upload/uploadImageService";
 import { useAuth } from "../../../hooks/useAuth";
+import Avatar from '@mui/material/Avatar';
+import { stringAvatar } from '../../../utils/avatarHelper';
 import "../../../styles/profile/profile.css";
 import "../../../styles/profile/modal.css";
 import "../../../styles/profile/sidebar.css";
@@ -336,11 +338,15 @@ const EditProfile = () => {
 
               {/* Avatar */}
               <div className="flex items-center gap-6">
-                <img
-                  src={avatarPreview || profileData.avatarUrl}
-                  alt="Avatar"
-                  className="profile-avatar profile-avatar-md"
-                />
+                {avatarPreview || profileData.avatarUrl ? (
+                  <img
+                    src={avatarPreview || profileData.avatarUrl}
+                    alt="Avatar"
+                    className="profile-avatar profile-avatar-md"
+                  />
+                ) : (
+                  <Avatar {...stringAvatar(profileData.username || 'User', 80, '1.8rem')} />
+                )}
                 <div>
                   <label className="profile-btn-primary cursor-pointer">
                     Chọn ảnh mới
@@ -586,11 +592,15 @@ const EditProfile = () => {
                       className="flex items-center justify-between p-4 border border-[#FFE4EC] rounded-lg"
                     >
                       <div className="flex items-center gap-4">
-                        <img
-                          src={user.avatarUrl || "https://i.pravatar.cc/300"}
-                          alt={user.username}
-                          className="w-12 h-12 rounded-full object-cover"
-                        />
+                        {user.avatarUrl ? (
+                          <img
+                            src={user.avatarUrl}
+                            alt={user.username}
+                            className="w-12 h-12 rounded-full object-cover"
+                          />
+                        ) : (
+                          <Avatar {...stringAvatar(user.username, 48, '1.2rem')} />
+                        )}
                         <div>
                           <div className="font-bold">{user.username}</div>
                           <div className="text-sm text-gray-500">@{user.username}</div>

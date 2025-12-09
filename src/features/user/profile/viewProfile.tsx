@@ -15,6 +15,8 @@ import { HiDotsHorizontal } from "react-icons/hi";
 import { MdPublic, MdLock } from "react-icons/md";
 import "../../../styles/profile/profile.css";
 import "../../../styles/profile/tabs.css";
+import Avatar from '@mui/material/Avatar';
+import { stringAvatar } from '../../../utils/avatarHelper';
 
 const ViewProfile = () => {
   const { userId } = useParams<{ userId: string }>();
@@ -106,11 +108,15 @@ const ViewProfile = () => {
         <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
           {/* Avatar */}
           <div className="flex-shrink-0">
-            <img
-              src={profile.avatarUrl || "https://i.pravatar.cc/300"}
-              alt={profile.username}
-              className="profile-avatar profile-avatar-lg"
-            />
+            {profile.avatarUrl ? (
+              <Avatar
+                src={profile.avatarUrl}
+                alt={profile.username}
+                sx={{ width: 120, height: 120 }}
+              />
+            ) : (
+              <Avatar {...stringAvatar(profile.username)} />
+            )}
           </div>
 
           {/* User Info */}
@@ -379,7 +385,7 @@ const ViewProfile = () => {
                   >
                     <div className="flex items-center gap-4">
                       <img
-                        src={community.thumbnailUrl || "https://via.placeholder.com/100"}
+                        src={community.thumbnailUrl}
                         alt={community.name}
                         className="profile-community-avatar"
                       />

@@ -3,6 +3,7 @@ import { NavLink, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import Avatar from "@mui/material/Avatar";
 import Box from "@mui/material/Box";
+import { stringAvatar } from '../../utils/avatarHelper';
 import IconButton from "@mui/material/IconButton";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
@@ -115,7 +116,11 @@ const Header = ({
             </button>
             <Box>
               <IconButton onClick={handleOpen} size="small">
-                <Avatar alt="User Avatar" src={user?.avatarUrl || "https://i.pravatar.cc/300"} />
+                {user?.avatarUrl ? (
+                  <Avatar alt="User Avatar" src={user.avatarUrl} />
+                ) : (
+                  <Avatar {...stringAvatar(user?.username || 'User', 40, '1rem')} />
+                )}
               </IconButton>
 
               <Menu
