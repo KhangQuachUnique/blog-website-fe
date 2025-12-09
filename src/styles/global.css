@@ -8,6 +8,27 @@ body {
   font-family: "Quicksand", "Mona Sans", "Open Sans", "Outfit", sans-serif;
 }
 
+/* Custom font families for consistent typography */
+.font-heading {
+  font-family: "Montserrat", "Mona Sans", sans-serif;
+  font-weight: 700;
+}
+
+.font-subheading {
+  font-family: "Outfit", "Montserrat", sans-serif;
+  font-weight: 600;
+}
+
+.font-body {
+  font-family: "Quicksand", "Open Sans", sans-serif;
+  font-weight: 500;
+}
+
+.font-label {
+  font-family: "Outfit", "Quicksand", sans-serif;
+  font-weight: 500;
+}
+
 .primary-text {
   color: #4a3c42;
 }
