@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
-import { BiRefresh, BiChevronLeft, BiChevronRight } from "react-icons/bi";
-import { AiOutlineLoading3Quarters } from "react-icons/ai";
+import { MdRefresh } from "react-icons/md";
+import { BiChevronLeft, BiChevronRight } from "react-icons/bi";
+import { MdAutorenew } from "react-icons/md";
 import { useToast } from "../../../contexts/toast";
 
 type User = {
@@ -119,7 +120,7 @@ const ReportListPage = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen">
-        <AiOutlineLoading3Quarters
+        <MdAutorenew
           size={40}
           className="animate-spin text-pink-500"
         />
@@ -159,7 +160,7 @@ const ReportListPage = () => {
           onClick={fetchReports}
           className="flex items-center gap-2 px-5 py-2 bg-pink-500 text-white rounded-full"
         >
-          <BiRefresh size={18} /> Làm mới
+          <MdRefresh size={18} /> Làm mới
         </button>
       </div>
 
