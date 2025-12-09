@@ -81,8 +81,8 @@ const GenericTable = React.forwardRef<HTMLDivElement, GenericTableProps<any>>(
                   align={col.align || 'left'}
                   sx={{
                     fontFamily: '"Outfit", "Montserrat", sans-serif',
+                    width: col.width
                   }}
-                  sx={{ width: col.width }}
                 >
                   {col.label}
                 </TableCell>
