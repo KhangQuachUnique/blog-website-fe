@@ -77,10 +77,11 @@ const EditProfile = () => {
           showPhoneNumber: profile.showPhoneNumber !== undefined ? profile.showPhoneNumber : false,
         });
         setIsPrivate(profile.isPrivate || false);
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Error fetching profile:', err);
-        console.error('Error response:', err.response?.data);
-        setError(err.response?.data?.message || err.message || "Không thể tải thông tin người dùng");
+        const error = err as { response?: { data?: { message?: string } }; message?: string };
+        console.error('Error response:', error.response?.data);
+        setError(error.response?.data?.message || error.message || "Không thể tải thông tin người dùng");
       } finally {
         setInitialLoading(false);
       }
@@ -96,15 +97,15 @@ const EditProfile = () => {
         try {
           const users = await userService.getBlockedUsers();
           setBlockedUsers(users);
-        } catch (err: any) {
-          setError(err.message || "Không thể tải danh sách người dùng bị chặn");
+        } catch (err: unknown) {
+          setError(err instanceof Error ? err.message : "Không thể tải danh sách người dùng bị chặn");
         }
       };
       fetchBlockedUsers();
     }
   }, [activeTab]);
 
-  const handleProfileChange = (field: keyof UpdateProfileData, value: any) => {
+  const handleProfileChange = (field: keyof UpdateProfileData, value: string | boolean | undefined) => {
     setProfileData((prev) => ({ ...prev, [field]: value }));
   };
 
@@ -128,8 +129,8 @@ const EditProfile = () => {
         handleProfileChange("avatarUrl", avatarUrl);
         setSuccess("Ảnh đại diện đã được tải lên!");
         setTimeout(() => setSuccess(null), 3000);
-      } catch (err: any) {
-        setError(err.message || "Không thể tải ảnh lên");
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : "Không thể tải ảnh lên");
       } finally {
         setLoading(false);
       }
@@ -151,8 +152,8 @@ const EditProfile = () => {
       await userService.updateMyProfile(cleanedData);
       setSuccess("Cập nhật hồ sơ thành công!");
       setTimeout(() => setSuccess(null), 3000);
-    } catch (err: any) {
-      setError(err.message || "Có lỗi xảy ra");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Có lỗi xảy ra");
     } finally {
       setLoading(false);
     }
@@ -166,8 +167,8 @@ const EditProfile = () => {
       setForgotPasswordStep('reset');
       setSuccess('Mã xác thực đã được gửi đến email của bạn!');
       setTimeout(() => setSuccess(null), 3000);
-    } catch (err: any) {
-      setError(err.message || 'Có lỗi xảy ra');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Có lỗi xảy ra');
     } finally {
       setLoading(false);
     }
@@ -198,8 +199,8 @@ const EditProfile = () => {
       setForgotPasswordEmail('');
       setResetPasswordData({ verificationCode: '', newPassword: '', confirmPassword: '' });
       setTimeout(() => setSuccess(null), 3000);
-    } catch (err: any) {
-      setError(err.message || 'Có lỗi xảy ra');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Có lỗi xảy ra');
     } finally {
       setLoading(false);
     }
@@ -222,8 +223,8 @@ const EditProfile = () => {
       setSuccess("Đổi mật khẩu thành công!");
       setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" });
       setTimeout(() => setSuccess(null), 3000);
-    } catch (err: any) {
-      setError(err.message || "Có lỗi xảy ra");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Có lỗi xảy ra");
     } finally {
       setLoading(false);
     }
@@ -235,8 +236,8 @@ const EditProfile = () => {
       setBlockedUsers((prev) => prev.filter((user) => user.id !== userId));
       setSuccess("Đã bỏ chặn người dùng");
       setTimeout(() => setSuccess(null), 3000);
-    } catch (err: any) {
-      setError(err.message || "Có lỗi xảy ra");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Có lỗi xảy ra");
     }
   };
 
@@ -248,8 +249,8 @@ const EditProfile = () => {
       await logout();
       setShowDeleteModal(false);
       navigate("/");
-    } catch (err: any) {
-      setError(err.message || "Có lỗi xảy ra");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Có lỗi xảy ra");
       setLoading(false);
     }
   };
@@ -389,7 +390,7 @@ const EditProfile = () => {
                 <label className="block text-sm font-semibold mb-2">Giới tính</label>
                 <select
                   value={profileData.gender || ""}
-                  onChange={(e) => handleProfileChange("gender", e.target.value as any)}
+                  onChange={(e) => handleProfileChange("gender", e.target.value as 'MALE' | 'FEMALE' | 'OTHER' | undefined)}
                   className="w-full px-4 py-2 border border-[#FFE4EC] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F295B6]"
                 >
                   <option value="">Chọn giới tính</option>
@@ -552,8 +553,8 @@ const EditProfile = () => {
                           setIsPrivate(result.isPrivate);
                           setSuccess(result.isPrivate ? "Đã chuyển sang chế độ riêng tư" : "Đã công khai hồ sơ");
                           setTimeout(() => setSuccess(null), 3000);
-                        } catch (err: any) {
-                          setError(err.message || "Có lỗi xảy ra");
+                        } catch (err: unknown) {
+                          setError(err instanceof Error ? err.message : "Có lỗi xảy ra");
                         }
                       }}
                       className="sr-only peer"
