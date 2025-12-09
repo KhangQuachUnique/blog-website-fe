@@ -13,6 +13,8 @@ import { BsGenderFemale } from "react-icons/bs";
 import { MdOutlineSchedule } from "react-icons/md";
 import { HiDotsHorizontal } from "react-icons/hi";
 import { MdPublic, MdLock } from "react-icons/md";
+import "../../../styles/profile/profile.css";
+import "../../../styles/profile/tabs.css";
 
 const ViewProfile = () => {
   const { userId } = useParams<{ userId: string }>();
@@ -100,14 +102,14 @@ const ViewProfile = () => {
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
       {/* Profile Header */}
-      <div className="bg-white rounded-2xl border border-[#FFE4EC] shadow-sm p-8 mb-6">
+      <div className="profile-card profile-card-header mb-6">
         <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
           {/* Avatar */}
           <div className="flex-shrink-0">
             <img
               src={profile.avatarUrl || "https://i.pravatar.cc/300"}
               alt={profile.username}
-              className="w-32 h-32 rounded-full object-cover border-4 border-[#FFE4EC]"
+              className="profile-avatar profile-avatar-lg"
             />
           </div>
 
@@ -118,7 +120,7 @@ const ViewProfile = () => {
                 {profile.username}
               </h1>
               {profile.isPrivate && (
-                <span className="px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-full">
+                <span className="profile-privacy-badge-sm">
                   🔒 Riêng tư
                 </span>
               )}
@@ -195,22 +197,22 @@ const ViewProfile = () => {
             {/* Stats */}
             <div className="flex gap-6 mt-4">
               <div className="text-center">
-                <div className="font-bold text-xl" style={{ color: "#F295B6" }}>
+                <div className="profile-stat-value">
                   {profile.posts.length}
                 </div>
-                <div className="text-sm text-gray-600">Bài viết</div>
+                <div className="profile-stat-label">Bài viết</div>
               </div>
               <div className="text-center">
-                <div className="font-bold text-xl" style={{ color: "#F295B6" }}>
+                <div className="profile-stat-value">
                   {profile.followersCount}
                 </div>
-                <div className="text-sm text-gray-600">Người theo dõi</div>
+                <div className="profile-stat-label">Người theo dõi</div>
               </div>
               <div className="text-center">
-                <div className="font-bold text-xl" style={{ color: "#F295B6" }}>
+                <div className="profile-stat-value">
                   {profile.followingCount}
                 </div>
-                <div className="text-sm text-gray-600">Đang theo dõi</div>
+                <div className="profile-stat-label">Đang theo dõi</div>
               </div>
             </div>
           </div>
@@ -219,7 +221,7 @@ const ViewProfile = () => {
           {isOwnProfile && (
             <button
               onClick={() => navigate("/profile/edit")}
-              className="flex items-center gap-2 px-6 py-3 bg-[#F295B6] text-white font-bold rounded-lg hover:bg-[#FFB8D1] transition-colors duration-200"
+              className="profile-btn-primary"
             >
               <IoSettingsOutline fontSize={20} />
               Quản lý hồ sơ
@@ -229,65 +231,61 @@ const ViewProfile = () => {
       </div>
 
       {/* Tabs */}
-      <div className="bg-white rounded-2xl border border-[#FFE4EC] shadow-sm overflow-hidden">
-        <div className="flex border-b border-[#FFE4EC]">
+      <div className="profile-card overflow-hidden">
+        <div className="profile-tab-nav">
           <button
             onClick={() => setActiveTab("posts")}
-            className={`flex-1 px-6 py-4 font-semibold transition-all duration-200 flex items-center justify-center gap-2 ${
-              activeTab === "posts"
-                ? "text-[#F295B6] border-b-2 border-[#F295B6] bg-[#FFEFF4]"
-                : "text-gray-600 hover:bg-[#FFF8FB]"
+            className={`profile-tab-nav-item ${
+              activeTab === "posts" ? "profile-tab-nav-item-active" : ""
             }`}
           >
-            <BsFileText fontSize={18} />
+            <BsFileText className="profile-tab-nav-icon" />
             Bài viết ({profile.posts.length})
           </button>
           <button
             onClick={() => setActiveTab("communities")}
-            className={`flex-1 px-6 py-4 font-semibold transition-all duration-200 flex items-center justify-center gap-2 ${
-              activeTab === "communities"
-                ? "text-[#F295B6] border-b-2 border-[#F295B6] bg-[#FFEFF4]"
-                : "text-gray-600 hover:bg-[#FFF8FB]"
+            className={`profile-tab-nav-item ${
+              activeTab === "communities" ? "profile-tab-nav-item-active" : ""
             }`}
           >
-            <MdGroup fontSize={20} />
+            <MdGroup className="profile-tab-nav-icon" />
             Cộng đồng ({profile.communities.length})
           </button>
         </div>
 
         {/* Tab Content */}
-        <div className="p-6">
+        <div className="profile-tab-content">
           {activeTab === "posts" && (
             <div className="space-y-4">
               {profile.posts.length === 0 ? (
-                <div className="text-center py-12 text-gray-500">
+                <div className="profile-tab-empty">
                   Chưa có bài viết nào
                 </div>
               ) : (
                 profile.posts.map((post) => (
                   <div
                     key={post.id}
-                    className="border border-[#FFE4EC] rounded-xl p-6 hover:shadow-md transition-shadow duration-200"
+                    className="profile-post-card"
                   >
                     <div className="flex gap-4">
                       {post.thumbnailUrl && (
                         <img
                           src={post.thumbnailUrl}
                           alt={post.title}
-                          className="w-48 h-32 object-cover rounded-lg flex-shrink-0 cursor-pointer"
+                          className="profile-post-thumbnail"
                         />
                       )}
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center gap-2">
-                            <h3 className="text-xl font-bold hover:text-[#F295B6] transition-colors cursor-pointer">
-                              {post.title}
-                            </h3>
-                            {!post.isPublic && (
-                              <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">
-                                🔒 Riêng tư
-                              </span>
-                            )}
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              <h3 className="profile-post-title">
+                                {post.title}
+                              </h3>
+                              {!post.isPublic && (
+                                <span className="profile-privacy-badge">
+                                  🔒 Riêng tư
+                                </span>
+                              )}
                           </div>
                           
                           {/* Dropdown menu 3 chấm - chỉ hiển thị nếu là chính mình */}
@@ -306,7 +304,7 @@ const ViewProfile = () => {
                               
                               {/* Dropdown Menu */}
                               {openDropdownId === post.id && (
-                                <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
+                                <div className="profile-dropdown">
                                   <div className="py-1">
                                     <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase">
                                       Quyền xem
@@ -322,8 +320,8 @@ const ViewProfile = () => {
                                           console.error('Failed to toggle privacy:', error);
                                         }
                                       }}
-                                      className={`w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2 ${
-                                        post.isPublic ? 'bg-green-50 text-green-700' : 'text-gray-700'
+                                      className={`profile-dropdown-item ${
+                                        post.isPublic ? 'profile-dropdown-item-active' : ''
                                       }`}
                                     >
                                       <MdPublic fontSize={18} />
@@ -342,9 +340,7 @@ const ViewProfile = () => {
                                           }
                                         }
                                       }}
-                                      className={`w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2 ${
-                                        !post.isPublic ? 'bg-gray-50 text-gray-700' : 'text-gray-700'
-                                      }`}
+                                      className="profile-dropdown-item"
                                     >
                                       <MdLock fontSize={18} />
                                       <span>Riêng tư</span>
@@ -372,20 +368,20 @@ const ViewProfile = () => {
           {activeTab === "communities" && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {profile.communities.length === 0 ? (
-                <div className="col-span-full text-center py-12 text-gray-500">
+                <div className="col-span-full profile-tab-empty">
                   Chưa tham gia cộng đồng nào
                 </div>
               ) : (
                 profile.communities.map((community) => (
                   <div
                     key={community.id}
-                    className="border border-[#FFE4EC] rounded-xl p-6 hover:shadow-md transition-shadow duration-200 cursor-pointer"
+                    className="profile-community-card"
                   >
                     <div className="flex items-center gap-4">
                       <img
                         src={community.thumbnailUrl || "https://via.placeholder.com/100"}
                         alt={community.name}
-                        className="w-16 h-16 rounded-full object-cover"
+                        className="profile-community-avatar"
                       />
                       <div className="flex-1">
                         <h4 className="font-bold text-lg hover:text-[#F295B6] transition-colors">

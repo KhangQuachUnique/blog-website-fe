@@ -7,6 +7,9 @@ import { MdBlock } from "react-icons/md";
 import * as userService from "../../../services/user/userService";
 import { uploadFile } from "../../../services/upload/uploadImageService";
 import { useAuth } from "../../../hooks/useAuth";
+import "../../../styles/profile/profile.css";
+import "../../../styles/profile/modal.css";
+import "../../../styles/profile/sidebar.css";
 
 type TabType = "profile" | "password" | "privacy" | "blocked" | "delete";
 
@@ -268,7 +271,7 @@ const EditProfile = () => {
       <div className="max-w-6xl mx-auto px-4 py-8">
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#F295B6] mx-auto mb-4"></div>
+            <div className="profile-loading-spinner mx-auto mb-4"></div>
             <p className="text-gray-600">Đang tải thông tin...</p>
           </div>
         </div>
@@ -293,28 +296,26 @@ const EditProfile = () => {
 
       {/* Success/Error Messages */}
       {success && (
-        <div className="mb-6 p-4 bg-green-50 border border-green-200 text-green-800 rounded-lg">
+        <div className="profile-alert-success">
           {success}
         </div>
       )}
       {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-800 rounded-lg">
+        <div className="profile-alert-error">
           {error}
         </div>
       )}
 
       <div className="flex flex-col lg:flex-row gap-6">
         {/* Sidebar Tabs */}
-        <div className="lg:w-64 bg-white rounded-2xl border border-[#FFE4EC] shadow-sm p-4">
-          <div className="space-y-2">
+        <div className="profile-sidebar">
+          <div className="profile-sidebar-tabs">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-semibold transition-all duration-200 ${
-                  activeTab === tab.id
-                    ? "bg-[#FFEFF4] text-[#F295B6]"
-                    : "text-gray-600 hover:bg-[#FFF8FB]"
+                className={`profile-sidebar-tab ${
+                  activeTab === tab.id ? "profile-sidebar-tab-active" : ""
                 }`}
               >
                 {tab.icon}
@@ -325,7 +326,7 @@ const EditProfile = () => {
         </div>
 
         {/* Content */}
-        <div className="flex-1 bg-white rounded-2xl border border-[#FFE4EC] shadow-sm p-8">
+        <div className="flex-1 profile-card profile-card-header">
           {/* Profile Tab */}
           {activeTab === "profile" && (
             <div className="space-y-6">
@@ -338,10 +339,10 @@ const EditProfile = () => {
                 <img
                   src={avatarPreview || profileData.avatarUrl}
                   alt="Avatar"
-                  className="w-24 h-24 rounded-full object-cover border-4 border-[#FFE4EC]"
+                  className="profile-avatar profile-avatar-md"
                 />
                 <div>
-                  <label className="px-4 py-2 bg-[#F295B6] text-white font-semibold rounded-lg hover:bg-[#FFB8D1] cursor-pointer transition-colors duration-200">
+                  <label className="profile-btn-primary cursor-pointer">
                     Chọn ảnh mới
                     <input
                       type="file"
@@ -356,42 +357,42 @@ const EditProfile = () => {
 
               {/* Form Fields */}
               <div>
-                <label className="block text-sm font-semibold mb-2">Username</label>
+                <label className="profile-label">Username</label>
                 <input
                   type="text"
                   value={profileData.username}
                   onChange={(e) => handleProfileChange("username", e.target.value)}
-                  className="w-full px-4 py-2 border border-[#FFE4EC] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F295B6]"
+                  className="profile-input"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold mb-2">Số điện thoại</label>
+                <label className="profile-label">Số điện thoại</label>
                 <input
                   type="tel"
                   value={profileData.phoneNumber}
                   onChange={(e) => handleProfileChange("phoneNumber", e.target.value)}
-                  className="w-full px-4 py-2 border border-[#FFE4EC] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F295B6]"
+                  className="profile-input"
                   placeholder="0123456789"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold mb-2">Ngày sinh</label>
+                <label className="profile-label">Ngày sinh</label>
                 <input
                   type="date"
                   value={profileData.dob}
                   onChange={(e) => handleProfileChange("dob", e.target.value)}
-                  className="w-full px-4 py-2 border border-[#FFE4EC] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F295B6]"
+                  className="profile-input"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold mb-2">Giới tính</label>
+                <label className="profile-label">Giới tính</label>
                 <select
                   value={profileData.gender || ""}
                   onChange={(e) => handleProfileChange("gender", e.target.value as 'MALE' | 'FEMALE' | 'OTHER' | undefined)}
-                  className="w-full px-4 py-2 border border-[#FFE4EC] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F295B6]"
+                  className="profile-input"
                 >
                   <option value="">Chọn giới tính</option>
                   <option value="MALE">Nam</option>
@@ -401,12 +402,12 @@ const EditProfile = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold mb-2">Tiểu sử</label>
+                <label className="profile-label">Tiểu sử</label>
                 <textarea
                   value={profileData.bio}
                   onChange={(e) => handleProfileChange("bio", e.target.value)}
                   rows={4}
-                  className="w-full px-4 py-2 border border-[#FFE4EC] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F295B6]"
+                  className="profile-input"
                   placeholder="Viết vài dòng về bản thân..."
                 />
               </div>
@@ -429,7 +430,7 @@ const EditProfile = () => {
                       onChange={(e) => handleProfileChange("showEmail", e.target.checked)}
                       className="sr-only peer"
                     />
-                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-pink-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#F295B6]"></div>
+                    <div className="profile-toggle"></div>
                   </label>
                 </div>
 
@@ -445,7 +446,7 @@ const EditProfile = () => {
                       onChange={(e) => handleProfileChange("showPhoneNumber", e.target.checked)}
                       className="sr-only peer"
                     />
-                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-pink-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#F295B6]"></div>
+                    <div className="profile-toggle"></div>
                   </label>
                 </div>
               </div>
@@ -454,14 +455,14 @@ const EditProfile = () => {
                 <button
                   onClick={handleSaveProfile}
                   disabled={loading}
-                  className="flex items-center gap-2 px-6 py-3 bg-[#F295B6] text-white font-bold rounded-lg hover:bg-[#FFB8D1] transition-colors duration-200 disabled:opacity-50"
+                  className="profile-btn-primary"
                 >
                   <IoSaveOutline fontSize={20} />
                   {loading ? "Đang lưu..." : "Lưu thay đổi"}
                 </button>
                 <button
                   onClick={() => navigate(-1)}
-                  className="flex items-center gap-2 px-6 py-3 bg-gray-100 text-gray-700 font-bold rounded-lg hover:bg-gray-200 transition-colors duration-200"
+                  className="profile-btn-secondary"
                 >
                   <IoCloseOutline fontSize={20} />
                   Hủy
@@ -479,7 +480,7 @@ const EditProfile = () => {
 
               <div>
                 <div className="flex justify-between items-center mb-2">
-                  <label className="block text-sm font-semibold">Mật khẩu hiện tại</label>
+                  <label className="profile-label mb-0">Mật khẩu hiện tại</label>
                   <button
                     type="button"
                     onClick={() => setShowForgotPasswordModal(true)}
@@ -492,34 +493,34 @@ const EditProfile = () => {
                   type="password"
                   value={passwordData.currentPassword}
                   onChange={(e) => handlePasswordChange("currentPassword", e.target.value)}
-                  className="w-full px-4 py-2 border border-[#FFE4EC] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F295B6]"
+                  className="profile-input"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold mb-2">Mật khẩu mới</label>
+                <label className="profile-label">Mật khẩu mới</label>
                 <input
                   type="password"
                   value={passwordData.newPassword}
                   onChange={(e) => handlePasswordChange("newPassword", e.target.value)}
-                  className="w-full px-4 py-2 border border-[#FFE4EC] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F295B6]"
+                  className="profile-input"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold mb-2">Xác nhận mật khẩu mới</label>
+                <label className="profile-label">Xác nhận mật khẩu mới</label>
                 <input
                   type="password"
                   value={passwordData.confirmPassword}
                   onChange={(e) => handlePasswordChange("confirmPassword", e.target.value)}
-                  className="w-full px-4 py-2 border border-[#FFE4EC] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F295B6]"
+                  className="profile-input"
                 />
               </div>
 
               <button
                 onClick={handleChangePassword}
                 disabled={loading}
-                className="flex items-center gap-2 px-6 py-3 bg-[#F295B6] text-white font-bold rounded-lg hover:bg-[#FFB8D1] transition-colors duration-200 disabled:opacity-50"
+                className="profile-btn-primary"
               >
                 <IoSaveOutline fontSize={20} />
                 {loading ? "Đang lưu..." : "Đổi mật khẩu"}
@@ -559,7 +560,7 @@ const EditProfile = () => {
                       }}
                       className="sr-only peer"
                     />
-                    <div className="w-14 h-7 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-pink-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-[#F295B6]"></div>
+                    <div className="profile-toggle-lg"></div>
                   </label>
                 </div>
               </div>
@@ -631,7 +632,7 @@ const EditProfile = () => {
 
               <button
                 onClick={() => setShowDeleteModal(true)}
-                className="px-6 py-3 bg-red-600 text-white font-bold rounded-lg hover:bg-red-700 transition-colors duration-200"
+                className="profile-btn-danger"
               >
                 Xóa tài khoản của tôi
               </button>
@@ -642,10 +643,10 @@ const EditProfile = () => {
 
       {/* Forgot Password Modal */}
       {showForgotPasswordModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl p-8 max-w-md w-full mx-4 border-2 border-[#F295B6] shadow-xl">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold" style={{ color: "#8C1D35" }}>
+        <div className="profile-modal-overlay">
+          <div className="profile-modal profile-modal-border-primary">
+            <div className="profile-modal-header">
+              <h2 className="profile-modal-title profile-modal-title-primary">
                 {forgotPasswordStep === 'email' ? 'Quên mật khẩu' : 'Đặt lại mật khẩu'}
               </h2>
               <button
@@ -654,92 +655,92 @@ const EditProfile = () => {
                   setForgotPasswordStep('email');
                   setError(null);
                 }}
-                className="text-gray-500 hover:text-gray-700"
+                className="profile-modal-close-btn"
               >
                 <IoCloseOutline fontSize={28} />
               </button>
             </div>
 
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg mb-4 text-sm">
+              <div className="profile-modal-inner-alert">
                 {error}
               </div>
             )}
 
             {forgotPasswordStep === 'email' ? (
-              <div className="space-y-4">
-                <p className="text-sm text-gray-600 mb-4">
+              <div className="profile-modal-form">
+                <p className="profile-modal-form-hint">
                   Nhập email của bạn để nhận mã xác thực
                 </p>
                 <div>
-                  <label className="block text-sm font-semibold mb-2">Email</label>
+                  <label className="profile-label">Email</label>
                   <input
                     type="email"
                     value={forgotPasswordEmail}
                     onChange={(e) => setForgotPasswordEmail(e.target.value)}
-                    className="w-full px-4 py-2 border border-[#FFE4EC] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F295B6]"
+                    className="profile-input"
                     placeholder="your@email.com"
                   />
                 </div>
                 <button
                   onClick={handleRequestPasswordReset}
                   disabled={loading || !forgotPasswordEmail}
-                  className="w-full px-6 py-3 bg-[#F295B6] text-white font-bold rounded-lg hover:bg-[#FFB8D1] transition-colors duration-200 disabled:opacity-50"
+                  className="profile-modal-btn-full profile-modal-btn-primary"
                 >
                   {loading ? 'Đang gửi...' : 'Gửi mã xác thực'}
                 </button>
               </div>
             ) : (
-              <div className="space-y-4">
-                <p className="text-sm text-gray-600 mb-4">
+              <div className="profile-modal-form">
+                <p className="profile-modal-form-hint">
                   Nhập mã xác thực đã được gửi đến email và mật khẩu mới
                 </p>
                 <div>
-                  <label className="block text-sm font-semibold mb-2">Mã xác thực (6 số)</label>
+                  <label className="profile-label">Mã xác thực (6 số)</label>
                   <input
                     type="text"
                     value={resetPasswordData.verificationCode}
                     onChange={(e) => setResetPasswordData({ ...resetPasswordData, verificationCode: e.target.value })}
-                    className="w-full px-4 py-2 border border-[#FFE4EC] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F295B6]"
+                    className="profile-input"
                     placeholder="123456"
                     maxLength={6}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold mb-2">Mật khẩu mới</label>
+                  <label className="profile-label">Mật khẩu mới</label>
                   <input
                     type="password"
                     value={resetPasswordData.newPassword}
                     onChange={(e) => setResetPasswordData({ ...resetPasswordData, newPassword: e.target.value })}
-                    className="w-full px-4 py-2 border border-[#FFE4EC] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F295B6]"
+                    className="profile-input"
                     placeholder="Ít nhất 6 ký tự"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold mb-2">Xác nhận mật khẩu</label>
+                  <label className="profile-label">Xác nhận mật khẩu</label>
                   <input
                     type="password"
                     value={resetPasswordData.confirmPassword}
                     onChange={(e) => setResetPasswordData({ ...resetPasswordData, confirmPassword: e.target.value })}
-                    className="w-full px-4 py-2 border border-[#FFE4EC] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F295B6]"
+                    className="profile-input"
                     placeholder="Nhập lại mật khẩu"
                   />
                 </div>
-                <div className="flex gap-2">
+                <div className="profile-modal-btn-container-single">
                   <button
                     onClick={() => {
                       setForgotPasswordStep('email');
                       setResetPasswordData({ verificationCode: '', newPassword: '', confirmPassword: '' });
                       setError(null);
                     }}
-                    className="flex-1 px-4 py-3 bg-gray-100 text-gray-700 font-bold rounded-lg hover:bg-gray-200 transition-colors duration-200"
+                    className="profile-modal-btn-flex profile-modal-btn-secondary"
                   >
                     Quay lại
                   </button>
                   <button
                     onClick={handleResetPassword}
                     disabled={loading}
-                    className="flex-1 px-4 py-3 bg-[#F295B6] text-white font-bold rounded-lg hover:bg-[#FFB8D1] transition-colors duration-200 disabled:opacity-50"
+                    className="profile-modal-btn-flex profile-modal-btn-primary"
                   >
                     {loading ? 'Đang xử lý...' : 'Đặt lại mật khẩu'}
                   </button>
@@ -752,15 +753,15 @@ const EditProfile = () => {
 
       {/* Delete Account Confirmation Modal */}
       {showDeleteModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl p-8 max-w-md w-full mx-4 border-2 border-red-500 shadow-xl">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-red-600">
+        <div className="profile-modal-overlay">
+          <div className="profile-modal profile-modal-border-danger">
+            <div className="profile-modal-header">
+              <h2 className="profile-modal-title profile-modal-title-danger">
                 ⚠️ Xác nhận xóa tài khoản
               </h2>
               <button
                 onClick={() => setShowDeleteModal(false)}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
+                className="profile-modal-close-btn"
                 disabled={loading}
               >
                 <IoCloseOutline size={28} />
@@ -768,10 +769,10 @@ const EditProfile = () => {
             </div>
 
             <div className="mb-6">
-              <p className="text-gray-700 mb-4 font-semibold">
+              <p className="profile-modal-text profile-modal-text-bold">
                 Bạn có chắc chắn muốn xóa tài khoản của mình?
               </p>
-              <p className="text-red-600 mb-4">
+              <p className="profile-modal-text-danger">
                 Hành động này sẽ xóa vĩnh viễn:
               </p>
               <ul className="list-disc list-inside text-gray-700 space-y-2 mb-4 ml-2">
@@ -780,29 +781,29 @@ const EditProfile = () => {
                 <li>Danh sách người theo dõi và đang theo dõi</li>
                 <li>Lịch sử hoạt động</li>
               </ul>
-              <p className="text-red-700 font-bold text-center bg-red-50 p-3 rounded-lg">
+              <p className="profile-modal-warning-box">
                 ⚠️ Hành động này không thể hoàn tác!
               </p>
             </div>
 
             {error && (
-              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
+              <div className="profile-modal-inner-alert">
                 {error}
               </div>
             )}
 
-            <div className="flex gap-3">
+            <div className="profile-modal-btn-container">
               <button
                 onClick={() => setShowDeleteModal(false)}
                 disabled={loading}
-                className="flex-1 px-4 py-3 bg-gray-100 text-gray-700 font-bold rounded-lg hover:bg-gray-200 transition-colors duration-200 disabled:opacity-50"
+                className="profile-modal-btn-flex profile-modal-btn-secondary"
               >
                 Hủy
               </button>
               <button
                 onClick={handleDeleteAccount}
                 disabled={loading}
-                className="flex-1 px-4 py-3 bg-red-600 text-white font-bold rounded-lg hover:bg-red-700 transition-colors duration-200 disabled:opacity-50"
+                className="profile-modal-btn-flex profile-modal-btn-danger"
               >
                 {loading ? 'Đang xóa...' : 'Xác nhận xóa'}
               </button>
