@@ -69,6 +69,7 @@ export interface IBlockResponseDto {
   height: number;
   type: EBlockType;
   content: string;
+  objectFit?: "contain" | "cover" | "fill";
 }
 
 export interface IPostResponseDto {

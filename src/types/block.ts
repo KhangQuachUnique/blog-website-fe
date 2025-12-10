@@ -12,4 +12,5 @@ export interface ICreateBlockDto {
   height: number;
   type: EBlockType;
   content: string;
+  objectFit?: "contain" | "cover" | "fill";
 }
