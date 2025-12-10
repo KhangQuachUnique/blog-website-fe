@@ -39,7 +39,7 @@ const MyCommunitiesPage = () => {
   const handleOpenCommunity = (community: MyCommunity) => {
     // Tạm thời: tất cả đều đi tới manage của community đó
     // sau này nếu có trang view riêng cho member thì bạn tách ra
-    navigate(`/community/manage/${community.id}`);
+    navigate(`/community/${community.id}`);
   };
 
   const handleOpenCreate = () => setOpenCreate(true);

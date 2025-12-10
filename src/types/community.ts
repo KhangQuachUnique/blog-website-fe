@@ -7,4 +7,5 @@ export interface CommunitySettings {
     requirePostApproval: boolean;
     requireMemberApproval: boolean;
     createdAt: string; 
+    role: "ADMIN" | "MODERATOR" | "MEMBER" | "PENDING";
 }

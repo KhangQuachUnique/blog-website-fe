@@ -5,16 +5,20 @@ import MemberManagement from "../pages/community/MemberManagement";
 
 const communityRoutes = [
   {
-    path: "community",
+    path: "community/:id",
     element: <ManageLayout />,
     children: [
       {
-        path: "manage",
-        children: [
-          { index: true, element: <ForumSetting /> },
-          { path: "posts", element: <PostManagement /> },
-          { path: "members", element: <MemberManagement /> },
-        ],
+        index: true,
+        element: <ForumSetting />,
+      },
+      {
+        path: "posts",
+        element: <PostManagement />,
+      },
+      {
+        path: "members",
+        element: <MemberManagement />,
       },
     ],
   },
