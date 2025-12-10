@@ -5,7 +5,6 @@ import { IoArrowBack, IoSaveOutline, IoCloseOutline } from "react-icons/io5";
 import { AiOutlineUser, AiOutlineLock, AiOutlineEye, AiOutlineUserDelete } from "react-icons/ai";
 import { MdBlock } from "react-icons/md";
 import * as userService from "../../../services/user/userService";
-import { uploadFile } from "../../../services/upload/uploadImageService";
 import { useAuth } from "../../../hooks/useAuth";
 import Avatar from '@mui/material/Avatar';
 import { stringAvatar } from '../../../utils/avatarHelper';
@@ -63,6 +62,7 @@ const EditProfile = () => {
 
   // Avatar upload
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
 
   // Fetch user data on mount
   useEffect(() => {
@@ -118,27 +118,18 @@ const EditProfile = () => {
     setPasswordData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      // Store file for later upload
+      setAvatarFile(file);
+      
+      // Show preview
       const reader = new FileReader();
       reader.onloadend = () => {
         setAvatarPreview(reader.result as string);
       };
       reader.readAsDataURL(file);
-
-      // Upload file to server
-      try {
-        setLoading(true);
-        const avatarUrl = await uploadFile(file);
-        handleProfileChange("avatarUrl", avatarUrl);
-        setSuccess("Ảnh đại diện đã được tải lên!");
-        setTimeout(() => setSuccess(null), 3000);
-      } catch (err: unknown) {
-        setError(err instanceof Error ? err.message : "Không thể tải ảnh lên");
-      } finally {
-        setLoading(false);
-      }
     }
   };
 
@@ -146,16 +137,38 @@ const EditProfile = () => {
     setLoading(true);
     setError(null);
     try {
+      let uploadedAvatarUrl = profileData.avatarUrl;
+
+      // Upload avatar first if there's a new file
+      if (avatarFile) {
+        const formData = new FormData();
+        formData.append("file", avatarFile);
+        
+        // Upload using uploadFile from service
+        const { uploadFile } = await import("../../../services/upload/uploadImageService");
+        uploadedAvatarUrl = await uploadFile(formData);
+        
+        // Update profileData with new URL to keep the preview
+        setProfileData(prev => ({ ...prev, avatarUrl: uploadedAvatarUrl }));
+        
+        // Clear file but keep preview
+        setAvatarFile(null);
+      }
+
       // Clean data: chuyển chuỗi rỗng thành undefined
       const cleanedData = {
         ...profileData,
-        avatarUrl: profileData.avatarUrl || undefined,
+        avatarUrl: uploadedAvatarUrl || undefined,
         dob: profileData.dob || undefined,
         phoneNumber: profileData.phoneNumber || undefined,
         bio: profileData.bio || undefined,
       };
+      
       await userService.updateMyProfile(cleanedData);
       setSuccess("Cập nhật hồ sơ thành công!");
+      
+      // Clear preview after successful update
+      setAvatarPreview(null);
       setTimeout(() => setSuccess(null), 3000);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Có lỗi xảy ra");
