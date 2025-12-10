@@ -1,9 +1,7 @@
 import axios from "../../config/axiosCustomize";
 
-export const uploadFile = async (file: File): Promise<string> => {
-  const formData = new FormData();
-  formData.append("file", file);
-  const response = await axios.post("/files/upload/image", formData, {
+export const uploadFile = async (data: FormData): Promise<string> => {
+  const response = await axios.post("/files/upload/image", data, {
     headers: {
       "Content-Type": "multipart/form-data",
     },

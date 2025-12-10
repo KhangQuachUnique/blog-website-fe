@@ -1,4 +1,9 @@
+import { useMutation } from "@tanstack/react-query";
 import { useCallback, useRef } from "react";
+import {
+  uploadFile,
+  uploadMultipleFiles,
+} from "../services/upload/uploadImageService";
 
 /**
  * Hook quản lý FormData cho việc upload ảnh
@@ -78,3 +83,27 @@ export const useImageForm = () => {
 };
 
 export default useImageForm;
+
+/**
+ * Upload single image
+ * @param file
+ * @returns
+ */
+export const useUploadImage = (file: File) => {
+  const formData = new FormData();
+  formData.append("file", file);
+  return useMutation({
+    mutationFn: () => uploadFile(formData),
+  });
+};
+
+/** Upload multiple images
+ * @param formData
+ * @param keys
+ * @returns
+ */
+export const useUploadMultipleImages = (formData: FormData, keys: string[]) => {
+  return useMutation({
+    mutationFn: () => uploadMultipleFiles(formData, keys),
+  });
+};
