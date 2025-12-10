@@ -98,7 +98,7 @@ const mapPostToBlocks = (post: IPostResponseDto): BlockData[] => {
     id: String(index + 1),
     type: block.type,
     content: block.content,
-    caption: block.type === EBlockType.IMAGE ? "" : undefined,
+    caption: block.type === EBlockType.IMAGE ? (block.caption as any) ?? "" : undefined,
     objectFit:
       block.type === EBlockType.IMAGE ? (block.objectFit as any) ?? "cover" : undefined,
   }));

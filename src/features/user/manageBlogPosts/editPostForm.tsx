@@ -1,6 +1,14 @@
 import { useState, useEffect, useCallback } from "react";
 import GridLayout from "react-grid-layout";
 import { InputBase } from "@mui/material";
+import {
+  GRID_SETTINGS,
+  TITLE_SX,
+  SHORT_DESC_SX,
+  BLOCK_WRAPPER,
+  BUTTON_STYLE_OUTLINE,
+  BUTTON_STYLE_PRIMARY,
+} from "./layoutConstants";
 
 import TextBlock from "../../../components/block/textBlockEdit";
 import ImageBlock from "../../../components/block/imageBlockEdit";
@@ -131,6 +139,7 @@ const EditPostForm = ({
           height: layoutItem?.h ?? 6,
           type: block.type,
           content,
+              caption: block.type === EBlockType.IMAGE ? (block.caption as any) : undefined,
         };
       });
     },
@@ -239,18 +248,14 @@ const EditPostForm = ({
       <BlockSidebar onAddBlock={handleAddBlock} />
 
       {/* Title & Description */}
-      <div className="w-[800px] p-3">
+      <div className={`w-[${GRID_SETTINGS.width}px] p-3`}>
         <InputBase
           placeholder="Nhập tiêu đề bài viết..."
           className="w-full"
           multiline
           value={title}
           onChange={handleTitleChange}
-          sx={{
-            fontSize: "48px",
-            fontWeight: "bold",
-            fontFamily: "Quicksand, Mona Sans, Open Sans, Outfit, sans-serif",
-          }}
+          sx={TITLE_SX}
         />
         <InputBase
           placeholder="Nhập mô tả ngắn về bài viết..."
@@ -258,40 +263,32 @@ const EditPostForm = ({
           multiline
           value={shortDescription}
           onChange={handleShortDescriptionChange}
-          sx={{
-            fontSize: "18px",
-            fontStyle: "italic",
-            marginTop: "12px",
-            color: "#8c1d35",
-            fontFamily: "Quicksand, Mona Sans, Open Sans, Outfit, sans-serif",
-          }}
+          sx={SHORT_DESC_SX}
         />
       </div>
 
       {/* Grid Layout */}
-      <div className="w-[800px]">
+      <div className={`w-[${GRID_SETTINGS.width}px]`}>
         <GridLayout
           layout={layout}
           onLayoutChange={(newLayout) =>
             handleLayoutChange(newLayout as LayoutItem[])
           }
-          cols={16}
-          rowHeight={30}
-          width={800}
+          cols={GRID_SETTINGS.cols}
+          rowHeight={GRID_SETTINGS.rowHeight}
+          width={GRID_SETTINGS.width}
           isDraggable={isCtrlPressed}
           isResizable={true}
           draggableCancel=".rgl-no-drag"
           isDroppable={true}
           onDrop={handleGridDrop}
-          droppingItem={{ i: "__dropping-elem__", w: 8, h: 6 }}
+          droppingItem={{ i: "__dropping-elem__", ...GRID_SETTINGS.defaultItem }}
         >
           {blocks.map((block) => (
             <div
               key={block.id}
-              className={`border-dashed border-2 rounded-lg border-gray-300 relative ${
-                isCtrlPressed
-                  ? "cursor-move border-pink-400 select-none"
-                  : "cursor-default"
+              className={`${BLOCK_WRAPPER.base} ${
+                isCtrlPressed ? BLOCK_WRAPPER.ctrlPressed : BLOCK_WRAPPER.default
               }`}
             >
               {block.type === EBlockType.TEXT ? (
@@ -341,36 +338,19 @@ const EditPostForm = ({
           <CustomButton
             variant="outline"
             onClick={handleSaveDraft}
-            style={{
-              color: "#F295B6",
-              border: "2px solid #F295B6",
-              fontWeight: "600",
-            }}
+            style={BUTTON_STYLE_OUTLINE}
           >
             Lưu nháp
           </CustomButton>
           <CustomButton
             onClick={handleNextStepClick}
-            style={{
-              width: "auto",
-              backgroundColor: "#F295B6",
-              color: "white",
-              fontWeight: "600",
-            }}
+            style={{ width: "auto", ...BUTTON_STYLE_PRIMARY }}
           >
             Bước tiếp theo
           </CustomButton>
         </div>
       ) : (
-        <CustomButton
-          onClick={handleNextStepClick}
-          style={{
-            width: "auto",
-            backgroundColor: "#F295B6",
-            color: "white",
-            fontWeight: "600",
-          }}
-        >
+        <CustomButton onClick={handleNextStepClick} style={{ width: "auto", ...BUTTON_STYLE_PRIMARY }}>
           Bước tiếp theo
         </CustomButton>
       )}

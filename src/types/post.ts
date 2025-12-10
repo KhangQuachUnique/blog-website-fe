@@ -70,6 +70,7 @@ export interface IBlockResponseDto {
   type: EBlockType;
   content: string;
   objectFit?: "contain" | "cover" | "fill";
+  caption?: string;
 }
 
 export interface IPostResponseDto {

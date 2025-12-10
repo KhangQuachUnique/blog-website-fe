@@ -5,23 +5,26 @@ import TextBlock from "../../../components/block/textBlock";
 import ImageBlock from "../../../components/block/imageBlock";
 import { EBlockType } from "../../../types/block";
 import GridLayout from "react-grid-layout";
+import {
+	GRID_SETTINGS,
+	TITLE_SX,
+	SHORT_DESC_SX,
+} from "../../../features/user/manageBlogPosts/layoutConstants";
 
 const PostDetailsPage = () => {
 	const { id } = useParams();
 	const postId = Number(id ?? 0);
 	const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diff = Math.floor((now.getTime() - date.getTime()) / 1000);
+		const date = new Date(dateString);
+		const now = new Date();
+		const diff = Math.floor((now.getTime() - date.getTime()) / 1000);
 
-    if (diff < 60) return "vừa xong";
-    if (diff < 60) return "vừa xong";
-    if (diff < 3600) return `${Math.floor(diff / 60)} phút trước`;
-    if (diff < 86400) return `${Math.floor(diff / 3600)} giờ trước`;
-    if (diff < 604800) return `${Math.floor(diff / 86400)} ngày trước`;
-    return date.toLocaleDateString("vi-VN");
-    // return date.toLocaleDateString("vi-VN");
-  };
+		if (diff < 60) return "vừa xong";
+		if (diff < 3600) return `${Math.floor(diff / 60)} phút trước`;
+		if (diff < 86400) return `${Math.floor(diff / 3600)} giờ trước`;
+		if (diff < 604800) return `${Math.floor(diff / 86400)} ngày trước`;
+		return date.toLocaleDateString("vi-VN");
+	};
 
 	const { data: post, isLoading, isError, error } = useGetPostById(postId);
 
@@ -71,7 +74,7 @@ const PostDetailsPage = () => {
 	const blocks = post.blocks || [];
 
 	// Grid configuration (keep in sync with editor)
-	const COLS = 16;
+	const COLS = GRID_SETTINGS.cols;
 
 
 	// Map blocks to react-grid-layout `layout` items using stable ids and clamped values
@@ -85,63 +88,46 @@ const PostDetailsPage = () => {
 		// ensure x + w <= COLS
 		const w = x + wClamped > COLS ? Math.max(1, COLS - x) : wClamped;
 
+		const baseH = Math.max(1, Math.floor(b.height));
+		// If image block has a caption, reserve an extra row so caption can be visible
+		const hasCaption = Boolean((b as any).caption && String((b as any).caption).trim().length > 0 && b.type === EBlockType.IMAGE);
+		const h = baseH + (hasCaption ? 1 : 0);
+
 		return {
 			i: String(b.id),
 			x,
 			y: Math.max(0, Math.floor(b.y)),
 			w,
-			h: Math.max(1, Math.floor(b.height)),
+			h,
 		};
 	});
 
-	// Normalize layout to avoid overlaps: simple greedy placer that shifts colliding items down
-	const normalizeLayout = (items: { i: string; x: number; y: number; w: number; h: number }[]) => {
-		// clone and sort by y then x
-		const out = items.map((it) => ({ ...it }));
-		out.sort((a, b) => (a.y === b.y ? a.x - b.x : a.y - b.y));
-
-		const placed: typeof out = [];
-
-		const collides = (a: any, b: any) => {
-			if (a.i === b.i) return false;
-			return !(a.x + a.w <= b.x || a.x >= b.x + b.w || a.y + a.h <= b.y || a.y >= b.y + b.h);
-		};
-
-		for (const item of out) {
-			let y = item.y;
-			let placedItem = { ...item, y };
-			let tries = 0;
-			while (true) {
-				const collision = placed.find((p) => collides(placedItem, p));
-				if (!collision) break;
-				// move below the colliding item
-				placedItem.y = collision.y + collision.h;
-				tries++;
-				if (tries > 1000) break;
-			}
-			placed.push(placedItem);
-		}
-
-		// keep original order mapping
-		return placed;
-	};
-
-	// const normalizedLayout = normalizeLayout(layout).map((it) => ({ ...it }));
+	// (normalizeLayout removed) layout is taken directly from backend positions
 
 	return (
-		<article className="max-w-5xl mx-auto p-10">
+		<article className="max-w-5xl mx-auto p-10 border border-[#FFE4EC] rounded-2xl bg-white shadow-sm">
 			<header className="mb-6">
-				<h1 className="text-3xl font-bold mb-2">{post.title}</h1>
-					<div className="text-sm text-gray-500 mb-4">
-						Bởi <Link to="#" className="font-medium">{post.author?.username ?? "Người dùng"}</Link> · {formatDate(String(post.createdAt))}
+				<h1 className="mb-2 break-words" style={{ ...(TITLE_SX as any), overflowWrap: "break-word" }}>{post.title}</h1>
+				<div className="flex items-center gap-3 text-sm text-gray-500 mb-4">
+					<img
+						src={post.author?.avatarUrl ?? "/assets/default-avatar.png"}
+						alt={post.author?.username ?? "avatar"}
+						className="w-10 h-10 rounded-full object-cover"
+					/>
+					<div>
+						<div>
+							Bởi <Link to="#" className="font-medium">{post.author?.username ?? "Người dùng"}</Link>
+						</div>
+						<div className="text-xs text-gray-400">{formatDate(String(post.createdAt))}</div>
 					</div>
+				</div>
 				{post.thumbnailUrl && (
 					<div className="mb-4">
 						<img src={post.thumbnailUrl} alt={post.title} className="w-full rounded-lg" />
 					</div>
 				)}
 				{post.shortDescription && (
-					<p className="text-lg text-gray-700 mb-4">{post.shortDescription}</p>
+					<p className="mb-4" style={SHORT_DESC_SX as any}>{post.shortDescription}</p>
 				)}
 				{post.hashtags && post.hashtags.length > 0 && (
 					<div className="mb-4">
@@ -159,28 +145,28 @@ const PostDetailsPage = () => {
 
 				{blocks.length > 0 && (
 					<div className="w-[800px] mx-auto" ref={containerRef}>
-							<GridLayout
-								layout={layout}
-								cols={16}
-								rowHeight={30}
-								width={containerWidth}
-								isDraggable={false}
-								isResizable={false}
-								draggableCancel=".rgl-no-drag"
-								isDroppable={false}
-								compactType={null}
-								margin={[20,20]}
-								containerPadding={[0,0]}
-							>
+						<GridLayout
+							layout={layout}
+							cols={GRID_SETTINGS.cols}
+							rowHeight={GRID_SETTINGS.rowHeight}
+							width={containerWidth}
+							isDraggable={false}
+							isResizable={false}
+							draggableCancel=".rgl-no-drag"
+							isDroppable={false}
+							compactType={null}
+							margin={[20, 20]}
+							containerPadding={[0, 0]}
+						>
 								{blocks.map((block) => (
 									<div
 										key={block.id}
-										className={`border-lines border-3 rounded-lg border-[#FFE4EC] relative cursor-default bg-white`}
+										className={` rounded-lg border-[#FFE4EC] relative cursor-default bg-white`}
 									>
 										{block.type === EBlockType.TEXT ? (
 											<TextBlock id={String(block.id)} content={block.content || ""} />
 										) : (
-											<ImageBlock id={String(block.id)} imageUrl={block.content} caption={undefined} objectFit={(block as any).objectFit ?? "cover"} />
+											<ImageBlock id={String(block.id)} imageUrl={block.content} caption={(block as any).caption} objectFit={(block as any).objectFit ?? "cover"} />
 										)}
 									</div>
 								))}
