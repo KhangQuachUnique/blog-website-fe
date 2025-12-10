@@ -97,13 +97,13 @@ const Header = ({
           <div className="flex items-center gap-4">
             <NavLink
               to="/login"
-              className="font-bold py-2 px-4 text-[#F295B6] bg-white rounded-lg hover:bg-[#FFEFF4] transition-background duration-200"
+              className="font-label py-2 px-4 text-[#F295B6] bg-white rounded-lg hover:bg-[#FFEFF4] transition-background duration-200"
             >
               Login
             </NavLink>
             <NavLink
               to="/register"
-              className="font-bold py-2 px-4 text-white bg-[#F295B6] rounded-lg hover:bg-[#FFB8D1] transition-background duration-200"
+              className="font-label py-2 px-4 text-white bg-[#F295B6] rounded-lg hover:bg-[#FFB8D1] transition-background duration-200"
             >
               Register
             </NavLink>

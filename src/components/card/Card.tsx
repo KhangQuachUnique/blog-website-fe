@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import type { IPostResponseDto } from "../../types/post";
 import { InteractBar } from "../InteractBar";
+import { recordViewedPost } from '../../services/user/viewedHistory';
 import { useAuth } from "../../contexts/AuthContext";
 import "../../styles/newsfeed/Card.css";
 
@@ -25,7 +26,13 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
     <article className="newsfeed-card hover:shadow-lg transition-shadow">
       {/* Thumbnail bên trái */}
       {post.thumbnailUrl && (
-        <Link to={`/post/${post.id}`} className="newsfeed-card__thumbnail">
+        <Link
+          to={`/post/${post.id}`}
+          className="newsfeed-card__thumbnail"
+          onClick={() => {
+            if (user && user.id) recordViewedPost(post.id);
+          }}
+        >
           <img
             src={post.thumbnailUrl}
             alt={post.title}
@@ -37,7 +44,13 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
       
       {/* Content + InteractBar bên phải */}
       <div className="newsfeed-card__right">
-        <Link to={`/post/${post.id}`} className="newsfeed-card__content">
+        <Link
+          to={`/post/${post.id}`}
+          className="newsfeed-card__content"
+          onClick={() => {
+            if (user && user.id) recordViewedPost(post.id);
+          }}
+        >
           <h2 className="newsfeed-card__title">{post.title}</h2>
           <div className="newsfeed-card__header">
             <div className="newsfeed-card__author">
