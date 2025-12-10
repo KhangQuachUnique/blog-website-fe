@@ -12,42 +12,89 @@ const ManageLayout = () => {
   if (!data) return <p>Không tìm thấy cộng đồng</p>;
 
   const role = data.role;
+  const coverSrc =
+    data.thumbnailUrl ??
+    "https://via.placeholder.com/1200x300?text=Community+Cover";
 
-  // 🔵 MEMBER → không được vào giao diện quản lý
+  // 🔵 MEMBER → chỉ xem, không có quyền quản lý
   if (role === "MEMBER") {
     return (
       <div className="community-page">
+        <div className="community-header-img">
+          <img src={coverSrc} alt="cover" />
+        </div>
+
         <h2>{data.name}</h2>
         <p>{data.description}</p>
-        <p>Bạn là <strong>Thành viên</strong>. Bạn không có quyền quản lý cộng đồng.</p>
+
+        <p style={{ marginTop: 16 }}>
+          Bạn là <strong>Thành viên</strong>. Bạn không có quyền quản lý cộng
+          đồng.
+        </p>
       </div>
     );
   }
 
-  // 🟡 PENDING → chưa được duyệt
+  // 🟡 PENDING → chờ duyệt
   if (role === "PENDING") {
     return (
       <div className="community-page">
+        <div className="community-header-img">
+          <img src={coverSrc} alt="cover" />
+        </div>
+
         <h2>{data.name}</h2>
         <p>Yêu cầu tham gia cộng đồng của bạn đang chờ duyệt.</p>
       </div>
     );
   }
 
-  // 🟢 ADMIN + MODERATOR → giao diện quản lý
+  // 🟢 ADMIN + MODERATOR → giao diện quản lý (full access)
   return (
     <div className="community-page">
-      <header className="community-header">
-        <h2 className="community-header-title">Quản lý cộng đồng: {data.name}</h2>
-        <p className="community-header-sub">
-          Quản lý cài đặt, bài viết và thành viên trong cộng đồng của bạn.
-        </p>
-      </header>
+      {/* HEADER */}
+      <div className="community-header-img">
+        <img src={coverSrc} alt="cover" />
+      </div>
 
+      <div style={{ marginTop: 20 }}>
+        <h2 className="community-header-title">{data.name}</h2>
+        <p className="community-header-sub">{data.description}</p>
+
+        <p style={{ marginTop: 8 }}>
+          Vai trò của bạn: <strong>{role}</strong>
+        </p>
+      </div>
+
+      {/* TABS */}
       <nav className="community-tabs">
-        <NavLink to={`/community/${communityId}`} end className="community-tab">Settings</NavLink>
-        <NavLink to={`/community/${communityId}/posts`} className="community-tab">Posts</NavLink>
-        <NavLink to={`/community/${communityId}/members`} className="community-tab">Members</NavLink>
+        <NavLink
+          to={`/community/${communityId}`}
+          end
+          className={({ isActive }) =>
+            "community-tab " + (isActive ? "community-tab-active" : "")
+          }
+        >
+          Settings
+        </NavLink>
+
+        <NavLink
+          to={`/community/${communityId}/posts`}
+          className={({ isActive }) =>
+            "community-tab " + (isActive ? "community-tab-active" : "")
+          }
+        >
+          Posts
+        </NavLink>
+
+        <NavLink
+          to={`/community/${communityId}/members`}
+          className={({ isActive }) =>
+            "community-tab " + (isActive ? "community-tab-active" : "")
+          }
+        >
+          Members
+        </NavLink>
       </nav>
 
       <Outlet />
