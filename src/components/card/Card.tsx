@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import type { IPostResponseDto } from "../../types/post";
-import InteractBar from "../interactBar/interactBar";
+import InteractBar from "../interactBar/InteractBar";
 import { recordViewedPost } from '../../services/user/viewedHistory';
 import { useAuth } from "../../contexts/AuthContext";
 import "../../styles/newsfeed/Card.css";
