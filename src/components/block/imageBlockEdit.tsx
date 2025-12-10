@@ -1,7 +1,6 @@
 import { useState, useRef } from "react";
 import { IoClose } from "react-icons/io5";
 import { BsImage } from "react-icons/bs";
-import { FaChevronUp } from "react-icons/fa";
 
 type ObjectFitType = "contain" | "cover" | "fill";
 
@@ -35,7 +34,6 @@ const ImageBlockEdit = ({
   const [objectFit, setObjectFit] = useState<ObjectFitType>(initialObjectFit);
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [showMenu, setShowMenu] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileSelect = async (file: File) => {
@@ -128,26 +126,26 @@ const ImageBlockEdit = ({
           className="hidden"
         />
         {isUploading ? (
-          <div className="text-gray-500">Đang tải ảnh...</div>
+          <div className="flex flex-col items-center gap-3">
+            <div className="w-8 h-8 border-4 border-[#F295B6]/30 border-t-[#F295B6] rounded-full animate-spin" />
+            <span className="text-sm text-gray-600 font-medium">
+              Đang tải ảnh...
+            </span>
+          </div>
         ) : (
-          <>
-            <svg
-              className="w-12 h-12 text-gray-400 mb-2"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-              />
-            </svg>
-            <p className="text-gray-500 text-sm text-center">
-              Click hoặc kéo thả ảnh vào đây
-            </p>
-          </>
+          <div className="flex flex-col items-center gap-3 text-center px-6">
+            <div className="w-14 h-14 rounded-full bg-white shadow-sm flex items-center justify-center text-[#F295B6]">
+              <BsImage className="w-7 h-7" />
+            </div>
+            <div>
+              <p className="text-gray-700 font-semibold text-sm">
+                Kéo thả hoặc nhấn để chọn
+              </p>
+              <p className="text-gray-500 text-xs mt-1">
+                PNG, JPG, GIF. Tối đa 5MB
+              </p>
+            </div>
+          </div>
         )}
       </div>
     );
@@ -155,7 +153,7 @@ const ImageBlockEdit = ({
 
   return (
     <div className="w-full h-full flex flex-col bg-white group">
-      <div className="relative flex-1 overflow-hidden rounded-lg">
+      <div className="relative flex-1 overflow-hidden rounded-lg bg-gradient-to-br from-white via-pink-50/30 to-blue-50/30">
         <img
           src={imageUrl}
           alt={caption || "Blog image"}
@@ -165,82 +163,51 @@ const ImageBlockEdit = ({
           }}
         />
         {/* Overlay khi hover */}
-        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none" />
 
-        {/* Toolbar trên cùng */}
-        <div className="absolute top-2 left-2 right-2 flex justify-between items-center opacity-0 group-hover:opacity-100 transition-all">
+        {/* Liquid Glass Background Effect */}
+        <div className="absolute inset-0 opacity-0 group-hover:opacity-30 transition-all duration-300 pointer-events-none">
+          <div className="absolute top-0 left-1/4 w-64 h-64 bg-white/40 rounded-full mix-blend-screen filter blur-3xl" />
+          <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-pink-300/20 rounded-full mix-blend-screen filter blur-3xl" />
+          <div className="absolute top-1/3 right-0 w-96 h-96 bg-blue-300/15 rounded-full mix-blend-screen filter blur-3xl" />
+        </div>
+
+        {/* Top Left: Change & Delete buttons */}
+        <div className="absolute top-3 left-3 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-auto">
           <button
             onClick={handleClickUpload}
-            className="bg-white/70 backdrop-blur-sm text-gray-700 rounded-lg px-3 py-1.5 text-sm font-medium hover:bg-white transition-all shadow-lg flex items-center gap-1"
+            className="bg-white/40 hover:bg-white/50 backdrop-blur-xl text-black rounded-full w-10 h-10 flex items-center justify-center transition-all shadow-xl hover:shadow-2xl border border-white/60 hover:border-white/80"
             title="Thay đổi ảnh"
           >
-            <BsImage className="w-4 h-4" />
-            Đổi ảnh
+            <BsImage className="w-5 h-5" />
           </button>
 
           <button
             onClick={handleRemoveImage}
-            className="bg-red-500/90 backdrop-blur-sm text-white rounded-lg w-8 h-8 flex items-center justify-center hover:bg-red-600 transition-all shadow-lg"
+            className="bg-red-500/50 hover:bg-red-500/60 backdrop-blur-xl text-white rounded-full w-10 h-10 flex items-center justify-center transition-all shadow-xl hover:shadow-2xl border border-white/40 hover:border-white/60"
             title="Xóa ảnh"
           >
             <IoClose className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Dropdown menu object-fit */}
-        <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-all">
-          <div className="relative">
-            <button
-              onClick={() => setShowMenu(!showMenu)}
-              className="bg-white/90 backdrop-blur-sm text-gray-700 rounded-lg px-3 py-1.5 text-sm font-medium hover:bg-white transition-all shadow-lg flex items-center gap-2"
-            >
-              <span className="capitalize">{objectFit}</span>
-              <FaChevronUp className="w-4 h-4" />
-            </button>
-
-            {showMenu && (
-              <div className="absolute z-10 bottom-full right-0 mb-2 bg-white rounded-lg shadow-xl overflow-hidden min-w-[140px]">
-                <button
-                  onClick={() => {
-                    handleObjectFitChange("contain");
-                    setShowMenu(false);
-                  }}
-                  className={`w-full px-4 py-2 text-left text-sm hover:bg-pink-50 transition-colors ${
-                    objectFit === "contain"
-                      ? "bg-pink-100 text-[#F295B6] font-medium"
-                      : "text-gray-700"
-                  }`}
-                >
-                  Contain
-                </button>
-                <button
-                  onClick={() => {
-                    handleObjectFitChange("cover");
-                    setShowMenu(false);
-                  }}
-                  className={`w-full px-4 py-2 text-left text-sm hover:bg-pink-50 transition-colors ${
-                    objectFit === "cover"
-                      ? "bg-pink-100 text-[#F295B6] font-medium"
-                      : "text-gray-700"
-                  }`}
-                >
-                  Cover
-                </button>
-                <button
-                  onClick={() => {
-                    handleObjectFitChange("fill");
-                    setShowMenu(false);
-                  }}
-                  className={`w-full px-4 py-2 text-left text-sm hover:bg-pink-50 transition-colors ${
-                    objectFit === "fill"
-                      ? "bg-pink-100 text-[#F295B6] font-medium"
-                      : "text-gray-700"
-                  }`}
-                >
-                  Fill
-                </button>
-              </div>
-            )}
+        {/* Bottom Right: Object Fit Bar */}
+        <div className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-auto">
+          <div className="flex items-center gap-2 bg-white/40 hover:bg-white/50 backdrop-blur-xl rounded-full px-1 py-1 shadow-xl border border-white/60 hover:border-white/80 transition-all">
+            {(["contain", "cover", "fill"] as const).map((fit) => (
+              <button
+                key={fit}
+                onClick={() => handleObjectFitChange(fit)}
+                className={`px-4 py-2 rounded-full text-xs font-semibold transition-all ${
+                  objectFit === fit
+                    ? "bg-gradient-to-br from-[#F295B6] to-[#E072A0] text-white shadow-lg backdrop-blur-md border border-white/30"
+                    : "text-gray-700 hover:text-gray-900 hover:bg-white/40 backdrop-blur-md border border-transparent hover:border-white/40"
+                }`}
+                title={fit}
+              >
+                {fit}
+              </button>
+            ))}
           </div>
         </div>
 
@@ -252,7 +219,7 @@ const ImageBlockEdit = ({
           className="hidden"
         />
       </div>
-      <div className="pt-2">
+      <div className="py-1">
         <input
           type="text"
           value={caption}
