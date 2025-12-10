@@ -1,4 +1,6 @@
 import type { User } from "../../types/user.types";
+import Avatar from '@mui/material/Avatar';
+import { stringAvatar } from '../../utils/avatarHelper';
 
 interface ProfileHeaderProps {
   user: User;
@@ -22,11 +24,17 @@ const ProfileHeader = ({
       <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
         {/* Avatar */}
         <div className="flex-shrink-0">
-          <img
-            src={user.avatarUrl || "https://i.pravatar.cc/300"}
-            alt={user.username}
-            className="w-32 h-32 rounded-full object-cover border-4 border-[#FFE4EC]"
-          />
+          {user.avatarUrl ? (
+            <img
+              src={user.avatarUrl}
+              alt={user.username}
+              className="w-32 h-32 rounded-full object-cover border-4 border-[#FFE4EC]"
+            />
+          ) : (
+            <div className="border-4 border-[#FFE4EC] rounded-full">
+              <Avatar {...stringAvatar(user.username, 128, '3rem')} />
+            </div>
+          )}
         </div>
 
         {/* User Info */}

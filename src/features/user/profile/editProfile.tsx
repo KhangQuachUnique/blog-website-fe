@@ -16,7 +16,7 @@ type TabType = "profile" | "password" | "privacy" | "blocked" | "delete";
 
 const EditProfile = () => {
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const { logout, refreshUser } = useAuth();
   const [activeTab, setActiveTab] = useState<TabType>("profile");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState<string | null>(null);
@@ -165,6 +165,10 @@ const EditProfile = () => {
       };
       
       await userService.updateMyProfile(cleanedData);
+      
+      // Refresh user data in AuthContext to update avatar everywhere
+      await refreshUser();
+      
       setSuccess("Cập nhật hồ sơ thành công!");
       
       // Clear preview after successful update
