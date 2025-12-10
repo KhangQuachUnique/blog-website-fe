@@ -2,6 +2,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import {
   createPost,
   getPostById,
+  getAllPosts,
   updatePost,
 } from "../services/user/post/postService";
 
@@ -14,6 +15,17 @@ export const useGetPostById = (postId: number) => {
   return useQuery({
     queryKey: ["post", postId],
     queryFn: () => getPostById(postId),
+  });
+};
+
+/**
+ * Hook to get all blog posts
+ * @returns
+ */
+export const useGetAllPosts = () => {
+  return useQuery({
+    queryKey: ["posts"],
+    queryFn: getAllPosts,
   });
 };
 

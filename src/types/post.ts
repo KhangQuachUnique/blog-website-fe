@@ -90,3 +90,13 @@ export interface IPostResponseDto {
   totalComments: number;
   totalReacts: number;
 }
+
+export interface BlogPost {
+  id: number;
+  title: string;
+  status: EBlogPostStatus;
+  createdAt: string;
+  thumbnailUrl?: string | null;
+  upVotes?: number | null;
+  downVotes?: number | null;
+}

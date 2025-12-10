@@ -38,12 +38,12 @@ const SideBar = ({ navLinks, collapsed, setCollapsed }: SideBarProps) => {
             <li key={link.name}>
               <a
                 href={link.href}
-                className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 hover:bg-[#FFE4EC] hover:text-[#8C1D35] hover:translate-x-1 group"
+                className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 hover:bg-[#FFE4EC] hover:text-[#8C1D35] hover:translate-x-1 group font-label"
               >
                 <div className="text-[#F295B6] group-hover:scale-110 transition-transform duration-200">
                   {link.icon}
                 </div>
-                <div className="font-medium">{link.name}</div>
+                <div>{link.name}</div>
               </a>
             </li>
           ))}
