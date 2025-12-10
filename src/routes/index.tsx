@@ -11,6 +11,7 @@ import communityRoutes from "./community.route";
 import manageBlogPostsRoutes from "./user/manageBlogPosts.route";
 import HomePage from "../pages/home/HomePage";
 import newsfeedRoutes from "./user/newsfeed.route";
+import MyCommunitiesPage from "../pages/community/MyCommunitiesPage";
 
 export const router = createBrowserRouter([
   {
@@ -27,7 +28,7 @@ export const router = createBrowserRouter([
       },
       {
         path: "groups",
-        element: <div>Groups Page</div>,
+        element: <MyCommunitiesPage />,
       },
 
       ...communityRoutes,
