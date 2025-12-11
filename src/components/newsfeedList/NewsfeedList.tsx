@@ -25,15 +25,21 @@ const NewsfeedList = ({ posts, loadMoreRef }: Props) => {
         className="newsfeed-masonry-grid"
         columnClassName="newsfeed-masonry-grid_column"
       >
-        {posts.map((post) => (
-          <div key={post.id} className="newsfeed-masonry-item">
-            <Card post={post} />
-          </div>
-        ))}
+        {posts.map((post, idx) => {
+          const isLast = idx === posts.length - 1;
+          return (
+            <div
+              key={post.id}
+              className="newsfeed-masonry-item"
+              ref={isLast ? (loadMoreRef as any) : undefined}
+            >
+              <Card post={post} />
+            </div>
+          );
+        })}
       </Masonry>
 
-      {/* sentinel for infinite scroll */}
-      <div ref={loadMoreRef as any} />
+      {/* sentinel is attached to the last item via ref in the map above */}
     </div>
   );
 };

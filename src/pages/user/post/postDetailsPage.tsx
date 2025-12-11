@@ -163,11 +163,31 @@ const PostDetailsPage = () => {
 										key={block.id}
 										className={` rounded-lg border-[#FFE4EC] relative cursor-default bg-white`}
 									>
-										{block.type === EBlockType.TEXT ? (
-											<TextBlock id={String(block.id)} content={block.content || ""} />
-										) : (
-											<ImageBlock id={String(block.id)} imageUrl={block.content} caption={(block as any).caption} objectFit={(block as any).objectFit ?? "cover"} />
-										)}
+											{block.type === EBlockType.TEXT ? (
+												<TextBlock id={String(block.id)} content={block.content || ""} />
+											) : (
+												(() => {
+													// derive image props: prefer explicit block fields, fallback to JSON-encoded content
+													let imageUrl: string | undefined = (block as any).content;
+													let caption: string | undefined = (block as any).caption;
+													let objectFit: "contain" | "cover" | "fill" = (block as any).objectFit ?? "cover";
+													try {
+														if (imageUrl && (imageUrl.trim().startsWith("{") || imageUrl.trim().startsWith("["))) {
+															const parsed = JSON.parse(imageUrl);
+															if (parsed) {
+																if (parsed.url) imageUrl = parsed.url;
+																if (parsed.caption) caption = parsed.caption;
+																if (parsed.objectFit) objectFit = parsed.objectFit;
+															}
+														}
+													} catch (e) {
+														// ignore parse errors
+													}
+													return (
+														<ImageBlock id={String(block.id)} imageUrl={imageUrl} caption={caption} objectFit={objectFit} />
+													);
+												})()
+											)}
 									</div>
 								))}
 							</GridLayout>
