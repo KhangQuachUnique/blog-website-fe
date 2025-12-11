@@ -19,7 +19,7 @@ const navLinks = [
     icon: <FiUser fontSize={18} /> },
   {
     name: "Quản lí bài đăng",
-    href: "#",
+    href: "/admin/posts/list",
     icon: <HiOutlineDocumentText fontSize={18} />,
   },
   {

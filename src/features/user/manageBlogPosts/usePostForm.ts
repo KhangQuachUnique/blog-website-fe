@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import { EBlockType } from "../../../types/block";
 import type { IPostResponseDto } from "../../../types/post";
-import { useImageForm } from "./hooks/useImageForm";
+import { useImageForm } from "../../../hooks/useImage";
 
 /**
  * Types

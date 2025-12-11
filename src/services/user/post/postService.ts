@@ -13,6 +13,11 @@ export const getPostById = async (
   return response;
 };
 
+export const getAllPosts = async (): Promise<IPostResponseDto[]> => {
+  const response = await axios.get<IPostResponseDto[]>("/blog-posts");
+  return response;
+};
+
 export const createPost = async (
   data: ICreateBlogPostDto
 ): Promise<IPostResponseDto> => {
