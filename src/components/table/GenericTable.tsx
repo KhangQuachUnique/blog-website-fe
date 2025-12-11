@@ -88,7 +88,7 @@ const GenericTable = React.forwardRef<HTMLDivElement, GenericTableProps<any>>(
                 </TableCell>
               ))}
               {actions.length > 0 && (
-                <TableCell align="center" sx={{ width: '120px' }}>
+                <TableCell align="center" sx={{ width: '130px' }}>
                   Hành động
                 </TableCell>
               )}
