@@ -207,3 +207,48 @@
   height: 100%;
   object-fit: cover;
 }
+
+.community-manage-box {
+  margin-top: 16px;
+  padding: 16px 18px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #ffe6ef, #fff);
+  border: 1px solid #ffd1e2;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.community-manage-info h4 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #d63384;
+}
+
+.community-manage-info p {
+  margin: 6px 0 0;
+  font-size: 14px;
+  color: #555;
+  max-width: 520px;
+}
+
+.btn-manage {
+  background: #ff5fa2;
+  color: white;
+  border: none;
+  border-radius: 999px;
+  padding: 10px 18px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.btn-manage:hover {
+  background: #ff3d8f;
+  transform: translateY(-1px);
+}
