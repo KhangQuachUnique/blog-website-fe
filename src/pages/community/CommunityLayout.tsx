@@ -71,36 +71,83 @@ const CommunityLayout = () => {
         )}
       </div>
 
-      {/* TABS */}
-      <nav className="community-tabs">
-        <NavLink
-          to={`/community/${communityId}`}
-          end
-          className={({ isActive }) =>
-            "community-tab " + (isActive ? "community-tab-active" : "")
-          }
-        >
-          Bài viết
-        </NavLink>
+        {/* TABS */}
+        <nav className="community-tabs">
+            <NavLink
+            to={`/community/${communityId}`}
+            end
+            className={({ isActive }) =>
+                "community-tab " + (isActive ? "community-tab-active" : "")
+            }
+            >
+            Bài viết
+            </NavLink>
 
-        <NavLink
-          to={`/community/${communityId}/about`}
-          className={({ isActive }) =>
-            "community-tab " + (isActive ? "community-tab-active" : "")
-          }
-        >
-          Giới thiệu
-        </NavLink>
+            <NavLink
+            to={`/community/${communityId}/about`}
+            className={({ isActive }) =>
+                "community-tab " + (isActive ? "community-tab-active" : "")
+            }
+            >
+            Giới thiệu
+            </NavLink>
 
-        <NavLink
-          to={`/community/${communityId}/members`}
-          className={({ isActive }) =>
-            "community-tab " + (isActive ? "community-tab-active" : "")
-          }
-        >
-          Thành viên
-        </NavLink>
-      </nav>
+            <NavLink
+            to={`/community/${communityId}/members`}
+            className={({ isActive }) =>
+                "community-tab " + (isActive ? "community-tab-active" : "")
+            }
+            >
+            Thành viên
+            </NavLink>
+        </nav>
+
+        {/* CREATE POST BOX */}
+        {data.role !== "PENDING" && (
+        <div className="community-card" style={{ marginBottom: 20 }}>
+            <div style={{ display: "flex", gap: 12 }}>
+            {/* Avatar giả */}
+            <div
+                style={{
+                width: 42,
+                height: 42,
+                borderRadius: "50%",
+                background: "#ffd1e2",
+                flexShrink: 0,
+                }}
+            />
+
+            <button
+                onClick={() => console.log("Open create post modal")}
+                style={{
+                flex: 1,
+                textAlign: "left",
+                padding: "10px 16px",
+                borderRadius: 999,
+                border: "1px solid #ffe4f1",
+                background: "#fff",
+                color: "#777",
+                cursor: "pointer",
+                }}
+            >
+                Bạn đang nghĩ gì?
+            </button>
+            </div>
+
+            {/* Thông báo duyệt bài */}
+            {data.requirePostApproval && (
+            <div
+                style={{
+                marginTop: 10,
+                fontSize: 13,
+                color: "#d81b60",
+                }}
+            >
+            </div>
+            )}
+        </div>
+        )}
+
 
       {/* NỘI DUNG TAB */}
       <Outlet />
