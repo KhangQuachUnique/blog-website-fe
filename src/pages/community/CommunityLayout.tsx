@@ -31,9 +31,33 @@ const CommunityLayout = () => {
         <h1 style={{ fontSize: 30, fontWeight: 700 }}>{data.name}</h1>
         <p style={{ maxWidth: 700 }}>{data.description}</p>
 
-        <div style={{ marginTop: 8, fontSize: 14, color: "#666" }}>
-          Vai trò của bạn: <b>{role}</b>
+        <div
+            style={{
+                marginTop: 8,
+                fontSize: 14,
+                color: "#666",
+                display: "flex",
+                gap: 6,
+                flexWrap: "wrap",
+            }}
+            >
+            <span>
+                Vai trò: <b>{role}</b>
+            </span>
+
+            <span>•</span>
+
+            <span>
+                {data.isPublic ? "Công khai" : "Riêng tư"}
+            </span>
+
+            <span>•</span>
+
+            <span>
+                {data.memberCount} thành viên
+            </span>
         </div>
+
 
         {/* ADMIN / MOD → nút quản lý */}
         {isAdmin && (

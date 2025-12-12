@@ -69,7 +69,7 @@ const ManageLayout = () => {
       {/* TABS */}
       <nav className="community-tabs">
         <NavLink
-          to={`/community/${communityId}`}
+          to={`/community/${communityId}/manage`}
           end
           className={({ isActive }) =>
             "community-tab " + (isActive ? "community-tab-active" : "")
@@ -79,7 +79,7 @@ const ManageLayout = () => {
         </NavLink>
 
         <NavLink
-          to={`/community/${communityId}/posts`}
+          to={`/community/${communityId}/manage/posts`}
           className={({ isActive }) =>
             "community-tab " + (isActive ? "community-tab-active" : "")
           }
@@ -88,7 +88,7 @@ const ManageLayout = () => {
         </NavLink>
 
         <NavLink
-          to={`/community/${communityId}/members`}
+          to={`/community/${communityId}/manage/members`}
           className={({ isActive }) =>
             "community-tab " + (isActive ? "community-tab-active" : "")
           }

@@ -8,4 +8,5 @@ export interface CommunitySettings {
     requireMemberApproval: boolean;
     createdAt: string; 
     role: "ADMIN" | "MODERATOR" | "MEMBER" | "PENDING";
+    memberCount: number;
 }
