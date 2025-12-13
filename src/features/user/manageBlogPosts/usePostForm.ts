@@ -205,6 +205,20 @@ export const usePostForm = (options: UsePostFormOptions = {}) => {
     []
   );
 
+  // Auto-resize block height when content changes
+  const handleBlockHeightChange = useCallback(
+    (id: string, newHeight: number) => {
+      setLayout((prev) =>
+        prev.map((item) =>
+          item.i === id && item.h !== newHeight
+            ? { ...item, h: newHeight }
+            : item
+        )
+      );
+    },
+    []
+  );
+
   const handleDeleteBlock = useCallback(
     (id: string) => {
       setBlocks((prev) => prev.filter((block) => block.id !== id));
@@ -272,6 +286,7 @@ export const usePostForm = (options: UsePostFormOptions = {}) => {
     handleBlockContentChange,
     handleBlockCaptionChange,
     handleBlockObjectFitChange,
+    handleBlockHeightChange,
     handleDeleteBlock,
     handleAddBlock,
     handleGridDrop,

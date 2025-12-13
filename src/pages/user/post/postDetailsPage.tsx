@@ -1,219 +1,249 @@
+import React, { useEffect, useRef, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { useEffect, useRef, useState } from "react";
+import GridLayout from "react-grid-layout";
+
 import { useGetPostById } from "../../../hooks/usePost";
 import TextBlock from "../../../components/block/textBlock";
 import ImageBlock from "../../../components/block/imageBlock";
+
 import { EBlockType, ObjectFitType } from "../../../types/block";
-import GridLayout from "react-grid-layout";
+import type { IBlockResponseDto } from "../../../types/block";
+import type { IPostResponseDto } from "../../../types/post";
+
 import {
-	GRID_SETTINGS,
-	TITLE_SX,
-	SHORT_DESC_SX,
+  GRID_SETTINGS,
+  BLOCK_WRAPPER,
 } from "../../../features/user/manageBlogPosts/layoutConstants";
 
-const PostDetailsPage = () => {
-	const { id } = useParams();
-	const postId = Number(id ?? 0);
-	const formatDate = (dateString: string) => {
-		const date = new Date(dateString);
-		const now = new Date();
-		const diff = Math.floor((now.getTime() - date.getTime()) / 1000);
+// ============================================
+// Types
+// ============================================
+interface LayoutItem {
+  i: string;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
 
-		if (diff < 60) return "vừa xong";
-		if (diff < 3600) return `${Math.floor(diff / 60)} phút trước`;
-		if (diff < 86400) return `${Math.floor(diff / 3600)} giờ trước`;
-		if (diff < 604800) return `${Math.floor(diff / 86400)} ngày trước`;
-		return date.toLocaleDateString("vi-VN");
-	};
+// ============================================
+// Helper Functions
+// ============================================
+const formatDate = (dateInput: string | Date): string => {
+  const date = dateInput instanceof Date ? dateInput : new Date(dateInput);
+  const now = new Date();
+  const diff = Math.floor((now.getTime() - date.getTime()) / 1000);
 
-	const { data: post, isLoading, isError, error } = useGetPostById(postId);
+  if (diff < 60) return "vừa xong";
+  if (diff < 3600) return `${Math.floor(diff / 60)} phút trước`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)} giờ trước`;
+  if (diff < 604800) return `${Math.floor(diff / 86400)} ngày trước`;
+  return date.toLocaleDateString("vi-VN");
+};
 
-	// Measure container width so ResponsiveGridLayout width prop matches real size
-	const containerRef = useRef<HTMLDivElement | null>(null);
-	const [containerWidth, setContainerWidth] = useState<number>(800);
+const parseObjectFit = (value: unknown): ObjectFitType => {
+  if (!value) return ObjectFitType.COVER;
+  const normalized = String(value).toUpperCase();
+  if (normalized === "CONTAIN") return ObjectFitType.CONTAIN;
+  if (normalized === "FILL") return ObjectFitType.FILL;
+  return ObjectFitType.COVER;
+};
 
-	useEffect(() => {
-		if (!containerRef.current) return;
+// ============================================
+// Component
+// ============================================
+const PostDetailsPage: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
+  const postId = Number(id ?? 0);
 
-		// initialize
-		setContainerWidth(containerRef.current.clientWidth || 800);
+  // Fetch post data
+  const { data: postData, isLoading, isError, error } = useGetPostById(postId);
+  const post = postData as IPostResponseDto | undefined;
 
-		// use ResizeObserver when available (access via window to avoid TS 'new' errors)
-		let ro: any = null;
-		const ROCtor = (window as any).ResizeObserver;
-		if (typeof ROCtor !== "undefined" && ROCtor) {
-			ro = new ROCtor((entries: any) => {
-				const w = entries[0]?.contentRect?.width;
-				if (w) setContainerWidth(Math.round(w));
-			});
-			ro.observe(containerRef.current);
-		} else {
-			const onResize = () => {
-				if (containerRef.current) setContainerWidth(containerRef.current.clientWidth);
-			};
-			window.addEventListener("resize", onResize);
-			onResize();
-			return () => window.removeEventListener("resize", onResize);
-		}
+  // Container width for GridLayout
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [containerWidth, setContainerWidth] = useState<number>(GRID_SETTINGS.width);
 
-		return () => {
-			if (ro) ro.disconnect();
-		};
-	}, []);
+  useEffect(() => {
+    if (!containerRef.current) return;
 
-	if (!id || Number.isNaN(postId)) {
-		return <div className="p-6">Invalid post id</div>;
-	}
+    setContainerWidth(containerRef.current.clientWidth || GRID_SETTINGS.width);
 
-	if (isLoading) return <div className="p-6">Loading...</div>;
-	if (isError) return <div className="p-6">Error loading post: {String(error)}</div>;
+    const ROCtor = (window as unknown as { ResizeObserver?: typeof ResizeObserver }).ResizeObserver;
+    if (ROCtor) {
+      const ro = new ROCtor((entries) => {
+        const w = entries[0]?.contentRect?.width;
+        if (w) setContainerWidth(Math.round(w));
+      });
+      ro.observe(containerRef.current);
+      return () => ro.disconnect();
+    } else {
+      const onResize = () => {
+        if (containerRef.current) {
+          setContainerWidth(containerRef.current.clientWidth);
+        }
+      };
+      window.addEventListener("resize", onResize);
+      return () => window.removeEventListener("resize", onResize);
+    }
+  }, []);
 
-	if (!post) return <div className="p-6">Post not found</div>;
+  // ============================================
+  // Early returns
+  // ============================================
+  if (!id || Number.isNaN(postId)) {
+    return <div className="p-6 text-center text-gray-500">Invalid post id</div>;
+  }
 
-	// Blocks from backend include layout info: x, y, width, height
-	const blocks = post.blocks || [];
+  if (isLoading) {
+    return <div className="p-6 text-center text-gray-500">Đang tải...</div>;
+  }
 
-	// Grid configuration (keep in sync with editor)
-	const COLS = GRID_SETTINGS.cols;
+  if (isError) {
+    return <div className="p-6 text-center text-red-500">Lỗi: {String(error)}</div>;
+  }
 
+  if (!post) {
+    return <div className="p-6 text-center text-gray-500">Không tìm thấy bài viết</div>;
+  }
 
-	// Map blocks to react-grid-layout `layout` items using stable ids and clamped values
-	const layout = blocks.map((b) => {
-		const rawX = Math.floor(b.x);
-		const rawW = Math.floor(b.width);
+  // ============================================
+  // Prepare blocks & layout
+  // ============================================
+  const blocks: IBlockResponseDto[] = post.blocks ?? [];
+  const COLS = GRID_SETTINGS.cols;
 
-		const x = Math.max(0, Math.min(rawX, COLS - 1));
-		const wClamped = Math.max(1, Math.min(rawW, COLS));
+  const layout: LayoutItem[] = blocks.map((b) => {
+    const rawX = Math.floor(b.x);
+    const rawW = Math.floor(b.width);
 
-		// ensure x + w <= COLS
-		const w = x + wClamped > COLS ? Math.max(1, COLS - x) : wClamped;
+    const x = Math.max(0, Math.min(rawX, COLS - 1));
+    const wClamped = Math.max(1, Math.min(rawW, COLS));
+    const w = x + wClamped > COLS ? Math.max(1, COLS - x) : wClamped;
 
-		const baseH = Math.max(1, Math.floor(b.height));
-		// If image block has a caption, reserve an extra row so caption can be visible
-		const rawCaption = (b as any).imageCaption ?? (b as any).caption;
-		const hasCaption = Boolean(rawCaption && String(rawCaption).trim().length > 0 && b.type === EBlockType.IMAGE);
-		const h = baseH + (hasCaption ? 1 : 0);
+    const baseH = Math.max(1, Math.floor(b.height));
+    const hasCaption =
+      b.type === EBlockType.IMAGE &&
+      Boolean(b.imageCaption && String(b.imageCaption).trim().length > 0);
+    const h = baseH + (hasCaption ? 1 : 0);
 
-		return {
-			i: String(b.id),
-			x,
-			y: Math.max(0, Math.floor(b.y)),
-			w,
-			h,
-		};
-	});
+    return {
+      i: String(b.id),
+      x,
+      y: Math.max(0, Math.floor(b.y)),
+      w,
+      h,
+    };
+  });
 
-	// (normalizeLayout removed) layout is taken directly from backend positions
+  // ============================================
+  // Render
+  // ============================================
+  return (
+    <div className="w-full relative p-9 flex flex-col gap-4 items-center justify-center">
+      {/* Title & Short Description - same style as editPostForm */}
+      <div style={{ width: GRID_SETTINGS.width, padding: 12 }}>
+        {/* Title */}
+        <h1
+          className="w-full"
+          style={{
+            fontSize: "48px",
+            fontWeight: "bold",
+            fontFamily: "Quicksand, Mona Sans, Open Sans, Outfit, sans-serif",
+            overflowWrap: "break-word",
+          }}
+        >
+          {post.title}
+        </h1>
 
-	return (
-		<article className="max-w-5xl mx-auto p-10 border border-[#FFE4EC] rounded-2xl bg-white shadow-sm">
-			<header className="mb-6">
-				<h1 className="mb-2 whitespace-normal" style={{ ...(TITLE_SX as any), overflowWrap: "break-word" }}>{post.title}</h1>
-				<div className="flex items-center gap-3 text-sm text-gray-500 mb-4">
-					<img
-						src={post.author?.avatarUrl ?? "/assets/default-avatar.png"}
-						alt={post.author?.username ?? "avatar"}
-						className="w-10 h-10 rounded-full object-cover"
-					/>
-					<div>
-						<div>
-							Bởi <Link to="#" className="font-medium">{post.author?.username ?? "Người dùng"}</Link>
-						</div>
-						<div className="text-xs text-gray-400">{formatDate(String(post.createdAt))}</div>
-					</div>
-				</div>
-				{post.thumbnailUrl && (
-					<div className="mb-4">
-						<img src={post.thumbnailUrl} alt={post.title} className="w-full rounded-lg" />
-					</div>
-				)}
-				{post.shortDescription && (
-					<p className="mb-4" style={SHORT_DESC_SX as any}>{post.shortDescription}</p>
-				)}
-				{post.hashtags && post.hashtags.length > 0 && (
-					<div className="mb-4">
-						{post.hashtags.map((h) => (
-							<span key={h.id} className="mr-2 text-sm text-[#F295B6]">#{h.name}</span>
-						))}
-					</div>
-				)}
-			</header>
+        {/* Short Description */}
+        {post.shortDescription && (
+          <p
+            className="w-full"
+            style={{
+              fontSize: "18px",
+              fontStyle: "italic",
+              marginTop: "12px",
+              color: "#8c1d35",
+              fontFamily: "Quicksand, Mona Sans, Open Sans, Outfit, sans-serif",
+            }}
+          >
+            {post.shortDescription}
+          </p>
+        )}
 
-			<section className="mb-8">
-				{blocks.length === 0 && (
-					<div className="text-gray-500">Không có nội dung.</div>
-				)}
+        {/* Author Info */}
+        <div className="flex items-center gap-3 text-sm text-gray-500 mt-4">
+          <img
+            src={post.author?.avatarUrl ?? "/assets/default-avatar.png"}
+            alt={post.author?.username ?? "avatar"}
+            className="w-10 h-10 rounded-full object-cover"
+          />
+          <div>
+            <div>
+              Bởi{" "}
+              <Link to={`/user/${post.author?.id}`} className="font-medium text-[#F295B6] hover:underline">
+                {post.author?.username ?? "Người dùng"}
+              </Link>
+            </div>
+            <div className="text-xs text-gray-400">{formatDate(post.createdAt)}</div>
+          </div>
+        </div>
 
-				{blocks.length > 0 && (
-					<div className="w-[800px] mx-auto" ref={containerRef}>
-						<GridLayout
-							layout={layout}
-							cols={GRID_SETTINGS.cols}
-							rowHeight={GRID_SETTINGS.rowHeight}
-							width={containerWidth}
-							isDraggable={false}
-							isResizable={false}
-							draggableCancel=".rgl-no-drag"
-							isDroppable={false}
-							compactType={null}
-							margin={[20, 20]}
-							containerPadding={[0, 0]}
-						>
-								{blocks.map((block) => (
-									<div
-										key={block.id}
-										className={` rounded-lg border-[#FFE4EC] relative cursor-default bg-white`}
-									>
-											{block.type === EBlockType.TEXT ? (
-												<TextBlock id={String(block.id)} content={block.content || ""} />
-											) : (
-												(() => {
-													// derive image props: prefer explicit block fields, fallback to JSON-encoded content
-													let imageUrl: string | undefined = (block as any).content;
-													let caption: string | undefined = (block as any).imageCaption ?? (block as any).caption;
-													let objectFit = ObjectFitType.COVER;
-													// prefer top-level block.objectFit if present
-													try {
-														const topFit = (block as any).objectFit;
-														if (topFit) {
-															const r = String(topFit).toUpperCase();
-															if (r === "CONTAIN" || r === "COVER" || r === "FILL") {
-																objectFit = (ObjectFitType as any)[r];
-															}
-														}
-													} catch (e) {
-														// ignore
-													}
-													try {
-														if (imageUrl && (imageUrl.trim().startsWith("{") || imageUrl.trim().startsWith("["))) {
-															const parsed = JSON.parse(imageUrl);
-															if (parsed) {
-																if (parsed.url) imageUrl = parsed.url;
-																if (parsed.caption) caption = parsed.caption;
-																if (parsed.objectFit) {
-																	const raw = String(parsed.objectFit).toUpperCase();
-																	if (raw === "CONTAIN" || raw === "COVER" || raw === "FILL") {
-																		objectFit = (ObjectFitType as any)[raw];
-																	}
-																}
-															}
-														}
-													} catch (e) {
-														// ignore parse errors
-													}
-													return (
-														<ImageBlock id={String(block.id)} imageUrl={imageUrl} imageCaption={caption} objectFit={objectFit} />
-													);
-												})()
-											)}
-									</div>
-								))}
-							</GridLayout>
-						</div>
-				)}
-			</section>
-		</article>
-	);
+        {/* Hashtags */}
+        {post.hashtags && post.hashtags.length > 0 && (
+          <div className="mt-4 flex flex-wrap gap-2">
+            {post.hashtags.map((h) => (
+              <span
+                key={h.id}
+                className="text-sm text-[#F295B6] bg-[#FFF0F5] px-2 py-1 rounded-full"
+              >
+                #{h.name}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Grid Layout - same as editPostForm */}
+      <div style={{ width: GRID_SETTINGS.width }}>
+        {blocks.length === 0 ? (
+          <div className="text-gray-500 text-center py-8">Không có nội dung.</div>
+        ) : (
+          <div ref={containerRef} style={{ width: GRID_SETTINGS.width }}>
+            <GridLayout
+              layout={layout}
+              cols={GRID_SETTINGS.cols}
+              rowHeight={GRID_SETTINGS.rowHeight}
+              width={containerWidth}
+              isDraggable={false}
+              isResizable={false}
+              draggableCancel=".rgl-no-drag"
+              isDroppable={false}
+            >
+              {blocks.map((block) => (
+                <div
+                  key={block.id}
+                  className={`${BLOCK_WRAPPER.base} ${BLOCK_WRAPPER.default}`}
+                >
+                  {block.type === EBlockType.TEXT ? (
+                    <TextBlock id={String(block.id)} content={block.content || ""} />
+                  ) : (
+                    <ImageBlock
+                      id={String(block.id)}
+                      imageUrl={block.content}
+                      imageCaption={block.imageCaption}
+                      objectFit={parseObjectFit(block.objectFit)}
+                    />
+                  )}
+                </div>
+              ))}
+            </GridLayout>
+          </div>
+        )}
+      </div>
+    </div>
+  );
 };
 
 export default PostDetailsPage;
