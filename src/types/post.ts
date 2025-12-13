@@ -1,4 +1,4 @@
-import type { EBlockType, ICreateBlockDto } from "./block";
+import type { IBlockResponseDto, ICreateBlockDto } from "./block";
 
 export const EPostType = {
   PERSONAL: "PERSONAL",
@@ -59,16 +59,6 @@ export interface ICommunityDto {
 export interface IHashtagDto {
   id: number;
   name: string;
-}
-
-export interface IBlockResponseDto {
-  id: number;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  type: EBlockType;
-  content: string;
 }
 
 export interface IPostResponseDto {

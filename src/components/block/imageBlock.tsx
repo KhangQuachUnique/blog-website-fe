@@ -1,15 +1,17 @@
+import { ObjectFitType } from "../../types/block";
+
 interface ImageBlockProps {
   id: string;
   imageUrl?: string;
-  caption?: string;
-  objectFit?: "contain" | "cover" | "fill";
+  imageCaption?: string;
+  objectFit?: ObjectFitType;
 }
 
 const ImageBlock = ({
   id,
   imageUrl,
-  caption,
-  objectFit = "cover",
+  imageCaption,
+  objectFit = ObjectFitType.COVER,
 }: ImageBlockProps) => {
   if (!imageUrl) {
     return (
@@ -27,15 +29,17 @@ const ImageBlock = ({
       <div className="flex-1 overflow-hidden rounded-lg">
         <img
           src={imageUrl}
-          alt={caption || "Blog image"}
+          alt={imageCaption || "Blog image"}
           className="w-full h-full"
-          style={{ objectFit }}
+          style={{
+            objectFit: objectFit.toLowerCase() as "contain" | "cover" | "fill",
+          }}
           loading="lazy"
         />
       </div>
-      {caption && (
+      {imageCaption && (
         <figcaption className="mt-2 text-sm text-gray-600 italic text-center">
-          {caption}
+          {imageCaption}
         </figcaption>
       )}
     </figure>
