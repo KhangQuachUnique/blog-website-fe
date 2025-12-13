@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
-import { EBlockType } from "../../../types/block";
+import { EBlockType, ObjectFitType } from "../../../types/block";
 import type { IPostResponseDto } from "../../../types/post";
-import { useImageForm } from "../../../hooks/useImageForm";
+import { useImageForm } from "../../../hooks/useImage";
 
 /**
  * Types
@@ -16,13 +16,11 @@ export interface LayoutItem {
   minH?: number;
 }
 
-export type ObjectFitType = "contain" | "cover" | "fill";
-
 export interface BlockData {
   id: string;
   type: EBlockType;
   content?: string;
-  caption?: string;
+  imageCaption?: string;
   objectFit?: ObjectFitType;
 }
 
@@ -37,13 +35,13 @@ const DEFAULT_LAYOUT: LayoutItem[] = [
 ];
 
 const DEFAULT_BLOCKS: BlockData[] = [
-  { id: "1", type: EBlockType.TEXT, content: "<p>Nhập nội dung...</p>" },
+  { id: "1", type: EBlockType.TEXT },
   {
     id: "2",
     type: EBlockType.IMAGE,
     content: undefined,
-    caption: "",
-    objectFit: "cover",
+    imageCaption: "",
+    objectFit: ObjectFitType.COVER,
   },
 ];
 
@@ -53,9 +51,9 @@ const DEFAULT_BLOCKS: BlockData[] = [
 const createNewBlock = (id: string, type: EBlockType): BlockData => ({
   id,
   type,
-  content: type === EBlockType.TEXT ? "<p>Nhập nội dung...</p>" : undefined,
-  caption: type === EBlockType.IMAGE ? "" : undefined,
-  objectFit: type === EBlockType.IMAGE ? "cover" : undefined,
+  content: type === EBlockType.TEXT ? "" : undefined,
+  imageCaption: type === EBlockType.IMAGE ? "" : undefined,
+  objectFit: type === EBlockType.IMAGE ? ObjectFitType.COVER : undefined,
 });
 
 /**
@@ -98,8 +96,9 @@ const mapPostToBlocks = (post: IPostResponseDto): BlockData[] => {
     id: String(index + 1),
     type: block.type,
     content: block.content,
-    caption: block.type === EBlockType.IMAGE ? "" : undefined,
-    objectFit: block.type === EBlockType.IMAGE ? "cover" : undefined,
+    imageCaption:
+      block.type === EBlockType.IMAGE ? block.imageCaption : undefined,
+    objectFit: block.type === EBlockType.IMAGE ? block.objectFit : undefined,
   }));
 };
 
@@ -186,10 +185,13 @@ export const usePostForm = (options: UsePostFormOptions = {}) => {
   );
 
   const handleBlockCaptionChange = useCallback(
-    (id: string, caption: string) => {
+    (id: string, imageCaption: string) => {
       setBlocks((prev) =>
-        prev.map((block) => (block.id === id ? { ...block, caption } : block))
+        prev.map((block) =>
+          block.id === id ? { ...block, imageCaption } : block
+        )
       );
+      console.log("Caption changed");
     },
     []
   );
