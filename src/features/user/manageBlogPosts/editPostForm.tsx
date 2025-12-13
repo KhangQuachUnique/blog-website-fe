@@ -76,6 +76,7 @@ const EditPostForm = ({
     handleBlockContentChange,
     handleBlockCaptionChange,
     handleBlockObjectFitChange,
+    handleBlockHeightChange,
     handleDeleteBlock,
     handleAddBlock,
     handleGridDrop,
@@ -247,7 +248,7 @@ const EditPostForm = ({
       <BlockSidebar onAddBlock={handleAddBlock} />
 
       {/* Title & Description */}
-      <div className={`w-[${GRID_SETTINGS.width}px] p-3`}>
+      <div style={{ width: GRID_SETTINGS.width, padding: 12 }}>
         <InputBase
           placeholder="Nhập tiêu đề bài viết..."
           className="w-full"
@@ -279,7 +280,7 @@ const EditPostForm = ({
       </div>
 
       {/* Grid Layout */}
-      <div className={`w-[${GRID_SETTINGS.width}px]`}>
+      <div style={{ width: GRID_SETTINGS.width, margin: '0 auto' }}>
         <GridLayout
           layout={layout}
           onLayoutChange={(newLayout) =>
@@ -309,6 +310,7 @@ const EditPostForm = ({
                   onContentChange={(newContent) =>
                     handleBlockContentChange(block.id, newContent)
                   }
+                  onHeightChange={handleBlockHeightChange}
                   style={isCtrlPressed ? { pointerEvents: "none" } : {}}
                 />
               ) : (
