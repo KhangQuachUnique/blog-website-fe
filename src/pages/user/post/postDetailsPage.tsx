@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { useGetPostById } from "../../../hooks/usePost";
 import TextBlock from "../../../components/block/textBlock";
 import ImageBlock from "../../../components/block/imageBlock";
-import { EBlockType } from "../../../types/block";
+import { EBlockType, ObjectFitType } from "../../../types/block";
 import GridLayout from "react-grid-layout";
 import {
 	GRID_SETTINGS,
@@ -90,7 +90,8 @@ const PostDetailsPage = () => {
 
 		const baseH = Math.max(1, Math.floor(b.height));
 		// If image block has a caption, reserve an extra row so caption can be visible
-		const hasCaption = Boolean((b as any).caption && String((b as any).caption).trim().length > 0 && b.type === EBlockType.IMAGE);
+		const rawCaption = (b as any).imageCaption ?? (b as any).caption;
+		const hasCaption = Boolean(rawCaption && String(rawCaption).trim().length > 0 && b.type === EBlockType.IMAGE);
 		const h = baseH + (hasCaption ? 1 : 0);
 
 		return {
@@ -107,7 +108,7 @@ const PostDetailsPage = () => {
 	return (
 		<article className="max-w-5xl mx-auto p-10 border border-[#FFE4EC] rounded-2xl bg-white shadow-sm">
 			<header className="mb-6">
-				<h1 className="mb-2 break-words" style={{ ...(TITLE_SX as any), overflowWrap: "break-word" }}>{post.title}</h1>
+				<h1 className="mb-2 whitespace-normal" style={{ ...(TITLE_SX as any), overflowWrap: "break-word" }}>{post.title}</h1>
 				<div className="flex items-center gap-3 text-sm text-gray-500 mb-4">
 					<img
 						src={post.author?.avatarUrl ?? "/assets/default-avatar.png"}
@@ -169,22 +170,39 @@ const PostDetailsPage = () => {
 												(() => {
 													// derive image props: prefer explicit block fields, fallback to JSON-encoded content
 													let imageUrl: string | undefined = (block as any).content;
-													let caption: string | undefined = (block as any).caption;
-													let objectFit: "contain" | "cover" | "fill" = (block as any).objectFit ?? "cover";
+													let caption: string | undefined = (block as any).imageCaption ?? (block as any).caption;
+													let objectFit = ObjectFitType.COVER;
+													// prefer top-level block.objectFit if present
+													try {
+														const topFit = (block as any).objectFit;
+														if (topFit) {
+															const r = String(topFit).toUpperCase();
+															if (r === "CONTAIN" || r === "COVER" || r === "FILL") {
+																objectFit = (ObjectFitType as any)[r];
+															}
+														}
+													} catch (e) {
+														// ignore
+													}
 													try {
 														if (imageUrl && (imageUrl.trim().startsWith("{") || imageUrl.trim().startsWith("["))) {
 															const parsed = JSON.parse(imageUrl);
 															if (parsed) {
 																if (parsed.url) imageUrl = parsed.url;
 																if (parsed.caption) caption = parsed.caption;
-																if (parsed.objectFit) objectFit = parsed.objectFit;
+																if (parsed.objectFit) {
+																	const raw = String(parsed.objectFit).toUpperCase();
+																	if (raw === "CONTAIN" || raw === "COVER" || raw === "FILL") {
+																		objectFit = (ObjectFitType as any)[raw];
+																	}
+																}
 															}
 														}
 													} catch (e) {
 														// ignore parse errors
 													}
 													return (
-														<ImageBlock id={String(block.id)} imageUrl={imageUrl} caption={caption} objectFit={objectFit} />
+														<ImageBlock id={String(block.id)} imageUrl={imageUrl} imageCaption={caption} objectFit={objectFit} />
 													);
 												})()
 											)}

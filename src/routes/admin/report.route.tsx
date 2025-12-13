@@ -1,4 +1,4 @@
-import ReportListPage from "../../pages/admin/reportManage/ReportListPage";
+import ReportListPage from "../../pages/admin/reportManage/reportListPage";
 
 const adminReportRoutes = [
   {

@@ -3,8 +3,6 @@ import GridLayout from "react-grid-layout";
 import { InputBase } from "@mui/material";
 import {
   GRID_SETTINGS,
-  TITLE_SX,
-  SHORT_DESC_SX,
   BLOCK_WRAPPER,
   BUTTON_STYLE_OUTLINE,
   BUTTON_STYLE_PRIMARY,
@@ -16,7 +14,7 @@ import DeleteConfirmButton from "../../../components/deleteConfirmButton";
 import CustomButton from "../../../components/button";
 import BlockSidebar from "./components/blockSidebar";
 import ConfigDialog from "./components/configDialog";
-import { EBlockType } from "../../../types/block";
+import { EBlockType, type ICreateBlockDto } from "../../../types/block";
 import { usePostForm, type LayoutItem } from "./usePostForm";
 import type {
   IPostResponseDto,
@@ -119,7 +117,7 @@ const EditPostForm = ({
    * Build DTOs
    */
   const buildBlocksDto = useCallback(
-    (imageUrls: Record<string, string>) => {
+    (imageUrls: Record<string, string>): ICreateBlockDto[] => {
       return blocks.map((block) => {
         const layoutItem = layout.find((item) => item.i === block.id);
 
@@ -139,7 +137,8 @@ const EditPostForm = ({
           height: layoutItem?.h ?? 6,
           type: block.type,
           content,
-              caption: block.type === EBlockType.IMAGE ? (block.caption as any) : undefined,
+          imageCaption: block.imageCaption,
+          objectFit: block.objectFit,
         };
       });
     },
@@ -255,7 +254,12 @@ const EditPostForm = ({
           multiline
           value={title}
           onChange={handleTitleChange}
-          sx={TITLE_SX}
+          sx={{
+            fontSize: "48px",
+            fontWeight: "bold",
+            fontFamily: "Quicksand, Mona Sans, Open Sans, Outfit, sans-serif",
+          }}
+          spellCheck={false}
         />
         <InputBase
           placeholder="Nhập mô tả ngắn về bài viết..."
@@ -263,7 +267,14 @@ const EditPostForm = ({
           multiline
           value={shortDescription}
           onChange={handleShortDescriptionChange}
-          sx={SHORT_DESC_SX}
+          sx={{
+            fontSize: "18px",
+            fontStyle: "italic",
+            marginTop: "12px",
+            color: "#8c1d35",
+            fontFamily: "Quicksand, Mona Sans, Open Sans, Outfit, sans-serif",
+          }}
+          spellCheck={false}
         />
       </div>
 
@@ -304,12 +315,12 @@ const EditPostForm = ({
                 <ImageBlock
                   id={block.id}
                   imageUrl={block.content}
-                  caption={block.caption}
+                  imageCaption={block.imageCaption}
                   objectFit={block.objectFit}
                   handleAppendImageForm={handleAppendImageForm}
                   handleRemoveImageForm={handleRemoveImageForm}
                   onImageChange={(id, url) => handleBlockContentChange(id, url)}
-                  onCaptionChange={(id, caption) =>
+                  onImageCaptionChange={(id, caption) =>
                     handleBlockCaptionChange(id, caption)
                   }
                   onObjectFitChange={(id, objectFit) =>
