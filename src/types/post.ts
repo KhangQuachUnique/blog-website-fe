@@ -61,6 +61,7 @@ export interface IHashtagDto {
   name: string;
 }
 
+
 export interface IPostResponseDto {
   id: number;
   title: string;
