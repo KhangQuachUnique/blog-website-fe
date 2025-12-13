@@ -8,7 +8,7 @@ import DeleteConfirmButton from "../../../components/deleteConfirmButton";
 import CustomButton from "../../../components/button";
 import BlockSidebar from "./components/blockSidebar";
 import ConfigDialog from "./components/configDialog";
-import { EBlockType } from "../../../types/block";
+import { EBlockType, type ICreateBlockDto } from "../../../types/block";
 import { usePostForm, type LayoutItem } from "./usePostForm";
 import type {
   IPostResponseDto,
@@ -111,7 +111,7 @@ const EditPostForm = ({
    * Build DTOs
    */
   const buildBlocksDto = useCallback(
-    (imageUrls: Record<string, string>) => {
+    (imageUrls: Record<string, string>): ICreateBlockDto[] => {
       return blocks.map((block) => {
         const layoutItem = layout.find((item) => item.i === block.id);
 
@@ -131,6 +131,8 @@ const EditPostForm = ({
           height: layoutItem?.h ?? 6,
           type: block.type,
           content,
+          imageCaption: block.imageCaption,
+          objectFit: block.objectFit,
         };
       });
     },
@@ -307,12 +309,12 @@ const EditPostForm = ({
                 <ImageBlock
                   id={block.id}
                   imageUrl={block.content}
-                  caption={block.caption}
+                  imageCaption={block.imageCaption}
                   objectFit={block.objectFit}
                   handleAppendImageForm={handleAppendImageForm}
                   handleRemoveImageForm={handleRemoveImageForm}
                   onImageChange={(id, url) => handleBlockContentChange(id, url)}
-                  onCaptionChange={(id, caption) =>
+                  onImageCaptionChange={(id, caption) =>
                     handleBlockCaptionChange(id, caption)
                   }
                   onObjectFitChange={(id, objectFit) =>
