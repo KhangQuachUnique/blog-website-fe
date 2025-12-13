@@ -1,4 +1,4 @@
-import { NavLink, Outlet, useParams, useNavigate } from "react-router-dom";
+import { NavLink, Outlet, useParams, useNavigate, useLocation } from "react-router-dom";
 import { useGetCommunitySettings } from "../../hooks/useCommunity";
 import "../../styles/community.css";
 
@@ -6,6 +6,7 @@ const CommunityLayout = () => {
   const { id } = useParams();
   const communityId = Number(id);
   const navigate = useNavigate();
+  const location = useLocation();
 
   const { data, isLoading } = useGetCommunitySettings(communityId);
 
@@ -18,6 +19,10 @@ const CommunityLayout = () => {
   const coverSrc =
     data.thumbnailUrl ??
     "https://via.placeholder.com/1200x300?text=Community+Cover";
+
+  // ✅ chỉ hiện ở tab Bài viết (index)
+  const basePath = `/community/${communityId}`;
+  const isPostsTab = location.pathname === basePath;
 
   return (
     <div className="community-page">
@@ -32,34 +37,24 @@ const CommunityLayout = () => {
         <p style={{ maxWidth: 700 }}>{data.description}</p>
 
         <div
-            style={{
-                marginTop: 8,
-                fontSize: 14,
-                color: "#666",
-                display: "flex",
-                gap: 6,
-                flexWrap: "wrap",
-            }}
-            >
-            <span>
-                Vai trò: <b>{role}</b>
-            </span>
-
-            <span>•</span>
-
-            <span>
-                {data.isPublic ? "Công khai" : "Riêng tư"}
-            </span>
-
-            <span>•</span>
-
-            <span>
-                {data.memberCount} thành viên
-            </span>
+          style={{
+            marginTop: 8,
+            fontSize: 14,
+            color: "#666",
+            display: "flex",
+            gap: 6,
+            flexWrap: "wrap",
+          }}
+        >
+          <span>
+            Vai trò: <b>{role}</b>
+          </span>
+          <span>•</span>
+          <span>{data.isPublic ? "Công khai" : "Riêng tư"}</span>
+          <span>•</span>
+          <span>{data.memberCount} thành viên</span>
         </div>
 
-
-        {/* ADMIN / MOD → nút quản lý */}
         {isAdmin && (
           <button
             onClick={() => navigate(`/community/${communityId}/manage`)}
@@ -71,55 +66,54 @@ const CommunityLayout = () => {
         )}
       </div>
 
-        {/* TABS */}
-        <nav className="community-tabs">
-            <NavLink
-            to={`/community/${communityId}`}
-            end
-            className={({ isActive }) =>
-                "community-tab " + (isActive ? "community-tab-active" : "")
-            }
-            >
-            Bài viết
-            </NavLink>
+      {/* TABS */}
+      <nav className="community-tabs">
+        <NavLink
+          to={`/community/${communityId}`}
+          end
+          className={({ isActive }) =>
+            "community-tab " + (isActive ? "community-tab-active" : "")
+          }
+        >
+          Bài viết
+        </NavLink>
 
-            <NavLink
-            to={`/community/${communityId}/about`}
-            className={({ isActive }) =>
-                "community-tab " + (isActive ? "community-tab-active" : "")
-            }
-            >
-            Giới thiệu
-            </NavLink>
+        <NavLink
+          to={`/community/${communityId}/about`}
+          className={({ isActive }) =>
+            "community-tab " + (isActive ? "community-tab-active" : "")
+          }
+        >
+          Giới thiệu
+        </NavLink>
 
-            <NavLink
-            to={`/community/${communityId}/members`}
-            className={({ isActive }) =>
-                "community-tab " + (isActive ? "community-tab-active" : "")
-            }
-            >
-            Thành viên
-            </NavLink>
-        </nav>
+        <NavLink
+          to={`/community/${communityId}/members`}
+          className={({ isActive }) =>
+            "community-tab " + (isActive ? "community-tab-active" : "")
+          }
+        >
+          Thành viên
+        </NavLink>
+      </nav>
 
-        {/* CREATE POST BOX */}
-        {data.role !== "PENDING" && (
+      {/* ✅ CREATE POST BOX: chỉ hiện ở tab Bài viết */}
+      {isPostsTab && data.role !== "PENDING" && (
         <div className="community-card" style={{ marginBottom: 20 }}>
-            <div style={{ display: "flex", gap: 12 }}>
-            {/* Avatar giả */}
+          <div style={{ display: "flex", gap: 12 }}>
             <div
-                style={{
+              style={{
                 width: 42,
                 height: 42,
                 borderRadius: "50%",
                 background: "#ffd1e2",
                 flexShrink: 0,
-                }}
+              }}
             />
 
             <button
-                onClick={() => console.log("Open create post modal")}
-                style={{
+              onClick={() => console.log("Open create post modal")}
+              style={{
                 flex: 1,
                 textAlign: "left",
                 padding: "10px 16px",
@@ -128,28 +122,24 @@ const CommunityLayout = () => {
                 background: "#fff",
                 color: "#777",
                 cursor: "pointer",
-                }}
+              }}
             >
-                Bạn đang nghĩ gì?
+              Bạn đang nghĩ gì?
             </button>
-            </div>
+          </div>
 
-            {/* Thông báo duyệt bài */}
-            {data.requirePostApproval && (
+          {data.requirePostApproval && (
             <div
-                style={{
+              style={{
                 marginTop: 10,
                 fontSize: 13,
                 color: "#d81b60",
-                }}
-            >
-            </div>
-            )}
+              }}
+            />
+          )}
         </div>
-        )}
+      )}
 
-
-      {/* NỘI DUNG TAB */}
       <Outlet />
     </div>
   );
