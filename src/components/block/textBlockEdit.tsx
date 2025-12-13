@@ -87,7 +87,7 @@ const TextBlockEdit = ({
         heading: { levels: [1, 2, 3] },
       }),
       Placeholder.configure({
-        placeholder: "Nhập nội dung...",
+        placeholder: "Viết câu chuyện của bạn...",
       }),
       Underline,
       TextAlign.configure({

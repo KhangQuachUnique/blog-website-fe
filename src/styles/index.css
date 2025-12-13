@@ -14,3 +14,11 @@
   opacity: 0.3 !important;
   border-radius: 10px !important;
 }
+
+.ProseMirror p.is-editor-empty::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: #9ca3af; /* gray-400 */
+  pointer-events: none;
+  height: 0;
+}

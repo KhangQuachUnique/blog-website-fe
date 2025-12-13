@@ -35,7 +35,7 @@ const DEFAULT_LAYOUT: LayoutItem[] = [
 ];
 
 const DEFAULT_BLOCKS: BlockData[] = [
-  { id: "1", type: EBlockType.TEXT, content: "<p>Nhập nội dung...</p>" },
+  { id: "1", type: EBlockType.TEXT },
   {
     id: "2",
     type: EBlockType.IMAGE,

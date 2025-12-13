@@ -253,6 +253,7 @@ const EditPostForm = ({
             fontWeight: "bold",
             fontFamily: "Quicksand, Mona Sans, Open Sans, Outfit, sans-serif",
           }}
+          spellCheck={false}
         />
         <InputBase
           placeholder="Nhập mô tả ngắn về bài viết..."
@@ -267,6 +268,7 @@ const EditPostForm = ({
             color: "#8c1d35",
             fontFamily: "Quicksand, Mona Sans, Open Sans, Outfit, sans-serif",
           }}
+          spellCheck={false}
         />
       </div>
 
