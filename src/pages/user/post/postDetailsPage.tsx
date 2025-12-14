@@ -6,6 +6,7 @@ import { useGetPostById } from "../../../hooks/usePost";
 import TextBlock from "../../../components/block/textBlock";
 import ImageBlock from "../../../components/block/imageBlock";
 import { CommentsSection } from "../../../components/comments/CommentsSection";
+import { BlockCommentsSidebar } from "../../../components/comments/BlockCommentsSidebar"; // [NEW] Import Sidebar
 import { useAuthUser } from '../../../hooks/useAuth';
 
 import { EBlockType, ObjectFitType } from "../../../types/block";
@@ -67,6 +68,9 @@ const PostDetailsPage: React.FC = () => {
   const [containerWidth, setContainerWidth] = useState<number>(
     GRID_SETTINGS.width
   );
+  
+  // [NEW] State quản lý block ảnh đang được chọn để bình luận
+  const [selectedBlock, setSelectedBlock] = useState<{ id: number; url: string } | null>(null);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -96,6 +100,18 @@ const PostDetailsPage: React.FC = () => {
 
   // Current logged in user (for comments)
   const { user: currentUser } = useAuthUser();
+  
+  // Normalize user object for comments components
+  const normalizedUser = currentUser ? { 
+    id: currentUser.id, 
+    username: currentUser.username, 
+    avatarUrl: currentUser.avatarUrl 
+  } : undefined;
+
+  // [NEW] Handler click vào ảnh
+  const handleImageClick = (blockId: number, imageUrl: string) => {
+    setSelectedBlock({ id: blockId, url: imageUrl });
+  };
 
   // ============================================
   // Early returns
@@ -156,7 +172,7 @@ const PostDetailsPage: React.FC = () => {
   // ============================================
   return (
     <div className="w-full relative p-9 flex flex-col gap-4 items-center justify-center">
-      {/* Title & Short Description - same style as editPostForm */}
+      {/* Title & Short Description */}
       <div style={{ width: GRID_SETTINGS.width, padding: 12 }}>
         {/* Title */}
         <h1
@@ -225,7 +241,7 @@ const PostDetailsPage: React.FC = () => {
         )}
       </div>
 
-      {/* Grid Layout - same as editPostForm */}
+      {/* Grid Layout */}
       <div style={{ width: GRID_SETTINGS.width }}>
         {blocks.length === 0 ? (
           <div className="text-gray-500 text-center py-8">
@@ -243,38 +259,68 @@ const PostDetailsPage: React.FC = () => {
               draggableCancel=".rgl-no-drag"
               isDroppable={false}
             >
-              {blocks.map((block) => (
-                <div
-                  key={block.id}
-                  className={`${BLOCK_WRAPPER.readMode} ${BLOCK_WRAPPER.default}`}
-                >
-                  {block.type === EBlockType.TEXT ? (
-                    <TextBlock
-                      id={String(block.id)}
-                      content={block.content || ""}
-                    />
-                  ) : (
-                    <ImageBlock
-                      id={String(block.id)}
-                      imageUrl={block.content}
-                      imageCaption={block.imageCaption}
-                      objectFit={parseObjectFit(block.objectFit)}
-                    />
-                  )}
-                </div>
-              ))}
+              {blocks.map((block) => {
+                const isImage = block.type === EBlockType.IMAGE;
+                
+                return (
+                  <div
+                    key={block.id}
+                    className={`
+                      ${BLOCK_WRAPPER.readMode} 
+                      ${BLOCK_WRAPPER.default}
+                      ${isImage ? 'cursor-pointer group hover:ring-2 hover:ring-blue-300 transition-all' : ''}
+                    `}
+                    // [NEW] Sự kiện click mở Sidebar cho ảnh
+                    onClick={(e) => {
+                      if (isImage) {
+                        e.stopPropagation();
+                        handleImageClick(block.id, block.content);
+                      }
+                    }}
+                  >
+                    {block.type === EBlockType.TEXT ? (
+                      <TextBlock
+                        id={String(block.id)}
+                        content={block.content || ""}
+                      />
+                    ) : (
+                      <>
+                        <ImageBlock
+                          id={String(block.id)}
+                          imageUrl={block.content}
+                          imageCaption={block.imageCaption}
+                          objectFit={parseObjectFit(block.objectFit)}
+                        />
+                        {/* [NEW] Overlay hint khi hover vào ảnh */}
+                        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-black/60 text-white text-xs px-2 py-1 rounded-full pointer-events-none z-10 flex items-center gap-1">
+                          <span>💬 Bình luận</span>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                );
+              })}
             </GridLayout>
           </div>
         )}
       </div>
 
-      {/* Comments Section */}
+      {/* Post Comments Section */}
       <div style={{ width: GRID_SETTINGS.width, marginTop: 32 }}>
         <CommentsSection
           postId={post.id}
-          currentUser={currentUser ? { id: currentUser.id, username: currentUser.username, avatarUrl: currentUser.avatarUrl } : undefined}
+          currentUser={normalizedUser}
         />
       </div>
+
+      {/* [NEW] Sidebar Comments cho từng Block */}
+      <BlockCommentsSidebar
+        isOpen={!!selectedBlock}
+        onClose={() => setSelectedBlock(null)}
+        blockId={selectedBlock?.id || 0}
+        imageUrl={selectedBlock?.url}
+        currentUser={normalizedUser}
+      />
     </div>
   );
 };
