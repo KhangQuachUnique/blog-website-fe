@@ -2427,7 +2427,9 @@ export interface operations {
     };
     CommentsController_findByPost: {
         parameters: {
-            query?: never;
+            query: {
+                sortBy: string;
+            };
             header?: never;
             path: {
                 postId: number;

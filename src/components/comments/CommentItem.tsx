@@ -30,9 +30,9 @@ export const CommentItem: React.FC<CommentItemProps> = ({
 
   const handleReply = async (content: string) => {
     if (!currentUserId) return;
-    
     try {
-      await onReply(comment.id, content);
+      // Truyền thêm comment.commenter.id vào tham số thứ 3
+      await onReply(comment.id, content, comment.commenter.id);
       setShowReplyForm(false);
       setShowReplies(true);
     } catch (error) {

@@ -72,7 +72,7 @@ export const useComments = (postId?: number, blockId?: number) => {
     }
   };
 
-  // Tạo reply (child comment)
+  // Tạo reply (child comment) - ĐÃ CẬP NHẬT LOGIC TÌM NGƯỜI NHẬN
   const createReply = async (
     parentCommentId: number,
     content: string,
@@ -100,26 +100,32 @@ export const useComments = (postId?: number, blockId?: number) => {
         prev.map(comment => {
           if (comment.id !== parentCommentId) return comment;
 
-          // Tìm user object của replyToUserId trong comments hoặc childComments
+          // --- LOGIC MỚI: TÌM THÔNG TIN NGƯỜI ĐƯỢC TRẢ LỜI ---
           let replyToUserObj = undefined;
-          if (replyToUserId) {
-            // Tìm trong comment.childComments
-            for (const child of comment.childComments) {
-              if (child.commentUser.id === replyToUserId) {
-                replyToUserObj = child.commentUser;
-                break;
-              }
-            }
-            // Nếu không thấy, tìm trong toàn bộ comments
-            if (!replyToUserObj) {
-              for (const cmt of prev) {
-                if (cmt.commenter.id === replyToUserId) {
-                  replyToUserObj = cmt.commenter;
-                  break;
-                }
+
+          // 1. Nếu Backend trả về sẵn thông tin người nhận, dùng luôn (Ưu tiên cao nhất)
+          if (newReply.replyToUser) {
+            replyToUserObj = newReply.replyToUser;
+          } 
+          // 2. Nếu không, tìm thủ công ở Client dựa trên ID đã truyền vào
+          else if (replyToUserId) {
+            // Case A: Reply chính người viết comment gốc (Parent)
+            if (comment.commenter.id === replyToUserId) {
+              replyToUserObj = comment.commenter;
+            } 
+            // Case B: Reply một child comment khác trong cùng thread
+            else {
+              // Tìm trong danh sách childComments hiện tại
+              const foundChild = comment.childComments.find(
+                c => c.commentUser?.id === replyToUserId || (c as any).commenter?.id === replyToUserId
+              );
+              
+              if (foundChild) {
+                replyToUserObj = foundChild.commentUser || (foundChild as any).commenter;
               }
             }
           }
+          // --- KẾT THÚC LOGIC TÌM NGƯỜI NHẬN ---
 
           return {
             ...comment,
@@ -129,8 +135,9 @@ export const useComments = (postId?: number, blockId?: number) => {
                 id: newReply.id,
                 content: newReply.content,
                 createAt: newReply.createAt,
-                commentUser: newReply.commenter,
-                replyToUser: replyToUserObj
+                // Xử lý field user trả về từ BE có thể không đồng nhất
+                commentUser: newReply.commenter || (newReply as any).commentUser, 
+                replyToUser: replyToUserObj // Đã có object user, UI sẽ hiển thị mũi tên ->
               }
             ],
             childCommentsCount: comment.childCommentsCount + 1
@@ -197,7 +204,7 @@ export const useComments = (postId?: number, blockId?: number) => {
     totalCount,
     loadComments,
     createComment,
-    createReply, // Export createReply separately
+    createReply,
     deleteComment,
     deleteReply,
     changeSortBy
