@@ -309,7 +309,7 @@ const ConfigDialog: FC<ConfigDialogProps> = ({
             fontWeight: "600",
           }}
         >
-          {isLoading ? "Đang xử lý..." : confirmButtonText || "Đăng bài"}
+          {isLoading ? "..." : confirmButtonText || "Đăng bài"}
         </CustomButton>
       </DialogActions>
     </Dialog>

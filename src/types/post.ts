@@ -1,4 +1,4 @@
-import type { EBlockType, ICreateBlockDto } from "./block";
+import type { IBlockResponseDto, ICreateBlockDto } from "./block";
 
 export const EPostType = {
   PERSONAL: "PERSONAL",
@@ -61,15 +61,6 @@ export interface IHashtagDto {
   name: string;
 }
 
-export interface IBlockResponseDto {
-  id: number;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  type: EBlockType;
-  content: string;
-}
 
 export interface IPostResponseDto {
   id: number;
@@ -89,4 +80,14 @@ export interface IPostResponseDto {
   downVotes: number;
   totalComments: number;
   totalReacts: number;
+}
+
+export interface BlogPost {
+  id: number;
+  title: string;
+  status: EBlogPostStatus;
+  createdAt: string;
+  thumbnailUrl?: string | null;
+  upVotes?: number | null;
+  downVotes?: number | null;
 }

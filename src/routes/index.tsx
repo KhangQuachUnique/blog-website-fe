@@ -10,6 +10,7 @@ import manageBlogPostsRoutes from "./user/manageBlogPosts.route";
 import HomePage from "../pages/home/HomePage";
 import newsfeedRoutes from "./user/newsfeed.route";
 import { SearchResultPage } from "../pages/search/searchResultsPage";
+import PostDetailsPage from "../pages/user/post/postDetailsPage";
 
 export const router = createBrowserRouter([
   {
@@ -23,6 +24,8 @@ export const router = createBrowserRouter([
       {
         path: "search",
         element: <SearchResultPage />,
+        path: "/post/:id",
+        element: <PostDetailsPage />,
       },
       ...manageBlogPostsRoutes,
       ...newsfeedRoutes,
