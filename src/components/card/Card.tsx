@@ -6,6 +6,7 @@ import { recordViewedPost } from '../../services/user/viewedHistory';
 import { useAuth } from "../../contexts/AuthContext";
 import { useGetPostById } from "../../hooks/usePost";
 import "../../styles/newsfeed/Card.css";
+import { Repeat2 } from "lucide-react";
 
 const Card = ({ post }: { post: IPostResponseDto }) => {
   const { user } = useAuth();
@@ -34,140 +35,164 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
     <>
       {/* REPOST layout */}
       {isRepost ? (
-        <article style={{ 
-          border: "1px solid #e5e7eb", 
-          borderRadius: "8px", 
-          overflow: "hidden",
-          backgroundColor: "#fff",
-          display: "flex",
-          flexDirection: "column"
-        }}>
-          {/* Repost Header - Compact */}
-          <Link
-            to={`/post/${post.id}`}
-            style={{
-              padding: "8px 12px",
-              backgroundColor: "#f9fafb",
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              fontSize: "12px",
-              color: "#6b7280",
-              borderBottom: "1px solid #e5e7eb",
-              textDecoration: "none",
-              cursor: "pointer"
-            }}
-            onClick={() => {
-              if (user && user.id) recordViewedPost(post.id);
-            }}
-          >
-            <img
-              src={post.author.avatarUrl}
-              alt={post.author.username}
-              style={{ 
-                width: "24px", 
-                height: "24px", 
-                borderRadius: "50%",
-                flexShrink: 0
-              }}
-            />
-            <span 
-              style={{ 
-                fontWeight: "500",
-                color: "#1f2937"
-              }}
-            >
-              {post.author.username}
-            </span>
-            <div style={{ display: "flex", alignItems: "center", gap: "2px" }}>
-              <img 
-                src="/icons8-repost.png" 
-                alt="repost" 
-                style={{ width: "12px", height: "12px" }}
-              />
-              <span>chia sẻ</span>
-            </div>
-          </Link>
-
-          {/* Main Content - 2 cột (thumbnail + content) */}
-          <div style={{ display: "flex", flex: 1 }}>
-            {/* Thumbnail bên trái */}
-            {original?.thumbnailUrl && (
-              <Link
-                to={`/post/${original.id}`}
-                style={{ 
-                  display: "block",
-                  textDecoration: "none",
-                  color: "inherit",
-                  flexShrink: 0
-                }}
-                onClick={() => {
-                  if (user && user.id) recordViewedPost(original.id);
-                }}
-              >
-                <img
-                  src={original.thumbnailUrl}
-                  alt={original.title}
-                  style={{ 
-                    width: "200px", 
-                    height: "100%",
-                    minHeight: "180px",
-                    objectFit: "cover"
-                  }}
-                  loading="lazy"
-                />
-              </Link>
-            )}
-            
-            {/* Content bên phải */}
+        <article className="newsfeed-card newsfeed-card--repost hover:shadow-lg transition-shadow">
+          {/* Thumbnail (links to original post) */}
+          {(original?.thumbnailUrl || post.thumbnailUrl) && (
             <Link
               to={`/post/${original?.id ?? (post as any).originalPostId ?? post.id}`}
-              style={{ 
-                flex: 1, 
-                display: "flex", 
-                flexDirection: "column", 
-                padding: "12px 16px",
-                textDecoration: "none",
-                color: "inherit"
-              }}
+              className="newsfeed-card__thumbnail"
               onClick={() => {
                 if (user && user.id) recordViewedPost(original?.id ?? (post as any).originalPostId ?? post.id);
               }}
             >
-              <div style={{ flex: 1 }}>
-                <h2 style={{ fontSize: "15px", fontWeight: "600", marginBottom: "6px", color: "#1f2937", lineHeight: 1.3 }}>
-                  {original?.title || post.title}
-                </h2>
-                {original?.author && (
-                  <div style={{ fontSize: "12px", color: "#6b7280", marginBottom: "4px" }}>
-                    bởi <strong style={{ color: "#1f2937" }}>{original.author.username}</strong>
+              <img
+                src={original?.thumbnailUrl ?? post.thumbnailUrl}
+                alt={original?.title ?? post.title}
+                className="newsfeed-card__image"
+                loading="lazy"
+              />
+            </Link>
+          )}
+
+          {/* Right side: repost header (compact) + original content */}
+          <div className="newsfeed-card__right">
+            {/* Compact repost header — links to the repost itself */}
+            <Link
+              to={`/post/${post.id}`}
+              style={{
+                padding: "8px 12px",
+                backgroundColor: "#f9fafb",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                fontSize: "12px",
+                color: "#6b7280",
+                borderBottom: "1px solid #e5e7eb",
+                textDecoration: "none"
+              }}
+              onClick={() => {
+                if (user && user.id) recordViewedPost(post.id);
+              }}
+            >
+            <Link
+              to={`/post/${post.id}`}
+              className="newsfeed-card__repost-meta"
+              onClick={() => {
+                if (user && user.id) recordViewedPost(post.id);
+              }}
+            >
+              <h2 className="newsfeed-card__title">{post.title}</h2>
+
+              <div className="newsfeed-card__header">
+                <div className="newsfeed-card__author">
+                  <img
+                    src={post.author.avatarUrl}
+                    alt={post.author.username}
+                    className="newsfeed-card__avatar"
+                  />
+                  <div className="newsfeed-card__author-info">
+                    <span className="newsfeed-card__username">{post.author.username}</span>
                   </div>
-                )}
+                </div>
+                <time className="newsfeed-card__time">{formatDate(post.createdAt)}</time>
               </div>
-              {original?.hashtags && original.hashtags.length > 0 && (
-                <div style={{ display: "flex", flexWrap: "wrap", gap: "4px" }}>
-                  {original.hashtags.slice(0, 3).map((h) => (
-                    <span 
-                      key={h.id} 
-                      style={{ fontSize: "11px", color: "#f295b6" }}
-                    >
-                      #{h.name}
-                    </span>
+
+              {post.hashtags && post.hashtags.length > 0 && (
+                <div className="newsfeed-card__hashtags">
+                  {post.hashtags.map((h) => (
+                    <span key={h.id} className="newsfeed-card__hashtag">#{h.name}</span>
                   ))}
                 </div>
               )}
             </Link>
-          </div>
+              <div className="newsfeed-card__repost-label">
+                <time className="newsfeed-card__time">{formatDate(post.createdAt)}</time>
+                {post.type === "REPOST" && <Repeat2 size={14} />}
+                <span>Đăng lại</span>
+              </div>
+            </Link>
 
-          {/* InteractBar của người repost */}
-          <div style={{ borderTop: "1px solid #e5e7eb", padding: "8px 12px" }} onClick={(e) => e.stopPropagation()}>
-            <InteractBar
-              postId={post.id}
-              userId={user?.id ?? 0}
-              initialUpVotes={post.upVotes}
-              initialDownVotes={post.downVotes}
-              totalComments={post.totalComments}
-            />
+            {/* Repost metadata (links to the repost itself): title, time, hashtags, avatar
+            <Link
+              to={`/post/${post.id}`}
+              className="newsfeed-card__repost-meta"
+              onClick={() => {
+                if (user && user.id) recordViewedPost(post.id);
+              }}
+            >
+              <h2 className="newsfeed-card__title">{post.title}</h2>
+
+              <div className="newsfeed-card__header">
+                <div className="newsfeed-card__author">
+                  <img
+                    src={post.author.avatarUrl}
+                    alt={post.author.username}
+                    className="newsfeed-card__avatar"
+                  />
+                  <div className="newsfeed-card__author-info">
+                    <span className="newsfeed-card__username">{post.author.username}</span>
+                  </div>
+                </div>
+                <time className="newsfeed-card__time">{formatDate(post.createdAt)}</time>
+              </div>
+
+              {post.hashtags && post.hashtags.length > 0 && (
+                <div className="newsfeed-card__hashtags">
+                  {post.hashtags.map((h) => (
+                    <span key={h.id} className="newsfeed-card__hashtag">#{h.name}</span>
+                  ))}
+                </div>
+              )}
+            </Link> */}
+
+            {/* Original post content — links to original post */}
+            <Link
+              to={`/post/${original?.id ?? (post as any).originalPostId ?? post.id}`}
+              className="newsfeed-card__content"
+              onClick={() => {
+                if (user && user.id) recordViewedPost(original?.id ?? (post as any).originalPostId ?? post.id);
+              }}
+            >
+              <h2 className="newsfeed-card__title">{original?.title ?? post.title}</h2>
+
+              <div className="newsfeed-card__header">
+                <div className="newsfeed-card__author">
+                  <img
+                    src={original?.author?.avatarUrl ?? post.author.avatarUrl}
+                    alt={original?.author?.username ?? post.author.username}
+                    className="newsfeed-card__avatar"
+                  />
+                  <div className="newsfeed-card__author-info">
+                    <span className="newsfeed-card__username">{original?.author?.username ?? post.author.username}</span>
+                    {original?.community && (
+                      <span className="newsfeed-card__community">
+                        {typeof original.community === "string" ? original.community : original.community.name}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <time className="newsfeed-card__time">{formatDate(original?.createdAt ?? post.createdAt)}</time>
+              </div>
+
+              {original?.hashtags && original.hashtags.length > 0 && (
+                <div className="newsfeed-card__hashtags">
+                  {original.hashtags.map((h) => (
+                    <span key={h.id} className="newsfeed-card__hashtag">#{h.name}</span>
+                  ))}
+                </div>
+              )}
+            </Link>
+
+            {/* InteractBar của người repost */}
+            <div className="newsfeed-card__interact" onClick={(e) => e.stopPropagation()}>
+              <InteractBar
+                postId={post.id}
+                userId={user?.id ?? 0}
+                initialUpVotes={post.upVotes}
+                initialDownVotes={post.downVotes}
+                totalComments={post.totalComments}
+              />
+            </div>
           </div>
         </article>
       ) : (

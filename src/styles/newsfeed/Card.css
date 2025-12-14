@@ -250,3 +250,72 @@
     height: 100%;
   }
 }
+
+/* Repost meta block: larger area to show repost title and hashtags */
+.newsfeed-card__repost-meta {
+  /* smaller meta block for repost (reduced vertical space) */
+  padding: 0.5rem 1rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  min-height: 80px; /* reduced space so meta block is smaller */
+}
+
+@media (max-width: 768px) {
+  .newsfeed-card__repost-meta {
+    min-height: 110px;
+  }
+}
+
+/* Repost card modifier: make repost cards taller than normal */
+.newsfeed-card--repost {
+  height: 360px; /* slightly taller than default 300px */
+}
+
+@media (max-width: 1200px) and (min-width: 769px) {
+  .newsfeed-card--repost {
+    height: 320px;
+  }
+}
+
+@media (max-width: 768px) {
+  .newsfeed-card--repost {
+    height: 420px; /* mobile: stack, allow more vertical space */
+  }
+}
+
+/* Slightly reduce the repost meta title size so it fits */
+.newsfeed-card__repost-meta .newsfeed-card__title {
+  font-size: 1.125rem; /* smaller than normal card title */
+  font-weight: 700;
+  color: #f295b6;
+  margin-bottom: 0.25rem;
+}
+
+/* position repost label (time + icon + label) at top-right */
+.newsfeed-card__right {
+  position: relative;
+}
+
+.newsfeed-card__repost-label {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #6b7280;
+  font-size: 12px;
+}
+
+/* hide duplicate time inside repost-meta header since we show it in the label */
+.newsfeed-card__repost-meta .newsfeed-card__time {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .newsfeed-card__repost-label {
+    position: static;
+    margin-top: 6px;
+  }
+}
