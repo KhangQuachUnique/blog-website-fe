@@ -1,12 +1,14 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import GridLayout from "react-grid-layout";
+import { Search } from "lucide-react";
 
 import { useGetPostById } from "../../../hooks/usePost";
 import TextBlock from "../../../components/block/textBlock";
 import ImageBlock from "../../../components/block/imageBlock";
 import { CommentsSection } from "../../../components/comments/CommentsSection";
-import { BlockCommentsSidebar } from "../../../components/comments/BlockCommentsSidebar"; // [NEW] Import Sidebar
+import { BlockCommentsSidebar } from "../../../components/comments/BlockCommentsSidebar";
+import { SearchSidebar } from "../../../components/searchBar/SearchSidebar"; // [NEW] Import Sidebar Search
 import { useAuthUser } from '../../../hooks/useAuth';
 
 import { EBlockType, ObjectFitType } from "../../../types/block";
@@ -69,8 +71,20 @@ const PostDetailsPage: React.FC = () => {
     GRID_SETTINGS.width
   );
   
-  // [NEW] State quản lý block ảnh đang được chọn để bình luận
-  const [selectedBlock, setSelectedBlock] = useState<{ id: number; url: string } | null>(null);
+  // State quản lý block ảnh đang được chọn để bình luận
+  const [selectedBlock, setSelectedBlock] = useState<{ id: number; url?: string } | null>(null);
+
+  // --- [NEW] STATE CHO TÍNH NĂNG TÔ ĐEN TÌM KIẾM ---
+  const [selection, setSelection] = useState<{
+    text: string;
+    x: number;
+    y: number;
+    show: boolean;
+  }>({ text: "", x: 0, y: 0, show: false });
+
+  const [searchKeyword, setSearchKeyword] = useState("");
+  const [isSearchSidebarOpen, setIsSearchSidebarOpen] = useState(false);
+  // --------------------------------------------------
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -98,6 +112,47 @@ const PostDetailsPage: React.FC = () => {
     }
   }, []);
 
+  // --- [NEW] XỬ LÝ SỰ KIỆN BÔI ĐEN TEXT ---
+  useEffect(() => {
+    const handleSelection = () => {
+      const selectedText = window.getSelection()?.toString().trim();
+
+      if (selectedText && selectedText.length > 0) {
+        const selectionObj = window.getSelection();
+        if (!selectionObj || selectionObj.rangeCount === 0) return;
+
+        const selectionRange = selectionObj.getRangeAt(0);
+        const rect = selectionRange.getBoundingClientRect();
+
+        if (rect) {
+          // Tính toán vị trí hiển thị nút tìm kiếm (ngay trên đoạn text)
+          setSelection({
+            text: selectedText,
+            x: rect.left + rect.width / 2, // Canh giữa
+            y: rect.top + window.scrollY - 40, // Cách bên trên 40px
+            show: true,
+          });
+        }
+      } else {
+        // Ẩn nút nếu không bôi đen
+        setSelection((prev) => ({ ...prev, show: false }));
+      }
+    };
+
+    // Chỉ lắng nghe sự kiện mouseup (khi nhả chuột ra)
+    document.addEventListener("mouseup", handleSelection);
+    return () => document.removeEventListener("mouseup", handleSelection);
+  }, []);
+
+  const handleQuickSearch = () => {
+    setSearchKeyword(selection.text);
+    setIsSearchSidebarOpen(true);
+    setSelection((prev) => ({ ...prev, show: false })); // Ẩn nút đi sau khi bấm
+    // Xóa bôi đen (UX optional)
+    window.getSelection()?.removeAllRanges(); 
+  };
+  // ----------------------------------------
+
   // Current logged in user (for comments)
   const { user: currentUser } = useAuthUser();
   
@@ -108,7 +163,7 @@ const PostDetailsPage: React.FC = () => {
     avatarUrl: currentUser.avatarUrl 
   } : undefined;
 
-  // [NEW] Handler click vào ảnh
+  // Handler click vào ảnh
   const handleImageClick = (blockId: number, imageUrl: string) => {
     setSelectedBlock({ id: blockId, url: imageUrl });
   };
@@ -172,6 +227,26 @@ const PostDetailsPage: React.FC = () => {
   // ============================================
   return (
     <div className="w-full relative p-9 flex flex-col gap-4 items-center justify-center">
+      
+      {/* --- [NEW] TOOLTIP BUTTON TÌM KIẾM --- */}
+      {selection.show && (
+        <button
+          className="fixed z-50 flex items-center gap-2 bg-gray-900 text-white px-3 py-1.5 rounded-full shadow-xl hover:bg-black transition-all animate-in fade-in zoom-in duration-200"
+          style={{
+            left: selection.x,
+            top: selection.y,
+            transform: "translateX(-50%)", // Căn giữa theo toạ độ X
+          }}
+          onClick={handleQuickSearch}
+          onMouseDown={(e) => e.preventDefault()} // Prevent text deselection
+        >
+          <Search size={14} />
+          <span className="text-xs font-medium">
+            Tìm "{selection.text.length > 15 ? selection.text.substring(0, 15) + '...' : selection.text}"
+          </span>
+        </button>
+      )}
+
       {/* Title & Short Description */}
       <div style={{ width: GRID_SETTINGS.width, padding: 12 }}>
         {/* Title */}
@@ -226,16 +301,17 @@ const PostDetailsPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Hashtags */}
+        {/* Hashtags - [NEW] CLICKABLE */}
         {post.hashtags && post.hashtags.length > 0 && (
           <div className="mt-4 flex flex-wrap gap-2">
             {post.hashtags.map((h) => (
-              <span
+              <Link
                 key={h.id}
-                className="text-sm text-[#F295B6] bg-[#FFF0F5] px-2 py-1 rounded-full"
+                to={`/search?q=${encodeURIComponent(h.name)}&type=hashtag`}
+                className="text-sm text-[#F295B6] bg-[#FFF0F5] px-2 py-1 rounded-full hover:bg-[#F295B6] hover:text-white transition-colors cursor-pointer"
               >
                 #{h.name}
-              </span>
+              </Link>
             ))}
           </div>
         )}
@@ -270,7 +346,6 @@ const PostDetailsPage: React.FC = () => {
                       ${BLOCK_WRAPPER.default}
                       ${isImage ? 'cursor-pointer group hover:ring-2 hover:ring-blue-300 transition-all' : ''}
                     `}
-                    // [NEW] Sự kiện click mở Sidebar cho ảnh
                     onClick={(e) => {
                       if (isImage) {
                         e.stopPropagation();
@@ -291,7 +366,7 @@ const PostDetailsPage: React.FC = () => {
                           imageCaption={block.imageCaption}
                           objectFit={parseObjectFit(block.objectFit)}
                         />
-                        {/* [NEW] Overlay hint khi hover vào ảnh */}
+                        {/* Overlay hint khi hover vào ảnh */}
                         <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-black/60 text-white text-xs px-2 py-1 rounded-full pointer-events-none z-10 flex items-center gap-1">
                           <span>💬 Bình luận</span>
                         </div>
@@ -313,13 +388,22 @@ const PostDetailsPage: React.FC = () => {
         />
       </div>
 
-      {/* [NEW] Sidebar Comments cho từng Block */}
+      {/* --- SIDEBARS --- */}
+      
+      {/* 1. Sidebar Comment Ảnh */}
       <BlockCommentsSidebar
         isOpen={!!selectedBlock}
         onClose={() => setSelectedBlock(null)}
         blockId={selectedBlock?.id || 0}
         imageUrl={selectedBlock?.url}
         currentUser={normalizedUser}
+      />
+
+      {/* 2. [NEW] Sidebar Search Text */}
+      <SearchSidebar
+        isOpen={isSearchSidebarOpen}
+        onClose={() => setIsSearchSidebarOpen(false)}
+        keyword={searchKeyword}
       />
     </div>
   );
