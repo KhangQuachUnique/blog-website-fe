@@ -2,11 +2,15 @@ import React, { useState } from 'react';
 import { MessageCircle } from 'lucide-react';
 import type { Comment } from '../../types/comment.types';
 import { ReplyForm } from './ReplyForm';
-import { ChildCommentItem } from './ChildCommentItem';
 
 interface CommentItemProps {
   comment: Comment;
   currentUserId?: number;
+  currentUser?: {
+    id: number;
+    username: string;
+    avatarUrl?: string;
+  };
   onReply: (parentCommentId: number, content: string, replyToUserId?: number) => Promise<void>;
   onDelete: (commentId: number) => Promise<void>;
   onDeleteReply: (commentId: number, replyId: number) => Promise<void>;
@@ -15,12 +19,14 @@ interface CommentItemProps {
 export const CommentItem: React.FC<CommentItemProps> = ({
   comment,
   currentUserId,
+  currentUser,
   onReply,
   onDelete,
   onDeleteReply
 }) => {
   const [showReplyForm, setShowReplyForm] = useState(false);
   const [showReplies, setShowReplies] = useState(false);
+  const [replyingToChildId, setReplyingToChildId] = useState<number | null>(null);
 
   const handleReply = async (content: string) => {
     if (!currentUserId) return;
@@ -28,9 +34,23 @@ export const CommentItem: React.FC<CommentItemProps> = ({
     try {
       await onReply(comment.id, content);
       setShowReplyForm(false);
-      setShowReplies(true); // Hiển thị replies sau khi tạo
+      setShowReplies(true);
     } catch (error) {
       console.error('Error creating reply:', error);
+      alert('Không thể tạo reply. Vui lòng thử lại.');
+    }
+  };
+
+  const handleChildReply = async (childCommentUserId: number, content: string) => {
+    if (!currentUserId) return;
+    
+    try {
+      await onReply(comment.id, content, childCommentUserId);
+      setReplyingToChildId(null);
+      setShowReplies(true);
+    } catch (error) {
+      console.error('Error replying to child comment:', error);
+      alert('Không thể tạo reply. Vui lòng thử lại.');
     }
   };
 
@@ -40,6 +60,18 @@ export const CommentItem: React.FC<CommentItemProps> = ({
         await onDelete(comment.id);
       } catch (error) {
         console.error('Error deleting comment:', error);
+        alert('Không thể xóa comment. Vui lòng thử lại.');
+      }
+    }
+  };
+
+  const handleChildDelete = async (childId: number) => {
+    if (confirm('Bạn có chắc muốn xóa reply này?')) {
+      try {
+        await onDeleteReply(comment.id, childId);
+      } catch (error) {
+        console.error('Error deleting reply:', error);
+        alert('Không thể xóa reply. Vui lòng thử lại.');
       }
     }
   };
@@ -48,6 +80,16 @@ export const CommentItem: React.FC<CommentItemProps> = ({
     const date = new Date(dateString);
     return date.toLocaleDateString('vi-VN', {
       year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const formatShortDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('vi-VN', {
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
@@ -90,49 +132,133 @@ export const CommentItem: React.FC<CommentItemProps> = ({
           
           {/* Comment Actions */}
           <div className="mt-3 flex items-center space-x-4">
-            <button
-              onClick={() => setShowReplyForm(!showReplyForm)}
-              className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-            >
-              Trả lời
-            </button>
+            {currentUserId && (
+              <button
+                onClick={() => setShowReplyForm(!showReplyForm)}
+                className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+              >
+                Trả lời
+              </button>
+            )}
             
             {/* Reply count with icon */}
-            <button
-              onClick={() => setShowReplies(!showReplies)}
-              className="flex items-center gap-1 text-gray-600 hover:text-gray-800 text-sm"
-            >
-              <MessageCircle size={16} />
-              <span>{comment.childComments?.length || comment.childCommentsCount || 0}</span>
-            </button>
+            {(comment.childComments?.length > 0 || comment.childCommentsCount > 0) && (
+              <button
+                onClick={() => setShowReplies(!showReplies)}
+                className="flex items-center gap-1 text-gray-600 hover:text-gray-800 text-sm"
+              >
+                <MessageCircle size={16} />
+                <span>{comment.childComments?.length || comment.childCommentsCount || 0}</span>
+              </button>
+            )}
           </div>
           
-          {/* Reply Form */}
-          {showReplyForm && currentUserId && (
-            <div className="mt-3">
-              <ReplyForm
-                onSubmit={handleReply}
-                onCancel={() => setShowReplyForm(false)}
-                placeholder={`Trả lời ${comment.commenter.username}...`}
-              />
+          {/* Reply Form for parent comment */}
+          {showReplyForm && currentUserId && currentUser && (
+            <div className="mt-3 ml-0">
+              <div className="flex items-start space-x-2">
+                <img
+                  src={currentUser.avatarUrl || '/default-avatar.png'}
+                  alt={currentUser.username}
+                  className="w-8 h-8 rounded-full object-cover"
+                />
+                <div className="flex-1">
+                  <ReplyForm
+                    onSubmit={handleReply}
+                    onCancel={() => setShowReplyForm(false)}
+                    placeholder={`Trả lời ${comment.commenter.username}...`}
+                    size="small"
+                  />
+                </div>
+              </div>
             </div>
           )}
           
           {/* Child Comments */}
-          {showReplies && comment.childComments.length > 0 && (
-            <div className="mt-4 ml-8 space-y-3">
-              {comment.childComments.map((childComment) => (
-                <ChildCommentItem
-                  key={childComment.id}
-                  childComment={childComment}
-                  parentCommentId={comment.id}
-                  currentUserId={currentUserId}
-                  onReply={(content, replyToUserId) => 
-                    onReply(comment.id, content, replyToUserId)
-                  }
-                  onDelete={(replyId) => onDeleteReply(comment.id, replyId)}
-                />
-              ))}
+          {showReplies && comment.childComments && comment.childComments.length > 0 && (
+            <div className="mt-4 space-y-3">
+              {comment.childComments.map((childComment) => {
+                const commenter = childComment.commentUser ?? (childComment as any).commenter ?? { 
+                  id: 0, 
+                  username: 'Người dùng', 
+                  avatarUrl: '/default-avatar.png' 
+                };
+                const repliedTo = childComment.replyToUser;
+
+                return (
+                  <div key={childComment.id} className="child-comment-item ml-8">
+                    <div className="flex items-start space-x-2">
+                      <img
+                        src={commenter.avatarUrl || '/default-avatar.png'}
+                        alt={commenter.username}
+                        className="w-8 h-8 rounded-full object-cover"
+                      />
+
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-2 flex-wrap">
+                          <span className="font-medium text-gray-900 text-sm">
+                            {commenter.username}
+                          </span>
+
+                          {repliedTo && (
+                            <>
+                              <span className="text-gray-500 text-sm">→</span>
+                              <span className="font-medium text-blue-600 text-sm">
+                                {repliedTo.username}
+                              </span>
+                            </>
+                          )}
+
+                          <span className="text-xs text-gray-500">
+                            {formatShortDate(childComment.createAt)}
+                          </span>
+
+                          {currentUserId === commenter.id && (
+                            <button 
+                              onClick={() => handleChildDelete(childComment.id)} 
+                              className="text-red-500 hover:text-red-700 text-xs"
+                            >
+                              Xóa
+                            </button>
+                          )}
+                        </div>
+
+                        <p className="mt-1 text-sm text-gray-700">{childComment.content}</p>
+
+                        {/* Reply button for child comments */}
+                        {currentUserId && (
+                          <div className="mt-2">
+                            {replyingToChildId === childComment.id ? (
+                              <div className="flex items-start space-x-2">
+                                <img
+                                  src={currentUser?.avatarUrl || '/default-avatar.png'}
+                                  alt={currentUser?.username || 'User'}
+                                  className="w-7 h-7 rounded-full object-cover"
+                                />
+                                <div className="flex-1">
+                                  <ReplyForm
+                                    onSubmit={(content) => handleChildReply(commenter.id, content)}
+                                    onCancel={() => setReplyingToChildId(null)}
+                                    placeholder={`Trả lời ${commenter.username}...`}
+                                    size="small"
+                                  />
+                                </div>
+                              </div>
+                            ) : (
+                              <button
+                                onClick={() => setReplyingToChildId(childComment.id)}
+                                className="text-blue-600 hover:text-blue-800 text-xs font-medium"
+                              >
+                                Trả lời
+                              </button>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>

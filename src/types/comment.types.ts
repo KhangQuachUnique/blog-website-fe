@@ -41,6 +41,7 @@ export interface CreateChildCommentRequest {
   parentCommentId: number;
   commentUserId: number;
   replyToUserId?: number;
+  type: 'POST' | 'BLOCK';
 }
 
 export type SortType = 'newest' | 'interactions';

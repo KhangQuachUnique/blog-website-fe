@@ -109,6 +109,7 @@ export const CommentsSection: React.FC<CommentsSectionProps> = ({
               key={comment.id}
               comment={comment}
               currentUserId={currentUser?.id}
+              currentUser={currentUser}
               onReply={handleCreateReply}
               onDelete={deleteComment}
               onDeleteReply={deleteReply}

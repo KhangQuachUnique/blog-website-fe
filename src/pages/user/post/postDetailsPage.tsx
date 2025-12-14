@@ -5,6 +5,8 @@ import GridLayout from "react-grid-layout";
 import { useGetPostById } from "../../../hooks/usePost";
 import TextBlock from "../../../components/block/textBlock";
 import ImageBlock from "../../../components/block/imageBlock";
+import { CommentsSection } from "../../../components/comments/CommentsSection";
+import { useAuthUser } from '../../../hooks/useAuth';
 
 import { EBlockType, ObjectFitType } from "../../../types/block";
 import type { IBlockResponseDto } from "../../../types/block";
@@ -91,6 +93,9 @@ const PostDetailsPage: React.FC = () => {
       return () => window.removeEventListener("resize", onResize);
     }
   }, []);
+
+  // Current logged in user (for comments)
+  const { user: currentUser } = useAuthUser();
 
   // ============================================
   // Early returns
@@ -261,6 +266,14 @@ const PostDetailsPage: React.FC = () => {
             </GridLayout>
           </div>
         )}
+      </div>
+
+      {/* Comments Section */}
+      <div style={{ width: GRID_SETTINGS.width, marginTop: 32 }}>
+        <CommentsSection
+          postId={post.id}
+          currentUser={currentUser ? { id: currentUser.id, username: currentUser.username, avatarUrl: currentUser.avatarUrl } : undefined}
+        />
       </div>
     </div>
   );

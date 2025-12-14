@@ -1,6 +1,6 @@
 import CreateBlogPostPage from "../../pages/user/manageBlogPosts/createPostPage";
 import UpdateBlogPostPage from "../../pages/user/manageBlogPosts/updatePostPage";
-import PostDetailPage from "../../pages/user/post/PostDetailPage";
+import PostDetailPage from "../../pages/user/post/postDetailsPage";
 
 const manageBlogPostsRoutes = [
   {

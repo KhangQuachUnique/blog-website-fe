@@ -37,25 +37,24 @@ export const useComments = (postId?: number, blockId?: number) => {
     }
   }, [postId, blockId, sortBy]);
 
-  // Tạo comment mới
+  // Tạo comment gốc
   const createComment = async (content: string, commenterId: number) => {
     const commentType: 'POST' | 'BLOCK' = postId ? 'POST' : 'BLOCK';
-    
-    // Chỉ gửi postId hoặc blockId, không gửi cả hai
-    const requestData = {
+    const requestData: any = {
       content,
       type: commentType,
       commenterId,
-      ...(postId && { postId }),
-      ...(blockId && { blockId }),
     };
+    
+    if (postId !== undefined && postId !== null) requestData.postId = Number(postId);
+    if (blockId !== undefined && blockId !== null) requestData.blockId = Number(blockId);
+    
     console.log('Creating comment with data:', requestData);
     
     try {
       const newComment = await commentService.createComment(requestData);
-      console.log('Comment created successfully:', newComment);
       
-      // Đảm bảo comment có đầy đủ fields
+      // Normalize comment structure
       const normalizedComment = {
         ...newComment,
         childComments: newComment.childComments || [],
@@ -64,45 +63,85 @@ export const useComments = (postId?: number, blockId?: number) => {
       
       setComments(prev => [normalizedComment, ...prev]);
       setTotalCount(prev => prev + 1);
-      return normalizedComment;
+      
+      return newComment;
     } catch (err) {
-      console.error('Error creating comment:', err);
       setError('Không thể tạo comment');
+      console.error('Create comment error:', err);
       throw err;
     }
   };
 
-  // Tạo reply
+  // Tạo reply (child comment)
   const createReply = async (
-    parentCommentId: number, 
-    content: string, 
-    commentUserId: number, 
+    parentCommentId: number,
+    content: string,
+    commenterId: number,
     replyToUserId?: number
   ) => {
+    const commentType: 'POST' | 'BLOCK' = postId ? 'POST' : 'BLOCK';
+    const requestData: any = {
+      content,
+      type: commentType,
+      commenterId,
+      parentCommentId,
+    };
+    
+    if (postId !== undefined && postId !== null) requestData.postId = Number(postId);
+    if (blockId !== undefined && blockId !== null) requestData.blockId = Number(blockId);
+    if (replyToUserId) requestData.replyToUserId = replyToUserId;
+    
+    console.log('Creating reply with data:', requestData);
+    
     try {
-      const newReply = await commentService.createChildComment({
-        content,
-        parentCommentId,
-        commentUserId,
-        replyToUserId
-      });
+      const newReply = await commentService.createComment(requestData);
 
-      // Update comment trong state
-      setComments(prev => 
-        prev.map(comment => 
-          comment.id === parentCommentId
-            ? {
-                ...comment,
-                childComments: [...comment.childComments, newReply],
-                childCommentsCount: comment.childCommentsCount + 1
+      setComments(prev =>
+        prev.map(comment => {
+          if (comment.id !== parentCommentId) return comment;
+
+          // Tìm user object của replyToUserId trong comments hoặc childComments
+          let replyToUserObj = undefined;
+          if (replyToUserId) {
+            // Tìm trong comment.childComments
+            for (const child of comment.childComments) {
+              if (child.commentUser.id === replyToUserId) {
+                replyToUserObj = child.commentUser;
+                break;
               }
-            : comment
-        )
+            }
+            // Nếu không thấy, tìm trong toàn bộ comments
+            if (!replyToUserObj) {
+              for (const cmt of prev) {
+                if (cmt.commenter.id === replyToUserId) {
+                  replyToUserObj = cmt.commenter;
+                  break;
+                }
+              }
+            }
+          }
+
+          return {
+            ...comment,
+            childComments: [
+              ...comment.childComments,
+              {
+                id: newReply.id,
+                content: newReply.content,
+                createAt: newReply.createAt,
+                commentUser: newReply.commenter,
+                replyToUser: replyToUserObj
+              }
+            ],
+            childCommentsCount: comment.childCommentsCount + 1
+          };
+        })
       );
-      
+
       return newReply;
     } catch (err) {
       setError('Không thể tạo reply');
+      console.error('Create reply error:', err);
       throw err;
     }
   };
@@ -158,7 +197,7 @@ export const useComments = (postId?: number, blockId?: number) => {
     totalCount,
     loadComments,
     createComment,
-    createReply,
+    createReply, // Export createReply separately
     deleteComment,
     deleteReply,
     changeSortBy

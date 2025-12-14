@@ -30,10 +30,11 @@ export const searchAPI = {
       const response = await axios.get('/search', {
         params: { q: keyword, type: type }
       });
-      
-      // Axios interceptor đã tự động extract response.data.data
-      // Nên response ở đây chính là array results
-      return response as unknown as SearchResultItem[];
+      // response sẽ là { posts: [...] } hoặc { communities: [...] } ...
+      if ((type === 'post' || type === 'hashtag') && response.posts) return response.posts;
+      if (type === 'community' && response.communities) return response.communities;
+      if (type === 'user' && response.users) return response.users;
+      return [];
     } catch (error) {
       console.error("Lỗi khi tìm kiếm:", error);
       throw error;

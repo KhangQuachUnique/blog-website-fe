@@ -24,6 +24,8 @@ export const router = createBrowserRouter([
       {
         path: "search",
         element: <SearchResultPage />,
+      },
+      {
         path: "/post/:id",
         element: <PostDetailsPage />,
       },
