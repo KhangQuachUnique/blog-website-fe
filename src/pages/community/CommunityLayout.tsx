@@ -1,5 +1,7 @@
+import { useState } from "react";
 import { NavLink, Outlet, useParams, useNavigate, useLocation } from "react-router-dom";
 import { useGetCommunitySettings } from "../../hooks/useCommunity";
+import { useLeaveCommunity } from "../../hooks/useManageCommunityMembers";
 import "../../styles/community.css";
 
 const CommunityLayout = () => {
@@ -10,19 +12,34 @@ const CommunityLayout = () => {
 
   const { data, isLoading } = useGetCommunitySettings(communityId);
 
+  const [openLeave, setOpenLeave] = useState(false);
+  const leaveMutation = useLeaveCommunity(communityId);
+
   if (isLoading) return <p>Đang tải...</p>;
   if (!data) return <p>Không tìm thấy cộng đồng</p>;
 
   const role = data.role;
-  const isAdmin = role === "ADMIN" || role === "MODERATOR";
+  const isAdminOrMod = role === "ADMIN" || role === "MODERATOR";
 
   const coverSrc =
     data.thumbnailUrl ??
     "https://via.placeholder.com/1200x300?text=Community+Cover";
 
-  // ✅ chỉ hiện ở tab Bài viết (index)
   const basePath = `/community/${communityId}`;
   const isPostsTab = location.pathname === basePath;
+
+  const canLeave = role !== "PENDING";
+
+  const handleConfirmLeave = async () => {
+    try {
+      await leaveMutation.mutateAsync();
+      setOpenLeave(false);
+      navigate("/"); // ✅ nếu bạn có trang list cộng đồng thì đổi sang route đó
+    } catch (e) {
+      console.error(e);
+      alert("Rời cộng đồng thất bại!");
+    }
+  };
 
   return (
     <div className="community-page">
@@ -55,15 +72,28 @@ const CommunityLayout = () => {
           <span>{data.memberCount} thành viên</span>
         </div>
 
-        {isAdmin && (
-          <button
-            onClick={() => navigate(`/community/${communityId}/manage`)}
-            className="btn-manage"
-            style={{ marginTop: 12 }}
-          >
-            Quản lý cộng đồng
-          </button>
-        )}
+        {/* ✅ Action buttons */}
+        <div className="community-actions">
+          {isAdminOrMod && (
+            <button
+              onClick={() => navigate(`/community/${communityId}/manage`)}
+              className="btn-manage"
+            >
+              Quản lý cộng đồng
+            </button>
+          )}
+
+          {canLeave && (
+            <button
+              className="btn-leave-community"
+              onClick={() => setOpenLeave(true)}
+              disabled={leaveMutation.isPending}
+              title="Rời khỏi cộng đồng này"
+            >
+              {leaveMutation.isPending ? "Đang xử lý..." : "Rời cộng đồng"}
+            </button>
+          )}
+        </div>
       </div>
 
       {/* TABS */}
@@ -141,6 +171,36 @@ const CommunityLayout = () => {
       )}
 
       <Outlet />
+
+      {/* ✅ Modal: Leave */}
+      {openLeave && (
+        <div className="community-modal-overlay" onClick={() => setOpenLeave(false)}>
+          <div className="community-modal community-modal-small" onClick={(e) => e.stopPropagation()}>
+            <button className="community-modal-close" onClick={() => setOpenLeave(false)}>
+              ×
+            </button>
+
+            <h4 style={{ marginBottom: 8 }}>Rời cộng đồng?</h4>
+            <p style={{ fontSize: 14, color: "#666", marginBottom: 20 }}>
+              Bạn chắc chắn muốn rời khỏi cộng đồng <b>{data.name}</b> chứ?
+            </p>
+
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
+              <button className="btn-secondary" onClick={() => setOpenLeave(false)}>
+                Hủy
+              </button>
+
+              <button
+                className="btn-danger-community"
+                onClick={handleConfirmLeave}
+                disabled={leaveMutation.isPending}
+              >
+                {leaveMutation.isPending ? "Đang rời..." : "Rời"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

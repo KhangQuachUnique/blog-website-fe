@@ -13,7 +13,9 @@ export interface CommunityMember {
 }
 
 // Settings giữ như bạn đang dùng
-export const getCommunitySettings = async (communityId: number): Promise<CommunitySettings> => {
+export const getCommunitySettings = async (
+  communityId: number
+): Promise<CommunitySettings> => {
   return axios.get(`/communities/${communityId}/settings`);
 };
 
@@ -41,10 +43,22 @@ export const updateCommunityMemberRole = (
   memberId: number,
   role: CommunityRole // chỉ cho set 3 role chính
 ) => {
-  return axios.patch(`/communities/${communityId}/members/${memberId}/role`, { role });
+  return axios.patch(`/communities/${communityId}/members/${memberId}/role`, {
+    role,
+  });
 };
 
 // ✅ Kick / Reject
 export const removeCommunityMember = (communityId: number, memberId: number) => {
   return axios.delete(`/communities/${communityId}/members/${memberId}`);
+};
+
+// ✅ Leave community (rời cộng đồng)
+export const leaveCommunity = (communityId: number) => {
+  return axios.delete(`/communities/${communityId}/leave`);
+};
+
+// ✅ Delete community (xóa cộng đồng)
+export const deleteCommunity = (communityId: number) => {
+  return axios.delete(`/communities/${communityId}`);
 };

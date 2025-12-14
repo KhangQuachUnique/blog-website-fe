@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   NavLink,
   Outlet,
@@ -6,6 +7,7 @@ import {
   useLocation,
 } from "react-router-dom";
 import { useGetCommunitySettings } from "../../hooks/useCommunity";
+import { useDeleteCommunity } from "../../hooks/useManageCommunityMembers";
 import "../../styles/community.css";
 
 const ManageLayout = () => {
@@ -16,6 +18,9 @@ const ManageLayout = () => {
 
   const { data, isLoading } = useGetCommunitySettings(communityId);
 
+  const [openDelete, setOpenDelete] = useState(false);
+  const deleteMutation = useDeleteCommunity(communityId);
+
   if (isLoading) return <p>Đang tải...</p>;
   if (!data) return <p>Không tìm thấy cộng đồng</p>;
 
@@ -24,13 +29,12 @@ const ManageLayout = () => {
     data.thumbnailUrl ??
     "https://via.placeholder.com/1200x300?text=Community+Cover";
 
-  // ✅ quay lại trang cộng đồng (match theo tab manage đang đứng)
   const goBackToCommunity = () => {
     const path = location.pathname.includes("/manage/members")
       ? `/community/${communityId}/members`
       : location.pathname.includes("/manage/posts")
-      ? `/community/${communityId}` // posts (index)
-      : `/community/${communityId}`; // settings -> index
+      ? `/community/${communityId}`
+      : `/community/${communityId}`;
 
     navigate(path);
   };
@@ -41,7 +45,19 @@ const ManageLayout = () => {
     </button>
   );
 
-  // 🔵 MEMBER → chỉ xem, không có quyền quản lý
+  const handleConfirmDelete = async () => {
+    try {
+      await deleteMutation.mutateAsync();
+      setOpenDelete(false);
+      alert("Đã xóa cộng đồng!");
+      navigate("/"); // ✅ nếu bạn có trang list cộng đồng thì đổi route
+    } catch (e) {
+      console.error(e);
+      alert("Xóa cộng đồng thất bại!");
+    }
+  };
+
+  // MEMBER → chỉ xem
   if (role === "MEMBER") {
     return (
       <div className="community-page">
@@ -57,14 +73,13 @@ const ManageLayout = () => {
         </div>
 
         <p style={{ marginTop: 16 }}>
-          Bạn là <strong>Thành viên</strong>. Bạn không có quyền quản lý cộng
-          đồng.
+          Bạn là <strong>Thành viên</strong>. Bạn không có quyền quản lý cộng đồng.
         </p>
       </div>
     );
   }
 
-  // 🟡 PENDING → chờ duyệt
+  // PENDING → chờ duyệt
   if (role === "PENDING") {
     return (
       <div className="community-page">
@@ -82,10 +97,9 @@ const ManageLayout = () => {
     );
   }
 
-  // 🟢 ADMIN + MODERATOR → giao diện quản lý (full access)
+  // ADMIN + MODERATOR
   return (
     <div className="community-page">
-      {/* HEADER */}
       <div className="community-header-img">
         <img src={coverSrc} alt="cover" />
       </div>
@@ -98,7 +112,6 @@ const ManageLayout = () => {
           Vai trò của bạn: <strong>{role}</strong>
         </p>
 
-        {/* ✅ ROW: Tabs (left) + Back (right) */}
         <div
           style={{
             marginTop: 12,
@@ -138,14 +151,56 @@ const ManageLayout = () => {
             </NavLink>
           </nav>
 
-          {/* spacer đẩy nút qua phải */}
           <div style={{ flex: 1 }} />
+
+          {/* ✅ chỉ ADMIN mới có nút xóa */}
+          {role === "ADMIN" && (
+            <button
+              className="btn-danger-community"
+              onClick={() => setOpenDelete(true)}
+              disabled={deleteMutation.isPending}
+              title="Xóa cộng đồng"
+            >
+              {deleteMutation.isPending ? "Đang xóa..." : "Xóa cộng đồng"}
+            </button>
+          )}
 
           <BackButton />
         </div>
       </div>
 
       <Outlet />
+
+      {/* ✅ Modal: Delete */}
+      {openDelete && (
+        <div className="community-modal-overlay" onClick={() => setOpenDelete(false)}>
+          <div className="community-modal community-modal-small" onClick={(e) => e.stopPropagation()}>
+            <button className="community-modal-close" onClick={() => setOpenDelete(false)}>
+              ×
+            </button>
+
+            <h4 style={{ marginBottom: 8 }}>Xóa cộng đồng?</h4>
+            <p style={{ fontSize: 14, color: "#666", marginBottom: 20 }}>
+              Hành động này <b>không thể hoàn tác</b>. Bạn chắc chắn muốn xóa cộng đồng{" "}
+              <b>{data.name}</b> chứ?
+            </p>
+
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
+              <button className="btn-secondary" onClick={() => setOpenDelete(false)}>
+                Hủy
+              </button>
+
+              <button
+                className="btn-danger-community"
+                onClick={handleConfirmDelete}
+                disabled={deleteMutation.isPending}
+              >
+                {deleteMutation.isPending ? "Đang xóa..." : "Xóa"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
