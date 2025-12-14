@@ -9,6 +9,7 @@ import {
 
 import { useAuthUser } from "../../hooks/useAuth";
 import { useGetCommunitySettings } from "../../hooks/useCommunity";
+import { useToast } from "../../contexts/toast";
 
 import type {
   CommunityMember,
@@ -39,6 +40,8 @@ const mapApiToUI = (m: CommunityMember): MemberUI => ({
 export default function MemberManagement() {
   const { id } = useParams();
   const communityId = Number(id);
+
+  const { showToast } = useToast();
 
   const [filter, setFilter] = useState<Filter>("all");
   const [memberToKick, setMemberToKick] = useState<MemberUI | null>(null);
@@ -102,9 +105,15 @@ export default function MemberManagement() {
   }, [draftRoles, members]);
 
   const handleApprove = async (memberId: number) => {
-    // Approve = set role MEMBER
-    await updateRole.mutateAsync({ memberId, role: "MEMBER" });
-    await refetch();
+    try {
+      // Approve = set role MEMBER
+      await updateRole.mutateAsync({ memberId, role: "MEMBER" });
+      await refetch();
+      showToast({ type: "success", message: "Đã duyệt thành viên!" });
+    } catch (e) {
+      console.error(e);
+      showToast({ type: "error", message: "Duyệt thành viên thất bại!" });
+    }
   };
 
   // ✅ Apply: commit tất cả draftRoles
@@ -128,21 +137,30 @@ export default function MemberManagement() {
         currentRole: ManageCommunityRole;
       }[];
 
-      if (updates.length === 0) return;
+      if (updates.length === 0) {
+        showToast({ type: "info", message: "Không có thay đổi để áp dụng." });
+        return;
+      }
 
       // ✅ RULES FOR MODERATOR
       if (isMod) {
         // 1) MOD không được promote ai lên ADMIN
         const hasPromoteToAdmin = updates.some((u) => u.role === "ADMIN");
         if (hasPromoteToAdmin) {
-          alert("Moderator không thể nâng ai lên Admin.");
+          showToast({
+            type: "error",
+            message: "Moderator không thể nâng ai lên Admin.",
+          });
           return;
         }
 
-        // 2) MOD không được đổi role của ADMIN (không hạ admin / không sửa admin)
+        // 2) MOD không được đổi role của ADMIN
         const touchesAdmin = updates.some((u) => u.currentRole === "ADMIN");
         if (touchesAdmin) {
-          alert("Moderator không thể thay đổi vai trò của Admin.");
+          showToast({
+            type: "error",
+            message: "Moderator không thể thay đổi vai trò của Admin.",
+          });
           return;
         }
       }
@@ -155,25 +173,44 @@ export default function MemberManagement() {
 
       clearDraft();
       await refetch();
+
+      showToast({
+        type: "success",
+        message: `Đã áp dụng ${updates.length} thay đổi!`,
+      });
     } catch (e) {
       console.error(e);
-      alert("Áp dụng thay đổi thất bại!");
+      showToast({ type: "error", message: "Áp dụng thay đổi thất bại!" });
     }
   };
 
   const handleConfirmKick = async () => {
     if (!memberToKick) return;
 
-    // ✅ MOD không được kick ADMIN (double-safety, dù nút đã ẩn)
+    // ✅ MOD không được kick ADMIN (double-safety)
     if (isMod && memberToKick.role === "ADMIN") {
-      alert("Moderator không thể kick Admin.");
+      showToast({ type: "error", message: "Moderator không thể kick Admin." });
       setMemberToKick(null);
       return;
     }
 
-    await removeMember.mutateAsync(memberToKick.id);
-    setMemberToKick(null);
-    await refetch();
+    try {
+      await removeMember.mutateAsync(memberToKick.id);
+      const kicked = memberToKick;
+      setMemberToKick(null);
+      await refetch();
+
+      showToast({
+        type: "success",
+        message:
+          kicked.role === "PENDING"
+            ? "Đã từ chối yêu cầu tham gia."
+            : "Đã kick thành viên.",
+      });
+    } catch (e) {
+      console.error(e);
+      showToast({ type: "error", message: "Thao tác thất bại!" });
+    }
   };
 
   if (!Number.isFinite(communityId) || communityId <= 0) {
@@ -303,8 +340,8 @@ export default function MemberManagement() {
             currentUserId != null && member.userId === currentUserId;
 
           // ✅ MOD restrictions
-          const modCannotEditAdmin = isMod && member.role === "ADMIN"; // không đổi role admin
-          const modCannotShowAdminOption = isMod; // không promote ai lên admin
+          const modCannotEditAdmin = isMod && member.role === "ADMIN";
+          const modCannotShowAdminOption = isMod;
 
           // ✅ Ẩn hẳn Kick nếu là ADMIN
           const hideKick = member.role === "ADMIN";
@@ -366,10 +403,22 @@ export default function MemberManagement() {
                     const nextRole = e.target.value as CommunityRole;
 
                     // ✅ MOD: chặn promote lên ADMIN
-                    if (isMod && nextRole === "ADMIN") return;
+                    if (isMod && nextRole === "ADMIN") {
+                      showToast({
+                        type: "error",
+                        message: "Moderator không thể nâng ai lên Admin.",
+                      });
+                      return;
+                    }
 
                     // ✅ MOD: không cho sửa admin
-                    if (modCannotEditAdmin) return;
+                    if (modCannotEditAdmin) {
+                      showToast({
+                        type: "error",
+                        message: "Moderator không thể thay đổi vai trò của Admin.",
+                      });
+                      return;
+                    }
 
                     setDraftRole(member.id, nextRole);
                   }}
@@ -388,7 +437,9 @@ export default function MemberManagement() {
                   }}
                 >
                   {/* ✅ MOD không hiện ADMIN option */}
-                  {!modCannotShowAdminOption && <option value="ADMIN">Admin</option>}
+                  {!modCannotShowAdminOption && (
+                    <option value="ADMIN">Admin</option>
+                  )}
                   <option value="MODERATOR">Moderator</option>
                   <option value="MEMBER">Member</option>
                 </select>
@@ -497,7 +548,7 @@ export default function MemberManagement() {
                 disabled={removeMember.isPending}
                 onClick={handleConfirmKick}
               >
-                Xác nhận
+                {removeMember.isPending ? "Đang xử lý..." : "Xác nhận"}
               </button>
             </div>
           </div>

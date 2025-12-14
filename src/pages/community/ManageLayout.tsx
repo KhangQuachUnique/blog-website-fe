@@ -8,6 +8,7 @@ import {
 } from "react-router-dom";
 import { useGetCommunitySettings } from "../../hooks/useCommunity";
 import { useDeleteCommunity } from "../../hooks/useManageCommunityMembers";
+import { useToast } from "../../contexts/toast";
 import "../../styles/community.css";
 
 const ManageLayout = () => {
@@ -18,6 +19,8 @@ const ManageLayout = () => {
 
   const { data, isLoading } = useGetCommunitySettings(communityId);
 
+  const { showToast } = useToast();
+
   const [openDelete, setOpenDelete] = useState(false);
   const deleteMutation = useDeleteCommunity(communityId);
 
@@ -25,6 +28,7 @@ const ManageLayout = () => {
   if (!data) return <p>Không tìm thấy cộng đồng</p>;
 
   const role = data.role;
+
   const coverSrc =
     data.thumbnailUrl ??
     "https://via.placeholder.com/1200x300?text=Community+Cover";
@@ -48,12 +52,23 @@ const ManageLayout = () => {
   const handleConfirmDelete = async () => {
     try {
       await deleteMutation.mutateAsync();
+
+      showToast({
+        type: "success",
+        message: "Đã xóa cộng đồng thành công.",
+        duration: 2500,
+      });
+
       setOpenDelete(false);
-      alert("Đã xóa cộng đồng!");
-      navigate("/"); // ✅ nếu bạn có trang list cộng đồng thì đổi route
-    } catch (e) {
+      navigate("/groups"); // ✅ đổi route nếu bạn có trang danh sách community riêng
+    } catch (e: any) {
       console.error(e);
-      alert("Xóa cộng đồng thất bại!");
+
+      const msg =
+        e?.response?.data?.message ||
+        "Xóa cộng đồng thất bại. Vui lòng thử lại.";
+
+      showToast({ type: "error", message: msg, duration: 3000 });
     }
   };
 
@@ -173,9 +188,19 @@ const ManageLayout = () => {
 
       {/* ✅ Modal: Delete */}
       {openDelete && (
-        <div className="community-modal-overlay" onClick={() => setOpenDelete(false)}>
-          <div className="community-modal community-modal-small" onClick={(e) => e.stopPropagation()}>
-            <button className="community-modal-close" onClick={() => setOpenDelete(false)}>
+        <div
+          className="community-modal-overlay"
+          onClick={() => setOpenDelete(false)}
+        >
+          <div
+            className="community-modal community-modal-small"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              className="community-modal-close"
+              onClick={() => setOpenDelete(false)}
+              disabled={deleteMutation.isPending}
+            >
               ×
             </button>
 
@@ -186,7 +211,11 @@ const ManageLayout = () => {
             </p>
 
             <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
-              <button className="btn-secondary" onClick={() => setOpenDelete(false)}>
+              <button
+                className="btn-secondary"
+                onClick={() => setOpenDelete(false)}
+                disabled={deleteMutation.isPending}
+              >
                 Hủy
               </button>
 

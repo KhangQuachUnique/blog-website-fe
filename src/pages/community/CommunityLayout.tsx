@@ -2,6 +2,7 @@ import { useState } from "react";
 import { NavLink, Outlet, useParams, useNavigate, useLocation } from "react-router-dom";
 import { useGetCommunitySettings } from "../../hooks/useCommunity";
 import { useLeaveCommunity } from "../../hooks/useManageCommunityMembers";
+import { useToast } from "../../contexts/toast";
 import "../../styles/community.css";
 
 const CommunityLayout = () => {
@@ -11,6 +12,8 @@ const CommunityLayout = () => {
   const location = useLocation();
 
   const { data, isLoading } = useGetCommunitySettings(communityId);
+
+  const { showToast } = useToast();
 
   const [openLeave, setOpenLeave] = useState(false);
   const leaveMutation = useLeaveCommunity(communityId);
@@ -33,11 +36,25 @@ const CommunityLayout = () => {
   const handleConfirmLeave = async () => {
     try {
       await leaveMutation.mutateAsync();
+
+      showToast({
+        type: "success",
+        message: "Đã rời cộng đồng thành công.",
+        duration: 2500,
+      });
+
       setOpenLeave(false);
-      navigate("/"); // ✅ nếu bạn có trang list cộng đồng thì đổi sang route đó
-    } catch (e) {
+
+      // ✅ đổi route nếu bạn có trang danh sách community riêng
+      navigate("/groups");
+    } catch (e: any) {
       console.error(e);
-      alert("Rời cộng đồng thất bại!");
+
+      const msg =
+        e?.response?.data?.message ||
+        "Rời cộng đồng thất bại. Vui lòng thử lại.";
+
+      showToast({ type: "error", message: msg, duration: 3000 });
     }
   };
 
@@ -174,9 +191,19 @@ const CommunityLayout = () => {
 
       {/* ✅ Modal: Leave */}
       {openLeave && (
-        <div className="community-modal-overlay" onClick={() => setOpenLeave(false)}>
-          <div className="community-modal community-modal-small" onClick={(e) => e.stopPropagation()}>
-            <button className="community-modal-close" onClick={() => setOpenLeave(false)}>
+        <div
+          className="community-modal-overlay"
+          onClick={() => setOpenLeave(false)}
+        >
+          <div
+            className="community-modal community-modal-small"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              className="community-modal-close"
+              onClick={() => setOpenLeave(false)}
+              disabled={leaveMutation.isPending}
+            >
               ×
             </button>
 
@@ -186,7 +213,11 @@ const CommunityLayout = () => {
             </p>
 
             <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
-              <button className="btn-secondary" onClick={() => setOpenLeave(false)}>
+              <button
+                className="btn-secondary"
+                onClick={() => setOpenLeave(false)}
+                disabled={leaveMutation.isPending}
+              >
                 Hủy
               </button>
 

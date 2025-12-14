@@ -8,10 +8,13 @@ import ForumInfoForm from "./components/ForumInfoForm";
 
 import { updateCommunitySettings } from "./community.api";
 import { useGetCommunitySettings } from "../../hooks/useCommunity";
+import { useToast } from "../../contexts/toast"; // ✅ thêm
 
 const ForumSetting = () => {
   const { id } = useParams();
   const communityId = Number(id);
+
+  const { showToast } = useToast(); // ✅ thêm
 
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
@@ -46,11 +49,18 @@ const ForumSetting = () => {
   const handleSave = async () => {
     try {
       setSaving(true);
-      await updateCommunitySettings(communityId, form); // ✅ truyền đúng id
-      alert("Đã lưu thay đổi!");
+      await updateCommunitySettings(communityId, form);
+
+      showToast({
+        type: "success",
+        message: "Đã lưu thay đổi!",
+      });
     } catch (err) {
       console.error(err);
-      alert("Lỗi khi lưu thay đổi!");
+      showToast({
+        type: "error",
+        message: "Lỗi khi lưu thay đổi!",
+      });
     } finally {
       setSaving(false);
     }
