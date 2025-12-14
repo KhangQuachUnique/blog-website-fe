@@ -118,7 +118,19 @@ const TextBlockEdit = ({
     editorProps: {
       attributes: {
         class:
-          "prose prose-lg max-w-none focus:outline-none px-4 pt-4 pb-[10px] text-lg [&_h1]:text-4xl [&_h1]:font-bold [&_h2]:text-3xl [&_h2]:font-bold [&_h3]:text-2xl [&_h3]:font-semibold [&_h3]:my-2 [&_ul]:list-disc [&_ul]:ml-6 [&_ol]:list-decimal [&_ol]:ml-6 [&_li]:my-1 [&_blockquote]:border-l-4 [&_blockquote]:border-[#F295B6] [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-gray-600 [&_blockquote]:my-4 [&_pre]:bg-gray-900 [&_pre]:text-gray-100 [&_pre]:rounded-lg [&_pre]:p-4 [&_pre]:my-4 [&_pre]:overflow-x-auto [&_code]:font-mono [&_code]:text-sm [&::selection]:bg-[#F295B6]/30 [&::selection]:text-inherit",
+          "px-1 py-1" +
+          "prose prose-lg max-w-none focus:outline-none text-lg " +
+          "[&_h1]:text-4xl [&_h1]:font-bold " +
+          "[&_h2]:text-3xl [&_h2]:font-bold " +
+          "[&_h3]:text-2xl [&_h3]:font-semibold [&_h3]:my-2 " +
+          "[&_ul]:list-disc [&_ul]:ml-6 " +
+          "[&_ol]:list-decimal [&_ol]:ml-6 " +
+          "[&_li]:my-1 " +
+          "[&_blockquote]:border-l-4 [&_blockquote]:border-[#F295B6] " +
+          "[&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-gray-600 [&_blockquote]:my-4 " +
+          "[&_pre]:bg-gray-900 [&_pre]:text-gray-100 [&_pre]:rounded-lg [&_pre]:p-4 [&_pre]:my-4 [&_pre]:overflow-x-auto " +
+          "[&_code]:font-mono [&_code]:text-sm " +
+          "[&::selection]:bg-[#F295B6]/30 [&::selection]:text-inherit",
         spellcheck: "false",
       },
     },
@@ -138,31 +150,31 @@ const TextBlockEdit = ({
     const checkHeight = () => {
       const editorEl = editorRef.current;
       if (!editorEl) return;
-      
+
       // Find the actual editor content element
-      const proseMirror = editorEl.querySelector('.ProseMirror');
+      const proseMirror = editorEl.querySelector(".ProseMirror");
       if (!proseMirror) return;
-      
+
       // Get the actual content height (use clientHeight for more accurate measurement)
       const contentHeight = proseMirror.scrollHeight;
-      
+
       const ROW_HEIGHT = 40;
       // Minimal padding: just enough to prevent text from touching border
       const PADDING = 50; // 16px top + minimal bottom (4px for safety)
-      
+
       // Calculate rows needed, round up to ensure content fits
       const neededRows = Math.ceil((contentHeight + PADDING) / ROW_HEIGHT);
-      
+
       // Only update if different to avoid unnecessary re-renders
       onHeightChange(id, Math.max(1, neededRows));
     };
 
     // Check after each content update
     checkHeight();
-    
+
     // Also use ResizeObserver to detect size changes
-    const proseMirror = editorRef.current.querySelector('.ProseMirror');
-    if (proseMirror && typeof ResizeObserver !== 'undefined') {
+    const proseMirror = editorRef.current.querySelector(".ProseMirror");
+    if (proseMirror && typeof ResizeObserver !== "undefined") {
       const ro = new ResizeObserver(() => {
         checkHeight();
       });

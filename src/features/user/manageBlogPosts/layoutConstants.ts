@@ -21,6 +21,7 @@ export const SHORT_DESC_SX = {
 
 export const BLOCK_WRAPPER = {
   base: "border-dashed border-2 rounded-lg border-gray-300 relative",
+  readMode: "border-transparent",
   ctrlPressed: "cursor-move border-pink-400 select-none",
   default: "cursor-default",
 };
