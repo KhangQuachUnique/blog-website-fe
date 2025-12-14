@@ -75,6 +75,8 @@ export interface IPostResponseDto {
   createdAt: Date;
   community?: ICommunityDto;
   originalPost?: IPostResponseDto;
+  // If backend returns only the id of the original post (for smaller payloads)
+  originalPostId?: number;
   blocks?: IBlockResponseDto[];
   upVotes: number;
   downVotes: number;
