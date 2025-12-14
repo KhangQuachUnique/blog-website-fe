@@ -1,19 +1,19 @@
 import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
 
 import PrivacySetting from "./components/PrivacySetting";
 import ApprovePostToggle from "./components/ApprovePostToggle";
 import ApproveMemberToggle from "./components/ApproveMemberToggle";
 import ForumInfoForm from "./components/ForumInfoForm";
 
-import {
-  getCommunitySettings,
-  updateCommunitySettings,
-} from "./community.api";
+import { updateCommunitySettings } from "./community.api";
 import { useGetCommunitySettings } from "../../hooks/useCommunity";
 
 const ForumSetting = () => {
-  const [saving, setSaving] = useState(false);
+  const { id } = useParams();
+  const communityId = Number(id);
 
+  const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
     name: "",
     description: "",
@@ -23,20 +23,21 @@ const ForumSetting = () => {
     requireMemberApproval: false,
   });
 
-  const { data, isLoading, isSuccess, isError } = useGetCommunitySettings(1);
+  const { data, isLoading, isSuccess, isError } =
+    useGetCommunitySettings(communityId);
 
   useEffect(() => {
     if (isSuccess && data) {
       setForm({
         name: data.name,
         description: data.description,
-        thumbnailUrl: data.thumbnailUrl ? data.thumbnailUrl : "",
+        thumbnailUrl: data.thumbnailUrl ?? "",
         isPublic: data.isPublic,
         requirePostApproval: data.requirePostApproval,
         requireMemberApproval: data.requireMemberApproval,
       });
     }
-  }, [isSuccess, data]);
+  }, [isSuccess, data, communityId]);
 
   const updateField = (field: string, value: any) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -45,7 +46,7 @@ const ForumSetting = () => {
   const handleSave = async () => {
     try {
       setSaving(true);
-      await updateCommunitySettings(form);
+      await updateCommunitySettings(communityId, form); // ✅ truyền đúng id
       alert("Đã lưu thay đổi!");
     } catch (err) {
       console.error(err);
@@ -55,8 +56,11 @@ const ForumSetting = () => {
     }
   };
 
-  if (isLoading) return <div>Đang tải dữ liệu...</div>;
+  if (!Number.isFinite(communityId) || communityId <= 0) {
+    return <div>Community id không hợp lệ.</div>;
+  }
 
+  if (isLoading) return <div>Đang tải dữ liệu...</div>;
   if (isError) return <div>Lỗi khi tải dữ liệu.</div>;
 
   return (

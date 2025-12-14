@@ -1,123 +1,85 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useParams } from "react-router-dom";
+
 import {
-  getCommunityMembers,
-  updateMemberRole,
-  updateMemberStatus,
-  deleteMember,
-  // ApiRole,
-  // ApiStatus,
-  // ApiCommunityMember,
-} from "./community.api"; // chỉnh lại path đúng với dự án của bạn
+  useManageCommunityMembers,
+  useRemoveMember,
+  useUpdateMemberRole,
+} from "../../hooks/useManageCommunityMembers";
 
 import type {
-  ApiRole,
-  ApiStatus,
-  ApiCommunityMember,
-} from "./community.api";
+  CommunityMember,
+  CommunityRole,
+  ManageCommunityRole,
+} from "../../services/user/community/communityService";
 
-type Role = ApiRole;
-type Status = ApiStatus;
-type Filter = "all" | Role | "PENDING";
+type Filter = "all" | CommunityRole | "PENDING";
 
-interface Member {
-  id: number;       // id của community_members
-  name: string;     // user.username
+interface MemberUI {
+  id: number; // community_members.id
+  name: string;
   avatar: string;
-  role: Role;
-  joinDate: string; // format yyyy-mm-dd
-  status: Status;
+  role: ManageCommunityRole;
+  joinDate: string;
 }
 
-const MemberManagement = () => {
-  const [members, setMembers] = useState<Member[]>([]);
+const mapApiToUI = (m: CommunityMember): MemberUI => ({
+  id: m.id,
+  name: m.user.username,
+  avatar: m.user.avatarUrl || "https://i.pravatar.cc/60?img=1",
+  role: m.role as ManageCommunityRole,
+  joinDate: m.joinedAt?.slice(0, 10) || "",
+});
+
+export default function MemberManagement() {
+  const { id } = useParams();
+  const communityId = Number(id);
+
   const [filter, setFilter] = useState<Filter>("all");
+  const [memberToKick, setMemberToKick] = useState<MemberUI | null>(null);
 
-  const [loading, setLoading] = useState<boolean>(true);
-  const [memberToKick, setMemberToKick] = useState<Member | null>(null);
+  // role param cho API
+  const roleParam: ManageCommunityRole | undefined =
+    filter === "all" ? undefined : (filter as ManageCommunityRole);
 
-  // Map từ API sang UI
-  const mapApiToMember = (m: ApiCommunityMember): Member => ({
-    id: m.id,
-    name: m.user.username,
-    avatar:
-      m.user.avatarUrl ||
-      "https://i.pravatar.cc/60?img=1", // fallback nhẹ nhàng
-    role: m.role,
-    joinDate: m.joinedAt?.slice(0, 10) || "",
-    status: m.status,
-  });
+  const { data, isLoading, isError, refetch } = useManageCommunityMembers(
+    communityId,
+    roleParam
+  );
 
-  const fetchMembers = async () => {
-    try {
-      setLoading(true);
-      const data = await getCommunityMembers();
-      setMembers(data.map(mapApiToMember));
-    } catch (err) {
-      console.error(err);
-      alert("Không tải được danh sách thành viên!");
-    } finally {
-      setLoading(false);
-    }
+  const updateRole = useUpdateMemberRole(communityId);
+  const removeMember = useRemoveMember(communityId);
+
+  const members: MemberUI[] = (data ?? []).map(mapApiToUI);
+
+  const handleApprove = async (memberId: number) => {
+    // Approve = set role MEMBER
+    await updateRole.mutateAsync({ memberId, role: "MEMBER" });
   };
 
-  useEffect(() => {
-    fetchMembers();
-  }, []);
-
-  const filteredMembers =
-    filter === "all"
-      ? members
-      : filter === "PENDING"
-      ? members.filter((m) => m.status === "PENDING")
-      : members.filter((m) => m.role === filter && m.status === "ACTIVE");
-
-  const handleApprove = async (id: number) => {
-    try {
-      await updateMemberStatus(id, "ACTIVE");
-      setMembers((prev) =>
-        prev.map((m) =>
-          m.id === id ? { ...m, status: "ACTIVE" } : m
-        )
-      );
-    } catch (err) {
-      console.error(err);
-      alert("Không duyệt được thành viên!");
-    }
-  };
-
-  const handleChangeRole = async (id: number, newRole: Role) => {
-    try {
-      await updateMemberRole(id, newRole);
-      setMembers((prev) =>
-        prev.map((m) =>
-          m.id === id ? { ...m, role: newRole } : m
-        )
-      );
-    } catch (err) {
-      console.error(err);
-      alert("Không cập nhật được vai trò!");
-    }
-  };
-
-  const handleOpenKick = (member: Member) => {
-    setMemberToKick(member);
-  };
-
-  const handleCloseKick = () => {
-    setMemberToKick(null);
+  const handleChangeRole = async (memberId: number, role: CommunityRole) => {
+    await updateRole.mutateAsync({ memberId, role });
   };
 
   const handleConfirmKick = async () => {
     if (!memberToKick) return;
-    try {
-      await deleteMember(memberToKick.id);
-      setMembers((prev) => prev.filter((m) => m.id !== memberToKick.id));
-      setMemberToKick(null);
-    } catch (err) {
-      console.error(err);
-      alert("Kick thành viên thất bại!");
-    }
+    await removeMember.mutateAsync(memberToKick.id);
+    setMemberToKick(null);
   };
+
+  if (!Number.isFinite(communityId) || communityId <= 0) {
+    return <div style={{ paddingTop: 20 }}>Community id không hợp lệ.</div>;
+  }
+
+  if (isError) {
+    return (
+      <div style={{ paddingTop: 20 }}>
+        <h3>Quản lý thành viên</h3>
+        <p style={{ color: "crimson" }}>Không tải được danh sách thành viên.</p>
+        <button onClick={() => refetch()}>Thử lại</button>
+      </div>
+    );
+  }
 
   return (
     <div style={{ paddingTop: 20 }}>
@@ -129,56 +91,45 @@ const MemberManagement = () => {
       {/* Tabs filter */}
       <div className="community-tabs" style={{ marginBottom: 24 }}>
         <button
-          className={`community-tab ${
-            filter === "all" ? "community-tab-active" : ""
-          }`}
+          className={`community-tab ${filter === "all" ? "community-tab-active" : ""}`}
           onClick={() => setFilter("all")}
         >
           Tất cả
         </button>
 
         <button
-          className={`community-tab ${
-            filter === "ADMIN" ? "community-tab-active" : ""
-          }`}
+          className={`community-tab ${filter === "ADMIN" ? "community-tab-active" : ""}`}
           onClick={() => setFilter("ADMIN")}
         >
           Admin
         </button>
 
         <button
-          className={`community-tab ${
-            filter === "MODERATOR" ? "community-tab-active" : ""
-          }`}
+          className={`community-tab ${filter === "MODERATOR" ? "community-tab-active" : ""}`}
           onClick={() => setFilter("MODERATOR")}
         >
           Mod
         </button>
 
         <button
-          className={`community-tab ${
-            filter === "MEMBER" ? "community-tab-active" : ""
-          }`}
+          className={`community-tab ${filter === "MEMBER" ? "community-tab-active" : ""}`}
           onClick={() => setFilter("MEMBER")}
         >
           Thành viên
         </button>
 
         <button
-          className={`community-tab ${
-            filter === "PENDING" ? "community-tab-active" : ""
-          }`}
+          className={`community-tab ${filter === "PENDING" ? "community-tab-active" : ""}`}
           onClick={() => setFilter("PENDING")}
         >
           Chờ duyệt
         </button>
       </div>
 
-      {loading && <p style={{ color: "#888" }}>Đang tải danh sách...</p>}
+      {isLoading && <p style={{ color: "#888" }}>Đang tải danh sách...</p>}
 
-      {/* Member list */}
-      {!loading &&
-        filteredMembers.map((member) => (
+      {!isLoading &&
+        members.map((member) => (
           <div
             key={member.id}
             className="community-card"
@@ -199,16 +150,17 @@ const MemberManagement = () => {
               <div style={{ fontWeight: 600 }}>{member.name}</div>
               <div style={{ fontSize: 13, color: "#666" }}>
                 {member.joinDate}
-                {member.status === "PENDING" && " · Chờ duyệt"}
+                {member.role === "PENDING" && " · Chờ duyệt"}
               </div>
             </div>
 
-            {/* Role */}
-            {member.status === "ACTIVE" && (
+            {/* Role select (không hiện với PENDING) */}
+            {member.role !== "PENDING" && (
               <select
                 value={member.role}
+                disabled={updateRole.isPending}
                 onChange={(e) =>
-                  handleChangeRole(member.id, e.target.value as Role)
+                  handleChangeRole(member.id, e.target.value as CommunityRole)
                 }
                 style={{
                   padding: "6px 10px",
@@ -226,10 +178,11 @@ const MemberManagement = () => {
 
             {/* Buttons */}
             <div style={{ display: "flex", gap: 10 }}>
-              {member.status === "PENDING" && (
+              {member.role === "PENDING" && (
                 <button
                   className="community-save-btn"
                   style={{ padding: "6px 14px" }}
+                  disabled={updateRole.isPending}
                   onClick={() => handleApprove(member.id)}
                 >
                   Duyệt
@@ -244,16 +197,18 @@ const MemberManagement = () => {
                   border: "none",
                   borderRadius: 999,
                   cursor: "pointer",
+                  opacity: removeMember.isPending ? 0.7 : 1,
                 }}
-                onClick={() => handleOpenKick(member)}
+                disabled={removeMember.isPending}
+                onClick={() => setMemberToKick(member)}
               >
-                Kick
+                {member.role === "PENDING" ? "Từ chối" : "Kick"}
               </button>
             </div>
           </div>
         ))}
 
-      {!loading && filteredMembers.length === 0 && (
+      {!isLoading && members.length === 0 && (
         <p style={{ color: "#888", marginTop: 20 }}>
           Không có thành viên nào trong mục này.
         </p>
@@ -261,28 +216,28 @@ const MemberManagement = () => {
 
       {/* Modal kick */}
       {memberToKick && (
-        <div className="community-modal-overlay" onClick={handleCloseKick}>
+        <div className="community-modal-overlay" onClick={() => setMemberToKick(null)}>
           <div
             className="community-modal community-modal-small"
             onClick={(e) => e.stopPropagation()}
           >
-            <button
-              className="community-modal-close"
-              onClick={handleCloseKick}
-            >
+            <button className="community-modal-close" onClick={() => setMemberToKick(null)}>
               ×
             </button>
 
-            <h4 style={{ marginBottom: 8 }}>Kick thành viên?</h4>
+            <h4 style={{ marginBottom: 8 }}>
+              {memberToKick.role === "PENDING" ? "Từ chối yêu cầu?" : "Kick thành viên?"}
+            </h4>
 
             <p style={{ fontSize: 14, color: "#666", marginBottom: 20 }}>
-              Bạn có chắc muốn kick{" "}
-              <strong>{memberToKick.name}</strong> khỏi cộng đồng không?
+              Bạn có chắc muốn{" "}
+              <strong>
+                {memberToKick.role === "PENDING" ? "từ chối" : "kick"} {memberToKick.name}
+              </strong>{" "}
+              không?
             </p>
 
-            <div
-              style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}
-            >
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
               <button
                 style={{
                   padding: "8px 16px",
@@ -291,7 +246,7 @@ const MemberManagement = () => {
                   background: "#fff",
                   cursor: "pointer",
                 }}
-                onClick={handleCloseKick}
+                onClick={() => setMemberToKick(null)}
               >
                 Hủy
               </button>
@@ -304,10 +259,12 @@ const MemberManagement = () => {
                   color: "#fff",
                   border: "none",
                   cursor: "pointer",
+                  opacity: removeMember.isPending ? 0.7 : 1,
                 }}
+                disabled={removeMember.isPending}
                 onClick={handleConfirmKick}
               >
-                Kick
+                Xác nhận
               </button>
             </div>
           </div>
@@ -315,6 +272,4 @@ const MemberManagement = () => {
       )}
     </div>
   );
-};
-
-export default MemberManagement;
+}

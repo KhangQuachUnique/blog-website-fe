@@ -10,8 +10,8 @@ export async function getCommunitySettings() {
   return response;
 }
 
-export async function updateCommunitySettings(payload: any) {
-  return await axios.patch(`/communities/${COMMUNITY_ID}`, payload);
+export async function updateCommunitySettings(communityId: number, payload: any) {
+  return axios.patch(`/communities/${communityId}`, payload);
 }
 
 // ====== Members API ======
