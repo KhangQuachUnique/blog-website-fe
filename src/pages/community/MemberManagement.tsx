@@ -7,6 +7,9 @@ import {
   useUpdateMemberRole,
 } from "../../hooks/useManageCommunityMembers";
 
+import { useAuthUser } from "../../hooks/useAuth";
+import { useGetCommunitySettings } from "../../hooks/useCommunity";
+
 import type {
   CommunityMember,
   CommunityRole,
@@ -17,6 +20,7 @@ type Filter = "all" | CommunityRole | "PENDING";
 
 interface MemberUI {
   id: number; // community_members.id
+  userId: number;
   name: string;
   avatar: string;
   role: ManageCommunityRole;
@@ -25,6 +29,7 @@ interface MemberUI {
 
 const mapApiToUI = (m: CommunityMember): MemberUI => ({
   id: m.id,
+  userId: m.user.id,
   name: m.user.username,
   avatar: m.user.avatarUrl || "https://i.pravatar.cc/60?img=1",
   role: m.role as ManageCommunityRole,
@@ -43,6 +48,15 @@ export default function MemberManagement() {
     {}
   );
 
+  // current user
+  const { user } = useAuthUser();
+  const currentUserId = user?.id;
+
+  // role của mình trong community (ADMIN/MOD/MEMBER/PENDING)
+  const { data: settings } = useGetCommunitySettings(communityId);
+  const viewerRole = settings?.role;
+  const isMod = viewerRole === "MODERATOR";
+
   // role param cho API
   const roleParam: ManageCommunityRole | undefined =
     filter === "all" ? undefined : (filter as ManageCommunityRole);
@@ -55,7 +69,10 @@ export default function MemberManagement() {
   const updateRole = useUpdateMemberRole(communityId);
   const removeMember = useRemoveMember(communityId);
 
-  const members: MemberUI[] = useMemo(() => (data ?? []).map(mapApiToUI), [data]);
+  const members: MemberUI[] = useMemo(
+    () => (data ?? []).map(mapApiToUI),
+    [data]
+  );
 
   // ✅ khi đổi filter hoặc reload list → clear draft để tránh lệch dữ liệu
   useEffect(() => {
@@ -69,7 +86,6 @@ export default function MemberManagement() {
   const clearDraft = () => setDraftRoles({});
 
   const hasChanges = useMemo(() => {
-    // chỉ tính các item thật sự đổi so với role hiện tại
     return Object.entries(draftRoles).some(([id, role]) => {
       const m = members.find((x) => x.id === Number(id));
       return m && m.role !== role;
@@ -86,7 +102,7 @@ export default function MemberManagement() {
   }, [draftRoles, members]);
 
   const handleApprove = async (memberId: number) => {
-    // Approve = set role MEMBER (vẫn cho chạy ngay)
+    // Approve = set role MEMBER
     await updateRole.mutateAsync({ memberId, role: "MEMBER" });
     await refetch();
   };
@@ -100,13 +116,42 @@ export default function MemberManagement() {
           const current = members.find((m) => m.id === memberId);
           if (!current) return null;
           if (current.role === newRole) return null;
-          return { memberId, role: newRole as CommunityRole };
+          return {
+            memberId,
+            role: newRole as CommunityRole,
+            currentRole: current.role,
+          };
         })
-        .filter(Boolean) as { memberId: number; role: CommunityRole }[];
+        .filter(Boolean) as {
+        memberId: number;
+        role: CommunityRole;
+        currentRole: ManageCommunityRole;
+      }[];
 
       if (updates.length === 0) return;
 
-      await Promise.all(updates.map((u) => updateRole.mutateAsync(u)));
+      // ✅ RULES FOR MODERATOR
+      if (isMod) {
+        // 1) MOD không được promote ai lên ADMIN
+        const hasPromoteToAdmin = updates.some((u) => u.role === "ADMIN");
+        if (hasPromoteToAdmin) {
+          alert("Moderator không thể nâng ai lên Admin.");
+          return;
+        }
+
+        // 2) MOD không được đổi role của ADMIN (không hạ admin / không sửa admin)
+        const touchesAdmin = updates.some((u) => u.currentRole === "ADMIN");
+        if (touchesAdmin) {
+          alert("Moderator không thể thay đổi vai trò của Admin.");
+          return;
+        }
+      }
+
+      await Promise.all(
+        updates.map((u) =>
+          updateRole.mutateAsync({ memberId: u.memberId, role: u.role })
+        )
+      );
 
       clearDraft();
       await refetch();
@@ -118,6 +163,14 @@ export default function MemberManagement() {
 
   const handleConfirmKick = async () => {
     if (!memberToKick) return;
+
+    // ✅ MOD không được kick ADMIN (double-safety, dù nút đã ẩn)
+    if (isMod && memberToKick.role === "ADMIN") {
+      alert("Moderator không thể kick Admin.");
+      setMemberToKick(null);
+      return;
+    }
+
     await removeMember.mutateAsync(memberToKick.id);
     setMemberToKick(null);
     await refetch();
@@ -246,6 +299,16 @@ export default function MemberManagement() {
           const roleValue = draft ?? (member.role as CommunityRole);
           const isDirty = draft && draft !== member.role;
 
+          const isSelf =
+            currentUserId != null && member.userId === currentUserId;
+
+          // ✅ MOD restrictions
+          const modCannotEditAdmin = isMod && member.role === "ADMIN"; // không đổi role admin
+          const modCannotShowAdminOption = isMod; // không promote ai lên admin
+
+          // ✅ Ẩn hẳn Kick nếu là ADMIN
+          const hideKick = member.role === "ADMIN";
+
           return (
             <div
               key={member.id}
@@ -264,12 +327,32 @@ export default function MemberManagement() {
               />
 
               <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: 600 }}>{member.name}</div>
+                <div style={{ fontWeight: 600 }}>
+                  {member.name}
+                  {isSelf && (
+                    <span
+                      style={{
+                        marginLeft: 8,
+                        fontSize: 12,
+                        color: "#c06292",
+                      }}
+                    >
+                      (Bạn)
+                    </span>
+                  )}
+                </div>
+
                 <div style={{ fontSize: 13, color: "#666" }}>
                   {member.joinDate}
                   {member.role === "PENDING" && " · Chờ duyệt"}
                   {isDirty && (
                     <span style={{ color: "#d81b60" }}> · Chưa áp dụng</span>
+                  )}
+                  {modCannotEditAdmin && (
+                    <span style={{ color: "#c06292" }}>
+                      {" "}
+                      · Admin (không thể chỉnh)
+                    </span>
                   )}
                 </div>
               </div>
@@ -278,19 +361,34 @@ export default function MemberManagement() {
               {member.role !== "PENDING" && (
                 <select
                   value={roleValue}
-                  disabled={updateRole.isPending}
-                  onChange={(e) =>
-                    setDraftRole(member.id, e.target.value as CommunityRole)
-                  }
+                  disabled={updateRole.isPending || modCannotEditAdmin}
+                  onChange={(e) => {
+                    const nextRole = e.target.value as CommunityRole;
+
+                    // ✅ MOD: chặn promote lên ADMIN
+                    if (isMod && nextRole === "ADMIN") return;
+
+                    // ✅ MOD: không cho sửa admin
+                    if (modCannotEditAdmin) return;
+
+                    setDraftRole(member.id, nextRole);
+                  }}
                   style={{
                     padding: "6px 10px",
                     borderRadius: 12,
-                    border: isDirty ? "1px solid #d81b60" : "1px solid #f7bad0",
+                    border: isDirty
+                      ? "1px solid #d81b60"
+                      : "1px solid #f7bad0",
                     background: "#fff",
-                    cursor: "pointer",
+                    cursor:
+                      updateRole.isPending || modCannotEditAdmin
+                        ? "not-allowed"
+                        : "pointer",
+                    opacity: modCannotEditAdmin ? 0.6 : 1,
                   }}
                 >
-                  <option value="ADMIN">Admin</option>
+                  {/* ✅ MOD không hiện ADMIN option */}
+                  {!modCannotShowAdminOption && <option value="ADMIN">Admin</option>}
                   <option value="MODERATOR">Moderator</option>
                   <option value="MEMBER">Member</option>
                 </select>
@@ -309,21 +407,24 @@ export default function MemberManagement() {
                   </button>
                 )}
 
-                <button
-                  style={{
-                    padding: "6px 14px",
-                    background: "#ff5370",
-                    color: "white",
-                    border: "none",
-                    borderRadius: 999,
-                    cursor: "pointer",
-                    opacity: removeMember.isPending ? 0.7 : 1,
-                  }}
-                  disabled={removeMember.isPending}
-                  onClick={() => setMemberToKick(member)}
-                >
-                  {member.role === "PENDING" ? "Từ chối" : "Kick"}
-                </button>
+                {/* ✅ Admin: ẩn nút Kick */}
+                {!hideKick && (
+                  <button
+                    style={{
+                      padding: "6px 14px",
+                      background: "#ff5370",
+                      color: "white",
+                      border: "none",
+                      borderRadius: 999,
+                      cursor: "pointer",
+                      opacity: removeMember.isPending ? 0.7 : 1,
+                    }}
+                    disabled={removeMember.isPending}
+                    onClick={() => setMemberToKick(member)}
+                  >
+                    {member.role === "PENDING" ? "Từ chối" : "Kick"}
+                  </button>
+                )}
               </div>
             </div>
           );
@@ -367,7 +468,9 @@ export default function MemberManagement() {
               không?
             </p>
 
-            <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
+            <div
+              style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}
+            >
               <button
                 style={{
                   padding: "8px 16px",
