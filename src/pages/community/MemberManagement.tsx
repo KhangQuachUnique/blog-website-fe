@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 
 import {
@@ -38,6 +38,11 @@ export default function MemberManagement() {
   const [filter, setFilter] = useState<Filter>("all");
   const [memberToKick, setMemberToKick] = useState<MemberUI | null>(null);
 
+  // ✅ draft role (chưa áp dụng)
+  const [draftRoles, setDraftRoles] = useState<Record<number, CommunityRole>>(
+    {}
+  );
+
   // role param cho API
   const roleParam: ManageCommunityRole | undefined =
     filter === "all" ? undefined : (filter as ManageCommunityRole);
@@ -50,21 +55,72 @@ export default function MemberManagement() {
   const updateRole = useUpdateMemberRole(communityId);
   const removeMember = useRemoveMember(communityId);
 
-  const members: MemberUI[] = (data ?? []).map(mapApiToUI);
+  const members: MemberUI[] = useMemo(() => (data ?? []).map(mapApiToUI), [data]);
 
-  const handleApprove = async (memberId: number) => {
-    // Approve = set role MEMBER
-    await updateRole.mutateAsync({ memberId, role: "MEMBER" });
+  // ✅ khi đổi filter hoặc reload list → clear draft để tránh lệch dữ liệu
+  useEffect(() => {
+    setDraftRoles({});
+  }, [filter, communityId]);
+
+  const setDraftRole = (memberId: number, role: CommunityRole) => {
+    setDraftRoles((prev) => ({ ...prev, [memberId]: role }));
   };
 
-  const handleChangeRole = async (memberId: number, role: CommunityRole) => {
-    await updateRole.mutateAsync({ memberId, role });
+  const clearDraft = () => setDraftRoles({});
+
+  const hasChanges = useMemo(() => {
+    // chỉ tính các item thật sự đổi so với role hiện tại
+    return Object.entries(draftRoles).some(([id, role]) => {
+      const m = members.find((x) => x.id === Number(id));
+      return m && m.role !== role;
+    });
+  }, [draftRoles, members]);
+
+  const pendingChangesCount = useMemo(() => {
+    let count = 0;
+    for (const [id, role] of Object.entries(draftRoles)) {
+      const m = members.find((x) => x.id === Number(id));
+      if (m && m.role !== role) count++;
+    }
+    return count;
+  }, [draftRoles, members]);
+
+  const handleApprove = async (memberId: number) => {
+    // Approve = set role MEMBER (vẫn cho chạy ngay)
+    await updateRole.mutateAsync({ memberId, role: "MEMBER" });
+    await refetch();
+  };
+
+  // ✅ Apply: commit tất cả draftRoles
+  const handleApply = async () => {
+    try {
+      const updates = Object.entries(draftRoles)
+        .map(([id, newRole]) => {
+          const memberId = Number(id);
+          const current = members.find((m) => m.id === memberId);
+          if (!current) return null;
+          if (current.role === newRole) return null;
+          return { memberId, role: newRole as CommunityRole };
+        })
+        .filter(Boolean) as { memberId: number; role: CommunityRole }[];
+
+      if (updates.length === 0) return;
+
+      await Promise.all(updates.map((u) => updateRole.mutateAsync(u)));
+
+      clearDraft();
+      await refetch();
+    } catch (e) {
+      console.error(e);
+      alert("Áp dụng thay đổi thất bại!");
+    }
   };
 
   const handleConfirmKick = async () => {
     if (!memberToKick) return;
     await removeMember.mutateAsync(memberToKick.id);
     setMemberToKick(null);
+    await refetch();
   };
 
   if (!Number.isFinite(communityId) || communityId <= 0) {
@@ -84,129 +140,194 @@ export default function MemberManagement() {
   return (
     <div style={{ paddingTop: 20 }}>
       <h3>Quản lý thành viên</h3>
-      <p style={{ marginBottom: 20, color: "#666" }}>
+      <p style={{ marginBottom: 16, color: "#666" }}>
         Quản lý vai trò, phê duyệt và kiểm soát thành viên trong cộng đồng.
       </p>
 
       {/* Tabs filter */}
-      <div className="community-tabs" style={{ marginBottom: 24 }}>
+      <div className="community-tabs" style={{ marginBottom: 14 }}>
         <button
-          className={`community-tab ${filter === "all" ? "community-tab-active" : ""}`}
+          className={`community-tab ${
+            filter === "all" ? "community-tab-active" : ""
+          }`}
           onClick={() => setFilter("all")}
         >
           Tất cả
         </button>
 
         <button
-          className={`community-tab ${filter === "ADMIN" ? "community-tab-active" : ""}`}
+          className={`community-tab ${
+            filter === "ADMIN" ? "community-tab-active" : ""
+          }`}
           onClick={() => setFilter("ADMIN")}
         >
           Admin
         </button>
 
         <button
-          className={`community-tab ${filter === "MODERATOR" ? "community-tab-active" : ""}`}
+          className={`community-tab ${
+            filter === "MODERATOR" ? "community-tab-active" : ""
+          }`}
           onClick={() => setFilter("MODERATOR")}
         >
           Mod
         </button>
 
         <button
-          className={`community-tab ${filter === "MEMBER" ? "community-tab-active" : ""}`}
+          className={`community-tab ${
+            filter === "MEMBER" ? "community-tab-active" : ""
+          }`}
           onClick={() => setFilter("MEMBER")}
         >
           Thành viên
         </button>
 
         <button
-          className={`community-tab ${filter === "PENDING" ? "community-tab-active" : ""}`}
+          className={`community-tab ${
+            filter === "PENDING" ? "community-tab-active" : ""
+          }`}
           onClick={() => setFilter("PENDING")}
         >
           Chờ duyệt
         </button>
       </div>
 
+      {/* ✅ Action bar: Apply / Cancel */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 10,
+          justifyContent: "flex-end",
+          marginBottom: 18,
+        }}
+      >
+        {hasChanges && (
+          <span style={{ fontSize: 13, color: "#d81b60", marginRight: 6 }}>
+            Có {pendingChangesCount} thay đổi chưa áp dụng
+          </span>
+        )}
+
+        <button
+          onClick={clearDraft}
+          disabled={!hasChanges || updateRole.isPending}
+          style={{
+            padding: "8px 14px",
+            borderRadius: 999,
+            border: "1px solid #ddd",
+            background: "#fff",
+            cursor:
+              !hasChanges || updateRole.isPending ? "not-allowed" : "pointer",
+            opacity: !hasChanges || updateRole.isPending ? 0.6 : 1,
+          }}
+        >
+          Hủy
+        </button>
+
+        <button
+          className="community-save-btn"
+          style={{
+            marginTop: 0,
+            padding: "8px 16px",
+            opacity: !hasChanges || updateRole.isPending ? 0.6 : 1,
+          }}
+          onClick={handleApply}
+          disabled={!hasChanges || updateRole.isPending}
+        >
+          {updateRole.isPending ? "Đang áp dụng..." : "Áp dụng"}
+        </button>
+      </div>
+
       {isLoading && <p style={{ color: "#888" }}>Đang tải danh sách...</p>}
 
       {!isLoading &&
-        members.map((member) => (
-          <div
-            key={member.id}
-            className="community-card"
-            style={{ display: "flex", alignItems: "center", gap: 16 }}
-          >
-            <img
-              src={member.avatar}
-              alt=""
-              style={{
-                width: 50,
-                height: 50,
-                borderRadius: "50%",
-                objectFit: "cover",
-              }}
-            />
+        members.map((member) => {
+          const draft = draftRoles[member.id];
+          const roleValue = draft ?? (member.role as CommunityRole);
+          const isDirty = draft && draft !== member.role;
 
-            <div style={{ flex: 1 }}>
-              <div style={{ fontWeight: 600 }}>{member.name}</div>
-              <div style={{ fontSize: 13, color: "#666" }}>
-                {member.joinDate}
-                {member.role === "PENDING" && " · Chờ duyệt"}
-              </div>
-            </div>
-
-            {/* Role select (không hiện với PENDING) */}
-            {member.role !== "PENDING" && (
-              <select
-                value={member.role}
-                disabled={updateRole.isPending}
-                onChange={(e) =>
-                  handleChangeRole(member.id, e.target.value as CommunityRole)
-                }
+          return (
+            <div
+              key={member.id}
+              className="community-card"
+              style={{ display: "flex", alignItems: "center", gap: 16 }}
+            >
+              <img
+                src={member.avatar}
+                alt=""
                 style={{
-                  padding: "6px 10px",
-                  borderRadius: 12,
-                  border: "1px solid #f7bad0",
-                  background: "#fff",
-                  cursor: "pointer",
+                  width: 50,
+                  height: 50,
+                  borderRadius: "50%",
+                  objectFit: "cover",
                 }}
-              >
-                <option value="ADMIN">Admin</option>
-                <option value="MODERATOR">Moderator</option>
-                <option value="MEMBER">Member</option>
-              </select>
-            )}
+              />
 
-            {/* Buttons */}
-            <div style={{ display: "flex", gap: 10 }}>
-              {member.role === "PENDING" && (
-                <button
-                  className="community-save-btn"
-                  style={{ padding: "6px 14px" }}
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 600 }}>{member.name}</div>
+                <div style={{ fontSize: 13, color: "#666" }}>
+                  {member.joinDate}
+                  {member.role === "PENDING" && " · Chờ duyệt"}
+                  {isDirty && (
+                    <span style={{ color: "#d81b60" }}> · Chưa áp dụng</span>
+                  )}
+                </div>
+              </div>
+
+              {/* Role select (không hiện với PENDING) */}
+              {member.role !== "PENDING" && (
+                <select
+                  value={roleValue}
                   disabled={updateRole.isPending}
-                  onClick={() => handleApprove(member.id)}
+                  onChange={(e) =>
+                    setDraftRole(member.id, e.target.value as CommunityRole)
+                  }
+                  style={{
+                    padding: "6px 10px",
+                    borderRadius: 12,
+                    border: isDirty ? "1px solid #d81b60" : "1px solid #f7bad0",
+                    background: "#fff",
+                    cursor: "pointer",
+                  }}
                 >
-                  Duyệt
-                </button>
+                  <option value="ADMIN">Admin</option>
+                  <option value="MODERATOR">Moderator</option>
+                  <option value="MEMBER">Member</option>
+                </select>
               )}
 
-              <button
-                style={{
-                  padding: "6px 14px",
-                  background: "#ff5370",
-                  color: "white",
-                  border: "none",
-                  borderRadius: 999,
-                  cursor: "pointer",
-                  opacity: removeMember.isPending ? 0.7 : 1,
-                }}
-                disabled={removeMember.isPending}
-                onClick={() => setMemberToKick(member)}
-              >
-                {member.role === "PENDING" ? "Từ chối" : "Kick"}
-              </button>
+              {/* Buttons */}
+              <div style={{ display: "flex", gap: 10 }}>
+                {member.role === "PENDING" && (
+                  <button
+                    className="community-save-btn"
+                    style={{ padding: "6px 14px" }}
+                    disabled={updateRole.isPending}
+                    onClick={() => handleApprove(member.id)}
+                  >
+                    Duyệt
+                  </button>
+                )}
+
+                <button
+                  style={{
+                    padding: "6px 14px",
+                    background: "#ff5370",
+                    color: "white",
+                    border: "none",
+                    borderRadius: 999,
+                    cursor: "pointer",
+                    opacity: removeMember.isPending ? 0.7 : 1,
+                  }}
+                  disabled={removeMember.isPending}
+                  onClick={() => setMemberToKick(member)}
+                >
+                  {member.role === "PENDING" ? "Từ chối" : "Kick"}
+                </button>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
 
       {!isLoading && members.length === 0 && (
         <p style={{ color: "#888", marginTop: 20 }}>
@@ -216,23 +337,32 @@ export default function MemberManagement() {
 
       {/* Modal kick */}
       {memberToKick && (
-        <div className="community-modal-overlay" onClick={() => setMemberToKick(null)}>
+        <div
+          className="community-modal-overlay"
+          onClick={() => setMemberToKick(null)}
+        >
           <div
             className="community-modal community-modal-small"
             onClick={(e) => e.stopPropagation()}
           >
-            <button className="community-modal-close" onClick={() => setMemberToKick(null)}>
+            <button
+              className="community-modal-close"
+              onClick={() => setMemberToKick(null)}
+            >
               ×
             </button>
 
             <h4 style={{ marginBottom: 8 }}>
-              {memberToKick.role === "PENDING" ? "Từ chối yêu cầu?" : "Kick thành viên?"}
+              {memberToKick.role === "PENDING"
+                ? "Từ chối yêu cầu?"
+                : "Kick thành viên?"}
             </h4>
 
             <p style={{ fontSize: 14, color: "#666", marginBottom: 20 }}>
               Bạn có chắc muốn{" "}
               <strong>
-                {memberToKick.role === "PENDING" ? "từ chối" : "kick"} {memberToKick.name}
+                {memberToKick.role === "PENDING" ? "từ chối" : "kick"}{" "}
+                {memberToKick.name}
               </strong>{" "}
               không?
             </p>

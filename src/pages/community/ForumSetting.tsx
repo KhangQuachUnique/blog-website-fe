@@ -65,7 +65,7 @@ const ForumSetting = () => {
 
   return (
     <div>
-      <h3 style={{ marginBottom: 16 }}>Forum Settings</h3>
+      <h3 style={{ marginBottom: 16 }}>Cài đặt cộng đồng</h3>
 
       <div className="community-card">
         <PrivacySetting
