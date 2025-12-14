@@ -95,7 +95,6 @@ const EditPostForm = ({
   const [isCtrlPressed, setIsCtrlPressed] = useState(false);
   const [isConfigDialogOpen, setIsConfigDialogOpen] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
-
   /**
    * Keyboard Events
    */
@@ -280,7 +279,7 @@ const EditPostForm = ({
       </div>
 
       {/* Grid Layout */}
-      <div style={{ width: GRID_SETTINGS.width, margin: '0 auto' }}>
+      <div style={{ width: GRID_SETTINGS.width, margin: "0 auto" }}>
         <GridLayout
           layout={layout}
           onLayoutChange={(newLayout) =>
@@ -294,13 +293,18 @@ const EditPostForm = ({
           draggableCancel=".rgl-no-drag"
           isDroppable={true}
           onDrop={handleGridDrop}
-          droppingItem={{ i: "__dropping-elem__", ...GRID_SETTINGS.defaultItem }}
+          droppingItem={{
+            i: "__dropping-elem__",
+            ...GRID_SETTINGS.defaultItem,
+          }}
         >
           {blocks.map((block) => (
             <div
               key={block.id}
               className={`${BLOCK_WRAPPER.base} ${
-                isCtrlPressed ? BLOCK_WRAPPER.ctrlPressed : BLOCK_WRAPPER.default
+                isCtrlPressed
+                  ? BLOCK_WRAPPER.ctrlPressed
+                  : BLOCK_WRAPPER.default
               }`}
             >
               {block.type === EBlockType.TEXT ? (
@@ -363,7 +367,10 @@ const EditPostForm = ({
           </CustomButton>
         </div>
       ) : (
-        <CustomButton onClick={handleNextStepClick} style={{ width: "auto", ...BUTTON_STYLE_PRIMARY }}>
+        <CustomButton
+          onClick={handleNextStepClick}
+          style={{ width: "auto", ...BUTTON_STYLE_PRIMARY }}
+        >
           Bước tiếp theo
         </CustomButton>
       )}
