@@ -55,7 +55,12 @@ export const refresh = async (): Promise<{ accessToken: string }> => {
   return unwrap(response);
 };
 
-export const verifyEmail = async (token: string) => {
-  const response = await axiosCustomize.post('/auth/verify-email', { token });
+export const sendOtp = async (email: string): Promise<{ message: string }> => {
+  const response = await axiosCustomize.post('/auth/send-otp', { email });
+  return unwrap(response);
+};
+
+export const verifyOtp = async (email: string, otp: string): Promise<{ message: string }> => {
+  const response = await axiosCustomize.post('/auth/verify-otp', { email, otp });
   return unwrap(response);
 };
