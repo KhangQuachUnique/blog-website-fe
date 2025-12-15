@@ -2,6 +2,7 @@ import { Badge, Popover } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { RiNotification4Line } from "react-icons/ri";
+import { FaInbox } from "react-icons/fa6";
 
 import { useAuth } from "../../hooks/useAuth";
 import type { NotificationResponseDto } from "../../types/notification";
@@ -109,8 +110,11 @@ const NotificationBell = () => {
                 </li>
               ))
             ) : (
-              <li className="text-sm text-gray-600" id="">
-                No new notifications.
+              <li className="text-sm text-gray-600 flex justify-center items-center py-[80px]">
+                <div className="flex flex-col items-center ">
+                  <FaInbox className="text-4xl text-gray-400" />
+                  <span className="mt-2">No new notifications</span>
+                </div>
               </li>
             )}
           </ul>
