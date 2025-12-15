@@ -62,3 +62,8 @@ export const leaveCommunity = (communityId: number) => {
 export const deleteCommunity = (communityId: number) => {
   return axios.delete(`/communities/${communityId}`);
 };
+
+// ✅ Join community
+export const joinCommunity = (communityId: number) => {
+  return axios.post(`/communities/${communityId}/join`);
+};

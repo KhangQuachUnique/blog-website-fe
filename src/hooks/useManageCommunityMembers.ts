@@ -5,6 +5,7 @@ import {
   updateCommunityMemberRole,
   leaveCommunity,
   deleteCommunity,
+  joinCommunity, // ✅ thêm
 } from "../services/user/community/communityService";
 
 import type {
@@ -34,6 +35,7 @@ export function useUpdateMemberRole(communityId: number) {
       qc.invalidateQueries({ queryKey: ["manage-community-members", communityId] });
       qc.invalidateQueries({ queryKey: ["community-members", communityId] });
       qc.invalidateQueries({ queryKey: ["communitySettings", communityId] });
+      qc.invalidateQueries({ queryKey: ["myCommunities"] });
     },
   });
 }
@@ -42,11 +44,32 @@ export function useRemoveMember(communityId: number) {
   const qc = useQueryClient();
 
   return useMutation({
-    mutationFn: (memberId: number) => removeCommunityMember(communityId, memberId),
+    mutationFn: (memberId: number) =>
+      removeCommunityMember(communityId, memberId),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["manage-community-members", communityId] });
       qc.invalidateQueries({ queryKey: ["community-members", communityId] });
       qc.invalidateQueries({ queryKey: ["communitySettings", communityId] });
+      qc.invalidateQueries({ queryKey: ["myCommunities"] });
+    },
+  });
+}
+
+/**
+ * ✅ JOIN community
+ * - public + no approval => vào MEMBER ngay
+ * - private hoặc require approval => PENDING
+ */
+export function useJoinCommunity(communityId: number) {
+  const qc = useQueryClient();
+
+  return useMutation({
+    mutationFn: () => joinCommunity(communityId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["communitySettings", communityId] });
+      qc.invalidateQueries({ queryKey: ["community-members", communityId] });
+      qc.invalidateQueries({ queryKey: ["manage-community-members", communityId] });
+      qc.invalidateQueries({ queryKey: ["myCommunities"] });
     },
   });
 }
@@ -58,13 +81,10 @@ export function useLeaveCommunity(communityId: number) {
   return useMutation({
     mutationFn: () => leaveCommunity(communityId),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["communitySettings"] });
-      qc.invalidateQueries({ queryKey: ["community-members"] });
-      qc.invalidateQueries({ queryKey: ["manage-community-members"] });
-
-      // tùy project bạn có query list cộng đồng nào thì invalidate thêm
-      qc.invalidateQueries({ queryKey: ["my-communities"] });
-      qc.invalidateQueries({ queryKey: ["communities", "my"] });
+      qc.invalidateQueries({ queryKey: ["communitySettings", communityId] });
+      qc.invalidateQueries({ queryKey: ["community-members", communityId] });
+      qc.invalidateQueries({ queryKey: ["manage-community-members", communityId] });
+      qc.invalidateQueries({ queryKey: ["myCommunities"] });
     },
   });
 }
@@ -76,12 +96,11 @@ export function useDeleteCommunity(communityId: number) {
   return useMutation({
     mutationFn: () => deleteCommunity(communityId),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["communitySettings"] });
-      qc.invalidateQueries({ queryKey: ["community-members"] });
-      qc.invalidateQueries({ queryKey: ["manage-community-members"] });
-
-      qc.invalidateQueries({ queryKey: ["my-communities"] });
-      qc.invalidateQueries({ queryKey: ["communities", "my"] });
+      // invalidate danh sách & các query liên quan
+      qc.invalidateQueries({ queryKey: ["communitySettings", communityId] });
+      qc.invalidateQueries({ queryKey: ["community-members", communityId] });
+      qc.invalidateQueries({ queryKey: ["manage-community-members", communityId] });
+      qc.invalidateQueries({ queryKey: ["myCommunities"] });
     },
   });
 }

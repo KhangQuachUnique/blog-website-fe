@@ -352,3 +352,31 @@
 .btn-secondary:hover {
   background: #fafafa;
 }
+
+.btn-join-community {
+  border: 1px solid #ffd1e2;
+  background: linear-gradient(90deg, #ff9eb5, #ffaed8);
+  color: #fff;
+  border-radius: 999px;
+  padding: 10px 18px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(255, 105, 180, 0.25);
+  transition: transform 0.08s ease, box-shadow 0.08s ease;
+}
+
+.btn-join-community:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(255, 105, 180, 0.32);
+}
+
+.btn-join-community:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.community-tab-disabled {
+  opacity: 0.6;
+}
