@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
+import { useToast } from "../../contexts/toast";
 
 // decorative GIF: try local `public/assets/auth-decor.gif`, fallback to external
 const LOCAL_GIF = "/assets/auth-decor.gif";
@@ -9,22 +10,21 @@ const FALLBACK_GIF = "https://media.giphy.com/media/3oEjI6SIIHBdRxXI40/giphy.gif
 const LoginPage = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
+  const { showToast } = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [gifSrc, setGifSrc] = useState(LOCAL_GIF);
 
   const validate = () => {
     if (!email) {
-      setError("Email is required");
+      showToast({ type: "error", message: "Vui lòng nhập email" });
       return false;
     }
     if (!password) {
-      setError("Password is required");
+      showToast({ type: "error", message: "Vui lòng nhập mật khẩu" });
       return false;
     }
-    setError(null);
     return true;
   };
 
@@ -32,14 +32,22 @@ const LoginPage = () => {
     e.preventDefault();
     if (!validate()) return;
     setLoading(true);
-    setError(null);
     try {
       await login(email, password);
+      showToast({ type: "success", message: "Đăng nhập thành công!" });
       navigate("/", { replace: true });
     } catch (err: any) {
-      setError(
-        err?.response?.data?.message || err?.message || "Login failed"
-      );
+      const errorMessage = err?.response?.data?.message || err?.message || "Đăng nhập thất bại";
+      
+      // Check if error is about email verification
+      if (errorMessage.includes("chưa được xác thực") || errorMessage.includes("not verified")) {
+        showToast({ type: "info", message: "Email chưa được xác thực. Đang chuyển đến trang xác thực..." });
+        setTimeout(() => {
+          navigate("/verify-email", { state: { email } });
+        }, 1500);
+      } else {
+        showToast({ type: "error", message: errorMessage });
+      }
     } finally {
       setLoading(false);
     }
@@ -88,10 +96,6 @@ const LoginPage = () => {
               />
             </div>
 
-            {error && (
-              <div className="text-sm text-red-600">{error}</div>
-            )}
-
             <button
               type="submit"
               disabled={loading}
@@ -106,6 +110,13 @@ const LoginPage = () => {
             Chưa có tài khoản?{' '}
             <NavLink to="/register" className="font-semibold text-[#F295B6]">
               Đăng ký
+            </NavLink>
+          </div>
+
+          <div className="mt-2 text-center text-sm text-gray-600">
+            Chưa xác thực email?{' '}
+            <NavLink to="/verify-email" className="font-semibold text-[#F295B6]">
+              Xác thực ngay
             </NavLink>
           </div>
         </div>
