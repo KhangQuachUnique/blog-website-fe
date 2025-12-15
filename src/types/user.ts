@@ -1,7 +1,7 @@
-// User roles
+// User roles - match với backend enum
 export const EUserRole = {
-  ADMIN: 'admin',
-  USER: 'user',
+  ADMIN: 'ADMIN',
+  USER: 'USER',
 } as const;
 
 export type EUserRole = typeof EUserRole[keyof typeof EUserRole];
