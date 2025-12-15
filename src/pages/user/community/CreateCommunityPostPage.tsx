@@ -6,18 +6,19 @@ import { useAuthUser } from "../../../hooks/useAuth";
 import { useParams } from "react-router-dom";
 
 const CreateCommunityPostPage = () => {
-  const { user, isAuthenticated } = useAuthUser();
+  const { user, isLoading, isAuthenticated } = useAuthUser();
   const { mutate } = useCreatePost();
   const { showToast } = useToast();
   const { id } = useParams<{ id: string }>();
   const communityId = Number(id);
 
-  const userId = isAuthenticated && user ? user.id : 0;
+  if (isLoading) {
+    return <p>Đang tải...</p>;
+  }
 
-  const handleSaveDraft = (dto: ICreateBlogPostDto) => {
-    console.log("Saving Draft:", dto);
-    // TODO: Call API to save draft
-  };
+  if (!isAuthenticated || !user) {
+    return <p>Bạn cần đăng nhập để tạo bài viết.</p>;
+  }
 
   const handlePublish = (dto: ICreateBlogPostDto) => {
     console.log("Publishing Post:", dto);
@@ -40,10 +41,9 @@ const CreateCommunityPostPage = () => {
   return (
     <EditPostForm
       mode="create"
-      authorId={userId}
+      authorId={user.id}
       postType={EPostType.COMMUNITY}
       communityId={communityId}
-      onSaveDraft={handleSaveDraft as (dto: unknown) => void}
       onPublish={handlePublish as (dto: unknown) => void}
     />
   );

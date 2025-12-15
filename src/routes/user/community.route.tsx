@@ -8,12 +8,17 @@ import ForumSetting from "../../features/user/manageCommunity/ForumSetting";
 import PostManagement from "../../features/user/manageCommunity/PostManagement";
 import MemberManagement from "../../features/user/manageCommunity/MemberManagement";
 import CreateCommunityPostPage from "../../pages/user/community/CreateCommunityPostPage";
+import { RoleGuard } from "../../components/guards";
 
 const communityRoutes = [
   // 🌍 FACEBOOK-STYLE COMMUNITY PAGE (ALL ROLES)
   {
     path: "community/:id",
-    element: <CommunityLayout />,
+    element: (
+      <RoleGuard>
+        <CommunityLayout />,
+      </RoleGuard>
+    ),
     children: [
       { index: true, element: <CommunityPosts /> },
       { path: "about", element: <CommunityAbout /> },
@@ -24,14 +29,25 @@ const communityRoutes = [
   // 🔒 COMMUNITY MANAGEMENT (ADMIN / MOD ONLY)
   {
     path: "community/:id/manage",
-    element: <ManageLayout />,
+    element: (
+      <RoleGuard>
+        <ManageLayout />
+      </RoleGuard>
+    ),
     children: [
       { index: true, element: <ForumSetting /> },
       { path: "posts", element: <PostManagement /> },
       { path: "members", element: <MemberManagement /> },
     ],
   },
-  { path: "community/:id/create-post", element: <CreateCommunityPostPage /> },
+  {
+    path: "community/:id/create-post",
+    element: (
+      <RoleGuard>
+        <CreateCommunityPostPage />
+      </RoleGuard>
+    ),
+  },
 ];
 
 export default communityRoutes;

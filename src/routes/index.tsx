@@ -25,10 +25,9 @@ export const router = createBrowserRouter([
       { path: "saved", element: <div>Saved Posts</div> },
       { path: "groups", element: <MyCommunitiesPage /> },
 
-      ...communityRoutes,
-
       { path: "post/:id", element: <PostDetailsPage /> },
 
+      ...communityRoutes,
       ...manageBlogPostsRoutes,
       ...newsfeedRoutes,
     ],
