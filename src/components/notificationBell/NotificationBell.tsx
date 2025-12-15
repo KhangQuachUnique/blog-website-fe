@@ -65,19 +65,27 @@ const NotificationBell = () => {
             mt: 1.2,
             borderRadius: 3,
             boxShadow: "0px 4px 20px rgba(135, 88, 104, 0.24)",
+            padding: 0,
           },
         }}
         onClose={handleClose}
       >
-        <div className="w-90 max-h-96 overflow-y-auto bg-white shadow-sm rounded-md p-4">
-          <h3 className="text-lg font-semibold text-gray-800 mb-3">
+        <div className="w-90 max-h-96 overflow-y-auto bg-white shadow-sm rounded-md">
+          <h3 className="text-lg font-semibold text-gray-800 p-4">
             Notifications
           </h3>
-          <ul className="space-y-5">
+          <ul className="">
             {notifications && notifications.length > 0 ? (
               notifications.map((notification) => (
-                <li key={notification.id} className="text-sm text-gray-600">
-                  <div className="flex items-start gap-3">
+                <li
+                  key={notification.id}
+                  className={`text-sm text-gray-600 p-4 ${
+                    notification.isRead
+                      ? "bg-gray-100"
+                      : "font-semibold bg-white border-l-4 border-[#C24E67]"
+                  }`}
+                >
+                  <div className={`flex items-start gap-3`}>
                     <Link to={`/user/profile/${notification.sender.id}`}>
                       <img
                         className="w-[80px] rounded-full"
@@ -85,10 +93,16 @@ const NotificationBell = () => {
                         alt={notification.sender.username}
                       />
                     </Link>
-                    <div>
-                      <span className="font-semibold text-gray-800">
+                    <div className="flex flex-col text-md gap-1">
+                      <span
+                        className={`font-semibold ${
+                          notification.isRead
+                            ? "text-gray-800"
+                            : "text-[#C24E67] font-semibold"
+                        }`}
+                      >
                         {notification.sender.username}
-                      </span>{" "}
+                      </span>
                       <span>{notification.template.message}</span>
                     </div>
                   </div>
