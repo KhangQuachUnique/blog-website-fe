@@ -6,17 +6,16 @@ import * as userService from "../../../services/user/userService";
 import { togglePostPrivacy } from "../../../services/user/post/postService";
 import { MdGroup } from "react-icons/md";
 import { BsFileText } from "react-icons/bs";
-import { TfiEmail } from "react-icons/tfi";
-import { CiPhone } from "react-icons/ci";
 import { BsGenderMale } from "react-icons/bs";
 import { BsGenderFemale } from "react-icons/bs";
-import { MdOutlineSchedule } from "react-icons/md";
 import { HiDotsHorizontal } from "react-icons/hi";
 import { MdPublic, MdLock } from "react-icons/md";
 import "../../../styles/profile/profile.css";
 import "../../../styles/profile/tabs.css";
-import Avatar from '@mui/material/Avatar';
-import { stringAvatar } from '../../../utils/avatarHelper';
+import Avatar from "@mui/material/Avatar";
+import { stringAvatar } from "../../../utils/avatarHelper";
+import { MdEmail, MdPhone } from "react-icons/md";
+import CustomButton from "../../../components/button";
 
 const ViewProfile = () => {
   const { userId } = useParams<{ userId: string }>();
@@ -31,7 +30,10 @@ const ViewProfile = () => {
   // Đóng dropdown khi click bên ngoài
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         setOpenDropdownId(null);
       }
     };
@@ -45,7 +47,7 @@ const ViewProfile = () => {
       setLoading(true);
       try {
         let data: UserProfile;
-        
+
         if (userId) {
           // Viewing another user's profile
           // TODO: Get viewerId from auth context if logged in
@@ -56,7 +58,7 @@ const ViewProfile = () => {
           data = await userService.getMyProfile();
           setIsOwnProfile(true);
         }
-        
+
         setProfile(data);
       } catch (error) {
         console.error("Failed to fetch profile:", error);
@@ -80,7 +82,9 @@ const ViewProfile = () => {
   if (!profile) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="text-lg text-gray-500">Không tìm thấy hồ sơ người dùng</div>
+        <div className="text-lg text-gray-500">
+          Không tìm thấy hồ sơ người dùng
+        </div>
       </div>
     );
   }
@@ -102,119 +106,136 @@ const ViewProfile = () => {
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
+    <div className="w-full">
       {/* Profile Header */}
       <div className="profile-card profile-card-header mb-6">
-        <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
-          {/* Avatar */}
-          <div className="flex-shrink-0">
-            {profile.avatarUrl ? (
-              <Avatar
-                src={profile.avatarUrl}
-                alt={profile.username}
-                sx={{ width: 120, height: 120 }}
-              />
-            ) : (
-              <Avatar {...stringAvatar(profile.username)} />
-            )}
-          </div>
-
-          {/* User Info */}
-          <div className="flex-1">
-            <div className="flex items-center gap-3 mb-2">
-              <h1 className="text-3xl font-bold" style={{ color: "#8C1D35" }}>
-                {profile.username}
-              </h1>
-              {profile.isPrivate && (
-                <span className="profile-privacy-badge-sm">
-                  🔒 Riêng tư
-                </span>
-              )}
+        <div className="flex flex-col items-start md:items-center">
+          {profile.coverImageUrl ? (
+            <img
+              src={profile.coverImageUrl}
+              alt={`${profile.username} cover`}
+            />
+          ) : (
+            <div className="w-full h-[300px] bg-gray-200"></div>
+          )}
+          <div className="flex flex-col max-w-[90%] w-[1200px]">
+            <div className="flex gap-2 h-25">
+              {/* Avatar */}
+              <div className="flex-shrink-0">
+                {profile.avatarUrl ? (
+                  <Avatar
+                    src={profile.avatarUrl}
+                    alt={profile.username}
+                    sx={{
+                      width: 160,
+                      height: 160,
+                      transform: "translateY(-50%)",
+                      border: "4px solid white",
+                    }}
+                  />
+                ) : (
+                  <Avatar
+                    {...stringAvatar(
+                      profile.username,
+                      160,
+                      "2.5rem",
+                      "translateY(-50%)",
+                      "4px solid white"
+                    )}
+                  />
+                )}
+              </div>
+              {/* User name */}
+              <div className="flex-1">
+                <div className="flex flex-col">
+                  <div className="flex items-center gap-3">
+                    <h1 className="text-3xl font-bold text-gray-800">
+                      {profile.username}
+                    </h1>
+                    {profile.gender && (
+                      <div>
+                        {profile.gender === "MALE" ? (
+                          <BsGenderMale className="text-base text-blue-500" />
+                        ) : profile.gender === "FEMALE" ? (
+                          <BsGenderFemale className="text-base text-pink-500" />
+                        ) : (
+                          <span className="text-base">⚧️</span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex flex-wrap items-center gap-4">
+                    {/* Ngày tham gia */}
+                    {profile.joinAt && (
+                      <div className="flex items-center gap-1 text-gray-500 font-medium">
+                        <span>
+                          Tham gia{" "}
+                          {new Date(profile.joinAt).toLocaleDateString("vi-VN")}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-start mt-2">
+                <CustomButton
+                  variant="outline"
+                  style={{
+                    color: "#f295b6",
+                    borderColor: "#f295b6",
+                  }}
+                >
+                  Follow
+                </CustomButton>
+              </div>
             </div>
-            
             {/* Container chính: Dùng flex-col và gap-2 để mọi dòng cách nhau ĐỀU 8px */}
-            <div className="flex flex-col gap-2 text-sm text-gray-600 mt-2">
-              
+            <div className="flex flex-col gap-2 text-lg text-gray-500">
               {/* --- 1. Email --- */}
               {profile.email && (isOwnProfile || profile.showEmail) && (
                 <div className="flex items-center gap-2">
-                  <TfiEmail className="text-lg shrink-0" />
+                  <MdEmail className="text-2xl shrink-0" />
                   <span>{profile.email}</span>
                   {!isOwnProfile && (
-                    <span className="text-xs text-gray-400 italic">(Công khai)</span>
+                    <span className="text-xs text-gray-400 italic">
+                      (Công khai)
+                    </span>
                   )}
                 </div>
               )}
 
               {/* --- 2. Số điện thoại --- */}
-              {profile.phoneNumber && (isOwnProfile || profile.showPhoneNumber) && (
-                <div className="flex items-center gap-2">
-                  <CiPhone className="text-lg shrink-0" />
-                  <span>{profile.phoneNumber}</span>
-                  {!isOwnProfile && (
-                    <span className="text-xs text-gray-400 italic">(Công khai)</span>
-                  )}
-                </div>
-              )}
-
-              {/* --- 3. Hàng chứa Giới tính & Ngày tham gia --- */}
-              {/* Kiểm tra nếu có ít nhất 1 trong 2 thông tin thì mới render hàng này */}
-              {(profile.gender || profile.joinAt) && (
-                <div className="flex flex-wrap items-center gap-4">
-                  
-                  {/* Giới tính */}
-                  {profile.gender && (
-                    <div className="flex items-center gap-1">
-                      {profile.gender === 'MALE' ? (
-                        <>
-                          <BsGenderMale className="text-base text-blue-500" /> 
-                          <span>Nam</span>
-                        </>
-                      ) : profile.gender === 'FEMALE' ? (
-                        <>
-                          <BsGenderFemale className="text-base text-pink-500" /> 
-                          <span>Nữ</span>
-                        </>
-                      ) : (
-                        <>
-                          <span className="text-base">⚧️</span> 
-                          <span>Khác</span>
-                        </>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Ngày tham gia */}
-                  {profile.joinAt && (
-                    <div className="flex items-center gap-1">
-                      <MdOutlineSchedule className="text-lg shrink-0" />
-                      <span>Tham gia {new Date(profile.joinAt).toLocaleDateString('vi-VN')}</span>
-                    </div>
-                  )}
-                </div>
-              )}
-
+              {profile.phoneNumber &&
+                (isOwnProfile || profile.showPhoneNumber) && (
+                  <div className="flex items-center gap-2">
+                    <MdPhone className="text-2xl shrink-0" />
+                    <span>{profile.phoneNumber}</span>
+                    {!isOwnProfile && (
+                      <span className="text-xs text-gray-400 italic">
+                        (Công khai)
+                      </span>
+                    )}
+                  </div>
+                )}
             </div>
-
             {profile.bio && (
-              <p className="text-gray-700 mt-3 max-w-2xl">{profile.bio}</p>
+              <p className="text-gray-700 max-w-2xl max-h-24 overflow-auto my-6">
+                {profile.bio}
+              </p>
             )}
-
             {/* Stats */}
-            <div className="flex gap-6 mt-4">
-              <div className="text-center">
-                <div className="profile-stat-value">
-                  {profile.posts.length}
-                </div>
+            <div className="flex gap-6 my-6">
+              <div className="flex items-center gap-2">
+                <div className="profile-stat-value">{profile.posts.length}</div>
                 <div className="profile-stat-label">Bài viết</div>
               </div>
-              <div className="text-center">
+              <div className="flex items-center gap-2">
                 <div className="profile-stat-value">
                   {profile.followersCount}
                 </div>
                 <div className="profile-stat-label">Người theo dõi</div>
               </div>
-              <div className="text-center">
+              <div className="flex items-center gap-2">
                 <div className="profile-stat-value">
                   {profile.followingCount}
                 </div>
@@ -222,7 +243,6 @@ const ViewProfile = () => {
               </div>
             </div>
           </div>
-
           {/* Action Buttons */}
           {isOwnProfile && (
             <button
@@ -264,15 +284,10 @@ const ViewProfile = () => {
           {activeTab === "posts" && (
             <div className="space-y-4">
               {profile.posts.length === 0 ? (
-                <div className="profile-tab-empty">
-                  Chưa có bài viết nào
-                </div>
+                <div className="profile-tab-empty">Chưa có bài viết nào</div>
               ) : (
                 profile.posts.map((post) => (
-                  <div
-                    key={post.id}
-                    className="profile-post-card"
-                  >
+                  <div key={post.id} className="profile-post-card">
                     <div className="flex gap-4">
                       {post.thumbnailUrl && (
                         <img
@@ -281,33 +296,41 @@ const ViewProfile = () => {
                           className="profile-post-thumbnail"
                         />
                       )}
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between mb-2">
-                            <div className="flex items-center gap-2">
-                              <h3 className="profile-post-title">
-                                {post.title}
-                              </h3>
-                              {!post.isPublic && (
-                                <span className="profile-privacy-badge">
-                                  🔒 Riêng tư
-                                </span>
-                              )}
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <h3 className="profile-post-title">{post.title}</h3>
+                            {!post.isPublic && (
+                              <span className="profile-privacy-badge">
+                                🔒 Riêng tư
+                              </span>
+                            )}
                           </div>
-                          
+
                           {/* Dropdown menu 3 chấm - chỉ hiển thị nếu là chính mình */}
                           {isOwnProfile && (
-                            <div className="relative" ref={openDropdownId === post.id ? dropdownRef : null}>
+                            <div
+                              className="relative"
+                              ref={
+                                openDropdownId === post.id ? dropdownRef : null
+                              }
+                            >
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  setOpenDropdownId(openDropdownId === post.id ? null : post.id);
+                                  setOpenDropdownId(
+                                    openDropdownId === post.id ? null : post.id
+                                  );
                                 }}
                                 className="p-2 hover:bg-gray-100 rounded-full transition-colors"
                                 title="Tùy chọn"
                               >
-                                <HiDotsHorizontal className="text-gray-600" fontSize={20} />
+                                <HiDotsHorizontal
+                                  className="text-gray-600"
+                                  fontSize={20}
+                                />
                               </button>
-                              
+
                               {/* Dropdown Menu */}
                               {openDropdownId === post.id && (
                                 <div className="profile-dropdown">
@@ -323,16 +346,25 @@ const ViewProfile = () => {
                                           await togglePostPrivacy(post.id);
                                           window.location.reload();
                                         } catch (error) {
-                                          console.error('Failed to toggle privacy:', error);
+                                          console.error(
+                                            "Failed to toggle privacy:",
+                                            error
+                                          );
                                         }
                                       }}
                                       className={`profile-dropdown-item ${
-                                        post.isPublic ? 'profile-dropdown-item-active' : ''
+                                        post.isPublic
+                                          ? "profile-dropdown-item-active"
+                                          : ""
                                       }`}
                                     >
                                       <MdPublic fontSize={18} />
                                       <span>Công khai</span>
-                                      {post.isPublic && <span className="ml-auto text-green-600">✓</span>}
+                                      {post.isPublic && (
+                                        <span className="ml-auto text-green-600">
+                                          ✓
+                                        </span>
+                                      )}
                                     </button>
                                     <button
                                       onClick={async (e) => {
@@ -342,7 +374,10 @@ const ViewProfile = () => {
                                             await togglePostPrivacy(post.id);
                                             window.location.reload();
                                           } catch (error) {
-                                            console.error('Failed to toggle privacy:', error);
+                                            console.error(
+                                              "Failed to toggle privacy:",
+                                              error
+                                            );
                                           }
                                         }
                                       }}
@@ -350,7 +385,11 @@ const ViewProfile = () => {
                                     >
                                       <MdLock fontSize={18} />
                                       <span>Riêng tư</span>
-                                      {!post.isPublic && <span className="ml-auto text-gray-600">✓</span>}
+                                      {!post.isPublic && (
+                                        <span className="ml-auto text-gray-600">
+                                          ✓
+                                        </span>
+                                      )}
                                     </button>
                                   </div>
                                 </div>
@@ -361,7 +400,12 @@ const ViewProfile = () => {
                         <div className="flex items-center gap-4 text-sm text-gray-500 mt-3">
                           <span>👍 {post.upVotes} upvotes</span>
                           <span>👎 {post.downVotes} downvotes</span>
-                          <span>📅 {new Date(post.createdAt).toLocaleDateString('vi-VN')}</span>
+                          <span>
+                            📅{" "}
+                            {new Date(post.createdAt).toLocaleDateString(
+                              "vi-VN"
+                            )}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -379,10 +423,7 @@ const ViewProfile = () => {
                 </div>
               ) : (
                 profile.communities.map((community) => (
-                  <div
-                    key={community.id}
-                    className="profile-community-card"
-                  >
+                  <div key={community.id} className="profile-community-card">
                     <div className="flex items-center gap-4">
                       <img
                         src={community.thumbnailUrl}

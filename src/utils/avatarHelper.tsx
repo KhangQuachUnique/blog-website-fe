@@ -7,7 +7,7 @@ export function stringToColor(string: string) {
     hash = string.charCodeAt(i) + ((hash << 5) - hash);
   }
 
-  let color = '#';
+  let color = "#";
 
   for (i = 0; i < 3; i += 1) {
     const value = (hash >> (i * 8)) & 0xff;
@@ -18,15 +18,21 @@ export function stringToColor(string: string) {
 }
 
 // Helper function để tạo avatar từ tên với size tùy chỉnh
-export function stringAvatar(name: string, size: number = 120, fontSize: string = '2.5rem') {
-  const nameParts = name.split(' ');
-  let initials = '';
-  
+export function stringAvatar(
+  name: string,
+  size: number = 160,
+  fontSize: string = "2.5rem",
+  transform?: string,
+  border: string = "2px solid white"
+) {
+  const nameParts = name.split(" ");
+  let initials = "";
+
   // Lấy chữ cái đầu của từ đầu tiên
   if (nameParts.length > 0 && nameParts[0].length > 0) {
     initials += nameParts[0][0].toUpperCase();
   }
-  
+
   // Lấy chữ cái đầu của từ cuối cùng (nếu có nhiều hơn 1 từ)
   if (nameParts.length > 1 && nameParts[nameParts.length - 1].length > 0) {
     initials += nameParts[nameParts.length - 1][0].toUpperCase();
@@ -41,7 +47,9 @@ export function stringAvatar(name: string, size: number = 120, fontSize: string 
       width: size,
       height: size,
       fontSize: fontSize,
-      fontWeight: 'bold',
+      fontWeight: "bold",
+      transform: transform,
+      border: border,
     },
     children: initials,
   };

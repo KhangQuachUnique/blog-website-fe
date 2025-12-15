@@ -6,7 +6,7 @@ export interface User {
   bio?: string;
   avatarUrl?: string;
   dob?: string; // Date of birth
-  gender?: 'MALE' | 'FEMALE' | 'OTHER';
+  gender?: "MALE" | "FEMALE" | "OTHER";
   isPrivate: boolean;
   showEmail: boolean; // Cài đặt hiển thị email công khai
   showPhoneNumber: boolean; // Cài đặt hiển thị số điện thoại công khai
@@ -37,8 +37,9 @@ export interface UserProfile {
   phoneNumber?: string;
   bio?: string;
   avatarUrl?: string;
+  coverImageUrl?: string;
   dob?: string;
-  gender?: 'MALE' | 'FEMALE' | 'OTHER';
+  gender?: "MALE" | "FEMALE" | "OTHER";
   isPrivate: boolean;
   showEmail: boolean; // Cài đặt hiển thị email công khai
   showPhoneNumber: boolean; // Cài đặt hiển thị số điện thoại công khai
@@ -55,7 +56,7 @@ export interface UpdateProfileData {
   avatarUrl?: string;
   phoneNumber?: string;
   dob?: string;
-  gender?: 'MALE' | 'FEMALE' | 'OTHER';
+  gender?: "MALE" | "FEMALE" | "OTHER";
   showEmail?: boolean; // Cài đặt hiển thị email công khai
   showPhoneNumber?: boolean; // Cài đặt hiển thị số điện thoại công khai
 }
