@@ -6,10 +6,10 @@ import {
   useParams,
   useLocation,
 } from "react-router-dom";
-import { useGetCommunitySettings } from "../../hooks/useCommunity";
-import { useDeleteCommunity } from "../../hooks/useManageCommunityMembers";
-import { useToast } from "../../contexts/toast";
-import "../../styles/community.css";
+import { useGetCommunitySettings } from "../../../hooks/useCommunity";
+import { useDeleteCommunity } from "../../../hooks/useManageCommunityMembers";
+import { useToast } from "../../../contexts/toast";
+import "../../../styles/community.css";
 
 const ManageLayout = () => {
   const { id } = useParams();
@@ -88,7 +88,8 @@ const ManageLayout = () => {
         </div>
 
         <p style={{ marginTop: 16 }}>
-          Bạn là <strong>Thành viên</strong>. Bạn không có quyền quản lý cộng đồng.
+          Bạn là <strong>Thành viên</strong>. Bạn không có quyền quản lý cộng
+          đồng.
         </p>
       </div>
     );
@@ -206,11 +207,13 @@ const ManageLayout = () => {
 
             <h4 style={{ marginBottom: 8 }}>Xóa cộng đồng?</h4>
             <p style={{ fontSize: 14, color: "#666", marginBottom: 20 }}>
-              Hành động này <b>không thể hoàn tác</b>. Bạn chắc chắn muốn xóa cộng đồng{" "}
-              <b>{data.name}</b> chứ?
+              Hành động này <b>không thể hoàn tác</b>. Bạn chắc chắn muốn xóa
+              cộng đồng <b>{data.name}</b> chứ?
             </p>
 
-            <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
+            <div
+              style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}
+            >
               <button
                 className="btn-secondary"
                 onClick={() => setOpenDelete(false)}

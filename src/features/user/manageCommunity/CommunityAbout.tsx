@@ -1,5 +1,5 @@
 import { useParams } from "react-router-dom";
-import { useGetCommunitySettings } from "../../hooks/useCommunity";
+import { useGetCommunitySettings } from "../../../hooks/useCommunity";
 
 const CommunityAbout = () => {
   const { id } = useParams();
@@ -23,13 +23,11 @@ const CommunityAbout = () => {
         <h3>Thông tin chung</h3>
 
         <p>
-          <b>Loại cộng đồng:</b>{" "}
-          {data.isPublic ? "Công khai" : "Riêng tư"}
+          <b>Loại cộng đồng:</b> {data.isPublic ? "Công khai" : "Riêng tư"}
         </p>
 
         <p>
-          <b>Yêu cầu duyệt bài:</b>{" "}
-          {data.requirePostApproval ? "Có" : "Không"}
+          <b>Yêu cầu duyệt bài:</b> {data.requirePostApproval ? "Có" : "Không"}
         </p>
 
         <p>

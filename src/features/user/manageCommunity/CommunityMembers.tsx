@@ -1,6 +1,6 @@
 // src/pages/community/CommunityMembers.tsx
 import { useParams } from "react-router-dom";
-import { useCommunityMembers } from "../../hooks/useCommunityMembers";
+import { useCommunityMembers } from "../../../hooks/useCommunityMembers";
 
 function formatDate(iso: string) {
   const d = new Date(iso);

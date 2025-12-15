@@ -6,7 +6,7 @@ import {
   getMyCommunities,
   createCommunity,
   type MyCommunity,
-} from "./communityList.api";
+} from "../../../features/user/manageCommunity/communityList.api";
 
 const MyCommunitiesPage = () => {
   const navigate = useNavigate();
@@ -104,9 +104,7 @@ const MyCommunitiesPage = () => {
 
       {!isLoading && !isError && communities.length === 0 && (
         <div className="community-card">
-          <p style={{ marginBottom: 8 }}>
-            Bạn chưa tham gia cộng đồng nào cả.
-          </p>
+          <p style={{ marginBottom: 8 }}>Bạn chưa tham gia cộng đồng nào cả.</p>
           <button className="community-save-btn" onClick={handleOpenCreate}>
             Bắt đầu bằng cách tạo cộng đồng đầu tiên
           </button>
@@ -205,10 +203,7 @@ const MyCommunitiesPage = () => {
       {/* Modal tạo cộng đồng */}
       {openCreate && (
         <div className="community-modal-overlay" onClick={handleCloseCreate}>
-          <div
-            className="community-modal"
-            onClick={(e) => e.stopPropagation()}
-          >
+          <div className="community-modal" onClick={(e) => e.stopPropagation()}>
             <button
               className="community-modal-close"
               onClick={handleCloseCreate}
@@ -247,17 +242,13 @@ const MyCommunitiesPage = () => {
               </div>
 
               <div style={{ marginBottom: 16 }}>
-                <label className="community-field-label">
-                  Quyền riêng tư
-                </label>
+                <label className="community-field-label">Quyền riêng tư</label>
                 <div className="community-radio-group">
                   <label>
                     <input
                       type="radio"
                       checked={createForm.isPublic}
-                      onChange={() =>
-                        handleChangeCreateField("isPublic", true)
-                      }
+                      onChange={() => handleChangeCreateField("isPublic", true)}
                     />{" "}
                     Công khai (ai cũng xem được bài viết)
                   </label>

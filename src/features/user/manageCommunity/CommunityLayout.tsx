@@ -6,13 +6,14 @@ import {
   useNavigate,
   useLocation,
 } from "react-router-dom";
-import { useGetCommunitySettings } from "../../hooks/useCommunity";
+import { useGetCommunitySettings } from "../../../hooks/useCommunity";
 import {
   useJoinCommunity,
   useLeaveCommunity,
-} from "../../hooks/useManageCommunityMembers";
-import { useToast } from "../../contexts/toast";
-import "../../styles/community.css";
+} from "../../../hooks/useManageCommunityMembers";
+import { useToast } from "../../../contexts/toast";
+import "../../../styles/community.css";
+import CustomButton from "../../../components/button";
 
 const CommunityLayout = () => {
   const { id } = useParams();
@@ -53,9 +54,6 @@ const CommunityLayout = () => {
     data.thumbnailUrl ??
     "https://via.placeholder.com/1200x300?text=Community+Cover";
 
-  const basePath = `/community/${communityId}`;
-  const isPostsTab = location.pathname === basePath;
-
   // ✅ chỉ member thật sự mới được leave
   const canLeave = isMemberApproved;
 
@@ -90,8 +88,7 @@ const CommunityLayout = () => {
     } catch (e: any) {
       console.error(e);
       const msg =
-        e?.response?.data?.message ||
-        "Tham gia thất bại. Vui lòng thử lại.";
+        e?.response?.data?.message || "Tham gia thất bại. Vui lòng thử lại.";
       showToast({ type: "error", message: msg, duration: 3000 });
     }
   };
@@ -131,7 +128,7 @@ const CommunityLayout = () => {
         <img src={coverSrc} alt="cover" />
       </div>
 
-      <div style={{ padding: "20px 0" }}>
+      <div style={{ padding: "20px 150px" }}>
         <h1 style={{ fontSize: 30, fontWeight: 700 }}>{data.name}</h1>
         <p style={{ maxWidth: 700 }}>{data.description}</p>
 
@@ -154,47 +151,64 @@ const CommunityLayout = () => {
           <span>{data.memberCount} thành viên</span>
         </div>
 
-        <div className="community-actions">
-          {isAdminOrMod && (
-            <button
-              onClick={() => navigate(`/community/${communityId}/manage`)}
-              className="btn-manage"
-            >
-              Quản lý cộng đồng
-            </button>
-          )}
+        <div className="community-actions justify-between">
+          <div>
+            {isAdminOrMod && (
+              <button
+                onClick={() => navigate(`/community/${communityId}/manage`)}
+                className="btn-manage"
+              >
+                Quản lý cộng đồng
+              </button>
+            )}
 
-          {role === "NONE" && (
-            <button
-              className="btn-join-community"
-              onClick={handleJoin}
-              disabled={joinMutation.isPending}
-              title={data.isPublic ? "Tham gia cộng đồng" : "Gửi yêu cầu tham gia"}
-            >
-              {joinMutation.isPending ? "Đang xử lý..." : joinLabel}
-            </button>
-          )}
+            {role === "NONE" && (
+              <button
+                className="btn-join-community"
+                onClick={handleJoin}
+                disabled={joinMutation.isPending}
+                title={
+                  data.isPublic ? "Tham gia cộng đồng" : "Gửi yêu cầu tham gia"
+                }
+              >
+                {joinMutation.isPending ? "Đang xử lý..." : joinLabel}
+              </button>
+            )}
 
-          {role === "PENDING" && (
-            <button
-              className="btn-join-community"
-              disabled
-              title="Yêu cầu đang chờ duyệt"
-            >
-              {joinLabel}
-            </button>
-          )}
+            {role === "PENDING" && (
+              <button
+                className="btn-join-community"
+                disabled
+                title="Yêu cầu đang chờ duyệt"
+              >
+                {joinLabel}
+              </button>
+            )}
 
-          {canLeave && (
-            <button
-              className="btn-leave-community"
-              onClick={() => setOpenLeave(true)}
-              disabled={leaveMutation.isPending}
-              title="Rời khỏi cộng đồng này"
+            {canLeave && (
+              <button
+                className="btn-leave-community"
+                onClick={() => setOpenLeave(true)}
+                disabled={leaveMutation.isPending}
+                title="Rời khỏi cộng đồng này"
+              >
+                {leaveMutation.isPending ? "Đang xử lý..." : "Rời cộng đồng"}
+              </button>
+            )}
+          </div>
+          <div>
+            <CustomButton
+              variant="outline"
+              style={{
+                width: "auto",
+                border: "2px solid #F295B6",
+                color: "#F295B6",
+              }}
+              onClick={() => navigate(`/community/${communityId}/create-post`)}
             >
-              {leaveMutation.isPending ? "Đang xử lý..." : "Rời cộng đồng"}
-            </button>
-          )}
+              Tạo bài viết
+            </CustomButton>
+          </div>
         </div>
 
         {isPrivateLocked && (
@@ -203,81 +217,54 @@ const CommunityLayout = () => {
               🔒 Cộng đồng riêng tư
             </div>
             <div style={{ color: "#666", fontSize: 14 }}>
-              Bạn cần tham gia (và được duyệt nếu có) để xem bài viết và danh sách
-              thành viên.
+              Bạn cần tham gia (và được duyệt nếu có) để xem bài viết và danh
+              sách thành viên.
             </div>
           </div>
         )}
       </div>
 
-      <nav className="community-tabs">
-        <NavLink
-          to={`/community/${communityId}`}
-          end
-          onClick={preventIfLocked}
-          className={({ isActive }) =>
-            "community-tab " +
-            (isActive ? "community-tab-active" : "") +
-            (isPrivateLocked ? " community-tab-disabled" : "")
-          }
-        >
-          Bài viết
-        </NavLink>
+      <div className="w-full px-[150px] py-4">
+        <nav className="community-tabs px-[150px]">
+          <NavLink
+            to={`/community/${communityId}`}
+            end
+            onClick={preventIfLocked}
+            className={({ isActive }) =>
+              "community-tab " +
+              (isActive ? "community-tab-active" : "") +
+              (isPrivateLocked ? " community-tab-disabled" : "")
+            }
+          >
+            Bài viết
+          </NavLink>
 
-        <NavLink
-          to={`/community/${communityId}/about`}
-          className={({ isActive }) =>
-            "community-tab " + (isActive ? "community-tab-active" : "")
-          }
-        >
-          Giới thiệu
-        </NavLink>
+          <NavLink
+            to={`/community/${communityId}/about`}
+            className={({ isActive }) =>
+              "community-tab " + (isActive ? "community-tab-active" : "")
+            }
+          >
+            Giới thiệu
+          </NavLink>
 
-        <NavLink
-          to={`/community/${communityId}/members`}
-          onClick={preventIfLocked}
-          className={({ isActive }) =>
-            "community-tab " +
-            (isActive ? "community-tab-active" : "") +
-            (isPrivateLocked ? " community-tab-disabled" : "")
-          }
-        >
-          Thành viên
-        </NavLink>
-      </nav>
+          <NavLink
+            to={`/community/${communityId}/members`}
+            onClick={preventIfLocked}
+            className={({ isActive }) =>
+              "community-tab " +
+              (isActive ? "community-tab-active" : "") +
+              (isPrivateLocked ? " community-tab-disabled" : "")
+            }
+          >
+            Thành viên
+          </NavLink>
+        </nav>
+      </div>
 
-      {isPostsTab && isMemberApproved && (
-        <div className="community-card" style={{ marginBottom: 20 }}>
-          <div style={{ display: "flex", gap: 12 }}>
-            <div
-              style={{
-                width: 42,
-                height: 42,
-                borderRadius: "50%",
-                background: "#ffd1e2",
-                flexShrink: 0,
-              }}
-            />
-            <button
-              onClick={() => console.log("Open create post modal")}
-              style={{
-                flex: 1,
-                textAlign: "left",
-                padding: "10px 16px",
-                borderRadius: 999,
-                border: "1px solid #ffe4f1",
-                background: "#fff",
-                color: "#777",
-                cursor: "pointer",
-              }}
-            >
-              Bạn đang nghĩ gì?
-            </button>
-          </div>
-        </div>
-      )}
-
-      <Outlet />
+      <div style={{ padding: "0 150px 40px 150px" }}>
+        <Outlet />
+      </div>
 
       {openLeave && (
         <div

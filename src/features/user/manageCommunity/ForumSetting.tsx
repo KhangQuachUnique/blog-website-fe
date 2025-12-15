@@ -7,8 +7,8 @@ import ApproveMemberToggle from "./components/ApproveMemberToggle";
 import ForumInfoForm from "./components/ForumInfoForm";
 
 import { updateCommunitySettings } from "./community.api";
-import { useGetCommunitySettings } from "../../hooks/useCommunity";
-import { useToast } from "../../contexts/toast"; // ✅ thêm
+import { useGetCommunitySettings } from "../../../hooks/useCommunity";
+import { useToast } from "../../../contexts/toast"; // ✅ thêm
 
 const ForumSetting = () => {
   const { id } = useParams();
@@ -94,9 +94,7 @@ const ForumSetting = () => {
       <div className="community-card">
         <ApproveMemberToggle
           value={form.requireMemberApproval}
-          onChange={(val: boolean) =>
-            updateField("requireMemberApproval", val)
-          }
+          onChange={(val: boolean) => updateField("requireMemberApproval", val)}
         />
       </div>
 

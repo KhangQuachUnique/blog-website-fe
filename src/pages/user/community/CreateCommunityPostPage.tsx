@@ -3,19 +3,21 @@ import { EPostType, type ICreateBlogPostDto } from "../../../types/post";
 import { useCreatePost } from "../../../hooks/usePost";
 import { useToast } from "../../../contexts/toast";
 import { useAuthUser } from "../../../hooks/useAuth";
+import { useParams } from "react-router-dom";
 
-const CreateBlogPostPage = () => {
+const CreateCommunityPostPage = () => {
   const { user, isAuthenticated } = useAuthUser();
   const { mutate } = useCreatePost();
   const { showToast } = useToast();
+  const { id } = useParams<{ id: string }>();
+  const communityId = Number(id);
 
-  if (!isAuthenticated || !user) {
-    showToast({
-      type: "error",
-      message: "Bạn cần đăng nhập để tạo bài viết.",
-    });
-    return null; // Hoặc chuyển hướng đến trang đăng nhập
-  }
+  const userId = isAuthenticated && user ? user.id : 0;
+
+  const handleSaveDraft = (dto: ICreateBlogPostDto) => {
+    console.log("Saving Draft:", dto);
+    // TODO: Call API to save draft
+  };
 
   const handlePublish = (dto: ICreateBlogPostDto) => {
     console.log("Publishing Post:", dto);
@@ -38,11 +40,13 @@ const CreateBlogPostPage = () => {
   return (
     <EditPostForm
       mode="create"
-      authorId={user.id}
-      postType={EPostType.PERSONAL}
+      authorId={userId}
+      postType={EPostType.COMMUNITY}
+      communityId={communityId}
+      onSaveDraft={handleSaveDraft as (dto: unknown) => void}
       onPublish={handlePublish as (dto: unknown) => void}
     />
   );
 };
 
-export default CreateBlogPostPage;
+export default CreateCommunityPostPage;

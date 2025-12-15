@@ -1,4 +1,4 @@
-import axios from "../../config/axiosCustomize";
+import axios from "../../../config/axiosCustomize";
 
 export type MyCommunityRole = "ADMIN" | "MODERATOR" | "MEMBER";
 

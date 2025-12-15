@@ -5,17 +5,17 @@ import {
   useManageCommunityMembers,
   useRemoveMember,
   useUpdateMemberRole,
-} from "../../hooks/useManageCommunityMembers";
+} from "../../../hooks/useManageCommunityMembers";
 
-import { useAuthUser } from "../../hooks/useAuth";
-import { useGetCommunitySettings } from "../../hooks/useCommunity";
-import { useToast } from "../../contexts/toast";
+import { useAuthUser } from "../../../hooks/useAuth";
+import { useGetCommunitySettings } from "../../../hooks/useCommunity";
+import { useToast } from "../../../contexts/toast";
 
 import type {
   CommunityMember,
   CommunityRole,
   ManageCommunityRole,
-} from "../../services/user/community/communityService";
+} from "../../../services/user/community/communityService";
 
 type Filter = "all" | CommunityRole | "PENDING";
 
@@ -415,7 +415,8 @@ export default function MemberManagement() {
                     if (modCannotEditAdmin) {
                       showToast({
                         type: "error",
-                        message: "Moderator không thể thay đổi vai trò của Admin.",
+                        message:
+                          "Moderator không thể thay đổi vai trò của Admin.",
                       });
                       return;
                     }
@@ -425,9 +426,7 @@ export default function MemberManagement() {
                   style={{
                     padding: "6px 10px",
                     borderRadius: 12,
-                    border: isDirty
-                      ? "1px solid #d81b60"
-                      : "1px solid #f7bad0",
+                    border: isDirty ? "1px solid #d81b60" : "1px solid #f7bad0",
                     background: "#fff",
                     cursor:
                       updateRole.isPending || modCannotEditAdmin

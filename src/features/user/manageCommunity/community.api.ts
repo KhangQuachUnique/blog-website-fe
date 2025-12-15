@@ -1,5 +1,5 @@
 // src/pages/community/community.api.ts
-import axios from "../../config/axiosCustomize";
+import axios from "../../../config/axiosCustomize";
 
 const COMMUNITY_ID = 1; // tạm thời fix id
 
@@ -10,7 +10,10 @@ export async function getCommunitySettings() {
   return response;
 }
 
-export async function updateCommunitySettings(communityId: number, payload: any) {
+export async function updateCommunitySettings(
+  communityId: number,
+  payload: any
+) {
   return axios.patch(`/communities/${communityId}`, payload);
 }
 

@@ -8,12 +8,12 @@ import adminUserRoutes from "./admin/user.route";
 import adminPostRoutes from "./admin/post.route";
 import adminReportRoutes from "./admin/report.route";
 import authRoutes from "./auth/auth.route";
-import communityRoutes from "./community.route";
+import communityRoutes from "./user/community.route";
 
 import manageBlogPostsRoutes from "./user/manageBlogPosts.route";
 import HomePage from "../pages/home/HomePage";
 import newsfeedRoutes from "./user/newsfeed.route";
-import MyCommunitiesPage from "../pages/community/MyCommunitiesPage";
+import MyCommunitiesPage from "../pages/user/community/MyCommunitiesPage";
 import PostDetailsPage from "../pages/user/post/postDetailsPage";
 
 export const router = createBrowserRouter([
