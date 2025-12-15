@@ -11,14 +11,14 @@ const LoginPage = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
   const { showToast } = useToast();
-  const [email, setEmail] = useState("");
+  const [emailOrUsername, setEmailOrUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [gifSrc, setGifSrc] = useState(LOCAL_GIF);
 
   const validate = () => {
-    if (!email) {
-      showToast({ type: "error", message: "Vui lòng nhập email" });
+    if (!emailOrUsername) {
+      showToast({ type: "error", message: "Vui lòng nhập email hoặc username" });
       return false;
     }
     if (!password) {
@@ -33,7 +33,7 @@ const LoginPage = () => {
     if (!validate()) return;
     setLoading(true);
     try {
-      await login(email, password);
+      await login(emailOrUsername, password);
       showToast({ type: "success", message: "Đăng nhập thành công!" });
       navigate("/", { replace: true });
     } catch (err: any) {
@@ -42,8 +42,10 @@ const LoginPage = () => {
       // Check if error is about email verification
       if (errorMessage.includes("chưa được xác thực") || errorMessage.includes("not verified")) {
         showToast({ type: "info", message: "Email chưa được xác thực. Đang chuyển đến trang xác thực..." });
+        // Try to extract email if it looks like email, otherwise just navigate
+        const emailToVerify = emailOrUsername.includes("@") ? emailOrUsername : "";
         setTimeout(() => {
-          navigate("/verify-email", { state: { email } });
+          navigate("/verify-email", { state: { email: emailToVerify } });
         }, 1500);
       } else {
         showToast({ type: "error", message: errorMessage });
@@ -75,13 +77,13 @@ const LoginPage = () => {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-1">Email</label>
+              <label className="block text-sm font-medium mb-1">Email hoặc Username</label>
               <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                type="text"
+                value={emailOrUsername}
+                onChange={(e) => setEmailOrUsername(e.target.value)}
                 className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F295B6]"
-                placeholder="you@example.com"
+                placeholder="you@example.com hoặc username"
               />
             </div>
 
@@ -110,6 +112,12 @@ const LoginPage = () => {
             Chưa có tài khoản?{' '}
             <NavLink to="/register" className="font-semibold text-[#F295B6]">
               Đăng ký
+            </NavLink>
+          </div>
+
+          <div className="mt-2 text-center text-sm text-gray-600">
+            <NavLink to="/forgot-password" className="font-semibold text-[#F295B6]">
+              Quên mật khẩu?
             </NavLink>
           </div>
 

@@ -7,7 +7,7 @@ const unwrap = (res: any) => {
 };
 
 export interface LoginRequest {
-  email: string;
+  emailOrUsername: string;
   password: string;
 }
 
@@ -62,5 +62,15 @@ export const sendOtp = async (email: string): Promise<{ message: string }> => {
 
 export const verifyOtp = async (email: string, otp: string): Promise<{ message: string }> => {
   const response = await axiosCustomize.post('/auth/verify-otp', { email, otp });
+  return unwrap(response);
+};
+
+export const sendResetOtp = async (email: string): Promise<{ message: string }> => {
+  const response = await axiosCustomize.post('/auth/forgot-password/send-otp', { email });
+  return unwrap(response);
+};
+
+export const resetPassword = async (email: string, otp: string, newPassword: string): Promise<{ message: string }> => {
+  const response = await axiosCustomize.post('/auth/forgot-password/reset', { email, otp, newPassword });
   return unwrap(response);
 };
