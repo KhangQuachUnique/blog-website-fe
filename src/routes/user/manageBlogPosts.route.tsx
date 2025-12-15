@@ -1,4 +1,4 @@
-import { ProtectedRoute } from "../../components/ProtectedRoute";
+import { RoleGuard } from "../../components/guards";
 import CreateBlogPostPage from "../../pages/user/manageBlogPosts/createPostPage";
 import UpdateBlogPostPage from "../../pages/user/manageBlogPosts/updatePostPage";
 
@@ -6,17 +6,17 @@ const manageBlogPostsRoutes = [
   {
     path: "/post/create",
     element: (
-      <ProtectedRoute>
+      <RoleGuard>
         <CreateBlogPostPage />
-      </ProtectedRoute>
+      </RoleGuard>
     ),
   },
   {
     path: "/post/edit/:id",
     element: (
-      <ProtectedRoute>
+      <RoleGuard>
         <UpdateBlogPostPage />
-      </ProtectedRoute>
+      </RoleGuard>
     ),
   },
 ];

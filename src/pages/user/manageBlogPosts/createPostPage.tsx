@@ -5,14 +5,17 @@ import { useToast } from "../../../contexts/toast";
 import { useAuthUser } from "../../../hooks/useAuth";
 
 const CreateBlogPostPage = () => {
-  const { user } = useAuthUser();
+  const { user, isLoading, isAuthenticated } = useAuthUser();
   const { mutate } = useCreatePost();
   const { showToast } = useToast();
 
-  const handleSaveDraft = (dto: ICreateBlogPostDto) => {
-    console.log("Saving Draft:", dto);
-    // TODO: Call API to save draft
-  };
+  if (isLoading) {
+    return <p>Đang tải...</p>;
+  }
+
+  if (!isAuthenticated || !user) {
+    return <p>Bạn cần đăng nhập để tạo bài viết.</p>;
+  }
 
   const handlePublish = (dto: ICreateBlogPostDto) => {
     console.log("Publishing Post:", dto);
@@ -37,7 +40,6 @@ const CreateBlogPostPage = () => {
       mode="create"
       authorId={user?.id || 0}
       postType={EPostType.PERSONAL}
-      onSaveDraft={handleSaveDraft as (dto: unknown) => void}
       onPublish={handlePublish as (dto: unknown) => void}
     />
   );

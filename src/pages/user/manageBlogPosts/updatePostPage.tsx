@@ -12,9 +12,9 @@ const UpdatePostPage = () => {
   const { data: post, isLoading, error } = useGetPostById(postId);
   const { mutate } = useUpdatePost();
   const { showToast } = useToast();
-  const { user } = useAuthUser();
+  const { user, isLoading: isAuthLoading } = useAuthUser();
 
-  if (isLoading) {
+  if (isLoading || isAuthLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[300px] text-[#F295B6]">
         <svg
