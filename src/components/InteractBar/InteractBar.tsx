@@ -29,16 +29,7 @@ const THEME = {
   shadowStrong: '0 8px 32px rgba(242, 149, 182, 0.25)',
 };
 
-// Backward compatibility
-const COLORS = {
-  primaryPink: THEME.primary,
-  lightPink: THEME.secondary,
-  lighterPink: THEME.tertiary,
-  pinkBg: THEME.cream,
-  primaryText: THEME.text,
-  secondaryText: THEME.textMuted,
-  white: THEME.white,
-};
+// Backward compatibility - removed unused COLORS constant
 
 // Emoji reactions with pastel vibes
 const EMOJI_LIST = [
@@ -226,7 +217,7 @@ const EmojiPicker: React.FC<{
         }}
         onMouseDown={(e) => e.stopPropagation()}
       >
-        {EMOJI_LIST.map((item, index) => (
+        {EMOJI_LIST.map((item) => (
           <button
             key={item.id}
             onClick={() => onSelect(item.id)}

@@ -1,6 +1,7 @@
 import LoginPage from "../../pages/auth/loginPage";
 import RegisterPage from "../../pages/auth/registerPage";
 import VerifyEmailPage from "../../pages/auth/verifyEmailPage";
+import ForgotPasswordPage from "../../pages/auth/forgotPasswordPage";
 
 const authRoutes = [
   {
@@ -14,6 +15,10 @@ const authRoutes = [
   {
     path: "/verify-email",
     element: <VerifyEmailPage />,
+  },
+  {
+    path: "/forgot-password",
+    element: <ForgotPasswordPage />,
   },
 ];
 
