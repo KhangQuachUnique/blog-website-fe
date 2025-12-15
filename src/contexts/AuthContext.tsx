@@ -2,14 +2,7 @@ import { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import * as authService from '../services/auth';
 import { ACCESS_TOKEN_KEY } from '../constants/auth';
-
-interface User {
-  id: number;
-  username: string;
-  email: string;
-  role?: string;
-  avatarUrl?: string;
-}
+import type { User } from '../types/user';
 
 interface AuthContextType {
   user: User | null;
