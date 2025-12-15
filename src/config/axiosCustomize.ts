@@ -72,8 +72,8 @@ instance.interceptors.response.use(
         return Promise.reject(refreshError);
       }
     }
-    // if (error.response && error.response.data)
-    //   error = error.response.data || error;
+    if (error.response && error.response.data)
+      error = error.response.data || error;
 
     return Promise.reject(error);
   }

@@ -28,8 +28,14 @@ export default function Newsfeed() {
 
       if (node) {
         observer.current = new IntersectionObserver((entries) => {
-          if (entries[0].isIntersecting && hasNextPage) {
-            fetchNextPage();
+          if (entries[0].isIntersecting) {
+            console.debug("Newsfeed: sentinel intersecting", { hasNextPage });
+            if (hasNextPage ?? true) {
+              console.debug("Newsfeed: fetchNextPage() called");
+              fetchNextPage();
+            } else {
+              console.debug("Newsfeed: hasNextPage is false, not fetching");
+            }
           }
         });
         observer.current.observe(node);
@@ -72,7 +78,7 @@ export default function Newsfeed() {
         Newsfeed
       </h1>
 
-      <NewsfeedList posts={posts} loadMoreRef={lastPostRef} />
+      <NewsfeedList posts={posts} loadMoreRef={lastPostRef} isFetchingNextPage={isFetchingNextPage} hasNextPage={hasNextPage} />
 
       {isFetchingNextPage && (
         <div className="flex justify-center py-8">

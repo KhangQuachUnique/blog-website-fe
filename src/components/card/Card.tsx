@@ -8,18 +8,16 @@ import "../../styles/newsfeed/Card.css";
 const Card = ({ post }: { post: IPostResponseDto }) => {
   const { user } = useAuth();
   
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
+  const formatDate = (dateInput: string | Date) => {
+    const date = dateInput instanceof Date ? dateInput : new Date(dateInput);
     const now = new Date();
     const diff = Math.floor((now.getTime() - date.getTime()) / 1000);
 
-    if (diff < 60) return "vừa xong";
     if (diff < 60) return "vừa xong";
     if (diff < 3600) return `${Math.floor(diff / 60)} phút trước`;
     if (diff < 86400) return `${Math.floor(diff / 3600)} giờ trước`;
     if (diff < 604800) return `${Math.floor(diff / 86400)} ngày trước`;
     return date.toLocaleDateString("vi-VN");
-    // return date.toLocaleDateString("vi-VN");
   };
 
   return (

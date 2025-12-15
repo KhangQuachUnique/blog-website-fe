@@ -1,6 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
 import GridLayout from "react-grid-layout";
 import { InputBase } from "@mui/material";
+import {
+  GRID_SETTINGS,
+  BLOCK_WRAPPER,
+  BUTTON_STYLE_OUTLINE,
+  BUTTON_STYLE_PRIMARY,
+} from "./layoutConstants";
 
 import TextBlock from "../../../components/block/textBlockEdit";
 import ImageBlock from "../../../components/block/imageBlockEdit";
@@ -8,7 +14,7 @@ import DeleteConfirmButton from "../../../components/deleteConfirmButton";
 import CustomButton from "../../../components/button";
 import BlockSidebar from "./components/blockSidebar";
 import ConfigDialog from "./components/configDialog";
-import { EBlockType } from "../../../types/block";
+import { EBlockType, type ICreateBlockDto } from "../../../types/block";
 import { usePostForm, type LayoutItem } from "./usePostForm";
 import type {
   IPostResponseDto,
@@ -70,6 +76,7 @@ const EditPostForm = ({
     handleBlockContentChange,
     handleBlockCaptionChange,
     handleBlockObjectFitChange,
+    handleBlockHeightChange,
     handleDeleteBlock,
     handleAddBlock,
     handleGridDrop,
@@ -111,7 +118,7 @@ const EditPostForm = ({
    * Build DTOs
    */
   const buildBlocksDto = useCallback(
-    (imageUrls: Record<string, string>) => {
+    (imageUrls: Record<string, string>): ICreateBlockDto[] => {
       return blocks.map((block) => {
         const layoutItem = layout.find((item) => item.i === block.id);
 
@@ -131,6 +138,8 @@ const EditPostForm = ({
           height: layoutItem?.h ?? 6,
           type: block.type,
           content,
+          imageCaption: block.imageCaption,
+          objectFit: block.objectFit,
         };
       });
     },
@@ -239,7 +248,7 @@ const EditPostForm = ({
       <BlockSidebar onAddBlock={handleAddBlock} />
 
       {/* Title & Description */}
-      <div className="w-[800px] p-3">
+      <div style={{ width: GRID_SETTINGS.width, padding: 12 }}>
         <InputBase
           placeholder="Nhập tiêu đề bài viết..."
           className="w-full"
@@ -251,6 +260,7 @@ const EditPostForm = ({
             fontWeight: "bold",
             fontFamily: "Quicksand, Mona Sans, Open Sans, Outfit, sans-serif",
           }}
+          spellCheck={false}
         />
         <InputBase
           placeholder="Nhập mô tả ngắn về bài viết..."
@@ -265,33 +275,32 @@ const EditPostForm = ({
             color: "#8c1d35",
             fontFamily: "Quicksand, Mona Sans, Open Sans, Outfit, sans-serif",
           }}
+          spellCheck={false}
         />
       </div>
 
       {/* Grid Layout */}
-      <div className="w-[800px]">
+      <div style={{ width: GRID_SETTINGS.width, margin: '0 auto' }}>
         <GridLayout
           layout={layout}
           onLayoutChange={(newLayout) =>
             handleLayoutChange(newLayout as LayoutItem[])
           }
-          cols={16}
-          rowHeight={30}
-          width={800}
+          cols={GRID_SETTINGS.cols}
+          rowHeight={GRID_SETTINGS.rowHeight}
+          width={GRID_SETTINGS.width}
           isDraggable={isCtrlPressed}
           isResizable={true}
           draggableCancel=".rgl-no-drag"
           isDroppable={true}
           onDrop={handleGridDrop}
-          droppingItem={{ i: "__dropping-elem__", w: 8, h: 6 }}
+          droppingItem={{ i: "__dropping-elem__", ...GRID_SETTINGS.defaultItem }}
         >
           {blocks.map((block) => (
             <div
               key={block.id}
-              className={`border-dashed border-2 rounded-lg border-gray-300 relative ${
-                isCtrlPressed
-                  ? "cursor-move border-pink-400 select-none"
-                  : "cursor-default"
+              className={`${BLOCK_WRAPPER.base} ${
+                isCtrlPressed ? BLOCK_WRAPPER.ctrlPressed : BLOCK_WRAPPER.default
               }`}
             >
               {block.type === EBlockType.TEXT ? (
@@ -301,18 +310,19 @@ const EditPostForm = ({
                   onContentChange={(newContent) =>
                     handleBlockContentChange(block.id, newContent)
                   }
+                  onHeightChange={handleBlockHeightChange}
                   style={isCtrlPressed ? { pointerEvents: "none" } : {}}
                 />
               ) : (
                 <ImageBlock
                   id={block.id}
                   imageUrl={block.content}
-                  caption={block.caption}
+                  imageCaption={block.imageCaption}
                   objectFit={block.objectFit}
                   handleAppendImageForm={handleAppendImageForm}
                   handleRemoveImageForm={handleRemoveImageForm}
                   onImageChange={(id, url) => handleBlockContentChange(id, url)}
-                  onCaptionChange={(id, caption) =>
+                  onImageCaptionChange={(id, caption) =>
                     handleBlockCaptionChange(id, caption)
                   }
                   onObjectFitChange={(id, objectFit) =>
@@ -341,36 +351,19 @@ const EditPostForm = ({
           <CustomButton
             variant="outline"
             onClick={handleSaveDraft}
-            style={{
-              color: "#F295B6",
-              border: "2px solid #F295B6",
-              fontWeight: "600",
-            }}
+            style={BUTTON_STYLE_OUTLINE}
           >
             Lưu nháp
           </CustomButton>
           <CustomButton
             onClick={handleNextStepClick}
-            style={{
-              width: "auto",
-              backgroundColor: "#F295B6",
-              color: "white",
-              fontWeight: "600",
-            }}
+            style={{ width: "auto", ...BUTTON_STYLE_PRIMARY }}
           >
             Bước tiếp theo
           </CustomButton>
         </div>
       ) : (
-        <CustomButton
-          onClick={handleNextStepClick}
-          style={{
-            width: "auto",
-            backgroundColor: "#F295B6",
-            color: "white",
-            fontWeight: "600",
-          }}
-        >
+        <CustomButton onClick={handleNextStepClick} style={{ width: "auto", ...BUTTON_STYLE_PRIMARY }}>
           Bước tiếp theo
         </CustomButton>
       )}
