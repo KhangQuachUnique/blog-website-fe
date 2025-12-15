@@ -1,17 +1,17 @@
 import { Link } from "react-router-dom";
 import type { IPostResponseDto } from "../../types/post";
 import { InteractBar } from "../InteractBar";
-import { recordViewedPost } from '../../services/user/viewedHistory';
+import { recordViewedPost } from "../../services/user/viewedHistory";
 import { useAuth } from "../../contexts/AuthContext";
-import Avatar from '@mui/material/Avatar';
-import { stringAvatar } from '../../utils/avatarHelper';
+import Avatar from "@mui/material/Avatar";
+import { stringAvatar } from "../../utils/avatarHelper";
 import "../../styles/newsfeed/Card.css";
 
 const Card = ({ post }: { post: IPostResponseDto }) => {
   const { user } = useAuth();
-  
-  const formatDate = (date: Date | string) => {
-    const dateObj = typeof date === 'string' ? new Date(date) : date;
+
+  const formatDate = (dateInput: string | Date) => {
+    const date = dateInput instanceof Date ? dateInput : new Date(dateInput);
     const now = new Date();
     const diff = Math.floor((now.getTime() - dateObj.getTime()) / 1000);
 
@@ -19,7 +19,7 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
     if (diff < 3600) return `${Math.floor(diff / 60)} phút trước`;
     if (diff < 86400) return `${Math.floor(diff / 3600)} giờ trước`;
     if (diff < 604800) return `${Math.floor(diff / 86400)} ngày trước`;
-    return dateObj.toLocaleDateString("vi-VN");
+    return date.toLocaleDateString("vi-VN");
   };
 
   return (
@@ -41,7 +41,7 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
           />
         </Link>
       )}
-      
+
       {/* Content + InteractBar bên phải */}
       <div className="newsfeed-card__right">
         <Link
@@ -61,7 +61,7 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
                   className="newsfeed-card__avatar"
                 />
               ) : (
-                <Avatar {...stringAvatar(post.author.username, 40, '1rem')} />
+                <Avatar {...stringAvatar(post.author.username, 40, "1rem")} />
               )}
               <div className="newsfeed-card__author-info">
                 <span className="newsfeed-card__username">
@@ -101,9 +101,12 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
             </div>
           )}
         </Link>
-        
+
         {/* InteractBar nằm dưới content */}
-        <div className="newsfeed-card__interact" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="newsfeed-card__interact"
+          onClick={(e) => e.stopPropagation()}
+        >
           <InteractBar
             postId={post.id}
             userId={user?.id ?? 0}
