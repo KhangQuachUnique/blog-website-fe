@@ -1,13 +1,13 @@
 import { Link } from "react-router-dom";
 import type { IPostResponseDto } from "../../types/post";
 import { InteractBar } from "../InteractBar";
-import { recordViewedPost } from '../../services/user/viewedHistory';
+import { recordViewedPost } from "../../services/user/viewedHistory/viewedHistory";
 import { useAuth } from "../../contexts/AuthContext";
 import "../../styles/newsfeed/Card.css";
 
 const Card = ({ post }: { post: IPostResponseDto }) => {
   const { user } = useAuth();
-  
+
   const formatDate = (dateInput: string | Date) => {
     const date = dateInput instanceof Date ? dateInput : new Date(dateInput);
     const now = new Date();
@@ -39,7 +39,7 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
           />
         </Link>
       )}
-      
+
       {/* Content + InteractBar bên phải */}
       <div className="newsfeed-card__right">
         <Link
@@ -95,9 +95,12 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
             </div>
           )}
         </Link>
-        
+
         {/* InteractBar nằm dưới content */}
-        <div className="newsfeed-card__interact" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="newsfeed-card__interact"
+          onClick={(e) => e.stopPropagation()}
+        >
           <InteractBar
             postId={post.id}
             userId={user?.id ?? 0}

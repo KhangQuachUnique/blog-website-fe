@@ -1,7 +1,7 @@
-import { createContext, useContext, useState, useEffect } from 'react';
-import type { ReactNode } from 'react';
-import * as authService from '../services/auth';
-import { ACCESS_TOKEN_KEY } from '../constants/auth';
+import { createContext, useContext, useState, useEffect } from "react";
+import type { ReactNode } from "react";
+import * as authService from "../services/auth";
+import { ACCESS_TOKEN_KEY } from "../constants/auth";
 
 interface User {
   id: number;
@@ -26,7 +26,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 };
@@ -42,42 +42,44 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   // On mount: try to restore session from localStorage token first
   useEffect(() => {
     const initAuth = async () => {
-      console.log('[AuthContext] Initializing auth...');
-      
+      console.log("[AuthContext] Initializing auth...");
+
       // First check if we have a token in localStorage
       const existingToken = localStorage.getItem(ACCESS_TOKEN_KEY);
-      
+
       if (existingToken) {
-        console.log('[AuthContext] Found existing token, loading user...');
+        console.log("[AuthContext] Found existing token, loading user...");
         try {
           // Try to get current user with existing token
           const userData = await authService.getCurrentUser();
-          console.log('[AuthContext] User loaded:', userData);
+          console.log("[AuthContext] User loaded:", userData);
           setUser(userData);
           setIsLoading(false);
           return;
         } catch (error) {
-          console.log('[AuthContext] Token expired or invalid, trying refresh...');
+          console.log(
+            "[AuthContext] Token expired or invalid, trying refresh..."
+          );
           // Token expired, try refresh below
         }
       }
 
       // If no token or token expired, try refresh
       try {
-        console.log('[AuthContext] Calling /auth/refresh...');
+        console.log("[AuthContext] Calling /auth/refresh...");
         const refreshResponse = await authService.refresh();
-        console.log('[AuthContext] Refresh response:', refreshResponse);
-        
+        console.log("[AuthContext] Refresh response:", refreshResponse);
+
         if (refreshResponse.accessToken) {
           localStorage.setItem(ACCESS_TOKEN_KEY, refreshResponse.accessToken);
-          console.log('[AuthContext] Token saved, loading user data...');
+          console.log("[AuthContext] Token saved, loading user data...");
           const userData = await authService.getCurrentUser();
-          console.log('[AuthContext] User data loaded:', userData);
+          console.log("[AuthContext] User data loaded:", userData);
           setUser(userData);
         }
       } catch (error) {
         // No valid refresh token - user not logged in
-        console.log('[AuthContext] Refresh failed:', error);
+        console.log("[AuthContext] Refresh failed:", error);
         localStorage.removeItem(ACCESS_TOKEN_KEY);
         setUser(null);
       } finally {

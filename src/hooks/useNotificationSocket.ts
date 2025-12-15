@@ -1,29 +1,34 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
-import { io, Socket } from "socket.io-client";
 
-let socket: Socket | null = null;
+import { useAuth } from "./useAuth";
+import { getSocket } from "../lib/socket";
+import type { NotificationResponseDto } from "../types/notification";
 
-export function useNotificationSocket(userId: string) {
+export const useNotificationSocket = () => {
+  const { user, isAuthenticated } = useAuth();
+  const queryClient = useQueryClient();
+
   useEffect(() => {
-    if (!userId) return;
+    if (!isAuthenticated || !user) return;
 
-    socket = io("http://localhost:8080", {
-      transports: ["websocket"],
+    const socket = getSocket();
 
-      query: { userId },
-    });
+    socket.auth = { userId: user.id };
+    socket.connect();
 
-    socket.on("connect", () => {
-      console.log("Connected to WS");
-      socket?.emit("join", userId);
-    });
+    const onNewNotification = (notification: NotificationResponseDto) => {
+      queryClient.setQueryData<NotificationResponseDto[]>(
+        ["notifications", user.id],
+        (oldNotifications = []) => [notification, ...oldNotifications]
+      );
+    };
 
-    socket.on("notification", (data) => {
-      console.log("New notification:", data);
-    });
+    socket.on("notification:new", onNewNotification);
 
     return () => {
-      socket?.disconnect();
+      socket.off("notification:new", onNewNotification);
+      socket.disconnect();
     };
-  }, [userId]);
-}
+  }, [isAuthenticated, user, queryClient]);
+};
