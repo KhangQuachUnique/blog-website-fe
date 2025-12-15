@@ -6,10 +6,19 @@
 
 @import "react-grid-layout/css/styles.css";
 @import "react-resizable/css/styles.css";
+@import "./toast/toast.css";
 
 /* Custom placeholder color - pink instead of red */
 .react-grid-placeholder {
   background: #f295b6 !important;
   opacity: 0.3 !important;
   border-radius: 10px !important;
+}
+
+.ProseMirror p.is-editor-empty::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: #9ca3af; /* gray-400 */
+  pointer-events: none;
+  height: 0;
 }

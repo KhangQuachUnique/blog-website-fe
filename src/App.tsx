@@ -1,14 +1,13 @@
 import { RouterProvider } from "react-router-dom";
 import { router } from "./routes";
-
-import { useNotificationSocket } from "./hooks/useNotificationSocket";
+import { ToastProvider } from "./contexts/toast";
 
 function App() {
-  const userId = "54"; // lấy từ auth hoặc redux
-
-  useNotificationSocket(userId);
-
-  return <RouterProvider router={router} />;
+  return (
+    <ToastProvider>
+      <RouterProvider router={router} />
+    </ToastProvider>
+  );
 }
 
 export default App;

@@ -1,9 +1,8 @@
 // src/components/NewsfeedList.tsx
-import Card from '../card/Card';
-import type  { IPostResponseDto } from '../../types/post';
-import { Loader2 } from 'lucide-react';
-import Masonry from 'react-masonry-css';
-import '../../styles/newsfeed/NewsfeedList.css';
+import Card from "../card/Card";
+import type { IPostResponseDto } from "../../types/post";
+import Masonry from "react-masonry-css";
+import "../../styles/newsfeed/NewsfeedList.css";
 
 interface Props {
   posts: IPostResponseDto[];
@@ -15,7 +14,7 @@ interface Props {
 // NewsfeedList.tsx using react-masonry-css
 const NewsfeedList = ({ posts, loadMoreRef }: Props) => {
   const breakpointCols = {
-    default:1
+    default: 1,
   };
 
   return (
@@ -25,18 +24,23 @@ const NewsfeedList = ({ posts, loadMoreRef }: Props) => {
         className="newsfeed-masonry-grid"
         columnClassName="newsfeed-masonry-grid_column"
       >
-        {posts.map((post) => (
-          <div key={post.id} className="newsfeed-masonry-item">
-            <Card post={post} />
-          </div>
-        ))}
+        {posts.map((post, idx) => {
+          const isLast = idx === posts.length - 1;
+          return (
+            <div
+              key={post.id}
+              className="newsfeed-masonry-item"
+              ref={isLast ? (loadMoreRef as any) : undefined}
+            >
+              <Card post={post} />
+            </div>
+          );
+        })}
       </Masonry>
 
-      {/* sentinel for infinite scroll */}
-      <div ref={loadMoreRef as any} />
+      {/* sentinel is attached to the last item via ref in the map above */}
     </div>
   );
 };
-
 
 export default NewsfeedList;
