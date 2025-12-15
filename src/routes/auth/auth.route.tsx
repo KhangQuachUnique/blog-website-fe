@@ -2,15 +2,24 @@ import LoginPage from "../../pages/auth/loginPage";
 import RegisterPage from "../../pages/auth/registerPage";
 import VerifyEmailPage from "../../pages/auth/verifyEmailPage";
 import ForgotPasswordPage from "../../pages/auth/forgotPasswordPage";
+import RoleGuard from "../../components/guards/RoleGuard";
 
 const authRoutes = [
   {
     path: "/login",
-    element: <LoginPage />,
+    element: (
+      <RoleGuard guestOnly>
+        <LoginPage />
+      </RoleGuard>
+    ),
   },
   {
     path: "/register",
-    element: <RegisterPage />,
+    element: (
+      <RoleGuard guestOnly>
+        <RegisterPage />
+      </RoleGuard>
+    ),
   },
   {
     path: "/verify-email",
@@ -18,7 +27,11 @@ const authRoutes = [
   },
   {
     path: "/forgot-password",
-    element: <ForgotPasswordPage />,
+    element: (
+      <RoleGuard guestOnly>
+        <ForgotPasswordPage />
+      </RoleGuard>
+    ),
   },
 ];
 
