@@ -12,26 +12,21 @@ import manageBlogPostsRoutes from "./user/manageBlogPosts.route";
 import HomePage from "../pages/home/HomePage";
 import newsfeedRoutes from "./user/newsfeed.route";
 import MyCommunitiesPage from "../pages/community/MyCommunitiesPage";
+import PostDetailsPage from "../pages/user/post/postDetailsPage";
 
 export const router = createBrowserRouter([
   {
     path: "/",
     element: <UserLayout />,
     children: [
-      {
-        index: true,
-        element: <HomePage />,
-      },
-      {
-        path: "saved",
-        element: <div>Saved Posts</div>,
-      },
-      {
-        path: "groups",
-        element: <MyCommunitiesPage />,
-      },
+      { index: true, element: <HomePage /> },
+      { path: "saved", element: <div>Saved Posts</div> },
+      { path: "groups", element: <MyCommunitiesPage /> },
 
       ...communityRoutes,
+
+      { path: "post/:id", element: <PostDetailsPage /> },
+
       ...manageBlogPostsRoutes,
       ...newsfeedRoutes,
     ],

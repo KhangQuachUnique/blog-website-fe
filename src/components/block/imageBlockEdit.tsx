@@ -1,37 +1,38 @@
 import { useState, useRef } from "react";
 import { IoClose } from "react-icons/io5";
 import { BsImage } from "react-icons/bs";
-
-type ObjectFitType = "contain" | "cover" | "fill";
+import { ObjectFitType } from "../../types/block";
 
 interface ImageBlockEditProps {
   id: string;
   imageUrl?: string;
-  caption?: string;
+  imageCaption?: string;
   objectFit?: ObjectFitType;
   style?: React.CSSProperties;
   handleAppendImageForm?: (key: string, file: File) => void;
   handleRemoveImageForm?: (key: string) => void;
   onImageChange?: (id: string, imageUrl: string) => void;
-  onCaptionChange?: (id: string, caption: string) => void;
+  onImageCaptionChange: (id: string, imageCaption: string) => void;
   onObjectFitChange?: (id: string, objectFit: ObjectFitType) => void;
 }
 
 const ImageBlockEdit = ({
   id,
   imageUrl: initialImageUrl,
-  caption: initialCaption = "",
-  objectFit: initialObjectFit = "cover",
+  imageCaption: initialImageCaption,
+  objectFit: initialObjectFit,
   style,
   handleAppendImageForm,
   handleRemoveImageForm,
   onImageChange,
-  onCaptionChange,
+  onImageCaptionChange,
   onObjectFitChange,
 }: ImageBlockEditProps) => {
   const [imageUrl, setImageUrl] = useState(initialImageUrl || "");
-  const [caption, setCaption] = useState(initialCaption);
-  const [objectFit, setObjectFit] = useState<ObjectFitType>(initialObjectFit);
+  const [imageCaption, setImageCaption] = useState(initialImageCaption);
+  const [objectFit, setObjectFit] = useState<ObjectFitType>(
+    initialObjectFit || ObjectFitType.COVER
+  );
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -80,10 +81,10 @@ const ImageBlockEdit = ({
     setIsDragging(false);
   };
 
-  const handleCaptionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageCaptionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newCaption = e.target.value;
-    setCaption(newCaption);
-    onCaptionChange?.(id, newCaption);
+    setImageCaption(newCaption);
+    onImageCaptionChange(id, newCaption);
   };
 
   const handleObjectFitChange = (newObjectFit: ObjectFitType) => {
@@ -93,9 +94,9 @@ const ImageBlockEdit = ({
 
   const handleRemoveImage = () => {
     setImageUrl("");
-    setCaption("");
+    setImageCaption("");
     onImageChange?.(id, "");
-    onCaptionChange?.(id, "");
+    onImageCaptionChange?.(id, "");
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -156,10 +157,10 @@ const ImageBlockEdit = ({
       <div className="relative flex-1 overflow-hidden rounded-lg bg-gradient-to-br from-white via-pink-50/30 to-blue-50/30">
         <img
           src={imageUrl}
-          alt={caption || "Blog image"}
+          alt={imageCaption || "Blog image"}
           className="w-full h-full"
           style={{
-            objectFit: objectFit,
+            objectFit: objectFit.toLowerCase() as "contain" | "cover" | "fill",
           }}
         />
         {/* Overlay khi hover */}
@@ -194,7 +195,7 @@ const ImageBlockEdit = ({
         {/* Bottom Right: Object Fit Bar */}
         <div className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-auto">
           <div className="flex items-center gap-2 bg-white/40 hover:bg-white/50 backdrop-blur-xl rounded-full px-1 py-1 shadow-xl border border-white/60 hover:border-white/80 transition-all">
-            {(["contain", "cover", "fill"] as const).map((fit) => (
+            {Object.values(ObjectFitType).map((fit) => (
               <button
                 key={fit}
                 onClick={() => handleObjectFitChange(fit)}
@@ -222,8 +223,8 @@ const ImageBlockEdit = ({
       <div className="py-1">
         <input
           type="text"
-          value={caption}
-          onChange={handleCaptionChange}
+          value={imageCaption}
+          onChange={handleImageCaptionChange}
           placeholder="Thêm chú thích cho ảnh..."
           className="w-full px-2 py-1 text-sm text-gray-600 italic outline-none focus:text-gray-800"
           spellCheck={false}

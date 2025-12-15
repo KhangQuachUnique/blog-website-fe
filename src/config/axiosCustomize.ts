@@ -33,7 +33,7 @@ instance.interceptors.response.use(
     const originalRequest = error.config;
 
     // Skip refresh logic for auth endpoints to prevent infinite loops
-    const isAuthEndpoint = originalRequest.url?.includes('/auth/');
+    const isAuthEndpoint = originalRequest.url?.includes("/auth/");
     if (isAuthEndpoint) {
       return Promise.reject(error);
     }
@@ -62,17 +62,21 @@ instance.interceptors.response.use(
       } catch (refreshError) {
         // Refresh failed - clear auth state
         localStorage.removeItem(ACCESS_TOKEN_KEY);
-        
+
         // Only redirect if not already on login/register page
-        const isAuthPage = window.location.pathname === '/login' || window.location.pathname === '/register';
-        
+        const isAuthPage =
+          window.location.pathname === "/login" ||
+          window.location.pathname === "/register";
+
         if (!isAuthPage) {
           window.location.href = "/login";
         }
-        
+
         return Promise.reject(refreshError);
       }
     }
+    if (error.response && error.response.data)
+      error = error.response.data || error;
 
     return Promise.reject(error);
   }
