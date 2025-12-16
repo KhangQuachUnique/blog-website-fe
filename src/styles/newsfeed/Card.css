@@ -2,7 +2,7 @@
   background: hsl(var(--card));
   border: 1px solid #ffe7f0;
   border-radius: 10px;
-  overflow: hidden; /* prevent image from forcing height */
+  overflow: visible; /* Allow emoji picker to overflow */
   transition: all 0.3s ease;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   display: flex;
@@ -12,7 +12,6 @@
 }
 
 .newsfeed-card:hover {
-  transform: translateY(-4px);
   box-shadow: 4px 4px 24px rgba(126, 126, 126, 0.25);
 }
 
@@ -56,6 +55,12 @@
 
 .newsfeed-card__content:hover {
   text-decoration: none;
+}
+
+/* Emoji Selector container */
+.newsfeed-card__emoji-selector {
+  position: relative;
+  z-index: 10;
 }
 
 /* InteractBar container */

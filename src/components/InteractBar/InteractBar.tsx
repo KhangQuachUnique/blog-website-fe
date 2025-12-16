@@ -8,7 +8,6 @@ import {
   Tooltip,
   Menu,
   MenuItem,
-  Popover,
   Stack,
   Paper,
   Divider,
@@ -40,15 +39,6 @@ const THEME = {
   downvoteActive: "#9B8A90",
 } as const;
 
-const EMOJI_LIST = [
-  { id: 1, emoji: "💖", label: "Love" },
-  { id: 2, emoji: "😊", label: "Happy" },
-  { id: 3, emoji: "🥺", label: "Cute" },
-  { id: 4, emoji: "😂", label: "Haha" },
-  { id: 5, emoji: "😮", label: "Wow" },
-  { id: 6, emoji: "🎀", label: "Pretty" },
-] as const;
-
 // ============================================
 // 🎪 INTERFACES
 // ============================================
@@ -75,7 +65,6 @@ const InteractBar: React.FC<InteractBarProps> = ({
   const { showToast } = useToast();
 
   // ========== State ==========
-  const [emojiAnchorEl, setEmojiAnchorEl] = useState<HTMLElement | null>(null);
   const [moreAnchorEl, setMoreAnchorEl] = useState<HTMLElement | null>(null);
 
   // ========== Custom Hook ==========
@@ -85,9 +74,6 @@ const InteractBar: React.FC<InteractBarProps> = ({
     downVotes,
     isVoting,
     handleVote,
-    selectedEmojiId,
-    isReacting,
-    handleEmojiReact,
   } = useInteractBar({
     postId,
     userId,
@@ -123,32 +109,6 @@ const InteractBar: React.FC<InteractBarProps> = ({
       return;
     }
     handleVote(type);
-  };
-
-  // ========== Emoji Handlers ==========
-  const handleEmojiClick = (event: React.MouseEvent<HTMLElement>) => {
-    if (!isLoggedIn) {
-      showLoginRequired();
-      return;
-    }
-    setEmojiAnchorEl(event.currentTarget);
-  };
-
-  const handleEmojiClose = () => {
-    setEmojiAnchorEl(null);
-  };
-
-  const onEmojiSelect = (emojiId: number) => {
-    handleEmojiReact(emojiId);
-    handleEmojiClose();
-  };
-
-  const getCurrentEmoji = () => {
-    if (selectedEmojiId) {
-      const found = EMOJI_LIST.find((e) => e.id === selectedEmojiId);
-      if (found) return found.emoji;
-    }
-    return "💗";
   };
 
   // ========== More Menu Handlers ==========
@@ -213,17 +173,8 @@ const InteractBar: React.FC<InteractBarProps> = ({
           onVoteClick={onVoteClick}
         />
 
-        {/* Right: Emoji, Comment & More */}
+        {/* Right: Comment & More */}
         <Stack direction="row" spacing={1} alignItems="center">
-          {/* Emoji React Button */}
-          <EmojiButton
-            isLoggedIn={isLoggedIn}
-            isReacting={isReacting}
-            selectedEmojiId={selectedEmojiId}
-            currentEmoji={getCurrentEmoji()}
-            onClick={handleEmojiClick}
-          />
-
           {/* Comment Button */}
           <CommentButton
             totalComments={totalComments}
@@ -237,14 +188,6 @@ const InteractBar: React.FC<InteractBarProps> = ({
           />
         </Stack>
       </Paper>
-
-      {/* Emoji Picker Popover */}
-      <EmojiPickerPopover
-        anchorEl={emojiAnchorEl}
-        onClose={handleEmojiClose}
-        selectedEmojiId={selectedEmojiId}
-        onEmojiSelect={onEmojiSelect}
-      />
 
       {/* More Menu */}
       <MoreMenu
@@ -370,54 +313,6 @@ const VoteSection: React.FC<VoteSectionProps> = ({
   </Stack>
 );
 
-// Emoji Button Component
-interface EmojiButtonProps {
-  isLoggedIn: boolean;
-  isReacting: boolean;
-  selectedEmojiId: number | null;
-  currentEmoji: string;
-  onClick: (event: React.MouseEvent<HTMLElement>) => void;
-}
-
-const EmojiButton: React.FC<EmojiButtonProps> = ({
-  isLoggedIn,
-  isReacting,
-  selectedEmojiId,
-  currentEmoji,
-  onClick,
-}) => (
-  <Tooltip
-    title={isLoggedIn ? "React với emoji" : "Đăng nhập để react"}
-    arrow
-    placement="top"
-  >
-    <span>
-      <IconButton
-        size="small"
-        disabled={isReacting}
-        onClick={onClick}
-        sx={{
-          width: 32,
-          height: 32,
-          fontSize: "16px",
-          backgroundColor: selectedEmojiId ? THEME.tertiary : THEME.cream,
-          border: `1px solid ${
-            selectedEmojiId ? THEME.primary : THEME.tertiary
-          }`,
-          borderRadius: "50px",
-          "&:hover": {
-            backgroundColor: THEME.tertiary,
-            borderColor: THEME.primary,
-          },
-          transition: "all 0.2s ease",
-        }}
-      >
-        {currentEmoji}
-      </IconButton>
-    </span>
-  </Tooltip>
-);
-
 // Comment Button Component
 interface CommentButtonProps {
   totalComments: number;
@@ -490,75 +385,6 @@ const MoreButton: React.FC<MoreButtonProps> = ({ isOpen, onClick }) => (
       <BiDotsHorizontalRounded style={{ fontSize: 18, color: THEME.primary }} />
     </IconButton>
   </Tooltip>
-);
-
-// Emoji Picker Popover Component
-interface EmojiPickerPopoverProps {
-  anchorEl: HTMLElement | null;
-  onClose: () => void;
-  selectedEmojiId: number | null;
-  onEmojiSelect: (emojiId: number) => void;
-}
-
-const EmojiPickerPopover: React.FC<EmojiPickerPopoverProps> = ({
-  anchorEl,
-  onClose,
-  selectedEmojiId,
-  onEmojiSelect,
-}) => (
-  <Popover
-    open={Boolean(anchorEl)}
-    anchorEl={anchorEl}
-    onClose={onClose}
-    anchorOrigin={{
-      vertical: "top",
-      horizontal: "center",
-    }}
-    transformOrigin={{
-      vertical: "bottom",
-      horizontal: "center",
-    }}
-    sx={{ mt: -1 }}
-    slotProps={{
-      paper: {
-        sx: {
-          borderRadius: "16px",
-          border: `1px solid ${THEME.tertiary}`,
-          boxShadow: "0 4px 20px rgba(0, 0, 0, 0.08)",
-        },
-      },
-    }}
-  >
-    <Box
-      sx={{
-        display: "flex",
-        gap: 0.5,
-        p: 2,
-        backgroundColor: THEME.white,
-      }}
-    >
-      {EMOJI_LIST.map((item) => (
-        <Tooltip key={item.id} title={item.label} arrow placement="top">
-          <IconButton
-            onClick={() => onEmojiSelect(item.id)}
-            sx={{
-              width: 44,
-              height: 44,
-              fontSize: "24px",
-              backgroundColor:
-                selectedEmojiId === item.id ? THEME.tertiary : "transparent",
-              "&:hover": {
-                backgroundColor: THEME.tertiary,
-              },
-              transition: "all 0.2s ease",
-            }}
-          >
-            {item.emoji}
-          </IconButton>
-        </Tooltip>
-      ))}
-    </Box>
-  </Popover>
 );
 
 // More Menu Component
