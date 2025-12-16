@@ -41,9 +41,9 @@ export interface UserResponse {
   username: string;
   email: string;
   role: EUserRole;
-  avatarUrl?: string | null;
-  bio?: string | null;
-  phoneNumber?: string | null;
+  avatarUrl: string | null;
+  bio: string | null;
+  phoneNumber: string | null;
 }
 
 export interface RefreshResponse {
