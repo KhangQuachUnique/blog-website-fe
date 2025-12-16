@@ -18,7 +18,7 @@ export const BlockCommentsSidebar: React.FC<BlockCommentsSidebarProps> = ({
   isOpen,
   onClose,
   blockId,
-  imageUrl,
+  imageUrl, // Biến này sẽ undefined nếu là Text Block
   currentUser,
 }) => {
   if (!isOpen) return null;
@@ -39,6 +39,10 @@ export const BlockCommentsSidebar: React.FC<BlockCommentsSidebarProps> = ({
       >
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200">
+          {/* [SỬA] Tiêu đề linh hoạt */}
+          <h2 className="text-lg font-semibold text-gray-900">
+            {imageUrl ? 'Bình luận về ảnh' : 'Thảo luận về nội dung'}
+          </h2>
           <button
             onClick={onClose}
             className="p-2 hover:bg-gray-100 rounded-full transition-colors"
@@ -48,7 +52,7 @@ export const BlockCommentsSidebar: React.FC<BlockCommentsSidebarProps> = ({
           </button>
         </div>
 
-        {/* Image Preview */}
+        {/* Image Preview - Chỉ hiện nếu có imageUrl */}
         {imageUrl && (
           <div className="p-4 border-b border-gray-200 bg-gray-50">
             <img
@@ -59,8 +63,20 @@ export const BlockCommentsSidebar: React.FC<BlockCommentsSidebarProps> = ({
           </div>
         )}
 
+        {/* Text Block Preview (Optional) - Nếu muốn hiện trích đoạn text */}
+        {!imageUrl && (
+          <div className="p-4 border-b border-gray-200 bg-gray-50 text-sm text-gray-500 italic">
+            Đang xem bình luận cho đoạn văn bản được chọn.
+          </div>
+        )}
+
         {/* Comments Section */}
-        <div className="flex-1 overflow-y-auto p-4" style={{ height: imageUrl ? 'calc(100vh - 240px)' : 'calc(100vh - 72px)' }}>
+        <div 
+          className="flex-1 overflow-y-auto p-4" 
+          style={{ 
+            height: imageUrl ? 'calc(100vh - 240px)' : 'calc(100vh - 120px)' 
+          }}
+        >
           <CommentsSection
             blockId={blockId}
             currentUser={currentUser}

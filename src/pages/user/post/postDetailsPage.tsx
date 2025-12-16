@@ -8,7 +8,7 @@ import TextBlock from "../../../components/block/textBlock";
 import ImageBlock from "../../../components/block/imageBlock";
 import { CommentsSection } from "../../../components/comments/CommentsSection";
 import { BlockCommentsSidebar } from "../../../components/comments/BlockCommentsSidebar";
-import { SearchSidebar } from "../../../components/searchBar/SearchSidebar"; // [NEW] Import Sidebar Search
+import { SearchSidebar } from "../../../components/searchBar/SearchSidebar";
 import { useAuthUser } from '../../../hooks/useAuth';
 
 import { EBlockType, ObjectFitType } from "../../../types/block";
@@ -71,10 +71,11 @@ const PostDetailsPage: React.FC = () => {
     GRID_SETTINGS.width
   );
   
-  // State quản lý block ảnh đang được chọn để bình luận
+  // [SỬA] State quản lý block đang được chọn để bình luận (cả Text và Image)
+  // Field 'url' là optional vì Text block không có url ảnh
   const [selectedBlock, setSelectedBlock] = useState<{ id: number; url?: string } | null>(null);
 
-  // --- [NEW] STATE CHO TÍNH NĂNG TÔ ĐEN TÌM KIẾM ---
+  // State cho tính năng tô đen tìm kiếm
   const [selection, setSelection] = useState<{
     text: string;
     x: number;
@@ -84,7 +85,6 @@ const PostDetailsPage: React.FC = () => {
 
   const [searchKeyword, setSearchKeyword] = useState("");
   const [isSearchSidebarOpen, setIsSearchSidebarOpen] = useState(false);
-  // --------------------------------------------------
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -112,7 +112,7 @@ const PostDetailsPage: React.FC = () => {
     }
   }, []);
 
-  // --- [NEW] XỬ LÝ SỰ KIỆN BÔI ĐEN TEXT ---
+  // Xử lý sự kiện bôi đen text
   useEffect(() => {
     const handleSelection = () => {
       const selectedText = window.getSelection()?.toString().trim();
@@ -151,7 +151,6 @@ const PostDetailsPage: React.FC = () => {
     // Xóa bôi đen (UX optional)
     window.getSelection()?.removeAllRanges(); 
   };
-  // ----------------------------------------
 
   // Current logged in user (for comments)
   const { user: currentUser } = useAuthUser();
@@ -163,8 +162,10 @@ const PostDetailsPage: React.FC = () => {
     avatarUrl: currentUser.avatarUrl 
   } : undefined;
 
-  // Handler click vào ảnh
-  const handleImageClick = (blockId: number, imageUrl: string) => {
+  // [SỬA] Handler click vào block (cả Text và Image)
+  const handleBlockClick = (blockId: number, type: string, content: string) => {
+    // Nếu là ảnh thì lấy content làm url, nếu là text thì url = undefined
+    const imageUrl = type === EBlockType.IMAGE ? content : undefined;
     setSelectedBlock({ id: blockId, url: imageUrl });
   };
 
@@ -228,7 +229,7 @@ const PostDetailsPage: React.FC = () => {
   return (
     <div className="w-full relative p-9 flex flex-col gap-4 items-center justify-center">
       
-      {/* --- [NEW] TOOLTIP BUTTON TÌM KIẾM --- */}
+      {/* Tooltip Button Tìm Kiếm */}
       {selection.show && (
         <button
           className="fixed z-50 flex items-center gap-2 bg-gray-900 text-white px-3 py-1.5 rounded-full shadow-xl hover:bg-black transition-all animate-in fade-in zoom-in duration-200"
@@ -301,7 +302,7 @@ const PostDetailsPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Hashtags - [NEW] CLICKABLE */}
+        {/* Hashtags - Clickable */}
         {post.hashtags && post.hashtags.length > 0 && (
           <div className="mt-4 flex flex-wrap gap-2">
             {post.hashtags.map((h) => (
@@ -336,6 +337,8 @@ const PostDetailsPage: React.FC = () => {
               isDroppable={false}
             >
               {blocks.map((block) => {
+                // [SỬA] Kiểm tra block có thể tương tác (comment) được không
+                const isInteractable = block.type === EBlockType.IMAGE || block.type === EBlockType.TEXT;
                 const isImage = block.type === EBlockType.IMAGE;
                 
                 return (
@@ -344,13 +347,15 @@ const PostDetailsPage: React.FC = () => {
                     className={`
                       ${BLOCK_WRAPPER.readMode} 
                       ${BLOCK_WRAPPER.default}
-                      ${isImage ? 'cursor-pointer group hover:ring-2 hover:ring-blue-300 transition-all' : ''}
+                      h-full
+                      ${isInteractable ? 'cursor-pointer group hover:ring-2 hover:ring-blue-300 transition-all relative' : ''}
                     `}
                     onClick={(e) => {
-                      if (isImage) {
-                        e.stopPropagation();
-                        handleImageClick(block.id, block.content);
-                      }
+                      if (!isInteractable) return;
+                      const selection = window.getSelection();
+                      if (selection && selection.toString().length > 0) return;
+                      if ((e.target as HTMLElement).closest('a')) return;
+                      handleBlockClick(block.id, block.type, block.content);
                     }}
                   >
                     {block.type === EBlockType.TEXT ? (
@@ -359,18 +364,19 @@ const PostDetailsPage: React.FC = () => {
                         content={block.content || ""}
                       />
                     ) : (
-                      <>
-                        <ImageBlock
-                          id={String(block.id)}
-                          imageUrl={block.content}
-                          imageCaption={block.imageCaption}
-                          objectFit={parseObjectFit(block.objectFit)}
-                        />
-                        {/* Overlay hint khi hover vào ảnh */}
-                        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-black/60 text-white text-xs px-2 py-1 rounded-full pointer-events-none z-10 flex items-center gap-1">
-                          <span>💬 Bình luận</span>
-                        </div>
-                      </>
+                      <ImageBlock
+                        id={String(block.id)}
+                        imageUrl={block.content}
+                        imageCaption={block.imageCaption}
+                        objectFit={parseObjectFit(block.objectFit)}
+                      />
+                    )}
+                    
+                    {/* [SỬA] Overlay hint khi hover vào block (Text hoặc Image) */}
+                    {isInteractable && (
+                      <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-black/60 text-white text-xs px-2 py-1 rounded-full pointer-events-none z-10 flex items-center gap-1">
+                        <span>💬 {isImage ? 'Bình luận ảnh' : 'Bình luận đoạn này'}</span>
+                      </div>
                     )}
                   </div>
                 );
@@ -390,7 +396,7 @@ const PostDetailsPage: React.FC = () => {
 
       {/* --- SIDEBARS --- */}
       
-      {/* 1. Sidebar Comment Ảnh */}
+      {/* 1. Sidebar Comment Block (Text hoặc Image) */}
       <BlockCommentsSidebar
         isOpen={!!selectedBlock}
         onClose={() => setSelectedBlock(null)}
@@ -399,7 +405,7 @@ const PostDetailsPage: React.FC = () => {
         currentUser={normalizedUser}
       />
 
-      {/* 2. [NEW] Sidebar Search Text */}
+      {/* 2. Sidebar Search Text */}
       <SearchSidebar
         isOpen={isSearchSidebarOpen}
         onClose={() => setIsSearchSidebarOpen(false)}
