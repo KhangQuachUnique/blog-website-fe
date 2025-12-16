@@ -2,9 +2,13 @@ import { Link } from "react-router-dom";
 import { useState, useCallback, memo } from "react";
 import type { IPostResponseDto } from "../../types/post";
 import InteractBar from "../interactBar/InteractBar";
-import { EmojiReactionBar, EmojiSelector, type EmojiReactionData } from "../Emoji";
+import {
+  EmojiReactionBar,
+  EmojiSelector,
+  type EmojiReactionData,
+} from "../Emoji";
 import emojiData from "../../assets/twemoji_valid_by_category.json";
-import { recordViewedPost } from '../../services/user/viewedHistory';
+import { recordViewedPost } from "../../services/user/viewedHistory";
 import { useAuth } from "../../contexts/AuthContext";
 import { usePostReactions } from "../../hooks/usePostReactions";
 import { getTwemojiUrl } from "../../utils/twemoji";
@@ -14,40 +18,41 @@ const Card = memo(({ post }: { post: IPostResponseDto }) => {
   const { user } = useAuth();
   const [showReactions, setShowReactions] = useState(false);
   const [recentEmojis, setRecentEmojis] = useState<string[]>([]);
-  
+
   const { reactions, handleReact, handleReactionClick } = usePostReactions({
     postId: post.id,
     enabled: showReactions,
   });
-  
+
   const handleInteractBarHover = useCallback(() => {
     if (!showReactions) setShowReactions(true);
   }, [showReactions]);
-  
-  const handleEmojiSelect = useCallback((codepoint: string) => {
-    handleReact(codepoint);
-  }, [handleReact]);
-  
+
+  const handleEmojiSelect = useCallback(
+    (codepoint: string) => {
+      handleReact(codepoint);
+    },
+    [handleReact]
+  );
+
   // Convert reactions to display format
   const reactionData: EmojiReactionData[] = reactions.map((r) => ({
-    emoji: r.type === 'unicode' ? getTwemojiUrl(r.icon, '72x72') : r.icon,
+    emoji: r.type === "unicode" ? getTwemojiUrl(r.icon, "72x72") : r.icon,
     count: r.count,
     isReactedByMe: r.is_reacted_by_me,
     emojiId: r.emoji_id,
   }));
-  
+
   const formatDate = (dateString: Date) => {
     const date = new Date(dateString);
     const now = new Date();
     const diff = Math.floor((now.getTime() - date.getTime()) / 1000);
 
     if (diff < 60) return "vừa xong";
-    if (diff < 60) return "vừa xong";
     if (diff < 3600) return `${Math.floor(diff / 60)} phút trước`;
     if (diff < 86400) return `${Math.floor(diff / 3600)} giờ trước`;
     if (diff < 604800) return `${Math.floor(diff / 86400)} ngày trước`;
     return date.toLocaleDateString("vi-VN");
-    // return date.toLocaleDateString("vi-VN");
   };
 
   return (
@@ -69,7 +74,7 @@ const Card = memo(({ post }: { post: IPostResponseDto }) => {
           />
         </Link>
       )}
-      
+
       {/* Content + InteractBar bên phải */}
       <div className="newsfeed-card__right">
         <Link
@@ -125,25 +130,29 @@ const Card = memo(({ post }: { post: IPostResponseDto }) => {
             </div>
           )}
         </Link>
-        
+
         {/* InteractBar + Reactions nằm dưới content */}
-        <div 
-          className="newsfeed-card__interact" 
+        <div
+          className="newsfeed-card__interact"
           onClick={(e) => e.stopPropagation()}
           onMouseEnter={handleInteractBarHover}
         >
           {showReactions && (
-            <div style={{ 
-              padding: '8px 12px 4px', 
-              borderTop: '1px solid #FFE7F0',
-            }}>
-              <div style={{ 
-                display: 'flex',
-                alignItems: 'flex-start',
-                gap: '8px',
-                maxHeight: '72px', // 2 lines: (16px emoji + 6px padding + 4px gap) * 2
-                overflow: 'hidden',
-              }}>
+            <div
+              style={{
+                padding: "8px 12px 4px",
+                borderTop: "1px solid #FFE7F0",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "flex-start",
+                  gap: "8px",
+                  maxHeight: "72px", // 2 lines: (16px emoji + 6px padding + 4px gap) * 2
+                  overflow: "hidden",
+                }}
+              >
                 {reactionData.length > 0 && (
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <EmojiReactionBar
@@ -179,6 +188,6 @@ const Card = memo(({ post }: { post: IPostResponseDto }) => {
   );
 });
 
-Card.displayName = 'Card';
+Card.displayName = "Card";
 
 export default Card;

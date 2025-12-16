@@ -68,18 +68,14 @@ const InteractBar: React.FC<InteractBarProps> = ({
   const [moreAnchorEl, setMoreAnchorEl] = useState<HTMLElement | null>(null);
 
   // ========== Custom Hook ==========
-  const {
-    voteType,
-    upVotes,
-    downVotes,
-    isVoting,
-    handleVote,
-  } = useInteractBar({
-    postId,
-    userId,
-    initialUpVotes,
-    initialDownVotes,
-  });
+  const { voteType, upVotes, downVotes, isVoting, handleVote } = useInteractBar(
+    {
+      postId,
+      userId,
+      initialUpVotes,
+      initialDownVotes,
+    }
+  );
 
   // ========== Computed Values ==========
   const netVotes = upVotes - downVotes;

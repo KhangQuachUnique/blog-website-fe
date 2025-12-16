@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
+import { useToast } from "../../contexts/toast";
 
 // decorative GIF: try local `public/assets/auth-decor.gif`, fallback to external
 const LOCAL_GIF = "/assets/auth-decor.gif";
@@ -9,32 +10,43 @@ const FALLBACK_GIF = "https://media.giphy.com/media/l0MYt5jPR6QX5pnqM/giphy.gif"
 const RegisterPage = () => {
   const navigate = useNavigate();
   const { register } = useAuth();
+  const { showToast } = useToast();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [gifSrc, setGifSrc] = useState(LOCAL_GIF);
 
   const validate = () => {
     if (!name) {
-      setError("Name is required");
+      showToast({ type: "error", message: "Vui lòng nhập họ tên" });
       return false;
     }
     if (!email) {
-      setError("Email is required");
+      showToast({ type: "error", message: "Vui lòng nhập email" });
       return false;
     }
     if (!password) {
-      setError("Password is required");
+      showToast({ type: "error", message: "Vui lòng nhập mật khẩu" });
+      return false;
+    }
+    if (password.length < 8) {
+      showToast({ type: "error", message: "Mật khẩu phải có ít nhất 8 ký tự" });
+      return false;
+    }
+    if (password.length > 50) {
+      showToast({ type: "error", message: "Mật khẩu không được quá 50 ký tự" });
+      return false;
+    }
+    if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(password)) {
+      showToast({ type: "error", message: "Mật khẩu phải chứa ít nhất 1 chữ hoa, 1 chữ thường và 1 số" });
       return false;
     }
     if (password !== confirmPassword) {
-      setError("Passwords do not match");
+      showToast({ type: "error", message: "Mật khẩu không khớp" });
       return false;
     }
-    setError(null);
     return true;
   };
 
@@ -42,16 +54,16 @@ const RegisterPage = () => {
     e.preventDefault();
     if (!validate()) return;
     setLoading(true);
-    setError(null);
     try {
       await register(name, email, password);
-      // on success, navigate to verify page if backend requires email verification
-      // otherwise navigate to home
-      navigate("/verify-email", { replace: true });
+      showToast({ type: "success", message: "Đăng ký thành công! Vui lòng xác thực email." });
+      // Navigate to verify page with email
+      navigate("/verify-email", { replace: true, state: { email } });
     } catch (err: any) {
-      setError(
-        err?.response?.data?.message || err?.message || "Registration failed"
-      );
+      showToast({
+        type: "error",
+        message: err?.response?.data?.message || err?.message || "Đăng ký thất bại"
+      });
     } finally {
       setLoading(false);
     }
@@ -106,8 +118,9 @@ const RegisterPage = () => {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                onFocus={() => showToast({ type: "info", message: "Mật khẩu phải có 8-50 ký tự, chứa ít nhất 1 chữ hoa, 1 chữ thường và 1 số" })}
                 className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F295B6]"
-                placeholder="Tối thiểu 6 ký tự"
+                placeholder="Tối thiểu 8 ký tự, có chữ hoa, thường và số"
               />
             </div>
 
@@ -121,10 +134,6 @@ const RegisterPage = () => {
                 placeholder="Nhập lại mật khẩu"
               />
             </div>
-
-            {error && (
-              <div className="text-sm text-red-600">{error}</div>
-            )}
 
             <button
               type="submit"
