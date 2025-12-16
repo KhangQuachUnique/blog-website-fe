@@ -2,6 +2,8 @@ import { createBrowserRouter } from "react-router-dom";
 
 import AdminLayout from "../components/layout/adminLayout";
 import UserLayout from "../components/layout/userLayout";
+import { RoleGuard } from "../components/guards";
+import { EUserRole } from "../types/user";
 import adminUserRoutes from "./admin/user.route";
 import adminPostRoutes from "./admin/post.route";
 import adminReportRoutes from "./admin/report.route";
@@ -41,7 +43,11 @@ export const router = createBrowserRouter([
   },
   {
     path: "/admin",
-    element: <AdminLayout />,
+    element: (
+      <RoleGuard allowedRoles={[EUserRole.ADMIN]} redirectTo="/">
+        <AdminLayout />
+      </RoleGuard>
+    ),
     children: [...adminUserRoutes, ...adminPostRoutes, ...adminReportRoutes],
   },
   ...authRoutes,
