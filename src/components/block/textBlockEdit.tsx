@@ -1,5 +1,5 @@
 import { useEditor, EditorContent } from "@tiptap/react";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
@@ -23,6 +23,7 @@ import {
   FaQuoteLeft,
   FaCode,
 } from "react-icons/fa6";
+import { GRID_SETTINGS } from "../../features/user/manageBlogPosts/layoutConstants";
 
 interface TextBlockProps {
   id: string;
@@ -188,44 +189,56 @@ const TextBlockEdit = ({
   }, [editor, isEditMode]);
 
   // Auto-resize: monitor content height and notify parent
+  // Uses useCallback to create stable height calculation function
+  const calculateAndNotifyHeight = useCallback(() => {
+    const editorEl = editorRef.current;
+    if (!editorEl || !onHeightChange) return;
+
+    // Find the actual editor content element
+    const proseMirror = editorEl.querySelector(".ProseMirror");
+    if (!proseMirror) return;
+
+    // Get the actual content height
+    const contentHeight = proseMirror.scrollHeight;
+    
+    // Use the same rowHeight as GridLayout for accurate calculation
+    const ROW_HEIGHT = GRID_SETTINGS.rowHeight;
+    const MARGIN = GRID_SETTINGS.margin?.[1] ?? 8; // Vertical margin between grid items
+    
+    // Add minimal padding: small buffer for comfortable display
+    const VERTICAL_PADDING = 16; // 8px top + 8px bottom padding
+    
+    // Calculate rows needed: (contentHeight + padding) / (rowHeight + margin)
+    // The margin is added because GridLayout calculates: actualHeight = rowHeight * rows + margin * (rows - 1)
+    // Simplified: each row contributes (rowHeight + margin) except the last one doesn't add margin
+    const effectiveRowHeight = ROW_HEIGHT + MARGIN;
+    const neededRows = Math.ceil((contentHeight + VERTICAL_PADDING + MARGIN) / effectiveRowHeight);
+
+    // Only update if height changed to avoid render loops
+    onHeightChange(id, Math.max(2, neededRows)); // Minimum 2 rows
+  }, [id, onHeightChange]);
+
   useEffect(() => {
     if (!editorRef.current || !onHeightChange || !editor) return;
 
-    const checkHeight = () => {
-      const editorEl = editorRef.current;
-      if (!editorEl) return;
-
-      // Find the actual editor content element
-      const proseMirror = editorEl.querySelector(".ProseMirror");
-      if (!proseMirror) return;
-
-      // Get the actual content height (use clientHeight for more accurate measurement)
-      const contentHeight = proseMirror.scrollHeight;
-
-      const ROW_HEIGHT = 40;
-      // Minimal padding: just enough to prevent text from touching border
-      const PADDING = 50; // 16px top + minimal bottom (4px for safety)
-
-      // Calculate rows needed, round up to ensure content fits
-      const neededRows = Math.ceil((contentHeight + PADDING) / ROW_HEIGHT);
-
-      // Only update if different to avoid unnecessary re-renders
-      onHeightChange(id, Math.max(1, neededRows));
-    };
-
-    // Check after each content update
-    checkHeight();
+    // Check height after editor is ready
+    const timeoutId = setTimeout(calculateAndNotifyHeight, 50);
 
     // Also use ResizeObserver to detect size changes
     const proseMirror = editorRef.current.querySelector(".ProseMirror");
     if (proseMirror && typeof ResizeObserver !== "undefined") {
       const ro = new ResizeObserver(() => {
-        checkHeight();
+        calculateAndNotifyHeight();
       });
       ro.observe(proseMirror);
-      return () => ro.disconnect();
+      return () => {
+        clearTimeout(timeoutId);
+        ro.disconnect();
+      };
     }
-  }, [id, onHeightChange, editor, content]);
+    
+    return () => clearTimeout(timeoutId);
+  }, [id, onHeightChange, editor, content, calculateAndNotifyHeight]);
 
   if (!editor) {
     return null;

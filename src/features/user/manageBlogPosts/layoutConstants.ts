@@ -1,8 +1,9 @@
 export const GRID_SETTINGS = {
   cols: 16,
-  rowHeight: 30,
+  rowHeight: 20, // Reduced for better precision
   width: 800,
-  defaultItem: { w: 8, h: 6 },
+  defaultItem: { w: 8, h: 8 },
+  margin: [8, 8] as [number, number],
 };
 
 export const TITLE_SX = {

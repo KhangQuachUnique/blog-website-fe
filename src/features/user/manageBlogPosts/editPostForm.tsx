@@ -290,6 +290,7 @@ const EditPostForm = ({
           cols={GRID_SETTINGS.cols}
           rowHeight={GRID_SETTINGS.rowHeight}
           width={GRID_SETTINGS.width}
+          margin={GRID_SETTINGS.margin}
           isDraggable={isCtrlPressed}
           isResizable={true}
           draggableCancel=".rgl-no-drag"
