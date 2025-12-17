@@ -22,7 +22,7 @@ const navLinks = [
   },
   {
     name: "Quản lí báo cáo",
-    href: "#",
+    href: "/admin/reports/list",
     icon: <MdReportGmailerrorred fontSize={18} />,
   },
 ];
