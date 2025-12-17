@@ -1,26 +1,15 @@
-import React, {
-  useState,
-  useRef,
-  useEffect,
-  useCallback,
-  useMemo,
-} from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 
 import { EmojiPicker } from "./EmojiPicker";
-import type {
-  IEmojiCategoryData,
-  IEmojiResponseDto,
-} from "../../../types/emoji";
+import type { IEmojiCategoryData } from "../../../types/emoji";
 import { useClickOutside } from "../hooks/useClickOutside";
-
-import { useAuth } from "../../../contexts/AuthContext";
+import { BsEmojiWinkFill } from "react-icons/bs";
 
 interface EmojiSelectorProps {
   emojisData: IEmojiCategoryData[];
   recentCodepoints?: string[];
   onSelect: (codepoint: string) => void;
   onRecentUpdate?: (codepoints: string[]) => void;
-  compact?: boolean;
 }
 
 /**
@@ -31,10 +20,7 @@ export const EmojiSelector: React.FC<EmojiSelectorProps> = ({
   recentCodepoints = [],
   onSelect,
   onRecentUpdate,
-  compact = false,
 }) => {
-  const { user } = useAuth();
-
   const [isPickerOpen, setIsPickerOpen] = useState(false);
   const [pickerPosition, setPickerPosition] = useState<{
     top: number;
@@ -159,47 +145,31 @@ export const EmojiSelector: React.FC<EmojiSelectorProps> = ({
         display: "inline-flex",
         flexDirection: "column",
         gap: "8px",
-        zIndex: 100,
       }}
     >
       {/* Open Picker Button */}
       <button
         ref={buttonRef}
         onClick={handleTogglePicker}
-        style={{
-          width: compact ? "28px" : "40px",
-          height: compact ? "28px" : "40px",
-          backgroundColor: isPickerOpen ? "#FFE7F0" : "transparent",
-          border: "1.5px solid #FFE7F0",
-          borderRadius: "8px",
-          cursor: "pointer",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontSize: compact ? "18px" : "24px",
-          transition: "all 0.15s ease",
-          filter: isPickerOpen ? "grayscale(0%)" : "grayscale(100%)",
-          opacity: isPickerOpen ? 1 : 0.5,
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.backgroundColor = "#FFE7F0";
-          e.currentTarget.style.borderColor = "#F295B6";
-          e.currentTarget.style.filter = "grayscale(0%)";
-          e.currentTarget.style.opacity = "1";
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.backgroundColor = isPickerOpen
-            ? "#FFE7F0"
-            : "transparent";
-          e.currentTarget.style.borderColor = "#FFE7F0";
-          if (!isPickerOpen) {
-            e.currentTarget.style.filter = "grayscale(100%)";
-            e.currentTarget.style.opacity = "0.5";
+        className={`
+          group flex items-center justify-center rounded-lg border transition-all duration-150 cursor-pointer
+          px-2 py-1 
+          ${
+            isPickerOpen
+              ? "bg-[#FFE7F0] border-[#FEB2CD]"
+              : "bg-transparent border-gray-300"
           }
-        }}
-        title="Chọn emoji 💕"
+          hover:bg-[#FFE7F0] hover:border-[#FEB2CD] hover:filter-none hover:opacity-100
+        `}
       >
-        👻
+        <BsEmojiWinkFill
+          size={20}
+          className={`
+            transition-colors duration-150
+            ${isPickerOpen ? "text-[#FEB2CD]" : "text-gray-400"}
+            group-hover:text-[#FEB2CD]
+          `}
+        />
       </button>
 
       {/* Emoji Picker Popup */}
@@ -221,22 +191,6 @@ export const EmojiSelector: React.FC<EmojiSelectorProps> = ({
             onSelect={handleSelect}
             onClose={() => setIsPickerOpen(false)}
           />
-
-          <div
-            style={{
-              position: "absolute",
-              top: "8px",
-              right: "8px",
-              fontSize: "12px",
-              color: "#8B7B82",
-              backgroundColor: "#FFF8FA",
-              padding: "4px 8px",
-              borderRadius: "4px",
-              pointerEvents: "none",
-            }}
-          >
-            Loading custom emojis...
-          </div>
         </div>
       )}
     </div>

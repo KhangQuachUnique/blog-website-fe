@@ -5,6 +5,7 @@ import type {
 } from "../../../types/emoji";
 import { DEFAULT_CATEGORY_TABS } from "../../../types/emoji";
 import { searchEmoji, debounce } from "../utils/utils";
+import type { ICommunityDto } from "../../../types/post";
 
 interface EmojiPickerProps {
   emojisData: IEmojiCategoryData[];
@@ -34,7 +35,7 @@ export const EmojiPicker: React.FC<EmojiPickerProps> = ({
 
   const isSearching = searchQuery.trim().length > 0;
 
-  // Available categories (filter out empty ones)
+  // Các categories khả dụng
   const categories = useMemo(() => {
     const cats: string[] = [];
     if (recent.length > 0) cats.push("Recent");
@@ -55,7 +56,7 @@ export const EmojiPicker: React.FC<EmojiPickerProps> = ({
         typeof d.category === "string" ? d.category : d.category.name;
       if (!cats.includes(name)) cats.push(name);
     });
-
+    console.log("Available categories:", cats);
     return cats;
   }, [emojisData, recent]);
 
@@ -106,7 +107,7 @@ export const EmojiPicker: React.FC<EmojiPickerProps> = ({
     <div
       style={{
         display: "grid",
-        gridTemplateColumns: "repeat(9, 38px)",
+        gridTemplateColumns: "repeat(9, 40px)",
         gap: "2px",
         padding: "8px 12px",
         justifyContent: "start",
@@ -124,8 +125,8 @@ export const EmojiPicker: React.FC<EmojiPickerProps> = ({
             e.preventDefault(); // Prevent focus/active state
           }}
           style={{
-            width: "38px",
-            height: "36px",
+            width: "40px",
+            height: "40px",
             padding: "0",
             backgroundColor: "transparent",
             border: "none",
@@ -145,11 +146,10 @@ export const EmojiPicker: React.FC<EmojiPickerProps> = ({
           }}
         >
           <img
-            src={emoji.twemoji_url}
-            alt={emoji.emoji}
+            src={emoji.twemoji_url ? emoji.twemoji_url : emoji.emojiUrl}
             style={{
-              width: "30px",
-              height: "30px",
+              width: "35px",
+              height: "35px",
               pointerEvents: "none",
             }}
           />
@@ -161,7 +161,7 @@ export const EmojiPicker: React.FC<EmojiPickerProps> = ({
   return (
     <div
       style={{
-        width: "428px",
+        width: "460px",
         height: "444px",
         maxHeight: "calc(100vh - 64px)",
         backgroundColor: "#FFFFFF",
@@ -228,79 +228,82 @@ export const EmojiPicker: React.FC<EmojiPickerProps> = ({
               borderRight: "1.5px solid #FFE7F0",
             }}
           >
-            {categories.map((category) => {
-              const tab = DEFAULT_CATEGORY_TABS.find((t) => t.key === category);
+            {emojisData
+              .filter((d) => typeof d.category === "string")
+              .map((d) => {
+                const tab = DEFAULT_CATEGORY_TABS.find(
+                  (t) => t.key === d.category
+                );
+                if (!tab) return null;
 
-              // For custom community categories, use community avatar
-              let icon = category === "Recent" ? "🕒" : tab?.icon || "😀";
-              let communityAvatar: string | undefined;
+                return (
+                  <button
+                    key={tab.key}
+                    onClick={() => scrollToCategory(tab.key)}
+                    className={`
+                      w-full h-10 flex items-center justify-center
+                      border-none border-l-4
+                      cursor-pointer text-2xl transition-all duration-100
+                      ${
+                        activeCategory === tab.key
+                          ? "border-l-[#F295B6] bg-[#FFE7F0]"
+                          : "border-l-transparent bg-transparent "
+                      }
+                      hover:bg-[#FFE7F0] hover:filter-none hover:opacity-100
+                      group
+                    `}
+                    title={tab.key}
+                  >
+                    <span
+                      className={`
+                        transition-colors duration-200  
+                        ${
+                          activeCategory === tab.key
+                            ? "text-[#F295B6]"
+                            : "text-gray-500"
+                        }
+                        group-hover:text-[#F295B6]
+                      `}
+                    >
+                      {tab.icon}
+                    </span>
+                  </button>
+                );
+              })}
+            {emojisData
+              .filter((d) => typeof d.category !== "string")
+              .map((d) => {
+                const category = d.category as ICommunityDto;
+                const categoryKey = category.name;
+                const source = category.thumbnailUrl || "";
 
-              // Check if this is a custom category (not in DEFAULT_CATEGORY_TABS)
-              if (!tab && category !== "Recent") {
-                const categoryEmojis = data[category];
-                if (categoryEmojis && categoryEmojis.length > 0) {
-                  communityAvatar = categoryEmojis[0]?.community?.avatarUrl;
-                }
-              }
-
-              return (
-                <button
-                  key={category}
-                  onClick={() => scrollToCategory(category)}
-                  style={{
-                    width: "100%",
-                    height: "40px",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    backgroundColor:
-                      activeCategory === category ? "#FFE7F0" : "transparent",
-                    border: "none",
-                    borderLeft:
-                      activeCategory === category
-                        ? "3px solid #F295B6"
-                        : "3px solid transparent",
-                    cursor: "pointer",
-                    transition: "all 0.1s ease",
-                    fontSize: "20px",
-                    filter:
-                      activeCategory === category
-                        ? "grayscale(0%)"
-                        : "grayscale(100%)",
-                    opacity: activeCategory === category ? 1 : 0.6,
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.filter = "grayscale(0%)";
-                    e.currentTarget.style.opacity = "1";
-                    e.currentTarget.style.backgroundColor = "#FFE7F0";
-                  }}
-                  onMouseLeave={(e) => {
-                    if (activeCategory !== category) {
-                      e.currentTarget.style.filter = "grayscale(100%)";
-                      e.currentTarget.style.opacity = "0.5";
-                    }
-                    e.currentTarget.style.backgroundColor =
-                      activeCategory === category ? "#FFE7F0" : "transparent";
-                  }}
-                  title={category}
-                >
-                  {communityAvatar ? (
-                    <img
-                      src={communityAvatar}
-                      alt={category}
-                      style={{
-                        width: "24px",
-                        height: "24px",
-                        borderRadius: "50%",
-                        objectFit: "cover",
-                      }}
-                    />
-                  ) : (
-                    icon
-                  )}
-                </button>
-              );
-            })}
+                return (
+                  <button
+                    key={categoryKey}
+                    onClick={() => scrollToCategory(categoryKey)}
+                    className={`
+                      w-full h-10 flex items-center justify-center
+                      border-none border-l-4
+                      cursor-pointer text-2xl transition-all duration-100
+                      ${
+                        activeCategory === categoryKey
+                          ? "border-l-[#F295B6] bg-[#FFE7F0] filter-none opacity-100"
+                          : "border-l-transparent bg-transparent filter grayscale opacity-60"
+                      }
+                      hover:bg-[#FFE7F0] hover:filter-none hover:opacity-100
+                    `}
+                    title={categoryKey}
+                  >
+                    {source && (
+                      <img
+                        src={source}
+                        alt={categoryKey}
+                        className="w-6 h-6 rounded-full"
+                      />
+                    )}
+                  </button>
+                );
+              })}
           </div>
         )}
 
@@ -396,7 +399,9 @@ export const EmojiPicker: React.FC<EmojiPickerProps> = ({
               )}
 
               {DEFAULT_CATEGORY_TABS.map((tab) => {
-                const emojis = data[tab.key];
+                const emojis = emojisData.find(
+                  (d) => d.category === tab.key
+                )?.emojis;
                 if (!emojis || emojis.length === 0) return null;
 
                 return (
@@ -428,63 +433,46 @@ export const EmojiPicker: React.FC<EmojiPickerProps> = ({
               })}
 
               {/* RENDER CUSTOM COMMUNITY CATEGORIES */}
-              {Object.keys(emojisData).map((categoryKey) => {
-                // Skip unicode categories (already rendered above)
-                const isUnicodeCategory = DEFAULT_CATEGORY_TABS.some(
-                  (tab) => tab.key === categoryKey
-                );
-                if (isUnicodeCategory) return null;
+              {emojisData
+                .filter((d) => typeof d.category !== "string")
+                .map((data) => {
+                  const emojis = data.emojis;
+                  const categoryKey =
+                    typeof data.category === "string"
+                      ? data.category
+                      : data.category.name;
 
-                const emojis = emojisData[categoryKey];
-                if (!emojis || emojis.length === 0) return null;
-
-                // Get community avatar from first emoji
-                const firstEmoji = emojis[0];
-                const communityAvatar = firstEmoji?.community?.avatarUrl;
-
-                return (
-                  <div
-                    key={categoryKey}
-                    ref={(el) => {
-                      if (el) categoryRefs.current.set(categoryKey, el);
-                    }}
-                  >
+                  return (
                     <div
-                      style={{
-                        padding: "16px 16px 8px 16px",
-                        color: "#F295B6",
-                        fontSize: "11px",
-                        fontWeight: 700,
-                        textTransform: "uppercase",
-                        letterSpacing: "0.8px",
-                        position: "sticky",
-                        top: 0,
-                        backgroundColor: "#FFFFFF",
-                        zIndex: 1,
-                        borderTop: "2px solid #FFE7F0",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "8px",
+                      key={categoryKey}
+                      ref={(el) => {
+                        if (el) categoryRefs.current.set(categoryKey, el);
                       }}
                     >
-                      {communityAvatar && (
-                        <img
-                          src={communityAvatar}
-                          alt={categoryKey}
-                          style={{
-                            width: "20px",
-                            height: "20px",
-                            borderRadius: "50%",
-                            objectFit: "cover",
-                          }}
-                        />
-                      )}
-                      {categoryKey}
+                      <div
+                        style={{
+                          padding: "16px 16px 8px 16px",
+                          color: "#F295B6",
+                          fontSize: "11px",
+                          fontWeight: 700,
+                          textTransform: "uppercase",
+                          letterSpacing: "0.8px",
+                          position: "sticky",
+                          top: 0,
+                          backgroundColor: "#FFFFFF",
+                          zIndex: 1,
+                          borderTop: "2px solid #FFE7F0",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "8px",
+                        }}
+                      >
+                        {categoryKey}
+                      </div>
+                      {renderEmojiGrid(emojis)}
                     </div>
-                    {renderEmojiGrid(emojis)}
-                  </div>
-                );
-              })}
+                  );
+                })}
             </>
           )}
         </div>

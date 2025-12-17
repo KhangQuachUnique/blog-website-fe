@@ -106,24 +106,7 @@ const Card = memo(({ post }: { post: IPostResponseDto }) => {
           className="newsfeed-card__interact"
           onClick={(e) => e.stopPropagation()}
         >
-          <div
-            style={{
-              padding: "8px 12px 4px",
-              borderTop: "1px solid #FFE7F0",
-            }}
-          >
-            <div
-              style={{
-                display: "flex",
-                alignItems: "flex-start",
-                gap: "8px",
-                maxHeight: "72px", // 2 lines: (16px emoji + 6px padding + 4px gap) * 2
-                overflow: "hidden",
-              }}
-            >
-              <ReactionSection reactions={reactionData} />
-            </div>
-          </div>
+          <ReactionSection reactions={reactionData} />
           <InteractBar
             postId={post.id}
             userId={user?.id ?? 0}

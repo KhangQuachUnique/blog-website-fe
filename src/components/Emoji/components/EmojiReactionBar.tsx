@@ -5,14 +5,13 @@ import { getTwemojiUrl } from "../utils/twemoji";
 interface EmojiReactionBarProps {
   reactions: EmojiReactSummaryDto[];
   onReactionClick: (emojiId: number) => void;
-  compact?: boolean;
 }
 
 /**
  * Display emoji reactions as pills with count
  */
 export const EmojiReactionBar: React.FC<EmojiReactionBarProps> = React.memo(
-  ({ reactions, onReactionClick, compact = false }) => {
+  ({ reactions, onReactionClick }) => {
     if (reactions.length === 0) return null;
 
     const getEmojiSrc = (reaction: EmojiReactSummaryDto): string => {
@@ -26,48 +25,39 @@ export const EmojiReactionBar: React.FC<EmojiReactionBarProps> = React.memo(
 
     return (
       <div
-        style={{
-          display: "inline-flex",
-          flexWrap: "wrap",
-          gap: compact ? "4px" : "6px",
-          alignItems: "center",
-        }}
+        className="
+          inline-flex flex-wrap items-center gap-1.5
+          p-2
+          max-h-[78px] overflow-y-auto
+        "
       >
+        <style>
+          {`
+            div::-webkit-scrollbar {
+              width: 6px;
+              height: 6px;
+            }
+            div::-webkit-scrollbar-thumb {
+              background-color: #FFE4EC;
+              border-radius: 6px;
+            }
+            div::-webkit-scrollbar-track {
+              background-color: #FFF8FA;
+              border-radius: 6px;
+            }
+          `}
+        </style>
         {reactions.map((reaction) => (
           <button
             key={reaction.emojiId}
             onClick={() => onReactionClick(reaction.emojiId)}
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: compact ? "3px" : "4px",
-              padding: compact ? "3px 8px" : "4px 10px",
-              backgroundColor: reaction.reactedByCurrentUser
-                ? "#FFE7F0"
-                : "#FFF8FA",
-              border: `1.5px solid ${
-                reaction.reactedByCurrentUser ? "#F295B6" : "#FFE7F0"
-              }`,
-              borderRadius: "8px",
-              cursor: "pointer",
-              transition: "all 0.15s ease",
-              fontSize: compact ? "12px" : "14px",
-              fontWeight: 600,
-              color: "#4A3C42",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = "#FFE7F0";
-              e.currentTarget.style.borderColor = "#F295B6";
-              e.currentTarget.style.transform = "scale(1.05)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor =
-                reaction.reactedByCurrentUser ? "#FFE7F0" : "#FFF8FA";
-              e.currentTarget.style.borderColor = reaction.reactedByCurrentUser
-                ? "#F295B6"
-                : "#FFE7F0";
-              e.currentTarget.style.transform = "scale(1)";
-            }}
+            className={`
+              inline-flex items-center rounded-lg font-semibold cursor-pointer transition-all duration-150
+              px-2 py-1 gap-[7px]
+              ${reaction.reactedByCurrentUser ? "bg-[#FFE7F0]" : "bg-[#F2F2F2]"}
+              text-[#4A3C42]
+              hover:bg-[#FFE7F0] hover:border-[#F295B6]
+            `}
             title={`${reaction.totalCount} người đã react`}
           >
             {/* All emojis are rendered as images (Twemoji PNG or custom uploads) */}
@@ -75,16 +65,12 @@ export const EmojiReactionBar: React.FC<EmojiReactionBarProps> = React.memo(
               src={getEmojiSrc(reaction)}
               alt="emoji"
               style={{
-                width: compact ? "16px" : "18px",
-                height: compact ? "16px" : "18px",
+                width: "20px",
+                height: "20px",
                 objectFit: "contain",
               }}
             />
-            <span
-              style={{ fontSize: compact ? "12px" : "13px", fontWeight: 600 }}
-            >
-              {reaction.totalCount}
-            </span>
+            <span className="text-sm">{reaction.totalCount}</span>
           </button>
         ))}
       </div>

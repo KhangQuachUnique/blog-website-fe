@@ -11,10 +11,13 @@ export interface ReactionSectionProps {
 const ReactionSection = ({ reactions }: ReactionSectionProps) => {
   const { recent, add } = useRecentEmojis();
   const emojisData = useEmojiData();
-  console.log("emojisData", emojisData);
 
   return (
-    <div>
+    <div
+      className={`flex items-center justify-between w-full gap-[3px] px-2 h-fit overflow-y-auto
+      ${reactions.length === 0 ? "justify-end p-2" : ""}
+    `}
+    >
       <EmojiReactionBar
         reactions={reactions}
         onReactionClick={(emojiId: number) => {}}
