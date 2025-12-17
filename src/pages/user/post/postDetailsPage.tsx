@@ -136,6 +136,32 @@ const PostDetailsPage: React.FC = () => {
     };
   });
 
+  // Reactions from backend (if present on the post DTO)
+  const reactionsData = (post as any).reacts ?? (post as any).reactions ?? undefined;
+  const reactionEmojis: Array<{ node: React.ReactNode; count: number }> = [];
+  if (reactionsData && Array.isArray(reactionsData.emojis)) {
+    for (const r of reactionsData.emojis) {
+      const cnt = Number(r.totalCount ?? r.count ?? r.cnt ?? 0);
+      let node: React.ReactNode;
+
+      if (r.emojiUrl || r.emoji_url) {
+        const src = r.emojiUrl ?? r.emoji_url;
+        node = <img src={src} alt="emoji" style={{ width: 18, height: 18 }} />;
+      } else if (r.codepoint) {
+        try {
+          const parts = String(r.codepoint).split('-').map((p: string) => parseInt(p, 16));
+          node = String.fromCodePoint(...parts);
+        } catch {
+          node = r.emoji ?? '💗';
+        }
+      } else {
+        node = r.emoji ?? '💗';
+      }
+
+      reactionEmojis.push({ node, count: cnt });
+    }
+  }
+
   // ============================================
   // Render
   // ============================================
@@ -155,6 +181,18 @@ const PostDetailsPage: React.FC = () => {
         >
           {post.title}
         </h1>
+
+        {/* Reactions (display under title) */}
+        {reactionEmojis.length > 0 && (
+          <div className="newsfeed-card__reactions" style={{ marginTop: 8 }}>
+            {reactionEmojis.map((r, idx) => (
+              <div key={idx} className="newsfeed-card__reaction">
+                <span className="newsfeed-card__reaction-emoji">{r.node}</span>
+                <span className="newsfeed-card__reaction-count">{r.count}</span>
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* Short Description */}
         {post.shortDescription && (
