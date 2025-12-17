@@ -1,46 +1,33 @@
-/**
- * ============================================
- * EMOJI TYPES - Centralized Type Definitions
- * ============================================
- */
+export const EEmojiType = {
+  CUSTOM: "CUSTOM",
+  UNICODE: "UNICODE",
+};
+export type EEmojiType = (typeof EEmojiType)[keyof typeof EEmojiType];
 
-/**
- * Backend custom emoji response
- */
-export interface CustomEmoji {
+interface ICommunityDTO {
   id: number;
-  type: 'CUSTOM' | 'UNICODE';
-  emojiUrl: string;
-  codepoint: string | null;
-  community: {
-    id: number;
-    name: string;
-    thumbnailUrl: string;
-  };
-}
-
-/**
- * Frontend emoji item (used in picker UI)
- */
-export interface EmojiItem {
-  emoji: string;
   name: string;
-  codepoint: string;
-  twemoji_url: string;
-  isCustom?: boolean;
-  customEmojiId?: number;
-  communityId?: number;
-  communityName?: string;
+  avatarUrl?: string;
 }
 
-/**
- * Emoji data grouped by category
- */
-export type EmojiCategoryData = Record<string, EmojiItem[]>;
+export interface IEmojiResponseDto {
+  id?: number;
+  type?: EEmojiType;
+  codepoint?: string;
+  emojiUrl?: string;
+  communityId?: number;
+}
 
-/**
- * Category tab metadata
- */
+export interface IEmojiCommunityResponseDto {
+  community: ICommunityDTO;
+  emojis: IEmojiResponseDto[];
+}
+
+export interface IEmojiCategoryData {
+  category: string | ICommunityDTO;
+  emojis: IEmojiResponseDto[];
+}
+
 export interface CategoryTab {
   key: string;
   label: string;
@@ -51,23 +38,13 @@ export interface CategoryTab {
  * Default category tabs (Discord-like)
  */
 export const DEFAULT_CATEGORY_TABS: CategoryTab[] = [
-  { key: 'Smileys & Emotion', label: 'Smileys', icon: '😀' },
-  { key: 'People & Body', label: 'People', icon: '👋' },
-  { key: 'Animals & Nature', label: 'Nature', icon: '🐻' },
-  { key: 'Food & Drink', label: 'Food', icon: '🍔' },
-  { key: 'Travel & Places', label: 'Travel', icon: '✈️' },
-  { key: 'Activities', label: 'Activities', icon: '⚽' },
-  { key: 'Objects', label: 'Objects', icon: '💡' },
-  { key: 'Symbols', label: 'Symbols', icon: '❤️' },
-  { key: 'Flags', label: 'Flags', icon: '🏳️' },
+  { key: "Smileys & Emotion", label: "Smileys", icon: "😀" },
+  { key: "People & Body", label: "People", icon: "👋" },
+  { key: "Animals & Nature", label: "Nature", icon: "🐻" },
+  { key: "Food & Drink", label: "Food", icon: "🍔" },
+  { key: "Travel & Places", label: "Travel", icon: "✈️" },
+  { key: "Activities", label: "Activities", icon: "⚽" },
+  { key: "Objects", label: "Objects", icon: "💡" },
+  { key: "Symbols", label: "Symbols", icon: "❤️" },
+  { key: "Flags", label: "Flags", icon: "🏳️" },
 ];
-
-/**
- * Emoji reaction data for reaction bar
- */
-export interface EmojiReactionData {
-  emoji: string;
-  count: number;
-  isReactedByMe: boolean;
-  emojiId: number;
-}

@@ -1,4 +1,5 @@
 import type { IBlockResponseDto, ICreateBlockDto } from "./block";
+import type { UserReactSummaryDto } from "./userReact";
 
 export const EPostType = {
   PERSONAL: "PERSONAL",
@@ -61,7 +62,6 @@ export interface IHashtagDto {
   name: string;
 }
 
-
 export interface IPostResponseDto {
   id: number;
   title: string;
@@ -78,8 +78,7 @@ export interface IPostResponseDto {
   blocks?: IBlockResponseDto[];
   upVotes: number;
   downVotes: number;
-  totalComments: number;
-  totalReacts: number;
+  reacts: UserReactSummaryDto;
 }
 
 export interface BlogPost {

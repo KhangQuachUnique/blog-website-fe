@@ -1,6 +1,6 @@
 import { useAuth } from "../../hooks/useAuth";
 import { ACCESS_TOKEN_KEY } from "../../constants/auth";
-import { EmojiSelector } from "../../components/Emoji";
+import { EmojiSelector } from "../../components/emoji/components/EmojiSelector";
 import emojiData from "../../assets/twemoji_valid_by_category.json";
 import { useState } from "react";
 
@@ -30,7 +30,9 @@ const HomePage = () => {
           <h1 className="text-4xl font-bold text-gray-800 mb-2">
             🏠 Home Page - Debug Info
           </h1>
-          <p className="text-gray-600">Thông tin authentication và user hiện tại</p>
+          <p className="text-gray-600">
+            Thông tin authentication và user hiện tại
+          </p>
         </div>
 
         {/* Auth Status Card */}
@@ -41,33 +43,45 @@ const HomePage = () => {
           </h2>
           <div className="space-y-3">
             <div className="flex items-center">
-              <span className="font-medium text-gray-700 w-40">Is Authenticated:</span>
-              <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
-                isAuthenticated 
-                  ? 'bg-green-100 text-green-800' 
-                  : 'bg-red-100 text-red-800'
-              }`}>
-                {isAuthenticated ? '✓ Yes' : '✗ No'}
+              <span className="font-medium text-gray-700 w-40">
+                Is Authenticated:
+              </span>
+              <span
+                className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                  isAuthenticated
+                    ? "bg-green-100 text-green-800"
+                    : "bg-red-100 text-red-800"
+                }`}
+              >
+                {isAuthenticated ? "✓ Yes" : "✗ No"}
               </span>
             </div>
             <div className="flex items-center">
-              <span className="font-medium text-gray-700 w-40">Is Loading:</span>
-              <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
-                isLoading 
-                  ? 'bg-yellow-100 text-yellow-800' 
-                  : 'bg-gray-100 text-gray-800'
-              }`}>
-                {isLoading ? '⏳ Loading...' : '✓ Ready'}
+              <span className="font-medium text-gray-700 w-40">
+                Is Loading:
+              </span>
+              <span
+                className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                  isLoading
+                    ? "bg-yellow-100 text-yellow-800"
+                    : "bg-gray-100 text-gray-800"
+                }`}
+              >
+                {isLoading ? "⏳ Loading..." : "✓ Ready"}
               </span>
             </div>
             <div className="flex items-center">
-              <span className="font-medium text-gray-700 w-40">Token in localStorage:</span>
-              <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
-                accessToken
-                  ? 'bg-blue-100 text-blue-800' 
-                  : 'bg-gray-100 text-gray-800'
-              }`}>
-                {accessToken ? '✓ Present' : '✗ None'}
+              <span className="font-medium text-gray-700 w-40">
+                Token in localStorage:
+              </span>
+              <span
+                className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                  accessToken
+                    ? "bg-blue-100 text-blue-800"
+                    : "bg-gray-100 text-gray-800"
+                }`}
+              >
+                {accessToken ? "✓ Present" : "✗ None"}
               </span>
             </div>
           </div>
@@ -92,22 +106,28 @@ const HomePage = () => {
               </div>
               <div className="bg-purple-50 p-4 rounded-lg">
                 <p className="text-sm text-gray-600 mb-1">Username</p>
-                <p className="text-lg font-semibold text-gray-800">{user.username}</p>
+                <p className="text-lg font-semibold text-gray-800">
+                  {user.username}
+                </p>
               </div>
               <div className="bg-blue-50 p-4 rounded-lg">
                 <p className="text-sm text-gray-600 mb-1">Email</p>
-                <p className="text-lg font-semibold text-gray-800">{user.email}</p>
+                <p className="text-lg font-semibold text-gray-800">
+                  {user.email}
+                </p>
               </div>
               <div className="bg-green-50 p-4 rounded-lg">
                 <p className="text-sm text-gray-600 mb-1">Role</p>
-                <p className="text-lg font-semibold text-gray-800">{user.role || 'N/A'}</p>
+                <p className="text-lg font-semibold text-gray-800">
+                  {user.role || "N/A"}
+                </p>
               </div>
               {user.avatarUrl && (
                 <div className="bg-yellow-50 p-4 rounded-lg md:col-span-2">
                   <p className="text-sm text-gray-600 mb-2">Avatar</p>
-                  <img 
-                    src={user.avatarUrl} 
-                    alt="User avatar" 
+                  <img
+                    src={user.avatarUrl}
+                    alt="User avatar"
                     className="w-20 h-20 rounded-full border-2 border-pink-300"
                   />
                 </div>
@@ -123,8 +143,8 @@ const HomePage = () => {
             <p className="text-gray-600 mb-4">
               Bạn chưa đăng nhập. Vui lòng đăng nhập để xem thông tin user.
             </p>
-            <a 
-              href="/login" 
+            <a
+              href="/login"
               className="inline-block bg-pink-500 hover:bg-pink-600 text-white font-semibold px-6 py-3 rounded-lg transition-colors"
             >
               Đăng nhập ngay
@@ -145,7 +165,8 @@ const HomePage = () => {
               </p>
             </div>
             <p className="text-sm text-gray-500 mt-2">
-              Token này được tự động gửi kèm trong mọi API request qua Authorization header
+              Token này được tự động gửi kèm trong mọi API request qua
+              Authorization header
             </p>
           </div>
         )}
@@ -157,54 +178,61 @@ const HomePage = () => {
             Emoji Selector Demo
           </h2>
           <p className="text-gray-600 mb-4">
-            Test thử Discord-style emoji picker với full categories, search, và recent tracking
+            Test thử Discord-style emoji picker với full categories, search, và
+            recent tracking
           </p>
-          
+
           <div className="flex items-center gap-4 mb-4">
             <EmojiSelector
               data={emojiData}
               recentCodepoints={recentEmojis}
               onSelect={(codepoint) => {
-                console.log('Selected emoji codepoint:', codepoint);
+                console.log("Selected emoji codepoint:", codepoint);
                 setSelectedEmoji(codepoint);
               }}
               onRecentUpdate={setRecentEmojis}
-              position="bottom"
             />
-            
+
             {selectedEmoji && (
               <div className="bg-pink-50 p-4 rounded-lg flex items-center gap-3">
                 <img
-                  src={`https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/svg/${selectedEmoji.replace(/\s+/g, '-')}.svg`}
+                  src={`https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/svg/${selectedEmoji.replace(
+                    /\s+/g,
+                    "-"
+                  )}.svg`}
                   alt="Selected"
-                  style={{ width: '32px', height: '32px' }}
+                  style={{ width: "32px", height: "32px" }}
                 />
                 <div>
                   <p className="text-sm text-gray-600">Selected:</p>
-                  <p className="font-mono text-xs text-gray-800">{selectedEmoji}</p>
+                  <p className="font-mono text-xs text-gray-800">
+                    {selectedEmoji}
+                  </p>
                 </div>
               </div>
             )}
           </div>
-          
+
           {recentEmojis.length > 0 && (
             <div className="bg-gray-50 p-3 rounded-lg">
               <p className="text-sm text-gray-600 mb-2">Recent emojis:</p>
-              <p className="font-mono text-xs text-gray-700">{recentEmojis.join(', ')}</p>
+              <p className="font-mono text-xs text-gray-700">
+                {recentEmojis.join(", ")}
+              </p>
             </div>
           )}
         </div>
 
         {/* Quick Actions */}
         <div className="mt-8 flex gap-4 justify-center">
-          <a 
-            href="/newsfeed" 
+          <a
+            href="/newsfeed"
             className="bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white font-semibold px-6 py-3 rounded-lg shadow-lg transition-all"
           >
             📰 Go to Newsfeed
           </a>
-          <a 
-            href="/create-post" 
+          <a
+            href="/create-post"
             className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-semibold px-6 py-3 rounded-lg shadow-lg transition-all"
           >
             ✏️ Create Post

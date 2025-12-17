@@ -1,19 +1,25 @@
-import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
-import { EmojiPicker } from './EmojiPicker';
-import type { EmojiCategoryData, EmojiItem } from './types';
-import { useClickOutside } from './hooks/useClickOutside';
-import { getRecentEmojis } from './utils';
-import { useAuth } from '../../contexts/AuthContext';
-import { useCustomEmojis } from '../../hooks/useCustomEmojis';
-import { convertCustomEmojisToCategories, mergeEmojiCategories } from './utils/customEmojiConverter';
+import React, {
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+  useMemo,
+} from "react";
+
+import { EmojiPicker } from "./EmojiPicker";
+import type {
+  IEmojiCategoryData,
+  IEmojiResponseDto,
+} from "../../../types/emoji";
+import { useClickOutside } from "../hooks/useClickOutside";
+
+import { useAuth } from "../../../contexts/AuthContext";
 
 interface EmojiSelectorProps {
-  data: EmojiCategoryData;
+  emojisData: IEmojiCategoryData[];
   recentCodepoints?: string[];
-  quickAccess?: EmojiItem[];
   onSelect: (codepoint: string) => void;
   onRecentUpdate?: (codepoints: string[]) => void;
-  position?: 'top' | 'bottom';
   compact?: boolean;
 }
 
@@ -21,52 +27,32 @@ interface EmojiSelectorProps {
  * Complete emoji selector system with picker and quick bar
  */
 export const EmojiSelector: React.FC<EmojiSelectorProps> = ({
-  data,
+  emojisData,
   recentCodepoints = [],
-  quickAccess,
   onSelect,
   onRecentUpdate,
-  position = 'bottom',
   compact = false,
 }) => {
   const { user } = useAuth();
-  const { emojis: customEmojis, isLoading: loadingCustomEmojis } = useCustomEmojis(user?.id);
-  
+
   const [isPickerOpen, setIsPickerOpen] = useState(false);
-  const [recentEmojis, setRecentEmojis] = useState<EmojiItem[]>([]);
-  const [pickerPosition, setPickerPosition] = useState<{ top: number; left: number } | null>(null);
+  const [pickerPosition, setPickerPosition] = useState<{
+    top: number;
+    left: number;
+  } | null>(null);
   const [isPositionReady, setIsPositionReady] = useState(false);
 
   const buttonRef = useRef<HTMLButtonElement>(null);
   const pickerRef = useRef<HTMLDivElement>(null);
 
-  // Merge unicode emojis with custom community emojis
-  const allEmojiData = useMemo(() => {
-    if (!customEmojis || customEmojis.length === 0) {
-      return data;
-    }
-
-    const customCategories = convertCustomEmojisToCategories(customEmojis);
-    const merged = mergeEmojiCategories(data, customCategories);
-    
-    return merged;
-  }, [data, customEmojis]);
-
-  // Load recent emojis
-  useEffect(() => {
-    if (recentCodepoints.length > 0) {
-      const emojis = getRecentEmojis(recentCodepoints, allEmojiData);
-      setRecentEmojis(emojis);
-    }
-  }, [recentCodepoints, allEmojiData]);
+  const closePicker = useCallback(() => {
+    setIsPickerOpen(false);
+    setPickerPosition(null);
+    setIsPositionReady(false);
+  }, []);
 
   // Close picker on outside click
-  useClickOutside([buttonRef, pickerRef], () => {
-    if (isPickerOpen) {
-      setIsPickerOpen(false);
-      setIsPositionReady(false);
-    }
-  });
+  useClickOutside([buttonRef, pickerRef], closePicker);
 
   const handleSelect = (codepoint: string) => {
     onSelect(codepoint);
@@ -114,13 +100,14 @@ export const EmojiSelector: React.FC<EmojiSelectorProps> = ({
 
     // Try to position on the right first
     left = buttonRect.right + horizontalGap;
-    const hasSpaceOnRight = left + pickerWidth + sidePadding <= window.innerWidth;
+    const hasSpaceOnRight =
+      left + pickerWidth + sidePadding <= window.innerWidth;
 
     if (!hasSpaceOnRight) {
       // If not enough space on right, try left
       left = buttonRect.left - pickerWidth - horizontalGap;
       const hasSpaceOnLeft = left >= sidePadding;
-      
+
       if (!hasSpaceOnLeft) {
         // If neither side works, center below
         left = buttonRect.left + buttonRect.width / 2 - pickerWidth / 2;
@@ -140,18 +127,12 @@ export const EmojiSelector: React.FC<EmojiSelectorProps> = ({
   }, []);
 
   useEffect(() => {
-    if (!isPickerOpen) {
-      setPickerPosition(null);
-      setIsPositionReady(false);
-      return;
-    }
-
     let animationFrameId: number | null = null;
 
     // Update position on scroll and resize
     const updatePosition = () => {
       if (animationFrameId !== null) return;
-      
+
       animationFrameId = requestAnimationFrame(() => {
         const newPos = updatePickerPosition();
         if (newPos) setPickerPosition(newPos);
@@ -159,12 +140,12 @@ export const EmojiSelector: React.FC<EmojiSelectorProps> = ({
       });
     };
 
-    window.addEventListener('scroll', updatePosition, true); // Use capture phase
-    window.addEventListener('resize', updatePosition);
+    window.addEventListener("scroll", updatePosition, true); // Use capture phase
+    window.addEventListener("resize", updatePosition);
 
     return () => {
-      window.removeEventListener('scroll', updatePosition, true);
-      window.removeEventListener('resize', updatePosition);
+      window.removeEventListener("scroll", updatePosition, true);
+      window.removeEventListener("resize", updatePosition);
       if (animationFrameId !== null) {
         cancelAnimationFrame(animationFrameId);
       }
@@ -174,45 +155,46 @@ export const EmojiSelector: React.FC<EmojiSelectorProps> = ({
   return (
     <div
       style={{
-        position: 'relative',
-        display: 'inline-flex',
-        flexDirection: 'column',
-        gap: '8px',
+        position: "relative",
+        display: "inline-flex",
+        flexDirection: "column",
+        gap: "8px",
         zIndex: 100,
       }}
     >
-
       {/* Open Picker Button */}
       <button
         ref={buttonRef}
         onClick={handleTogglePicker}
         style={{
-          width: compact ? '28px' : '40px',
-          height: compact ? '28px' : '40px',
-          backgroundColor: isPickerOpen ? '#FFE7F0' : 'transparent',
-          border: '1.5px solid #FFE7F0',
-          borderRadius: '8px',
-          cursor: 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontSize: compact ? '18px' : '24px',
-          transition: 'all 0.15s ease',
-          filter: isPickerOpen ? 'grayscale(0%)' : 'grayscale(100%)',
+          width: compact ? "28px" : "40px",
+          height: compact ? "28px" : "40px",
+          backgroundColor: isPickerOpen ? "#FFE7F0" : "transparent",
+          border: "1.5px solid #FFE7F0",
+          borderRadius: "8px",
+          cursor: "pointer",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: compact ? "18px" : "24px",
+          transition: "all 0.15s ease",
+          filter: isPickerOpen ? "grayscale(0%)" : "grayscale(100%)",
           opacity: isPickerOpen ? 1 : 0.5,
         }}
         onMouseEnter={(e) => {
-          e.currentTarget.style.backgroundColor = '#FFE7F0';
-          e.currentTarget.style.borderColor = '#F295B6';
-          e.currentTarget.style.filter = 'grayscale(0%)';
-          e.currentTarget.style.opacity = '1';
+          e.currentTarget.style.backgroundColor = "#FFE7F0";
+          e.currentTarget.style.borderColor = "#F295B6";
+          e.currentTarget.style.filter = "grayscale(0%)";
+          e.currentTarget.style.opacity = "1";
         }}
         onMouseLeave={(e) => {
-          e.currentTarget.style.backgroundColor = isPickerOpen ? '#FFE7F0' : 'transparent';
-          e.currentTarget.style.borderColor = '#FFE7F0';
+          e.currentTarget.style.backgroundColor = isPickerOpen
+            ? "#FFE7F0"
+            : "transparent";
+          e.currentTarget.style.borderColor = "#FFE7F0";
           if (!isPickerOpen) {
-            e.currentTarget.style.filter = 'grayscale(100%)';
-            e.currentTarget.style.opacity = '0.5';
+            e.currentTarget.style.filter = "grayscale(100%)";
+            e.currentTarget.style.opacity = "0.5";
           }
         }}
         title="Chọn emoji 💕"
@@ -225,35 +207,36 @@ export const EmojiSelector: React.FC<EmojiSelectorProps> = ({
         <div
           ref={pickerRef}
           style={{
-            position: 'fixed',
+            position: "fixed",
             zIndex: 999999,
             top: pickerPosition.top,
             left: pickerPosition.left,
             opacity: isPositionReady ? 1 : 0,
-            transition: 'opacity 0.1s ease',
+            transition: "opacity 0.1s ease",
           }}
         >
           <EmojiPicker
-            data={allEmojiData}
-            recent={recentEmojis}
+            emojisData={emojisData}
+            // recent={recentEmojis}
             onSelect={handleSelect}
             onClose={() => setIsPickerOpen(false)}
           />
-          {loadingCustomEmojis && (
-            <div style={{
-              position: 'absolute',
-              top: '8px',
-              right: '8px',
-              fontSize: '12px',
-              color: '#8B7B82',
-              backgroundColor: '#FFF8FA',
-              padding: '4px 8px',
-              borderRadius: '4px',
-              pointerEvents: 'none',
-            }}>
-              Loading custom emojis...
-            </div>
-          )}
+
+          <div
+            style={{
+              position: "absolute",
+              top: "8px",
+              right: "8px",
+              fontSize: "12px",
+              color: "#8B7B82",
+              backgroundColor: "#FFF8FA",
+              padding: "4px 8px",
+              borderRadius: "4px",
+              pointerEvents: "none",
+            }}
+          >
+            Loading custom emojis...
+          </div>
         </div>
       )}
     </div>

@@ -1,4 +1,4 @@
-import type { EmojiItem, EmojiCategoryData } from './types';
+import type { EmojiItem, EmojiCategoryData } from "../types";
 
 /**
  * Search emojis by name (case-insensitive)
@@ -41,14 +41,19 @@ export function getRecentEmojis(
 /**
  * Debounce function for search input
  */
-export function debounce<T extends (...args: any[]) => any>(
+export function debounce<T extends (...args: unknown[]) => void>(
   func: T,
   wait: number
 ): (...args: Parameters<T>) => void {
-  let timeout: NodeJS.Timeout | null = null;
+  let timeout: ReturnType<typeof setTimeout> | undefined;
 
   return (...args: Parameters<T>) => {
-    if (timeout) clearTimeout(timeout);
-    timeout = setTimeout(() => func(...args), wait);
+    if (timeout) {
+      clearTimeout(timeout);
+    }
+
+    timeout = setTimeout(() => {
+      func(...args);
+    }, wait);
   };
 }

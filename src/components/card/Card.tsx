@@ -1,47 +1,17 @@
 import { Link } from "react-router-dom";
-import { useState, useCallback, memo } from "react";
+import { memo } from "react";
 import type { IPostResponseDto } from "../../types/post";
 import InteractBar from "../interactBar/InteractBar";
-import {
-  EmojiReactionBar,
-  EmojiSelector,
-  type EmojiReactionData,
-} from "../Emoji";
-import emojiData from "../../assets/twemoji_valid_by_category.json";
 import { recordViewedPost } from "../../services/user/viewedHistory";
 import { useAuth } from "../../contexts/AuthContext";
-import { usePostReactions } from "../../hooks/usePostReactions";
-import { getTwemojiUrl } from "../../utils/twemoji";
 import "../../styles/newsfeed/Card.css";
+import ReactionSection from "../emoji";
 
 const Card = memo(({ post }: { post: IPostResponseDto }) => {
   const { user } = useAuth();
-  const [showReactions, setShowReactions] = useState(false);
-  const [recentEmojis, setRecentEmojis] = useState<string[]>([]);
-
-  const { reactions, handleReact, handleReactionClick } = usePostReactions({
-    postId: post.id,
-    enabled: showReactions,
-  });
-
-  const handleInteractBarHover = useCallback(() => {
-    if (!showReactions) setShowReactions(true);
-  }, [showReactions]);
-
-  const handleEmojiSelect = useCallback(
-    (codepoint: string) => {
-      handleReact(codepoint);
-    },
-    [handleReact]
-  );
 
   // Convert reactions to display format
-  const reactionData: EmojiReactionData[] = reactions.map((r) => ({
-    emoji: r.type === "unicode" ? getTwemojiUrl(r.icon, "72x72") : r.icon,
-    count: r.count,
-    isReactedByMe: r.is_reacted_by_me,
-    emojiId: r.emoji_id,
-  }));
+  const reactionData = post.reacts.emojis ?? [];
 
   const formatDate = (dateString: Date) => {
     const date = new Date(dateString);
@@ -135,46 +105,25 @@ const Card = memo(({ post }: { post: IPostResponseDto }) => {
         <div
           className="newsfeed-card__interact"
           onClick={(e) => e.stopPropagation()}
-          onMouseEnter={handleInteractBarHover}
         >
-          {showReactions && (
+          <div
+            style={{
+              padding: "8px 12px 4px",
+              borderTop: "1px solid #FFE7F0",
+            }}
+          >
             <div
               style={{
-                padding: "8px 12px 4px",
-                borderTop: "1px solid #FFE7F0",
+                display: "flex",
+                alignItems: "flex-start",
+                gap: "8px",
+                maxHeight: "72px", // 2 lines: (16px emoji + 6px padding + 4px gap) * 2
+                overflow: "hidden",
               }}
             >
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "flex-start",
-                  gap: "8px",
-                  maxHeight: "72px", // 2 lines: (16px emoji + 6px padding + 4px gap) * 2
-                  overflow: "hidden",
-                }}
-              >
-                {reactionData.length > 0 && (
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <EmojiReactionBar
-                      reactions={reactionData}
-                      onReactionClick={handleReactionClick}
-                      compact
-                    />
-                  </div>
-                )}
-                <div style={{ flexShrink: 0 }}>
-                  <EmojiSelector
-                    data={emojiData}
-                    recentCodepoints={recentEmojis}
-                    onSelect={handleEmojiSelect}
-                    onRecentUpdate={setRecentEmojis}
-                    position="top"
-                    compact
-                  />
-                </div>
-              </div>
+              <ReactionSection reactions={reactionData} />
             </div>
-          )}
+          </div>
           <InteractBar
             postId={post.id}
             userId={user?.id ?? 0}
