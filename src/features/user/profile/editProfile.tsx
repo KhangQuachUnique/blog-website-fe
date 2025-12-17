@@ -6,6 +6,7 @@ import { AiOutlineUser, AiOutlineLock, AiOutlineEye, AiOutlineUserDelete } from 
 import { MdBlock } from "react-icons/md";
 import * as userService from "../../../services/user/userService";
 import { useAuth } from "../../../hooks/useAuth";
+import { useToast } from "../../../contexts/toast";
 import Avatar from '@mui/material/Avatar';
 import { stringAvatar } from '../../../utils/avatarHelper';
 import "../../../styles/profile/profile.css";
@@ -17,6 +18,7 @@ type TabType = "profile" | "password" | "privacy" | "blocked" | "delete";
 const EditProfile = () => {
   const navigate = useNavigate();
   const { logout, refreshUser } = useAuth();
+  const { showToast } = useToast();
   const [activeTab, setActiveTab] = useState<TabType>("profile");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState<string | null>(null);
@@ -197,12 +199,28 @@ const EditProfile = () => {
   };
 
   const handleResetPassword = async () => {
-    if (resetPasswordData.newPassword !== resetPasswordData.confirmPassword) {
-      setError('Mật khẩu xác nhận không khớp');
+    if (!resetPasswordData.verificationCode) {
+      showToast({ type: "error", message: "Vui lòng nhập mã xác thực" });
       return;
     }
-    if (resetPasswordData.newPassword.length < 6) {
-      setError('Mật khẩu phải có ít nhất 6 ký tự');
+    if (!resetPasswordData.newPassword) {
+      showToast({ type: "error", message: "Vui lòng nhập mật khẩu mới" });
+      return;
+    }
+    if (resetPasswordData.newPassword.length < 8) {
+      showToast({ type: "error", message: "Mật khẩu phải có ít nhất 8 ký tự" });
+      return;
+    }
+    if (resetPasswordData.newPassword.length > 50) {
+      showToast({ type: "error", message: "Mật khẩu không được quá 50 ký tự" });
+      return;
+    }
+    if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(resetPasswordData.newPassword)) {
+      showToast({ type: "error", message: "Mật khẩu phải chứa ít nhất 1 chữ hoa, 1 chữ thường và 1 số" });
+      return;
+    }
+    if (resetPasswordData.newPassword !== resetPasswordData.confirmPassword) {
+      showToast({ type: "error", message: "Mật khẩu không khớp" });
       return;
     }
     
@@ -215,26 +233,45 @@ const EditProfile = () => {
         newPassword: resetPasswordData.newPassword
       });
       
-      setSuccess('Mật khẩu đã được đặt lại thành công!');
+      showToast({ type: "success", message: "Mật khẩu đã được đặt lại thành công!" });
       setShowForgotPasswordModal(false);
       setForgotPasswordStep('email');
       setForgotPasswordEmail('');
       setResetPasswordData({ verificationCode: '', newPassword: '', confirmPassword: '' });
-      setTimeout(() => setSuccess(null), 3000);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Có lỗi xảy ra');
+      const error = err as { response?: { data?: { message?: string } }; message?: string };
+      showToast({ 
+        type: "error", 
+        message: error.response?.data?.message || error.message || "Có lỗi xảy ra" 
+      });
     } finally {
       setLoading(false);
     }
   };
 
   const handleChangePassword = async () => {
-    if (passwordData.newPassword !== passwordData.confirmPassword) {
-      setError("Mật khẩu mới không khớp");
+    if (!passwordData.currentPassword) {
+      showToast({ type: "error", message: "Vui lòng nhập mật khẩu hiện tại" });
       return;
     }
-    if (passwordData.newPassword.length < 6) {
-      setError("Mật khẩu phải có ít nhất 6 ký tự");
+    if (!passwordData.newPassword) {
+      showToast({ type: "error", message: "Vui lòng nhập mật khẩu mới" });
+      return;
+    }
+    if (passwordData.newPassword.length < 8) {
+      showToast({ type: "error", message: "Mật khẩu phải có ít nhất 8 ký tự" });
+      return;
+    }
+    if (passwordData.newPassword.length > 50) {
+      showToast({ type: "error", message: "Mật khẩu không được quá 50 ký tự" });
+      return;
+    }
+    if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(passwordData.newPassword)) {
+      showToast({ type: "error", message: "Mật khẩu phải chứa ít nhất 1 chữ hoa, 1 chữ thường và 1 số" });
+      return;
+    }
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      showToast({ type: "error", message: "Mật khẩu không khớp" });
       return;
     }
     
@@ -242,11 +279,14 @@ const EditProfile = () => {
     setError(null);
     try {
       await userService.changePassword(passwordData);
-      setSuccess("Đổi mật khẩu thành công!");
+      showToast({ type: "success", message: "Đổi mật khẩu thành công!" });
       setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" });
-      setTimeout(() => setSuccess(null), 3000);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Có lỗi xảy ra");
+      const error = err as { response?: { data?: { message?: string } }; message?: string };
+      showToast({ 
+        type: "error", 
+        message: error.response?.data?.message || error.message || "Có lỗi xảy ra" 
+      });
     } finally {
       setLoading(false);
     }
@@ -740,7 +780,7 @@ const EditProfile = () => {
                     value={resetPasswordData.newPassword}
                     onChange={(e) => setResetPasswordData({ ...resetPasswordData, newPassword: e.target.value })}
                     className="profile-input"
-                    placeholder="Ít nhất 6 ký tự"
+                    placeholder="Ít nhất 8 ký tự"
                   />
                 </div>
                 <div>

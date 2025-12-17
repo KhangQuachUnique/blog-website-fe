@@ -52,6 +52,7 @@ export const changePassword = async (
   const response = await axiosCustomize.post("/users/me/change-password", {
     currentPassword: data.currentPassword,
     newPassword: data.newPassword,
+    confirmPassword: data.confirmPassword,
   });
   return unwrap(response);
 };
