@@ -63,6 +63,88 @@
   margin-top: auto;
 }
 
+/* Reactions area shown above InteractBar: up to 2 rows, then clipped */
+.newsfeed-card__reactions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  /* nudge emoji row slightly up: smaller top padding + slight negative margin */
+  padding: 0.35rem 1.25rem 0.25rem 1.25rem;
+  margin-top: -6px;
+  align-items: center;
+  /* each reaction pill approx 32px tall; two rows -> ~72px including gaps */
+  /* max-height: 72px; */
+  overflow: hidden;
+  transition: max-height 0.18s ease, margin-top 0.12s ease;
+}
+
+/* For repost cards: show only 1 visible row by default. On hover, allow scrolling to reveal hidden emojis. */
+.newsfeed-card--repost .newsfeed-card__reactions {
+  max-height: 40px; /* ~1 row */
+}
+
+.newsfeed-card--repost:hover .newsfeed-card__reactions {
+  /* expand and allow vertical scroll so user can scroll to see all reactions */
+  max-height: 180px; /* allow up to several rows when hovering */
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Thin scrollbar for reactions on hover */
+.newsfeed-card__reactions::-webkit-scrollbar {
+  width: 8px;
+}
+.newsfeed-card__reactions::-webkit-scrollbar-thumb {
+  background: rgba(242,149,182,0.35);
+  border-radius: 8px;
+}
+.newsfeed-card__reactions::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Repost: make reactions horizontal (single row) and hide visible scrollbar */
+.newsfeed-card--repost .newsfeed-card__reactions {
+  flex-wrap: nowrap;
+  white-space: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-behavior: smooth;
+}
+
+.newsfeed-card--repost .newsfeed-card__reactions::-webkit-scrollbar {
+  display: none;
+}
+.newsfeed-card--repost .newsfeed-card__reactions {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+.newsfeed-card--repost .newsfeed-card__reactions {
+  cursor: grab;
+}
+
+.newsfeed-card__reaction {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  background: #fff8fb;
+  border: 1px solid #ffe7f0;
+  border-radius: 999px;
+  font-size: 0.875rem;
+  color: hsl(var(--foreground));
+  min-height: 32px;
+}
+
+.newsfeed-card__reaction-emoji {
+  font-size: 16px;
+}
+
+.newsfeed-card__reaction-count {
+  font-weight: 700;
+  color: #f295b6;
+}
+
 .newsfeed-card__header {
   display: flex;
   justify-content: space-between;

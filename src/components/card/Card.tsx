@@ -1,3 +1,4 @@
+import React, { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import type { IPostResponseDto } from "../../types/post";
 import { EPostType } from "../../types/post";
@@ -10,9 +11,100 @@ import { Repeat2 } from "lucide-react";
 
 const Card = ({ post }: { post: IPostResponseDto }) => {
   const { user } = useAuth();
-  
+
+  // Extract reactions safely (newsfeed may include `reacts` or `reactions` metadata)
+  const reactionsData = (post as any).reacts ?? (post as any).reactions ?? undefined;
+  const reactionEmojis: Array<{ node: React.ReactNode; count: number }> = [];
+  if (reactionsData && Array.isArray(reactionsData.emojis)) {
+    for (const r of reactionsData.emojis) {
+      const cnt = Number(r.totalCount ?? r.count ?? r.cnt ?? 0);
+      let node: React.ReactNode;
+
+      // Prefer emoji image url if provided (custom emoji asset), otherwise construct from codepoint, otherwise fallback to raw char
+      if (r.emojiUrl || r.emoji_url) {
+        const src = r.emojiUrl ?? r.emoji_url;
+        node = <img src={src} alt="emoji" style={{ width: 18, height: 18 }} />;
+      } else if (r.codepoint) {
+        try {
+          const parts = String(r.codepoint).split('-').map((p: string) => parseInt(p, 16));
+          const ch = String.fromCodePoint(...parts);
+          node = <span>{ch}</span>;
+        } catch {
+          node = <span>{r.emoji ?? '💗'}</span>;
+        }
+      } else {
+        node = <span>{r.emoji ?? '💗'}</span>;
+      }
+
+      reactionEmojis.push({ node, count: cnt });
+    }
+  }
+
+  // Reactions container ref (used for repost horizontal scroll behavior)
+  const reactionsRef = useRef<HTMLDivElement | null>(null);
+
   // Check if this is a repost
   const isRepost = post.type === EPostType.REPOST;
+
+  // For repost cards: convert vertical wheel to horizontal scroll and enable drag-to-scroll
+  useEffect(() => {
+    if (!isRepost) return;
+    const el = reactionsRef.current;
+    if (!el) return;
+
+    let isDown = false;
+    let startX = 0;
+    let startScrollLeft = 0;
+
+    const onWheel = (e: WheelEvent) => {
+      // Prefer vertical delta -> horizontal scroll
+      if (Math.abs(e.deltaY) > 0) {
+        e.preventDefault();
+        el.scrollLeft += e.deltaY;
+      }
+    };
+
+    const onPointerDown = (ev: PointerEvent) => {
+      isDown = true;
+      startX = ev.clientX;
+      startScrollLeft = el.scrollLeft;
+      try { el.setPointerCapture(ev.pointerId); } catch {}
+      el.style.cursor = 'grabbing';
+    };
+
+    const onPointerMove = (ev: PointerEvent) => {
+      if (!isDown) return;
+      const dx = ev.clientX - startX;
+      el.scrollLeft = startScrollLeft - dx;
+    };
+
+    const endDrag = (ev?: PointerEvent) => {
+      isDown = false;
+      try {
+        if (ev && typeof ev.pointerId !== 'undefined') {
+          try {
+            el.releasePointerCapture(ev.pointerId);
+          } catch {}
+        }
+      } catch {}
+      el.style.cursor = 'grab';
+    };
+
+    el.addEventListener('wheel', onWheel, { passive: false });
+    el.addEventListener('pointerdown', onPointerDown as EventListener);
+    window.addEventListener('pointermove', onPointerMove as EventListener);
+    window.addEventListener('pointerup', endDrag as EventListener);
+    el.addEventListener('pointerleave', endDrag as EventListener);
+
+    return () => {
+      el.removeEventListener('wheel', onWheel as EventListener);
+      el.removeEventListener('pointerdown', onPointerDown as EventListener);
+      window.removeEventListener('pointermove', onPointerMove as EventListener);
+      window.removeEventListener('pointerup', endDrag as EventListener);
+      el.removeEventListener('pointerleave', endDrag as EventListener);
+    };
+  }, [isRepost, reactionEmojis.length]);
+  
   
   // Fetch original post if only ID provided
   const originalId = post.originalPost?.id ?? (post as any).originalPostId;
@@ -184,6 +276,18 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
             </Link>
 
             {/* InteractBar của người repost */}
+            {/* Reactions (up to 2 rows) */}
+            {reactionEmojis.length > 0 && (
+              <div ref={reactionsRef} className="newsfeed-card__reactions" onClick={(e) => e.stopPropagation()}>
+                    {reactionEmojis.map((r, idx) => (
+                      <div key={idx} className="newsfeed-card__reaction">
+                        <span className="newsfeed-card__reaction-emoji">{r.node}</span>
+                        <span className="newsfeed-card__reaction-count">{r.count}</span>
+                      </div>
+                    ))}
+              </div>
+            )}
+
             <div className="newsfeed-card__interact" onClick={(e) => e.stopPropagation()}>
               <InteractBar
                 postId={post.id}
@@ -273,6 +377,18 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
         </Link>
         
         {/* InteractBar nằm dưới content */}
+        {/* Reactions (up to 2 rows) */}
+        {reactionEmojis.length > 0 && (
+          <div className="newsfeed-card__reactions" onClick={(e) => e.stopPropagation()}>
+            {reactionEmojis.map((r, idx) => (
+              <div key={idx} className="newsfeed-card__reaction">
+                <span className="newsfeed-card__reaction-emoji">{r.node}</span>
+                <span className="newsfeed-card__reaction-count">{r.count}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
         <div className="newsfeed-card__interact" onClick={(e) => e.stopPropagation()}>
           <InteractBar
             postId={post.id}
