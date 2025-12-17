@@ -21,8 +21,6 @@ const EditProfile = () => {
   const { showToast } = useToast();
   const [activeTab, setActiveTab] = useState<TabType>("profile");
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
   
   // Delete account modal
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -88,7 +86,10 @@ const EditProfile = () => {
         console.error('Error fetching profile:', err);
         const error = err as { response?: { data?: { message?: string } }; message?: string };
         console.error('Error response:', error.response?.data);
-        setError(error.response?.data?.message || error.message || "Không thể tải thông tin người dùng");
+        showToast({
+          type: "error",
+          message: error.response?.data?.message || error.message || "Không thể tải thông tin người dùng"
+        });
       } finally {
         setInitialLoading(false);
       }
@@ -105,7 +106,10 @@ const EditProfile = () => {
           const users = await userService.getBlockedUsers();
           setBlockedUsers(users);
         } catch (err: unknown) {
-          setError(err instanceof Error ? err.message : "Không thể tải danh sách người dùng bị chặn");
+          showToast({
+            type: "error",
+            message: err instanceof Error ? err.message : "Không thể tải danh sách người dùng bị chặn"
+          });
         }
       };
       fetchBlockedUsers();
@@ -137,7 +141,6 @@ const EditProfile = () => {
 
   const handleSaveProfile = async () => {
     setLoading(true);
-    setError(null);
     try {
       let uploadedAvatarUrl = profileData.avatarUrl;
 
@@ -171,13 +174,16 @@ const EditProfile = () => {
       // Refresh user data in AuthContext to update avatar everywhere
       await refreshUser();
       
-      setSuccess("Cập nhật hồ sơ thành công!");
+      showToast({ type: "success", message: "Cập nhật hồ sơ thành công!" });
       
       // Clear preview after successful update
       setAvatarPreview(null);
-      setTimeout(() => setSuccess(null), 3000);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Có lỗi xảy ra");
+      const error = err as { response?: { data?: { message?: string } }; message?: string };
+      showToast({
+        type: "error",
+        message: error.response?.data?.message || error.message || "Có lỗi xảy ra"
+      });
     } finally {
       setLoading(false);
     }
@@ -185,14 +191,16 @@ const EditProfile = () => {
 
   const handleRequestPasswordReset = async () => {
     setLoading(true);
-    setError(null);
     try {
       await userService.requestPasswordReset(forgotPasswordEmail);
       setForgotPasswordStep('reset');
-      setSuccess('Mã xác thực đã được gửi đến email của bạn!');
-      setTimeout(() => setSuccess(null), 3000);
+      showToast({ type: "success", message: "Mã xác thực đã được gửi đến email của bạn!" });
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Có lỗi xảy ra');
+      const error = err as { response?: { data?: { message?: string } }; message?: string };
+      showToast({
+        type: "error",
+        message: error.response?.data?.message || error.message || "Có lỗi xảy ra"
+      });
     } finally {
       setLoading(false);
     }
@@ -296,23 +304,29 @@ const EditProfile = () => {
     try {
       await userService.unblockUser(userId);
       setBlockedUsers((prev) => prev.filter((user) => user.id !== userId));
-      setSuccess("Đã bỏ chặn người dùng");
-      setTimeout(() => setSuccess(null), 3000);
+      showToast({ type: "success", message: "Đã bỏ chặn người dùng" });
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Có lỗi xảy ra");
+      const error = err as { response?: { data?: { message?: string } }; message?: string };
+      showToast({
+        type: "error",
+        message: error.response?.data?.message || error.message || "Có lỗi xảy ra"
+      });
     }
   };
 
   const handleDeleteAccount = async () => {
     setLoading(true);
-    setError(null);
     try {
       await userService.deleteAccount();
       await logout();
       setShowDeleteModal(false);
       navigate("/");
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Có lỗi xảy ra");
+      const error = err as { response?: { data?: { message?: string } }; message?: string };
+      showToast({
+        type: "error",
+        message: error.response?.data?.message || error.message || "Có lỗi xảy ra"
+      });
       setLoading(false);
     }
   };
@@ -352,18 +366,6 @@ const EditProfile = () => {
           Quản lý hồ sơ
         </h1>
       </div>
-
-      {/* Success/Error Messages */}
-      {success && (
-        <div className="profile-alert-success">
-          {success}
-        </div>
-      )}
-      {error && (
-        <div className="profile-alert-error">
-          {error}
-        </div>
-      )}
 
       <div className="flex flex-col lg:flex-row gap-6">
         {/* Sidebar Tabs */}
@@ -615,10 +617,16 @@ const EditProfile = () => {
                         try {
                           const result = await userService.togglePrivacy();
                           setIsPrivate(result.isPrivate);
-                          setSuccess(result.isPrivate ? "Đã chuyển sang chế độ riêng tư" : "Đã công khai hồ sơ");
-                          setTimeout(() => setSuccess(null), 3000);
+                          showToast({
+                            type: "success",
+                            message: result.isPrivate ? "Đã chuyển sang chế độ riêng tư" : "Đã công khai hồ sơ"
+                          });
                         } catch (err: unknown) {
-                          setError(err instanceof Error ? err.message : "Có lỗi xảy ra");
+                          const error = err as { response?: { data?: { message?: string } }; message?: string };
+                          showToast({
+                            type: "error",
+                            message: error.response?.data?.message || error.message || "Có lỗi xảy ra"
+                          });
                         }
                       }}
                       className="sr-only peer"
@@ -720,19 +728,12 @@ const EditProfile = () => {
                 onClick={() => {
                   setShowForgotPasswordModal(false);
                   setForgotPasswordStep('email');
-                  setError(null);
                 }}
                 className="profile-modal-close-btn"
               >
                 <IoCloseOutline fontSize={28} />
               </button>
             </div>
-
-            {error && (
-              <div className="profile-modal-inner-alert">
-                {error}
-              </div>
-            )}
 
             {forgotPasswordStep === 'email' ? (
               <div className="profile-modal-form">
@@ -798,7 +799,6 @@ const EditProfile = () => {
                     onClick={() => {
                       setForgotPasswordStep('email');
                       setResetPasswordData({ verificationCode: '', newPassword: '', confirmPassword: '' });
-                      setError(null);
                     }}
                     className="profile-modal-btn-flex profile-modal-btn-secondary"
                   >
@@ -852,12 +852,6 @@ const EditProfile = () => {
                 ⚠️ Hành động này không thể hoàn tác!
               </p>
             </div>
-
-            {error && (
-              <div className="profile-modal-inner-alert">
-                {error}
-              </div>
-            )}
 
             <div className="profile-modal-btn-container">
               <button

@@ -16,10 +16,12 @@ import Avatar from "@mui/material/Avatar";
 import { stringAvatar } from "../../../utils/avatarHelper";
 import { MdEmail, MdPhone } from "react-icons/md";
 import CustomButton from "../../../components/button";
+import { useToast } from "../../../contexts/toast";
 
 const ViewProfile = () => {
   const { userId } = useParams<{ userId: string }>();
   const navigate = useNavigate();
+  const { showToast } = useToast();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"posts" | "communities">("posts");
@@ -62,6 +64,11 @@ const ViewProfile = () => {
         setProfile(data);
       } catch (error) {
         console.error("Failed to fetch profile:", error);
+        const err = error as { response?: { data?: { message?: string } }; message?: string };
+        showToast({
+          type: "error",
+          message: err.response?.data?.message || err.message || "Không thể tải thông tin hồ sơ"
+        });
         setProfile(null);
       } finally {
         setLoading(false);
@@ -344,12 +351,18 @@ const ViewProfile = () => {
                                         if (!post.isPublic) return;
                                         try {
                                           await togglePostPrivacy(post.id);
+                                          showToast({ type: "success", message: "Đã chuyển bài viết sang chế độ riêng tư" });
                                           window.location.reload();
                                         } catch (error) {
                                           console.error(
                                             "Failed to toggle privacy:",
                                             error
                                           );
+                                          const err = error as { response?: { data?: { message?: string } }; message?: string };
+                                          showToast({
+                                            type: "error",
+                                            message: err.response?.data?.message || err.message || "Không thể thay đổi quyền riêng tư"
+                                          });
                                         }
                                       }}
                                       className={`profile-dropdown-item ${
@@ -372,12 +385,18 @@ const ViewProfile = () => {
                                         if (post.isPublic) {
                                           try {
                                             await togglePostPrivacy(post.id);
+                                            showToast({ type: "success", message: "Đã chuyển bài viết sang chế độ công khai" });
                                             window.location.reload();
                                           } catch (error) {
                                             console.error(
                                               "Failed to toggle privacy:",
                                               error
                                             );
+                                            const err = error as { response?: { data?: { message?: string } }; message?: string };
+                                            showToast({
+                                              type: "error",
+                                              message: err.response?.data?.message || err.message || "Không thể thay đổi quyền riêng tư"
+                                            });
                                           }
                                         }
                                       }}
