@@ -96,22 +96,6 @@ const ViewProfile = () => {
     );
   }
 
-  if (profile.isPrivate && !isOwnProfile) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="text-6xl mb-4">🔒</div>
-          <div className="text-xl font-bold text-gray-700 mb-2">
-            Hồ sơ này ở chế độ riêng tư
-          </div>
-          <div className="text-gray-500">
-            Người dùng đã thiết lập hồ sơ ở chế độ riêng tư
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="w-full">
       {/* Profile Header */}
