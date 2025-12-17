@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import type { UpdateProfileData, ChangePasswordData, BlockedUser } from "../../../types/user.types";
 import { IoArrowBack, IoSaveOutline, IoCloseOutline } from "react-icons/io5";
 import { AiOutlineUser, AiOutlineLock, AiOutlineEye, AiOutlineUserDelete } from "react-icons/ai";
 import { MdBlock } from "react-icons/md";
 import * as userService from "../../../services/user/userService";
+import * as authService from "../../../services/auth";
 import { useAuth } from "../../../hooks/useAuth";
 import { useToast } from "../../../contexts/toast";
 import Avatar from '@mui/material/Avatar';
@@ -27,13 +28,15 @@ const EditProfile = () => {
   
   // Forgot password modal
   const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false);
-  const [forgotPasswordStep, setForgotPasswordStep] = useState<'email' | 'reset'>('email');
+  const [forgotPasswordStep, setForgotPasswordStep] = useState<'email' | 'otp' | 'password'>('email');
   const [forgotPasswordEmail, setForgotPasswordEmail] = useState('');
+  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [resetPasswordData, setResetPasswordData] = useState({
-    verificationCode: '',
     newPassword: '',
     confirmPassword: ''
   });
+  const [sendingOtp, setSendingOtp] = useState(false);
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   // Profile data
   const [profileData, setProfileData] = useState<UpdateProfileData>({
@@ -190,11 +193,17 @@ const EditProfile = () => {
   };
 
   const handleRequestPasswordReset = async () => {
-    setLoading(true);
+    if (!forgotPasswordEmail) {
+      showToast({ type: "error", message: "Vui lòng nhập email" });
+      return;
+    }
+    
+    setSendingOtp(true);
     try {
-      await userService.requestPasswordReset(forgotPasswordEmail);
-      setForgotPasswordStep('reset');
-      showToast({ type: "success", message: "Mã xác thực đã được gửi đến email của bạn!" });
+      await authService.sendResetOtp(forgotPasswordEmail);
+      setForgotPasswordStep('otp');
+      showToast({ type: "success", message: "Mã OTP đã được gửi đến email của bạn" });
+      setTimeout(() => inputRefs.current[0]?.focus(), 100);
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } }; message?: string };
       showToast({
@@ -202,15 +211,55 @@ const EditProfile = () => {
         message: error.response?.data?.message || error.message || "Có lỗi xảy ra"
       });
     } finally {
-      setLoading(false);
+      setSendingOtp(false);
     }
   };
 
-  const handleResetPassword = async () => {
-    if (!resetPasswordData.verificationCode) {
-      showToast({ type: "error", message: "Vui lòng nhập mã xác thực" });
+  const handleOtpChange = (index: number, value: string) => {
+    if (value && !/^\d+$/.test(value)) return;
+    
+    const newOtp = [...otp];
+    newOtp[index] = value.slice(-1);
+    setOtp(newOtp);
+    
+    if (value && index < 5) {
+      inputRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handleKeyDown = (index: number, e: React.KeyboardEvent) => {
+    if (e.key === "Backspace" && !otp[index] && index > 0) {
+      inputRefs.current[index - 1]?.focus();
+    }
+  };
+
+  const handlePaste = (e: React.ClipboardEvent) => {
+    e.preventDefault();
+    const pastedData = e.clipboardData.getData("text").slice(0, 6);
+    if (!/^\d+$/.test(pastedData)) return;
+    
+    const newOtp = [...otp];
+    for (let i = 0; i < pastedData.length && i < 6; i++) {
+      newOtp[i] = pastedData[i];
+    }
+    setOtp(newOtp);
+    
+    const lastIndex = Math.min(pastedData.length, 5);
+    inputRefs.current[lastIndex]?.focus();
+  };
+
+  const handleVerifyOtp = () => {
+    const otpCode = otp.join("");
+    if (otpCode.length !== 6) {
+      showToast({ type: "error", message: "Vui lòng nhập đủ 6 số OTP" });
       return;
     }
+    setForgotPasswordStep('password');
+  };
+
+  const handleResetPassword = async () => {
+    const otpCode = otp.join("");
+    
     if (!resetPasswordData.newPassword) {
       showToast({ type: "error", message: "Vui lòng nhập mật khẩu mới" });
       return;
@@ -233,20 +282,16 @@ const EditProfile = () => {
     }
     
     setLoading(true);
-    setError(null);
+
     try {
-      await userService.resetPassword({
-        email: forgotPasswordEmail,
-        verificationCode: resetPasswordData.verificationCode,
-        newPassword: resetPasswordData.newPassword
-      });
+      await authService.resetPassword(forgotPasswordEmail, otpCode, resetPasswordData.newPassword);
       
       showToast({ type: "success", message: "Mật khẩu đã được đặt lại thành công!" });
       setShowForgotPasswordModal(false);
       setForgotPasswordStep('email');
       setForgotPasswordEmail('');
-      setResetPasswordData({ verificationCode: '', newPassword: '', confirmPassword: '' });
-    } catch (err: unknown) {
+      setOtp(["", "", "", "", "", ""]);
+      setResetPasswordData({ newPassword: '', confirmPassword: '' });
       const error = err as { response?: { data?: { message?: string } }; message?: string };
       showToast({ 
         type: "error", 
@@ -284,7 +329,6 @@ const EditProfile = () => {
     }
     
     setLoading(true);
-    setError(null);
     try {
       await userService.changePassword(passwordData);
       showToast({ type: "success", message: "Đổi mật khẩu thành công!" });
@@ -462,7 +506,6 @@ const EditProfile = () => {
                   <option value="">Chọn giới tính</option>
                   <option value="MALE">Nam</option>
                   <option value="FEMALE">Nữ</option>
-                  <option value="OTHER">Khác</option>
                 </select>
               </div>
 
@@ -722,12 +765,16 @@ const EditProfile = () => {
           <div className="profile-modal profile-modal-border-primary">
             <div className="profile-modal-header">
               <h2 className="profile-modal-title profile-modal-title-primary">
-                {forgotPasswordStep === 'email' ? 'Quên mật khẩu' : 'Đặt lại mật khẩu'}
+                {forgotPasswordStep === 'email' && 'Quên mật khẩu'}
+                {forgotPasswordStep === 'otp' && 'Xác thực OTP'}
+                {forgotPasswordStep === 'password' && 'Đặt mật khẩu mới'}
               </h2>
               <button
                 onClick={() => {
                   setShowForgotPasswordModal(false);
                   setForgotPasswordStep('email');
+                  setOtp(["", "", "", "", "", ""]);
+                  setResetPasswordData({ newPassword: '', confirmPassword: '' });
                 }}
                 className="profile-modal-close-btn"
               >
@@ -735,10 +782,11 @@ const EditProfile = () => {
               </button>
             </div>
 
-            {forgotPasswordStep === 'email' ? (
+            {/* Step 1: Email */}
+            {forgotPasswordStep === 'email' && (
               <div className="profile-modal-form">
                 <p className="profile-modal-form-hint">
-                  Nhập email của bạn để nhận mã xác thực
+                  Nhập email của bạn để nhận mã OTP
                 </p>
                 <div>
                   <label className="profile-label">Email</label>
@@ -752,36 +800,71 @@ const EditProfile = () => {
                 </div>
                 <button
                   onClick={handleRequestPasswordReset}
-                  disabled={loading || !forgotPasswordEmail}
+                  disabled={sendingOtp || !forgotPasswordEmail}
                   className="profile-modal-btn-full profile-modal-btn-primary"
                 >
-                  {loading ? 'Đang gửi...' : 'Gửi mã xác thực'}
+                  {sendingOtp ? 'Đang gửi...' : 'Gửi mã OTP'}
                 </button>
               </div>
-            ) : (
+            )}
+
+            {/* Step 2: OTP */}
+            {forgotPasswordStep === 'otp' && (
               <div className="profile-modal-form">
                 <p className="profile-modal-form-hint">
-                  Nhập mã xác thực đã được gửi đến email và mật khẩu mới
+                  Nhập mã OTP đã gửi đến {forgotPasswordEmail}
                 </p>
                 <div>
-                  <label className="profile-label">Mã xác thực (6 số)</label>
-                  <input
-                    type="text"
-                    value={resetPasswordData.verificationCode}
-                    onChange={(e) => setResetPasswordData({ ...resetPasswordData, verificationCode: e.target.value })}
-                    className="profile-input"
-                    placeholder="123456"
-                    maxLength={6}
-                  />
+                  <label className="profile-label text-center block mb-3">Mã OTP</label>
+                  <div className="flex justify-center gap-2">
+                    {otp.map((digit, index) => (
+                      <input
+                        key={index}
+                        ref={(el) => { inputRefs.current[index] = el; }}
+                        type="text"
+                        inputMode="numeric"
+                        maxLength={1}
+                        value={digit}
+                        onChange={(e) => handleOtpChange(index, e.target.value)}
+                        onKeyDown={(e) => handleKeyDown(index, e)}
+                        onPaste={handlePaste}
+                        className="w-12 h-14 text-center text-xl font-bold border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F295B6] focus:border-[#F295B6]"
+                        style={{ borderColor: '#FFE4EC' }}
+                      />
+                    ))}
+                  </div>
                 </div>
+                <button
+                  onClick={handleVerifyOtp}
+                  className="profile-modal-btn-full profile-modal-btn-primary"
+                >
+                  Tiếp tục
+                </button>
+                <button
+                  onClick={handleRequestPasswordReset}
+                  disabled={sendingOtp}
+                  className="w-full py-2 font-medium text-[#F295B6] border border-[#F295B6] rounded-lg hover:bg-[#FFF8FB] transition-colors disabled:opacity-60"
+                >
+                  {sendingOtp ? 'Đang gửi...' : 'Gửi lại mã OTP'}
+                </button>
+              </div>
+            )}
+
+            {/* Step 3: New Password */}
+            {forgotPasswordStep === 'password' && (
+              <div className="profile-modal-form">
+                <p className="profile-modal-form-hint">
+                  Nhập mật khẩu mới cho tài khoản của bạn
+                </p>
                 <div>
                   <label className="profile-label">Mật khẩu mới</label>
                   <input
                     type="password"
                     value={resetPasswordData.newPassword}
                     onChange={(e) => setResetPasswordData({ ...resetPasswordData, newPassword: e.target.value })}
+                    onFocus={() => showToast({ type: "info", message: "Mật khẩu phải có 8-50 ký tự, chứa ít nhất 1 chữ hoa, 1 chữ thường và 1 số" })}
                     className="profile-input"
-                    placeholder="Ít nhất 8 ký tự"
+                    placeholder="Tối thiểu 8 ký tự, có chữ hoa, thường và số"
                   />
                 </div>
                 <div>
@@ -794,24 +877,13 @@ const EditProfile = () => {
                     placeholder="Nhập lại mật khẩu"
                   />
                 </div>
-                <div className="profile-modal-btn-container-single">
-                  <button
-                    onClick={() => {
-                      setForgotPasswordStep('email');
-                      setResetPasswordData({ verificationCode: '', newPassword: '', confirmPassword: '' });
-                    }}
-                    className="profile-modal-btn-flex profile-modal-btn-secondary"
-                  >
-                    Quay lại
-                  </button>
-                  <button
-                    onClick={handleResetPassword}
-                    disabled={loading}
-                    className="profile-modal-btn-flex profile-modal-btn-primary"
-                  >
-                    {loading ? 'Đang xử lý...' : 'Đặt lại mật khẩu'}
-                  </button>
-                </div>
+                <button
+                  onClick={handleResetPassword}
+                  disabled={loading}
+                  className="profile-modal-btn-full profile-modal-btn-primary"
+                >
+                  {loading ? 'Đang xử lý...' : 'Đặt lại mật khẩu'}
+                </button>
               </div>
             )}
           </div>
