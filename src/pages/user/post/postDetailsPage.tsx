@@ -224,7 +224,7 @@ const PostDetailsPage: React.FC = () => {
               {blocks.map((block) => (
                 <div
                   key={block.id}
-                  className={`${BLOCK_WRAPPER.base} ${BLOCK_WRAPPER.default}`}
+                  className={`${BLOCK_WRAPPER.readMode}`}
                 >
                   {block.type === EBlockType.TEXT ? (
                     <TextBlock id={String(block.id)} content={block.content || ""} />
