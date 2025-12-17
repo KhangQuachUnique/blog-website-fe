@@ -94,7 +94,7 @@ const PostsTable: React.FC<PostsTableProps> = ({
     },
     {
       id: "createdAt",
-      label: "Ngày tạo",
+      label: "Ngày đăng",
       align: "left",
       render: (post) => (
         <Box

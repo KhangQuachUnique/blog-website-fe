@@ -2,20 +2,13 @@ import { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import * as authService from '../services/auth';
 import { ACCESS_TOKEN_KEY } from '../constants/auth';
-
-interface User {
-  id: number;
-  username: string;
-  email: string;
-  role?: string;
-  avatarUrl?: string;
-}
+import type { User } from '../types/user';
 
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (emailOrUsername: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
@@ -99,17 +92,13 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   };
 
-  const login = async (email: string, password: string) => {
-    const response = await authService.login({ email, password });
+  const login = async (emailOrUsername: string, password: string) => {
+    const response = await authService.login({ emailOrUsername, password });
     if (response.accessToken) {
       localStorage.setItem(ACCESS_TOKEN_KEY, response.accessToken);
     }
-    if (response.user) {
-      setUser(response.user);
-    } else {
-      // If user not returned, fetch it
-      await loadUser();
-    }
+    // Always fetch full user data from /auth/me after login
+    await loadUser();
   };
 
   const register = async (name: string, email: string, password: string) => {
@@ -117,11 +106,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     if (response.accessToken) {
       localStorage.setItem(ACCESS_TOKEN_KEY, response.accessToken);
     }
-    if (response.user) {
-      setUser(response.user);
-    } else {
-      await loadUser();
-    }
+    // Always fetch full user data from /auth/me after register
+    await loadUser();
   };
 
   const logout = async () => {

@@ -119,29 +119,31 @@ const EditPostForm = ({
    */
   const buildBlocksDto = useCallback(
     (imageUrls: Record<string, string>): ICreateBlockDto[] => {
-      return blocks.map((block) => {
-        const layoutItem = layout.find((item) => item.i === block.id);
+      return blocks
+        .map((block) => {
+          const layoutItem = layout.find((item) => item.i === block.id);
 
-        let content = block.content || "";
-        if (block.type === EBlockType.IMAGE) {
-          if (imageUrls[block.id]) {
-            content = imageUrls[block.id];
-          } else if (isBlobUrl(block.content)) {
-            content = ""; // Don't send blob URL to server
+          let content = block.content || "";
+          if (block.type === EBlockType.IMAGE) {
+            if (imageUrls[block.id]) {
+              content = imageUrls[block.id];
+            } else if (isBlobUrl(block.content)) {
+              content = ""; // Don't send blob URL to server
+            }
           }
-        }
 
-        return {
-          x: layoutItem?.x ?? 0,
-          y: layoutItem?.y ?? 0,
-          width: layoutItem?.w ?? 8,
-          height: layoutItem?.h ?? 6,
-          type: block.type,
-          content,
-          imageCaption: block.imageCaption,
-          objectFit: block.objectFit,
-        };
-      });
+          return {
+            x: layoutItem?.x ?? 0,
+            y: layoutItem?.y ?? 0,
+            width: layoutItem?.w ?? 8,
+            height: layoutItem?.h ?? 6,
+            type: block.type,
+            content,
+            imageCaption: block.imageCaption,
+            objectFit: block.objectFit,
+          };
+        })
+        .filter((block) => block.content.trim() !== ""); // Filter out empty blocks
     },
     [blocks, layout]
   );

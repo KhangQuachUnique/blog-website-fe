@@ -23,10 +23,12 @@ const VerifyEmailPage = () => {
   const [gifSrc, setGifSrc] = useState(LOCAL_GIF);
   
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const otpSentRef = useRef(false);
 
   // Auto-send OTP if email is provided from register
   useEffect(() => {
-    if (emailFromState && !otpSent) {
+    if (emailFromState && !otpSentRef.current) {
+      otpSentRef.current = true;
       handleSendOtp();
     }
   }, []);
