@@ -47,6 +47,7 @@ export interface UserProfile {
   communities: Community[];
   followersCount: number;
   followingCount: number;
+  isFollowing?: boolean; // Chỉ hiện khi có viewer (không phải chính mình)
   posts: BlogPost[];
 }
 

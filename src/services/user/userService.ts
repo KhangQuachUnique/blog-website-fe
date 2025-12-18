@@ -126,6 +126,26 @@ export const deleteAccount = async (): Promise<{ message: string }> => {
 };
 
 /**
+ * Follow người dùng
+ */
+export const followUser = async (
+  userId: number
+): Promise<{ message: string }> => {
+  const response = await axiosCustomize.post(`/users/${userId}/follow`);
+  return unwrap(response);
+};
+
+/**
+ * Unfollow người dùng
+ */
+export const unfollowUser = async (
+  userId: number
+): Promise<{ message: string }> => {
+  const response = await axiosCustomize.delete(`/users/${userId}/follow`);
+  return unwrap(response);
+};
+
+/**
  * Upload avatar
  */
 export const uploadAvatar = async (file: File): Promise<string> => {

@@ -17,17 +17,22 @@ import { stringAvatar } from "../../../utils/avatarHelper";
 import { MdEmail, MdPhone } from "react-icons/md";
 import CustomButton from "../../../components/button";
 import { useToast } from "../../../contexts/toast";
+import { useAuth } from "../../../hooks/useAuth";
 
 const ViewProfile = () => {
   const { userId } = useParams<{ userId: string }>();
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const { user: currentUser } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"posts" | "communities">("posts");
   const [isOwnProfile, setIsOwnProfile] = useState(false);
   const [openDropdownId, setOpenDropdownId] = useState<number | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [followersCount, setFollowersCount] = useState(0);
+  const [followLoading, setFollowLoading] = useState(false);
 
   // Đóng dropdown khi click bên ngoài
   useEffect(() => {
@@ -52,9 +57,9 @@ const ViewProfile = () => {
 
         if (userId) {
           // Viewing another user's profile
-          // TODO: Get viewerId from auth context if logged in
           data = await userService.getUserProfile(Number(userId));
-          setIsOwnProfile(false);
+          // Kiểm tra xem có phải đang xem profile của chính mình không
+          setIsOwnProfile(currentUser?.id === Number(userId));
         } else {
           // Viewing own profile
           data = await userService.getMyProfile();
@@ -62,6 +67,8 @@ const ViewProfile = () => {
         }
 
         setProfile(data);
+        setIsFollowing(data.isFollowing || false);
+        setFollowersCount(data.followersCount);
       } catch (error) {
         console.error("Failed to fetch profile:", error);
         const err = error as { response?: { data?: { message?: string } }; message?: string };
@@ -76,7 +83,34 @@ const ViewProfile = () => {
     };
 
     fetchProfile();
-  }, [userId]);
+  }, [userId, currentUser?.id]);
+
+  const handleFollowToggle = async () => {
+    if (!profile || isOwnProfile) return;
+    
+    setFollowLoading(true);
+    try {
+      if (isFollowing) {
+        await userService.unfollowUser(profile.id);
+        setIsFollowing(false);
+        setFollowersCount(prev => prev - 1);
+        showToast({ type: "success", message: "Đã unfollow người dùng" });
+      } else {
+        await userService.followUser(profile.id);
+        setIsFollowing(true);
+        setFollowersCount(prev => prev + 1);
+        showToast({ type: "success", message: "Đã follow người dùng" });
+      }
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } }; message?: string };
+      showToast({
+        type: "error",
+        message: error.response?.data?.message || error.message || "Có lỗi xảy ra"
+      });
+    } finally {
+      setFollowLoading(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -169,15 +203,20 @@ const ViewProfile = () => {
                 </div>
               </div>
               <div className="flex items-start mt-2">
-                <CustomButton
-                  variant="outline"
-                  style={{
-                    color: "#f295b6",
-                    borderColor: "#f295b6",
-                  }}
-                >
-                  Follow
-                </CustomButton>
+                {!isOwnProfile && (
+                  <CustomButton
+                    variant={isFollowing ? "filled" : "outline"}
+                    style={{
+                      color: isFollowing ? "#fff" : "#f295b6",
+                      borderColor: "#f295b6",
+                      backgroundColor: isFollowing ? "#f295b6" : "transparent",
+                    }}
+                    onClick={handleFollowToggle}
+                    disabled={followLoading}
+                  >
+                    {followLoading ? "Đang xử lý..." : (isFollowing ? "Đã Follow" : "Follow")}
+                  </CustomButton>
+                )}
               </div>
             </div>
             {/* Container chính: Dùng flex-col và gap-2 để mọi dòng cách nhau ĐỀU 8px */}
@@ -189,7 +228,6 @@ const ViewProfile = () => {
                   <span>{profile.email}</span>
                   {!isOwnProfile && (
                     <span className="text-xs text-gray-400 italic">
-                      (Công khai)
                     </span>
                   )}
                 </div>
@@ -203,7 +241,6 @@ const ViewProfile = () => {
                     <span>{profile.phoneNumber}</span>
                     {!isOwnProfile && (
                       <span className="text-xs text-gray-400 italic">
-                        (Công khai)
                       </span>
                     )}
                   </div>
@@ -222,7 +259,7 @@ const ViewProfile = () => {
               </div>
               <div className="flex items-center gap-2">
                 <div className="profile-stat-value">
-                  {profile.followersCount}
+                  {followersCount}
                 </div>
                 <div className="profile-stat-label">Người theo dõi</div>
               </div>
@@ -234,16 +271,6 @@ const ViewProfile = () => {
               </div>
             </div>
           </div>
-          {/* Action Buttons */}
-          {isOwnProfile && (
-            <button
-              onClick={() => navigate("/profile/edit")}
-              className="profile-btn-primary"
-            >
-              <IoSettingsOutline fontSize={20} />
-              Quản lý hồ sơ
-            </button>
-          )}
         </div>
       </div>
 
