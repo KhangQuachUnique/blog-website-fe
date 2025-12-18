@@ -47,7 +47,6 @@ const TextBlockEdit = ({
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [linkUrl, setLinkUrl] = useState("");
   const [, forceUpdate] = useState({});
-  const [isDragging, setIsDragging] = useState(false);
   const popoverRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -111,9 +110,54 @@ const TextBlockEdit = ({
       onContentChange?.(html);
       forceUpdate({});
     },
-    onSelectionUpdate: () => {
-      // Chỉ update active state, không hiện toolbar khi đang kéo
+    onSelectionUpdate: ({ editor }) => {
       forceUpdate({});
+      
+      // Show toolbar when there's a text selection
+      if (!isEditMode) return;
+      
+      const { from, to } = editor.state.selection;
+      const hasSelection = from !== to;
+      
+      if (hasSelection) {
+        // Use setTimeout to ensure DOM is updated
+        setTimeout(() => {
+          const selection = window.getSelection();
+          if (!selection || selection.rangeCount === 0) return;
+          
+          const range = selection.getRangeAt(0);
+          const rect = range.getBoundingClientRect();
+          
+          // Check if selection is visible in viewport
+          if (rect.top < 0 || rect.bottom > window.innerHeight) {
+            console.log('[Selection] Out of viewport, skipping toolbar');
+            return;
+          }
+          
+          if (rect && rect.width > 0 && rect.height > 0) {
+            // For position: fixed, use viewport coordinates (don't add window.scrollY)
+            let top = rect.top - 60;
+            let left = rect.left + rect.width / 2;
+
+            // Giới hạn trong viewport
+            const toolbarWidth = 650;
+            const minLeft = toolbarWidth / 2 + 10;
+            const maxLeft = window.innerWidth - toolbarWidth / 2 - 10;
+            left = Math.max(minLeft, Math.min(left, maxLeft));
+
+            // Nếu quá gần top thì hiện dưới
+            if (top < 80) {
+              top = rect.bottom + 10;
+            }
+
+            console.log('[Selection] Showing toolbar at (viewport coords):', { top, left });
+            setPopoverPosition({ top, left });
+            setShowPopover(true);
+          }
+        }, 10);
+      } else if (!showLinkInput && !showColorPicker) {
+        setShowPopover(false);
+      }
     },
     editorProps: {
       attributes: {
@@ -183,50 +227,6 @@ const TextBlockEdit = ({
     }
   }, [id, onHeightChange, editor, content]);
 
-  // Handle mouse events for selection
-  const handleMouseDown = () => {
-    setIsDragging(true);
-    setShowPopover(false); // Ẩn toolbar khi bắt đầu kéo
-  };
-
-  const handleMouseUp = () => {
-    if (!isEditMode || !editor || !isDragging) return;
-
-    setIsDragging(false);
-
-    // Đợi selection update xong
-    setTimeout(() => {
-      const selection = window.getSelection();
-      const selectedText = selection?.toString();
-
-      if (selectedText && selectedText.trim().length > 0) {
-        const range = selection?.getRangeAt(0);
-        const rect = range?.getBoundingClientRect();
-
-        if (rect && rect.width > 0 && rect.height > 0) {
-          let top = rect.top + window.scrollY - 60;
-          let left = rect.left + rect.width / 2;
-
-          // Giới hạn trong viewport
-          const toolbarWidth = 650;
-          const minLeft = toolbarWidth / 2 + 10;
-          const maxLeft = window.innerWidth - toolbarWidth / 2 - 10;
-          left = Math.max(minLeft, Math.min(left, maxLeft));
-
-          // Nếu quá gần top thì hiện dưới
-          if (top < 80) {
-            top = rect.bottom + window.scrollY + 10;
-          }
-
-          setPopoverPosition({ top, left });
-          setShowPopover(true);
-        }
-      } else if (!showLinkInput && !showColorPicker) {
-        setShowPopover(false);
-      }
-    }, 50);
-  };
-
   if (!editor) {
     return null;
   }
@@ -244,7 +244,7 @@ const TextBlockEdit = ({
         createPortal(
           <div
             ref={popoverRef}
-            className="fixed z-[9999] bg-white border-2 border-gray-300 rounded-lg shadow-md px-4 py-3 flex items-center gap-2"
+            className="fixed z-9999 bg-white border-2 border-gray-300 rounded-lg shadow-md px-4 py-3 flex items-center gap-2"
             style={{
               backdropFilter: "blur(10px)",
               backgroundColor: "rgba(255, 255, 255, 0.98)",
@@ -529,8 +529,6 @@ const TextBlockEdit = ({
         className={`flex-1 overflow-visible rounded-lg ${
           isEditMode ? "bg-white" : "bg-transparent"
         }`}
-        onMouseDown={handleMouseDown}
-        onMouseUp={handleMouseUp}
       >
         <EditorContent editor={editor} className="h-full" />
         {isEditMode && (

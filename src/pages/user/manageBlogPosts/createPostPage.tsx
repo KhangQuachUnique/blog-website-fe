@@ -16,8 +16,9 @@ const CreateBlogPostPage = () => {
       onSuccess: () => {
         console.log("Post published successfully.");
       },
-      onError: (err) => {
-        console.error("Error publishing post:", err);
+      onError: (err: any) => {
+        console.error("Error publishing post (raw):", err);
+        console.error("Validation messages:", err?.message);
       },
     });
   };

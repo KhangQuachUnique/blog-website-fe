@@ -97,12 +97,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     if (response.accessToken) {
       localStorage.setItem(ACCESS_TOKEN_KEY, response.accessToken);
     }
-    if (response.user) {
-      setUser(response.user);
-    } else {
-      // If user not returned, fetch it
-      await loadUser();
-    }
+    // Always fetch full user data from /auth/me after login
+    await loadUser();
   };
 
   const register = async (name: string, email: string, password: string) => {
@@ -110,11 +106,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     if (response.accessToken) {
       localStorage.setItem(ACCESS_TOKEN_KEY, response.accessToken);
     }
-    if (response.user) {
-      setUser(response.user);
-    } else {
-      await loadUser();
-    }
+    // Always fetch full user data from /auth/me after register
+    await loadUser();
   };
 
   const logout = async () => {

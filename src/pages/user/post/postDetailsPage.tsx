@@ -62,18 +62,14 @@ const PostDetailsPage: React.FC = () => {
 
   // Container width for GridLayout
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const [containerWidth, setContainerWidth] = useState<number>(
-    GRID_SETTINGS.width
-  );
+  const [containerWidth, setContainerWidth] = useState<number>(GRID_SETTINGS.width);
 
   useEffect(() => {
     if (!containerRef.current) return;
 
     setContainerWidth(containerRef.current.clientWidth || GRID_SETTINGS.width);
 
-    const ROCtor = (
-      window as unknown as { ResizeObserver?: typeof ResizeObserver }
-    ).ResizeObserver;
+    const ROCtor = (window as unknown as { ResizeObserver?: typeof ResizeObserver }).ResizeObserver;
     if (ROCtor) {
       const ro = new ROCtor((entries) => {
         const w = entries[0]?.contentRect?.width;
@@ -104,17 +100,11 @@ const PostDetailsPage: React.FC = () => {
   }
 
   if (isError) {
-    return (
-      <div className="p-6 text-center text-red-500">Lỗi: {String(error)}</div>
-    );
+    return <div className="p-6 text-center text-red-500">Lỗi: {String(error)}</div>;
   }
 
   if (!post) {
-    return (
-      <div className="p-6 text-center text-gray-500">
-        Không tìm thấy bài viết
-      </div>
-    );
+    return <div className="p-6 text-center text-gray-500">Không tìm thấy bài viết</div>;
   }
 
   // ============================================
@@ -192,16 +182,11 @@ const PostDetailsPage: React.FC = () => {
           <div>
             <div>
               Bởi{" "}
-              <Link
-                to={`/user/${post.author?.id}`}
-                className="font-medium text-[#F295B6] hover:underline"
-              >
+              <Link to={`/user/${post.author?.id}`} className="font-medium text-[#F295B6] hover:underline">
                 {post.author?.username ?? "Người dùng"}
               </Link>
             </div>
-            <div className="text-xs text-gray-400">
-              {formatDate(post.createdAt)}
-            </div>
+            <div className="text-xs text-gray-400">{formatDate(post.createdAt)}</div>
           </div>
         </div>
 
@@ -223,9 +208,7 @@ const PostDetailsPage: React.FC = () => {
       {/* Grid Layout - same as editPostForm */}
       <div style={{ width: GRID_SETTINGS.width }}>
         {blocks.length === 0 ? (
-          <div className="text-gray-500 text-center py-8">
-            Không có nội dung.
-          </div>
+          <div className="text-gray-500 text-center py-8">Không có nội dung.</div>
         ) : (
           <div ref={containerRef} style={{ width: GRID_SETTINGS.width }}>
             <GridLayout
@@ -241,13 +224,10 @@ const PostDetailsPage: React.FC = () => {
               {blocks.map((block) => (
                 <div
                   key={block.id}
-                  className={`${BLOCK_WRAPPER.readMode} ${BLOCK_WRAPPER.default}`}
+                  className={`${BLOCK_WRAPPER.readMode}`}
                 >
                   {block.type === EBlockType.TEXT ? (
-                    <TextBlock
-                      id={String(block.id)}
-                      content={block.content || ""}
-                    />
+                    <TextBlock id={String(block.id)} content={block.content || ""} />
                   ) : (
                     <ImageBlock
                       id={String(block.id)}
