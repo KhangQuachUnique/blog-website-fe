@@ -3,6 +3,8 @@ import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { MessageCircle, MoreHorizontal, Share2, Repeat2, Flag } from 'lucide-react';
 import { useInteractBar } from '../../hooks/useInteractBar';
+import ReportButton from '../report/ReportButton';
+import { EReportType } from '../../types/report';
 
 // ============================================
 // 🎨 BLOOKIE DESIGN SYSTEM - PASTEL PINK EDITION
@@ -259,9 +261,12 @@ const MoreMenu: React.FC<{
   visible: boolean;
   onShare: () => void;
   onRepost: () => void;
-  onReport: () => void;
+  onClose: () => void;
+  postId: number;
+  currentUserId: number;
+  onLoginRequired: () => void;
   anchorRect?: DOMRect | null;
-}> = ({ visible, onShare, onRepost, onReport, anchorRect }) => {
+}> = ({ visible, onShare, onRepost, onClose, postId, currentUserId, onLoginRequired, anchorRect }) => {
   if (!visible) return null;
 
   const MenuItem: React.FC<{
@@ -346,11 +351,21 @@ const MoreMenu: React.FC<{
           background: THEME.tertiary, 
           margin: '4px 12px',
         }} />
-        <MenuItem 
-          icon={<Flag size={16} strokeWidth={2.5} />} 
-          label="Báo cáo" 
-          onClick={onReport}
-          danger 
+        <ReportButton
+          type={EReportType.POST}
+          targetId={postId}
+          currentUserId={currentUserId}
+          onClose={onClose}
+          onSuccess={onClose}
+          onLoginRequired={onLoginRequired}
+          renderButton={({ onClick }) => (
+            <MenuItem 
+              icon={<Flag size={16} strokeWidth={2.5} />} 
+              label="Báo cáo" 
+              onClick={onClick}
+              danger 
+            />
+          )}
         />
       </div>
     </>
@@ -474,12 +489,7 @@ const InteractBar: React.FC<InteractBarProps> = ({
     setShowMoreMenu(false);
   };
 
-  const handleReport = () => {
-    if (!isLoggedIn) {
-      showLoginRequired();
-      setShowMoreMenu(false);
-      return;
-    }
+  const handleCloseMoreMenu = () => {
     setShowMoreMenu(false);
   };
 
@@ -669,7 +679,10 @@ const InteractBar: React.FC<InteractBarProps> = ({
             visible={showMoreMenu}
             onShare={handleShare}
             onRepost={handleRepost}
-            onReport={handleReport}
+            onClose={handleCloseMoreMenu}
+            postId={postId}
+            currentUserId={userId}
+            onLoginRequired={showLoginRequired}
             anchorRect={moreMenuRef.current?.getBoundingClientRect() ?? null}
           />
         </div>
