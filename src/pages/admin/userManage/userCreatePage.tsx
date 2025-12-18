@@ -2,37 +2,79 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiArrowLeft, FiSave } from "react-icons/fi";
 import { HiOutlineMail, HiOutlineUser, HiOutlineLockClosed, HiOutlinePhone } from "react-icons/hi";
+import { createUser, type CreateUserRequest } from "../../../services/userService";
+import { useToast } from "../../../contexts/toast";
 
 const UserCreatePage = () => {
   const navigate = useNavigate();
+  const { showToast } = useToast();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   // State lưu dữ liệu form
   const [formData, setFormData] = useState({
-    fullName: "",
+    username: "",
     email: "",
     password: "",
+    confirmPassword: "",
     phoneNumber: "",
-    role: "USER", // Mặc định là USER
+    type: "USER", // Mặc định là USER
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+    setError("");
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Validate cơ bản
-    if (!formData.email || !formData.password || !formData.fullName) {
-      alert("Vui lòng điền đầy đủ thông tin bắt buộc!");
+    
+    // Validate
+    if (!formData.username || !formData.email || !formData.password) {
+      showToast({ type: "error", message: "Vui lòng điền đầy đủ thông tin bắt buộc!" });
       return;
     }
 
-    // TODO: Gọi API tạo user ở đây
-    console.log("Dữ liệu gửi đi:", formData);
+    if (formData.password.length < 8) {
+      showToast({ type: "error", message: "Mật khẩu phải có ít nhất 8 ký tự" });
+      return;
+    }
 
-    alert("Thêm người dùng thành công! (Giả lập)");
-    navigate("/admin/users/list");
+    if (formData.password.length > 50) {
+      showToast({ type: "error", message: "Mật khẩu không được quá 50 ký tự" });
+      return;
+    }
+
+    if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(formData.password)) {
+      showToast({ type: "error", message: "Mật khẩu phải chứa ít nhất 1 chữ hoa, 1 chữ thường và 1 số" });
+      return;
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      showToast({ type: "error", message: "Mật khẩu không khớp" });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const payload: CreateUserRequest = {
+        username: formData.username,
+        email: formData.email,
+        password: formData.password,
+        phoneNumber: formData.phoneNumber || undefined,
+        type: formData.type as "USER" | "ADMIN",
+      };
+
+      await createUser(payload);
+      showToast({ type: "success", message: "Thêm người dùng thành công!" });
+      navigate("/admin/users/list");
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : "Có lỗi xảy ra!";
+      showToast({ type: "error", message: errorMsg });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -55,17 +97,18 @@ const UserCreatePage = () => {
       <div className="bg-white p-8 rounded-2xl shadow-sm max-w-3xl mx-auto border border-[#FFE4EC]">
         <form onSubmit={handleSubmit} className="flex flex-col gap-6">
           
-          {/* Hàng 1: Họ tên & Email */}
+          {/* Hàng 1: Username & Email */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="flex flex-col gap-2">
-              <label className="text-sm font-semibold text-gray-700">Họ và tên <span className="text-red-500">*</span></label>
+              <label className="text-sm font-semibold text-gray-700">Tên đăng nhập <span className="text-red-500">*</span></label>
               <div className="flex items-center px-4 py-3 bg-[#FAF5F7] rounded-xl border border-transparent focus-within:border-[#F295B6] transition-all">
                 <HiOutlineUser className="text-gray-400 mr-2" fontSize={20} />
                 <input 
-                  type="text" name="fullName"
-                  placeholder="Nhập họ tên..."
+                  type="text" name="username"
+                  placeholder="Nhập tên đăng nhập..."
                   className="bg-transparent outline-none w-full text-sm"
-                  value={formData.fullName} onChange={handleChange}
+                  value={formData.username} onChange={handleChange}
+                  disabled={loading}
                 />
               </div>
             </div>
@@ -79,12 +122,13 @@ const UserCreatePage = () => {
                   placeholder="example@email.com"
                   className="bg-transparent outline-none w-full text-sm"
                   value={formData.email} onChange={handleChange}
+                  disabled={loading}
                 />
               </div>
             </div>
           </div>
 
-          {/* Hàng 2: Mật khẩu & SĐT */}
+          {/* Hàng 2: Mật khẩu & Xác nhận mật khẩu */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
              <div className="flex flex-col gap-2">
               <label className="text-sm font-semibold text-gray-700">Mật khẩu <span className="text-red-500">*</span></label>
@@ -92,11 +136,42 @@ const UserCreatePage = () => {
                 <HiOutlineLockClosed className="text-gray-400 mr-2" fontSize={20} />
                 <input 
                   type="password" name="password"
-                  placeholder="Nhập mật khẩu..."
+                  placeholder="Tối thiểu 8 ký tự, có chữ hoa, thường và số"
                   className="bg-transparent outline-none w-full text-sm"
                   value={formData.password} onChange={handleChange}
+                  disabled={loading}
                 />
               </div>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-semibold text-gray-700">Xác nhận mật khẩu <span className="text-red-500">*</span></label>
+              <div className="flex items-center px-4 py-3 bg-[#FAF5F7] rounded-xl border border-transparent focus-within:border-[#F295B6] transition-all">
+                <HiOutlineLockClosed className="text-gray-400 mr-2" fontSize={20} />
+                <input 
+                  type="password" name="confirmPassword"
+                  placeholder="Nhập lại mật khẩu"
+                  className="bg-transparent outline-none w-full text-sm"
+                  value={formData.confirmPassword} onChange={handleChange}
+                  disabled={loading}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Hàng 3: Vai trò & SĐT */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-semibold text-gray-700">Vai trò</label>
+              <select 
+                name="type"
+                className="px-4 py-3 bg-[#FAF5F7] rounded-xl border border-transparent focus:border-[#F295B6] outline-none text-sm cursor-pointer"
+                value={formData.type} onChange={handleChange}
+                disabled={loading}
+              >
+                <option value="USER">Người dùng (User)</option>
+                <option value="ADMIN">Quản trị viên (Admin)</option>
+              </select>
             </div>
 
             <div className="flex flex-col gap-2">
@@ -108,22 +183,10 @@ const UserCreatePage = () => {
                   placeholder="0912..."
                   className="bg-transparent outline-none w-full text-sm"
                   value={formData.phoneNumber} onChange={handleChange}
+                  disabled={loading}
                 />
               </div>
             </div>
-          </div>
-
-          {/* Hàng 3: Vai trò */}
-          <div className="flex flex-col gap-2">
-              <label className="text-sm font-semibold text-gray-700">Vai trò</label>
-              <select 
-                name="role"
-                className="px-4 py-3 bg-[#FAF5F7] rounded-xl border border-transparent focus:border-[#F295B6] outline-none text-sm cursor-pointer"
-                value={formData.role} onChange={handleChange}
-              >
-                <option value="USER">Người dùng (User)</option>
-                <option value="ADMIN">Quản trị viên (Admin)</option>
-              </select>
           </div>
 
           {/* Buttons */}
@@ -132,18 +195,19 @@ const UserCreatePage = () => {
               type="button"
               onClick={() => navigate("/admin/users/list")}
               className="px-6 py-2 rounded-xl text-gray-600 hover:bg-gray-100 transition-colors font-medium"
+              disabled={loading}
             >
               Hủy bỏ
             </button>
             <button 
               type="submit"
-              className="flex items-center gap-2 px-6 py-2 rounded-xl bg-[#F295B6] text-white hover:bg-[#ffb8d1] transition-colors font-bold shadow-sm hover:shadow-md"
+              disabled={loading}
+              className="flex items-center gap-2 px-6 py-2 rounded-xl bg-[#F295B6] text-white hover:bg-[#ffb8d1] disabled:opacity-50 transition-colors font-bold shadow-sm hover:shadow-md"
             >
               <FiSave fontSize={18} />
-              Lưu người dùng
+              {loading ? "Đang xử lý..." : "Lưu người dùng"}
             </button>
           </div>
-
         </form>
       </div>
     </div>

@@ -1,31 +1,55 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { FiArrowLeft, FiEdit3, FiTrash2, FiClock, FiShield, FiMail, FiPhone } from "react-icons/fi";
-
-// Mock Data (Tạm thời copy lại để test, sau này sẽ xóa khi có API)
-const MOCK_DB: IUser[] = [
-  { id: 1, fullName: "Nguyễn Văn A", email: "vana@gmail.com", phoneNumber: "0901234567", role: "USER", status: "ACTIVE", avatar: "https://i.pravatar.cc/150?u=1" },
-  { id: 2, fullName: "Trần Thị B", email: "btran@gmail.com", phoneNumber: "0912345678", role: "ADMIN", status: "ACTIVE", avatar: "https://i.pravatar.cc/150?u=2" },
-  { id: 3, fullName: "Lê Văn C", email: "c_le@gmail.com", role: "USER", status: "BANNED", banReason: "Spam bài viết", avatar: "https://i.pravatar.cc/150?u=3" },
-  { id: 4, fullName: "Phạm D", email: "pham_d@yahoo.com", role: "USER", status: "ACTIVE", avatar: "https://i.pravatar.cc/150?u=4" },
-];
+import { getUserById, deleteUser, type IUser } from "../../../services/userService";
 
 const UserDetailPage = () => {
-  const { id } = useParams(); // Lấy ID từ URL
+  const { id } = useParams();
   const navigate = useNavigate();
   const [user, setUser] = useState<IUser | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
-  // Giả lập gọi API lấy chi tiết user
   useEffect(() => {
     if (id) {
-      // Tìm user trong Mock DB
-      const foundUser = MOCK_DB.find(u => u.id.toString() === id);
-      if (foundUser) setUser(foundUser);
+      fetchUser();
     }
   }, [id]);
 
-  if (!user) {
-    return <div className="p-10 text-center text-gray-500">Đang tải hoặc không tìm thấy người dùng...</div>;
+  const fetchUser = async () => {
+    setLoading(true);
+    try {
+      const data = await getUserById(Number(id));
+      setUser(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Lỗi khi tải chi tiết người dùng");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!user || !window.confirm(`Bạn có chắc muốn xóa ${user.username}?`)) return;
+    
+    setDeleteLoading(true);
+    try {
+      await deleteUser(user.id);
+      alert("Xóa thành công!");
+      navigate("/admin/users/list");
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Lỗi khi xóa người dùng");
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
+  if (loading) {
+    return <div className="p-10 text-center text-gray-500">Đang tải...</div>;
+  }
+
+  if (error || !user) {
+    return <div className="p-10 text-center text-red-500">{error || "Không tìm thấy người dùng"}</div>;
   }
 
   return (
@@ -41,11 +65,18 @@ const UserDetailPage = () => {
         <div className="flex justify-between items-start">
            <h1 className="text-2xl font-bold text-[#8C1D35] font-['Mona_Sans']">Hồ sơ người dùng</h1>
            <div className="flex gap-3">
-             <button className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-xl hover:bg-gray-50 text-gray-600 font-medium transition-colors">
+             <button 
+              onClick={() => navigate(`/admin/users/edit/${user.id}`)}
+              className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-xl hover:bg-gray-50 text-gray-600 font-medium transition-colors"
+            >
                 <FiEdit3 /> Sửa
              </button>
-             <button className="flex items-center gap-2 px-4 py-2 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 font-medium transition-colors">
-                <FiTrash2 /> Xóa
+             <button 
+              onClick={handleDelete}
+              disabled={deleteLoading}
+              className="flex items-center gap-2 px-4 py-2 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 font-medium transition-colors disabled:opacity-50"
+            >
+              <FiTrash2 /> {deleteLoading ? "Đang xóa..." : "Xóa"}
              </button>
            </div>
         </div>
@@ -55,28 +86,23 @@ const UserDetailPage = () => {
         {/* CỘT TRÁI: AVATAR & STATUS */}
         <div className="col-span-1 bg-white p-6 rounded-2xl shadow-sm border border-[#FFE4EC] flex flex-col items-center text-center h-fit">
            <div className="w-32 h-32 rounded-full overflow-hidden mb-4 border-4 border-[#FAF5F7]">
-              <img src={user.avatar || "https://i.pravatar.cc/300"} alt="User Avatar" className="w-full h-full object-cover" />
+              <img src={user.avatarUrl || "https://i.pravatar.cc/300"} alt="User Avatar" className="w-full h-full object-cover" />
            </div>
-           <h2 className="text-xl font-bold text-gray-800">{user.fullName}</h2>
+           <h2 className="text-xl font-bold text-gray-800">{user.username}</h2>
            <p className="text-gray-500 text-sm mb-4">#{user.id}</p>
 
            <div className="flex gap-2 mb-6">
              <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                user.role === 'ADMIN' ? 'bg-purple-100 text-purple-600' : 'bg-blue-50 text-blue-600'
+                user.isBanned ? 'bg-red-100 text-red-600' : user.type === 'ADMIN' ? 'bg-purple-100 text-purple-600' : 'bg-blue-50 text-blue-600'
              }`}>
-                {user.role}
-             </span>
-             <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                user.status === 'ACTIVE' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'
-             }`}>
-                {user.status === 'ACTIVE' ? 'Hoạt động' : 'Đã khóa'}
+                {user.isBanned ? 'Đã khóa' : user.type === 'ADMIN' ? 'Admin' : 'User'}
              </span>
            </div>
 
-           {user.status === 'BANNED' && (
+           {user.isBanned && (
              <div className="w-full bg-red-50 p-4 rounded-xl text-left border border-red-100">
-               <p className="text-xs font-bold text-red-600 uppercase mb-1">Lý do khóa:</p>
-               <p className="text-sm text-red-800">{user.banReason}</p>
+               <p className="text-xs font-bold text-red-600 uppercase mb-1">Tài khoản đã khóa</p>
+               <p className="text-sm text-red-800">Tài khoản này đã bị vô hiệu hóa bởi quản trị viên.</p>
              </div>
            )}
         </div>
@@ -113,7 +139,9 @@ const UserDetailPage = () => {
                         <FiClock className="text-gray-400" />
                         <div>
                             <p className="text-xs text-gray-500">Ngày tham gia</p>
-                            <p className="text-sm font-medium text-gray-700">20/10/2023</p>
+                            <p className="text-sm font-medium text-gray-700">
+                              {user.joinAt ? new Date(user.joinAt).toLocaleDateString('vi-VN') : 'N/A'}
+                            </p>
                         </div>
                     </div>
                     <div className="flex items-center gap-3">
