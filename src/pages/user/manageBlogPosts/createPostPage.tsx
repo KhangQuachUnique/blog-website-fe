@@ -1,9 +1,11 @@
+import { useNavigate } from "react-router-dom";
 import EditPostForm from "../../../features/user/manageBlogPosts/editPostForm";
 import { EPostType, type ICreateBlogPostDto } from "../../../types/post";
 import { useCreatePost } from "../../../hooks/usePost";
 
 const CreateBlogPostPage = () => {
   const { mutate } = useCreatePost();
+  const navigate = useNavigate();
 
   const handleSaveDraft = (dto: ICreateBlogPostDto) => {
     console.log("Saving Draft:", dto);
@@ -13,12 +15,21 @@ const CreateBlogPostPage = () => {
   const handlePublish = (dto: ICreateBlogPostDto) => {
     console.log("Publishing Post:", dto);
     mutate(dto, {
-      onSuccess: () => {
-        console.log("Post published successfully.");
+      onSuccess: (data) => {
+        console.log("Post published successfully.", data);
+        // Navigate to the newly created post
+        if (data?.id) {
+          navigate(`/post/${data.id}`, { replace: true });
+        } else {
+          // Fallback to newsfeed if no ID returned
+          navigate("/", { replace: true });
+        }
       },
-      onError: (err: any) => {
+      onError: (err: unknown) => {
         console.error("Error publishing post (raw):", err);
-        console.error("Validation messages:", err?.message);
+        if (err instanceof Error) {
+          console.error("Validation messages:", err.message);
+        }
       },
     });
   };
