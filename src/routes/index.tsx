@@ -4,6 +4,7 @@ import AdminLayout from "../components/layout/adminLayout";
 import UserLayout from "../components/layout/userLayout";
 import { RoleGuard } from "../components/guards";
 import { EUserRole } from "../types/user";
+import adminDashboardRoutes from "./admin/dashboard.route";
 import adminUserRoutes from "./admin/user.route";
 import adminPostRoutes from "./admin/post.route";
 import adminReportRoutes from "./admin/report.route";
@@ -37,7 +38,7 @@ export const router = createBrowserRouter([
         <AdminLayout />
       </RoleGuard>
     ),
-    children: [...adminUserRoutes, ...adminPostRoutes, ...adminReportRoutes],
+    children: [...adminDashboardRoutes, ...adminUserRoutes, ...adminPostRoutes, ...adminReportRoutes],
   },
   ...authRoutes,
 ]);

@@ -11,10 +11,10 @@ import { MdReportGmailerrorred } from "react-icons/md";
 const navLinks = [
   {
     name: "Thống kê",
-    href: "#",
+    href: "/admin/dashboard",
     icon: <MdOutlineSpaceDashboard fontSize={18} />,
   },
-  { name: "Quản lí người dùng", href: "#", icon: <FiUser fontSize={18} /> },
+  { name: "Quản lí người dùng", href: "/admin/users/list", icon: <FiUser fontSize={18} /> },
   {
     name: "Quản lí bài đăng",
     href: "/admin/posts/list",
