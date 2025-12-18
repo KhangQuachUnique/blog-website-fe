@@ -1,8 +1,8 @@
 import { Link } from "react-router-dom";
-import { useState, useCallback, memo } from "react";
+import { memo } from "react";
 import type { IPostResponseDto } from "../../types/post";
 import { EPostType } from "../../types/post";
-import { InteractBar } from "../InteractBar";
+import InteractBar from "../interactBar/InteractBar";
 import { recordViewedPost } from '../../services/user/viewedHistory';
 import { useAuth } from "../../contexts/AuthContext";
 import { useGetPostById } from "../../hooks/usePost";
@@ -277,46 +277,9 @@ const Card = memo(({ post }: { post: IPostResponseDto }) => {
         <div
           className="newsfeed-card__interact"
           onClick={(e) => e.stopPropagation()}
-          onMouseEnter={handleInteractBarHover}
+
         >
-          {showReactions && (
-            <div
-              style={{
-                padding: "8px 12px 4px",
-                borderTop: "1px solid #FFE7F0",
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "flex-start",
-                  gap: "8px",
-                  maxHeight: "72px", // 2 lines: (16px emoji + 6px padding + 4px gap) * 2
-                  overflow: "hidden",
-                }}
-              >
-                {reactionData.length > 0 && (
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <EmojiReactionBar
-                      reactions={reactionData}
-                      onReactionClick={handleReactionClick}
-                      compact
-                    />
-                  </div>
-                )}
-                <div style={{ flexShrink: 0 }}>
-                  <EmojiSelector
-                    data={emojiData}
-                    recentCodepoints={recentEmojis}
-                    onSelect={handleEmojiSelect}
-                    onRecentUpdate={setRecentEmojis}
-                    position="top"
-                    compact
-                  />
-                </div>
-              </div>
-            </div>
-          )}
+          
           <InteractBar
             postId={post.id}
             userId={user?.id ?? 0}
