@@ -12,6 +12,7 @@ import manageBlogPostsRoutes from "./user/manageBlogPosts.route";
 import HomePage from "../pages/home/HomePage";
 import newsfeedRoutes from "./user/newsfeed.route";
 import PostDetailsPage from "../pages/user/post/postDetailsPage";
+import { savedPostsRoutes } from "./user/savedPosts.route";
 
 export const router = createBrowserRouter([
   {
@@ -28,6 +29,7 @@ export const router = createBrowserRouter([
       },
       ...manageBlogPostsRoutes,
       ...newsfeedRoutes,
+      ...savedPostsRoutes,
     ],
   },
   {

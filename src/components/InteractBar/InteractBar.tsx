@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
-import { MessageCircle, MoreHorizontal, Share2, Repeat2, Flag } from 'lucide-react';
+import { MessageCircle, MoreHorizontal, Share2, Repeat2, Flag, Bookmark } from 'lucide-react';
 import { useInteractBar } from '../../hooks/useInteractBar';
+import { useCheckSaved, useToggleSavePost } from '../../hooks/useSavedPost';
 
 // ============================================
 // 🎨 BLOOKIE DESIGN SYSTEM - PASTEL PINK EDITION
@@ -382,8 +383,11 @@ const InteractBar: React.FC<InteractBarProps> = ({
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [showLoginToast, setShowLoginToast] = useState(false);
   const [showShareToast, setShowShareToast] = useState(false);
+  const [showSaveToast, setShowSaveToast] = useState(false);
+  const [saveToastMessage, setSaveToastMessage] = useState('');
   const [commentHovered, setCommentHovered] = useState(false);
   const [moreHovered, setMoreHovered] = useState(false);
+  const [bookmarkHovered, setBookmarkHovered] = useState(false);
   const wrapperRef = React.useRef<HTMLDivElement | null>(null);
   
   const moreMenuRef = useRef<HTMLDivElement>(null);
@@ -407,6 +411,10 @@ const InteractBar: React.FC<InteractBarProps> = ({
 
   const netVotes = upVotes - downVotes;
   const isLoggedIn = userId > 0;
+
+  // 🔖 Saved post hooks
+  const { data: isSaved = false } = useCheckSaved(isLoggedIn ? userId : null, postId);
+  const { mutate: toggleSave, isPending: isSaving } = useToggleSavePost();
 
   // Toast handler
   const showLoginRequired = () => {
@@ -432,6 +440,24 @@ const InteractBar: React.FC<InteractBarProps> = ({
     }
     handleEmojiReact(emojiId);
     setShowEmojiPicker(false);
+  };
+
+  // Bookmark with login check
+  const onBookmarkClick = () => {
+    if (!isLoggedIn) {
+      showLoginRequired();
+      return;
+    }
+    toggleSave(
+      { userId, postId },
+      {
+        onSuccess: (result) => {
+          setSaveToastMessage(result.isSaved ? 'Đã lưu bài viết 🔖' : 'Đã bỏ lưu bài viết');
+          setShowSaveToast(true);
+          setTimeout(() => setShowSaveToast(false), 2000);
+        },
+      }
+    );
   };
 
   // Close dropdowns on outside click
@@ -510,6 +536,7 @@ const InteractBar: React.FC<InteractBarProps> = ({
       {/* Toast (portal) */}
       <Toast message="Đăng nhập để tương tác 💕" visible={showLoginToast} anchorRect={wrapperRef.current?.getBoundingClientRect() ?? null} />
       <Toast message="Đã sao chép link! 📋" visible={showShareToast} anchorRect={wrapperRef.current?.getBoundingClientRect() ?? null} />
+      <Toast message={saveToastMessage} visible={showSaveToast} anchorRect={wrapperRef.current?.getBoundingClientRect() ?? null} />
 
       {/* ===== LEFT: Vote Group ===== */}
       <div
@@ -557,6 +584,48 @@ const InteractBar: React.FC<InteractBarProps> = ({
           onClick={() => onVoteClick('downvote')}
         />
       </div>
+
+      {/* ===== MIDDLE: Bookmark Button ===== */}
+      <button
+        onClick={onBookmarkClick}
+        disabled={isSaving}
+        onMouseEnter={() => setBookmarkHovered(true)}
+        onMouseLeave={() => setBookmarkHovered(false)}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '5px',
+          padding: '6px 12px',
+          background: isSaved ? THEME.tertiary : bookmarkHovered ? THEME.tertiary : THEME.white,
+          border: `1.5px solid ${isSaved ? THEME.primary : THEME.secondary}`,
+          borderRadius: '50px',
+          cursor: isSaving ? 'not-allowed' : 'pointer',
+          opacity: isSaving ? 0.5 : 1,
+          boxShadow: THEME.shadowSoft,
+          transition: 'all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
+          transform: bookmarkHovered ? 'scale(1.05)' : 'scale(1)',
+        }}
+      >
+        <Bookmark
+          size={14}
+          strokeWidth={2.5}
+          fill={isSaved ? THEME.primary : 'none'}
+          style={{ 
+            color: isSaved ? THEME.primary : THEME.textMuted,
+            transition: 'all 0.2s ease',
+          }}
+        />
+        <span
+          style={{
+            fontSize: '12px',
+            fontWeight: 600,
+            color: isSaved ? THEME.primary : THEME.text,
+            fontFamily: "'Quicksand', sans-serif",
+          }}
+        >
+          {isSaved ? 'Đã lưu' : 'Lưu'}
+        </span>
+      </button>
 
       {/* ===== RIGHT: Emoji, Comment & More ===== */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
