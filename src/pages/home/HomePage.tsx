@@ -1,13 +1,8 @@
 import { useAuth } from "../../hooks/useAuth";
 import { ACCESS_TOKEN_KEY } from "../../constants/auth";
-import { EmojiSelector } from "../../components/Emoji";
-import emojiData from "../../assets/twemoji_valid_by_category.json";
-import { useState } from "react";
 
 const HomePage = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
-  const [recentEmojis, setRecentEmojis] = useState<string[]>([]);
-  const [selectedEmoji, setSelectedEmoji] = useState<string | null>(null);
 
   if (isLoading) {
     return (
@@ -149,51 +144,6 @@ const HomePage = () => {
             </p>
           </div>
         )}
-
-        {/* Emoji Selector Demo */}
-        <div className="bg-white rounded-lg shadow-lg p-6 mt-6 border-l-4 border-yellow-500">
-          <h2 className="text-2xl font-semibold text-gray-800 mb-4 flex items-center">
-            <span className="mr-2">😄</span>
-            Emoji Selector Demo
-          </h2>
-          <p className="text-gray-600 mb-4">
-            Test thử Discord-style emoji picker với full categories, search, và recent tracking
-          </p>
-          
-          <div className="flex items-center gap-4 mb-4">
-            <EmojiSelector
-              data={emojiData}
-              recentCodepoints={recentEmojis}
-              onSelect={(codepoint) => {
-                console.log('Selected emoji codepoint:', codepoint);
-                setSelectedEmoji(codepoint);
-              }}
-              onRecentUpdate={setRecentEmojis}
-              position="bottom"
-            />
-            
-            {selectedEmoji && (
-              <div className="bg-pink-50 p-4 rounded-lg flex items-center gap-3">
-                <img
-                  src={`https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/svg/${selectedEmoji.replace(/\s+/g, '-')}.svg`}
-                  alt="Selected"
-                  style={{ width: '32px', height: '32px' }}
-                />
-                <div>
-                  <p className="text-sm text-gray-600">Selected:</p>
-                  <p className="font-mono text-xs text-gray-800">{selectedEmoji}</p>
-                </div>
-              </div>
-            )}
-          </div>
-          
-          {recentEmojis.length > 0 && (
-            <div className="bg-gray-50 p-3 rounded-lg">
-              <p className="text-sm text-gray-600 mb-2">Recent emojis:</p>
-              <p className="font-mono text-xs text-gray-700">{recentEmojis.join(', ')}</p>
-            </div>
-          )}
-        </div>
 
         {/* Quick Actions */}
         <div className="mt-8 flex gap-4 justify-center">

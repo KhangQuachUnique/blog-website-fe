@@ -15,7 +15,6 @@ export interface UseInteractBarProps {
   userId: number;
   initialUpVotes?: number;
   initialDownVotes?: number;
-  initialVoteType?: VoteType | null;
 }
 
 export interface UseInteractBarReturn {
@@ -43,10 +42,9 @@ export const useInteractBar = ({
   userId,
   initialUpVotes = 0,
   initialDownVotes = 0,
-  initialVoteType = null,
 }: UseInteractBarProps): UseInteractBarReturn => {
-  // Vote states - initialize with initialVoteType
-  const [voteType, setVoteType] = useState<VoteType | null>(initialVoteType);
+  // Vote states
+  const [voteType, setVoteType] = useState<VoteType | null>(null);
   const [upVotes, setUpVotes] = useState(initialUpVotes);
   const [downVotes, setDownVotes] = useState(initialDownVotes);
   const [isVoting, setIsVoting] = useState(false);
@@ -101,65 +99,58 @@ export const useInteractBar = ({
   
   const handleVote = useCallback(
     async (type: VoteType) => {
-      if (!userId) return;
-      if (isVoting) return;
+      if (!userId) return; // Don't vote if not logged in
+      if (isVoting) return; // Already processing a vote
 
-      // Debounce
+      // Debounce rapid clicks
       const now = Date.now();
       if (now - lastVoteTimeRef.current < VOTE_DEBOUNCE_MS) {
-        console.log('Vote debounced');
+        console.log('Vote debounced - too fast');
         return;
       }
       lastVoteTimeRef.current = now;
 
       setIsVoting(true);
 
-      // Save previous for rollback
+      // Save previous state for rollback
       const prevVoteType = voteType;
+      const prevUpVotes = upVotes;
+      const prevDownVotes = downVotes;
 
-      let prevUp = upVotes;
-      let prevDown = downVotes;
+      // Optimistic update IMMEDIATELY - no blocking
+      if (voteType === type) {
+        // Toggle off
+        setVoteType(null);
+        if (type === 'upvote') setUpVotes((v) => v - 1);
+        else setDownVotes((v) => v - 1);
+      } else {
+        // Switch or new vote
+        if (voteType === 'upvote') setUpVotes((v) => v - 1);
+        if (voteType === 'downvote') setDownVotes((v) => v - 1);
+        setVoteType(type);
+        if (type === 'upvote') setUpVotes((v) => v + 1);
+        else setDownVotes((v) => v + 1);
+      }
 
-      // --------------------------------------------
-      // OPTIMISTIC UPDATE
-      // --------------------------------------------
-      setUpVotes((u) => {
-        prevUp = u;
-        if (voteType === 'upvote' && type === 'upvote') return u - 1; // toggle off
-        if (voteType === 'downvote' && type === 'upvote') return u + 1; // switch down → up
-        if (voteType === 'upvote' && type === 'downvote') return u - 1; // switch up → down (remove upvote)
-        if (!voteType && type === 'upvote') return u + 1; // new upvote
-        return u;
-      });
-
-      setDownVotes((d) => {
-        prevDown = d;
-        if (voteType === 'downvote' && type === 'downvote') return d - 1; // toggle off
-        if (voteType === 'upvote' && type === 'downvote') return d + 1; // switch up → down
-        if (voteType === 'downvote' && type === 'upvote') return d - 1; // switch down → up (remove downvote)
-        if (!voteType && type === 'downvote') return d + 1; // new downvote
-        return d;
-      });
-
-      setVoteType((prev) => (prev === type ? null : type));
-
-      // --------------------------------------------
-      // API CALL — only confirm, never overwrite
-      // --------------------------------------------
+      // API call in background
       try {
-        await votePost(userId, postId, type);
-      } catch (error) {
-        console.error('Vote failed:', error);
+        const response = await votePost(userId, postId, type);
 
-        // rollback đúng
+        // Only update if server returns different values
+        if (response.upVotes !== undefined) setUpVotes(response.upVotes);
+        if (response.downVotes !== undefined) setDownVotes(response.downVotes);
+        if (response.voteType !== undefined) setVoteType(response.voteType);
+      } catch (error) {
+        // Rollback on error
         setVoteType(prevVoteType);
-        setUpVotes(prevUp);
-        setDownVotes(prevDown);
+        setUpVotes(prevUpVotes);
+        setDownVotes(prevDownVotes);
+        console.error('Vote failed:', error);
       } finally {
         setIsVoting(false);
       }
     },
-    [userId, postId, voteType, isVoting]
+    [userId, postId, voteType, upVotes, downVotes, isVoting]
   );
 
   // ============================================
