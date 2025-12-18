@@ -1,24 +1,36 @@
 import EditPostForm from "../../../features/user/manageBlogPosts/editPostForm";
 import { EPostType, type ICreateBlogPostDto } from "../../../types/post";
 import { useCreatePost } from "../../../hooks/usePost";
+import { useToast } from "../../../contexts/toast";
+import { useAuthUser } from "../../../hooks/useAuth";
 
 const CreateBlogPostPage = () => {
+  const { user, isLoading, isAuthenticated } = useAuthUser();
   const { mutate } = useCreatePost();
+  const { showToast } = useToast();
 
-  const handleSaveDraft = (dto: ICreateBlogPostDto) => {
-    console.log("Saving Draft:", dto);
-    // TODO: Call API to save draft
-  };
+  if (isLoading) {
+    return <p>Đang tải...</p>;
+  }
+
+  if (!isAuthenticated || !user) {
+    return <p>Bạn cần đăng nhập để tạo bài viết.</p>;
+  }
 
   const handlePublish = (dto: ICreateBlogPostDto) => {
     console.log("Publishing Post:", dto);
     mutate(dto, {
       onSuccess: () => {
-        console.log("Post published successfully.");
+        showToast({
+          type: "success",
+          message: "Đăng bài thành công!",
+        });
       },
-      onError: (err: any) => {
-        console.error("Error publishing post (raw):", err);
-        console.error("Validation messages:", err?.message);
+      onError: (err) => {
+        showToast({
+          type: "error",
+          message: `Xảy ra lỗi khi đăng bài: ${err.message}`,
+        });
       },
     });
   };
@@ -26,9 +38,8 @@ const CreateBlogPostPage = () => {
   return (
     <EditPostForm
       mode="create"
-      authorId={3}
+      authorId={user?.id || 0}
       postType={EPostType.PERSONAL}
-      onSaveDraft={handleSaveDraft as (dto: unknown) => void}
       onPublish={handlePublish as (dto: unknown) => void}
     />
   );

@@ -339,6 +339,7 @@ const PostDetailsPage: React.FC = () => {
               cols={GRID_SETTINGS.cols}
               rowHeight={GRID_SETTINGS.rowHeight}
               width={containerWidth}
+              margin={GRID_SETTINGS.margin}
               isDraggable={false}
               isResizable={false}
               draggableCancel=".rgl-no-drag"
