@@ -61,6 +61,41 @@ export interface IHashtagDto {
   name: string;
 }
 
+// ============================================
+// Reaction / Emoji types (from backend UserReactSummaryDto)
+// ============================================
+
+/** Emoji types supported by backend */
+export type EmojiType = 'UNICODE' | 'CUSTOM';
+
+/** Single emoji summary in a reactions list */
+export interface IEmojiSummaryDto {
+  emojiId: number;
+  type: EmojiType;
+  codepoint?: string;       // e.g. "1f60d" for Unicode emojis
+  emojiUrl?: string;        // URL for custom emoji images
+  totalCount: number;
+  reactedByCurrentUser: boolean;
+}
+
+/** Reactions summary for a post or comment */
+export interface IReactionSummaryDto {
+  targetId: number;
+  targetType: 'post' | 'comment';
+  emojis: IEmojiSummaryDto[];
+  totalReactions: number;
+}
+
+/** Votes summary (from newsfeed) */
+export interface IVotesSummaryDto {
+  upvotes: number;
+  downvotes: number;
+  userVote: 'upvote' | 'downvote' | null;
+}
+
+// ============================================
+// Post Response DTO
+// ============================================
 
 export interface IPostResponseDto {
   id: number;
@@ -75,11 +110,19 @@ export interface IPostResponseDto {
   createdAt: Date;
   community?: ICommunityDto;
   originalPost?: IPostResponseDto;
+  originalPostId?: number;            // For repost: ID of original post
   blocks?: IBlockResponseDto[];
   upVotes: number;
   downVotes: number;
   totalComments: number;
   totalReacts: number;
+
+  // Newsfeed-specific fields (optional, present only in newsfeed response)
+  votes?: IVotesSummaryDto;
+  reacts?: IReactionSummaryDto;
+  reactions?: IReactionSummaryDto;    // Alias (some endpoints use this name)
+  finalScore?: number;
+  isViewed?: boolean;
 }
 
 export interface BlogPost {

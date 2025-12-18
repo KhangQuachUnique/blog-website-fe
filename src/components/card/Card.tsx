@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
-import type { IPostResponseDto } from "../../types/post";
+import type { IPostResponseDto, IEmojiSummaryDto, IReactionSummaryDto } from "../../types/post";
 import { EPostType } from "../../types/post";
 import { InteractBar } from "../InteractBar";
 import { recordViewedPost } from '../../services/user/viewedHistory';
@@ -12,28 +12,28 @@ import { Repeat2 } from "lucide-react";
 const Card = ({ post }: { post: IPostResponseDto }) => {
   const { user } = useAuth();
 
-  // Extract reactions safely (newsfeed may include `reacts` or `reactions` metadata)
-  const reactionsData = (post as any).reacts ?? (post as any).reactions ?? undefined;
+  // Extract reactions safely using typed fields
+  const reactionsData: IReactionSummaryDto | undefined = post.reacts ?? post.reactions;
   const reactionEmojis: Array<{ node: React.ReactNode; count: number }> = [];
   if (reactionsData && Array.isArray(reactionsData.emojis)) {
-    for (const r of reactionsData.emojis) {
-      const cnt = Number(r.totalCount ?? r.count ?? r.cnt ?? 0);
+    for (const r of reactionsData.emojis as IEmojiSummaryDto[]) {
+      const cnt = r.totalCount ?? 0;
       let node: React.ReactNode;
 
       // Prefer emoji image url if provided (custom emoji asset), otherwise construct from codepoint, otherwise fallback to raw char
-      if (r.emojiUrl || r.emoji_url) {
-        const src = r.emojiUrl ?? r.emoji_url;
-        node = <img src={src} alt="emoji" style={{ width: 18, height: 18 }} />;
+      if (r.emojiUrl) {
+        node = <img src={r.emojiUrl} alt="emoji" style={{ width: 18, height: 18 }} />;
       } else if (r.codepoint) {
+        let ch: string;
         try {
-          const parts = String(r.codepoint).split('-').map((p: string) => parseInt(p, 16));
-          const ch = String.fromCodePoint(...parts);
-          node = <span>{ch}</span>;
+          const parts = r.codepoint.split('-').map((p: string) => parseInt(p, 16));
+          ch = String.fromCodePoint(...parts);
         } catch {
-          node = <span>{r.emoji ?? '💗'}</span>;
+          ch = '💗';
         }
+        node = <span>{ch}</span>;
       } else {
-        node = <span>{r.emoji ?? '💗'}</span>;
+        node = <span>💗</span>;
       }
 
       reactionEmojis.push({ node, count: cnt });
@@ -68,7 +68,11 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
       isDown = true;
       startX = ev.clientX;
       startScrollLeft = el.scrollLeft;
-      try { el.setPointerCapture(ev.pointerId); } catch {}
+      try { 
+        el.setPointerCapture(ev.pointerId); 
+      } catch {
+        // Ignore pointer capture errors
+      }
       el.style.cursor = 'grabbing';
     };
 
@@ -84,9 +88,13 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
         if (ev && typeof ev.pointerId !== 'undefined') {
           try {
             el.releasePointerCapture(ev.pointerId);
-          } catch {}
+          } catch {
+            // Ignore pointer release errors
+          }
         }
-      } catch {}
+      } catch {
+        // Ignore errors
+      }
       el.style.cursor = 'grab';
     };
 
@@ -106,10 +114,12 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
   }, [isRepost, reactionEmojis.length]);
   
   
-  // Fetch original post if only ID provided
-  const originalId = post.originalPost?.id ?? (post as any).originalPostId;
-  const { data: fetchedOriginal } = originalId ? useGetPostById(Number(originalId)) : { data: undefined };
-  const original = post.originalPost ?? (fetchedOriginal as IPostResponseDto | undefined);
+  // Always call the hook at top level (not conditionally)
+  const originalId = post.originalPost?.id ?? post.originalPostId;
+  const { data: fetchedOriginal } = useGetPostById(originalId ? Number(originalId) : 0);
+  
+  // Use the original post if it's already in the response, otherwise use the fetched data
+  const original = post.originalPost ?? (originalId && fetchedOriginal ? (fetchedOriginal as IPostResponseDto) : undefined);
   
   const formatDate = (dateInput: string | Date) => {
     const date = dateInput instanceof Date ? dateInput : new Date(dateInput);
@@ -131,10 +141,10 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
           {/* Thumbnail (links to original post) */}
           {(original?.thumbnailUrl || post.thumbnailUrl) && (
             <Link
-              to={`/post/${original?.id ?? (post as any).originalPostId ?? post.id}`}
+              to={`/post/${original?.id ?? post.originalPostId ?? post.id}`}
               className="newsfeed-card__thumbnail"
               onClick={() => {
-                if (user && user.id) recordViewedPost(original?.id ?? (post as any).originalPostId ?? post.id);
+                if (user && user.id) recordViewedPost(original?.id ?? post.originalPostId ?? post.id);
               }}
             >
               <img
@@ -239,10 +249,10 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
 
             {/* Original post content — links to original post */}
             <Link
-              to={`/post/${original?.id ?? (post as any).originalPostId ?? post.id}`}
+              to={`/post/${original?.id ?? post.originalPostId ?? post.id}`}
               className="newsfeed-card__content"
               onClick={() => {
-                if (user && user.id) recordViewedPost(original?.id ?? (post as any).originalPostId ?? post.id);
+                if (user && user.id) recordViewedPost(original?.id ?? post.originalPostId ?? post.id);
               }}
             >
               <h2 className="newsfeed-card__title">{original?.title ?? post.title}</h2>

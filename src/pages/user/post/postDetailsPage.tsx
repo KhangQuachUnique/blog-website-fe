@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, {useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import GridLayout from "react-grid-layout";
 
@@ -8,7 +8,7 @@ import ImageBlock from "../../../components/block/imageBlock";
 
 import { EBlockType, ObjectFitType } from "../../../types/block";
 import type { IBlockResponseDto } from "../../../types/block";
-import type { IPostResponseDto } from "../../../types/post";
+import type { IPostResponseDto, IReactionSummaryDto, IEmojiSummaryDto } from "../../../types/post";
 
 import {
   GRID_SETTINGS,
@@ -64,10 +64,8 @@ const PostDetailsPage: React.FC = () => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [containerWidth, setContainerWidth] = useState<number>(GRID_SETTINGS.width);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!containerRef.current) return;
-
-    setContainerWidth(containerRef.current.clientWidth || GRID_SETTINGS.width);
 
     const ROCtor = (window as unknown as { ResizeObserver?: typeof ResizeObserver }).ResizeObserver;
     if (ROCtor) {
@@ -85,6 +83,15 @@ const PostDetailsPage: React.FC = () => {
       };
       window.addEventListener("resize", onResize);
       return () => window.removeEventListener("resize", onResize);
+    }
+  }, []);
+
+  // Initialize container width after first render
+  useEffect(() => {
+    if (containerRef.current) {
+      const initialWidth = containerRef.current.clientWidth || GRID_SETTINGS.width;
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setContainerWidth(initialWidth);
     }
   }, []);
 
@@ -137,25 +144,24 @@ const PostDetailsPage: React.FC = () => {
   });
 
   // Reactions from backend (if present on the post DTO)
-  const reactionsData = (post as any).reacts ?? (post as any).reactions ?? undefined;
+  const reactionsData: IReactionSummaryDto | undefined = post.reacts ?? post.reactions;
   const reactionEmojis: Array<{ node: React.ReactNode; count: number }> = [];
   if (reactionsData && Array.isArray(reactionsData.emojis)) {
-    for (const r of reactionsData.emojis) {
-      const cnt = Number(r.totalCount ?? r.count ?? r.cnt ?? 0);
+    for (const r of reactionsData.emojis as IEmojiSummaryDto[]) {
+      const cnt = r.totalCount ?? 0;
       let node: React.ReactNode;
 
-      if (r.emojiUrl || r.emoji_url) {
-        const src = r.emojiUrl ?? r.emoji_url;
-        node = <img src={src} alt="emoji" style={{ width: 18, height: 18 }} />;
+      if (r.emojiUrl) {
+        node = <img src={r.emojiUrl} alt="emoji" style={{ width: 18, height: 18 }} />;
       } else if (r.codepoint) {
         try {
-          const parts = String(r.codepoint).split('-').map((p: string) => parseInt(p, 16));
+          const parts = r.codepoint.split('-').map((p: string) => parseInt(p, 16));
           node = String.fromCodePoint(...parts);
         } catch {
-          node = r.emoji ?? '💗';
+          node = '💗';
         }
       } else {
-        node = r.emoji ?? '💗';
+        node = '💗';
       }
 
       reactionEmojis.push({ node, count: cnt });
