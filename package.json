@@ -32,6 +32,7 @@
     "@tiptap/starter-kit": "^3.12.1",
     "axios": "^1.13.2",
     "lucide-react": "^0.554.0",
+    "notistack": "^3.0.2",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-draggable": "^4.5.0",

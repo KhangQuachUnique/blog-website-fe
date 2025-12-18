@@ -1,14 +1,15 @@
 import { Link } from "react-router-dom";
+import { memo } from "react";
 import type { IPostResponseDto } from "../../types/post";
 import { EPostType } from "../../types/post";
-import { InteractBar } from "../InteractBar";
+import InteractBar from "../interactBar/InteractBar";
 import { recordViewedPost } from '../../services/user/viewedHistory';
 import { useAuth } from "../../contexts/AuthContext";
 import { useGetPostById } from "../../hooks/usePost";
 import "../../styles/newsfeed/Card.css";
 import { Repeat2 } from "lucide-react";
 
-const Card = ({ post }: { post: IPostResponseDto }) => {
+const Card = memo(({ post }: { post: IPostResponseDto }) => {
   const { user } = useAuth();
   
   // Check if this is a repost
@@ -18,6 +19,11 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
   const originalId = post.originalPost?.id ?? (post as any).originalPostId;
   const { data: fetchedOriginal } = originalId ? useGetPostById(Number(originalId)) : { data: undefined };
   const original = post.originalPost ?? (fetchedOriginal as IPostResponseDto | undefined);
+  
+  // Extract vote data - support both flat and nested formats from backend
+  const upVotes = post.votes?.upvotes ?? post.upVotes ?? 0;
+  const downVotes = post.votes?.downvotes ?? post.downVotes ?? 0;
+  const userVote = post.votes?.userVote ?? null;
   
   const formatDate = (dateInput: string | Date) => {
     const date = dateInput instanceof Date ? dateInput : new Date(dateInput);
@@ -188,8 +194,9 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
               <InteractBar
                 postId={post.id}
                 userId={user?.id ?? 0}
-                initialUpVotes={post.upVotes}
-                initialDownVotes={post.downVotes}
+                initialUpVotes={upVotes}
+                initialDownVotes={downVotes}
+                initialVoteType={userVote}
                 totalComments={post.totalComments}
               />
             </div>
@@ -215,7 +222,7 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
           />
         </Link>
       )}
-      
+
       {/* Content + InteractBar bên phải */}
       <div className="newsfeed-card__right">
         <Link
@@ -271,14 +278,20 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
             </div>
           )}
         </Link>
-        
-        {/* InteractBar nằm dưới content */}
-        <div className="newsfeed-card__interact" onClick={(e) => e.stopPropagation()}>
+
+        {/* InteractBar + Reactions nằm dưới content */}
+        <div
+          className="newsfeed-card__interact"
+          onClick={(e) => e.stopPropagation()}
+
+        >
+          
           <InteractBar
             postId={post.id}
             userId={user?.id ?? 0}
-            initialUpVotes={post.upVotes}
-            initialDownVotes={post.downVotes}
+            initialUpVotes={upVotes}
+            initialDownVotes={downVotes}
+            initialVoteType={userVote}
             totalComments={post.totalComments}
           />
         </div>
@@ -287,6 +300,8 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
       )}
     </>
   );
-};
+});
+
+Card.displayName = "Card";
 
 export default Card;
