@@ -135,14 +135,20 @@ const ViewProfile = () => {
       {/* Profile Header */}
       <div className="profile-card profile-card-header mb-6">
         <div className="flex flex-col items-start md:items-center">
-          {profile.coverImageUrl ? (
-            <img
-              src={profile.coverImageUrl}
-              alt={`${profile.username} cover`}
-            />
-          ) : (
-            <div className="w-full h-[300px] bg-gray-200"></div>
-          )}
+          {/* Cover Image with fixed aspect ratio */}
+          <div className="w-full h-[200px] sm:h-[250px] md:h-[300px] overflow-hidden bg-gray-200 rounded-t-lg">
+            {profile.coverImageUrl ? (
+              <img
+                src={profile.coverImageUrl}
+                alt={`${profile.username} cover`}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-r from-gray-200 to-gray-300 flex items-center justify-center">
+                <span className="text-gray-400 text-lg">Chưa có ảnh bìa</span>
+              </div>
+            )}
+          </div>
           <div className="flex flex-col max-w-[90%] w-[1200px]">
             <div className="flex gap-2 h-25">
               {/* Avatar */}

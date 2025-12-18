@@ -43,6 +43,7 @@ const EditProfile = () => {
     username: "",
     bio: "",
     avatarUrl: "",
+    coverImageUrl: "",
     phoneNumber: "",
     dob: "",
     gender: undefined,
@@ -67,6 +68,10 @@ const EditProfile = () => {
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
 
+  // Cover image upload
+  const [coverImagePreview, setCoverImagePreview] = useState<string | null>(null);
+  const [coverImageFile, setCoverImageFile] = useState<File | null>(null);
+
   // Fetch user data on mount
   useEffect(() => {
     const fetchUserData = async () => {
@@ -78,6 +83,7 @@ const EditProfile = () => {
           username: profile.username || "",
           bio: profile.bio || "",
           avatarUrl: profile.avatarUrl || "",
+          coverImageUrl: profile.coverImageUrl || "",
           phoneNumber: profile.phoneNumber || "",
           dob: profile.dob || "",
           gender: profile.gender,
@@ -142,10 +148,26 @@ const EditProfile = () => {
     }
   };
 
+  const handleCoverImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Store file for later upload
+      setCoverImageFile(file);
+      
+      // Show preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setCoverImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleSaveProfile = async () => {
     setLoading(true);
     try {
       let uploadedAvatarUrl = profileData.avatarUrl;
+      let uploadedCoverImageUrl = profileData.coverImageUrl;
 
       // Upload avatar first if there's a new file
       if (avatarFile) {
@@ -163,10 +185,27 @@ const EditProfile = () => {
         setAvatarFile(null);
       }
 
+      // Upload cover image if there's a new file
+      if (coverImageFile) {
+        const formData = new FormData();
+        formData.append("file", coverImageFile);
+        
+        // Upload using uploadFile from service
+        const { uploadFile } = await import("../../../services/upload/uploadImageService");
+        uploadedCoverImageUrl = await uploadFile(formData);
+        
+        // Update profileData with new URL to keep the preview
+        setProfileData(prev => ({ ...prev, coverImageUrl: uploadedCoverImageUrl }));
+        
+        // Clear file but keep preview
+        setCoverImageFile(null);
+      }
+
       // Clean data: chuyển chuỗi rỗng thành undefined
       const cleanedData = {
         ...profileData,
         avatarUrl: uploadedAvatarUrl || undefined,
+        coverImageUrl: uploadedCoverImageUrl || undefined,
         dob: profileData.dob || undefined,
         phoneNumber: profileData.phoneNumber || undefined,
         bio: profileData.bio || undefined,
@@ -181,6 +220,7 @@ const EditProfile = () => {
       
       // Clear preview after successful update
       setAvatarPreview(null);
+      setCoverImagePreview(null);
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } }; message?: string };
       showToast({
@@ -292,6 +332,7 @@ const EditProfile = () => {
       setForgotPasswordEmail('');
       setOtp(["", "", "", "", "", ""]);
       setResetPasswordData({ newPassword: '', confirmPassword: '' });
+    } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } }; message?: string };
       showToast({ 
         type: "error", 
@@ -438,6 +479,47 @@ const EditProfile = () => {
               <h2 className="text-2xl font-bold" style={{ color: "#8C1D35" }}>
                 Thông tin cá nhân
               </h2>
+
+              {/* Cover Image */}
+              <div>
+                <label className="profile-label">Ảnh bìa</label>
+                <div className="w-full">
+                  {coverImagePreview || profileData.coverImageUrl ? (
+                    <div className="w-full h-48 rounded-lg overflow-hidden mb-3">
+                      <img
+                        src={coverImagePreview || profileData.coverImageUrl}
+                        alt="Cover"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  ) : null}
+                  <div className="flex items-center gap-3">
+                    <label className="profile-btn-primary cursor-pointer">
+                      {coverImagePreview || profileData.coverImageUrl ? 'Thay đổi ảnh bìa' : 'Chọn ảnh bìa'}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleCoverImageChange}
+                        className="hidden"
+                      />
+                    </label>
+                    {(coverImagePreview || profileData.coverImageUrl) && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCoverImagePreview(null);
+                          setCoverImageFile(null);
+                          setProfileData(prev => ({ ...prev, coverImageUrl: '' }));
+                        }}
+                        className="profile-btn-secondary"
+                      >
+                        Xóa ảnh bìa
+                      </button>
+                    )}
+                  </div>
+                  <p className="text-sm text-gray-500 mt-2">JPG, PNG, tối đa 5MB. Tỷ lệ khuyên dùng 16:9</p>
+                </div>
+              </div>
 
               {/* Avatar */}
               <div className="flex items-center gap-6">

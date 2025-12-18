@@ -55,6 +55,7 @@ export interface UpdateProfileData {
   username?: string;
   bio?: string;
   avatarUrl?: string;
+  coverImageUrl?: string;
   phoneNumber?: string;
   dob?: string;
   gender?: "MALE" | "FEMALE" | "OTHER";
