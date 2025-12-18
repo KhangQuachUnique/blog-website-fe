@@ -3,18 +3,21 @@ import { EPostType, type ICreateBlogPostDto } from "../../../types/post";
 import { useCreatePost } from "../../../hooks/usePost";
 import { useToast } from "../../../contexts/toast";
 import { useAuthUser } from "../../../hooks/useAuth";
+import { useParams } from "react-router-dom";
 
-const CreateBlogPostPage = () => {
-  const { user, isAuthenticated } = useAuthUser();
+const CreateCommunityPostPage = () => {
+  const { user, isLoading, isAuthenticated } = useAuthUser();
   const { mutate } = useCreatePost();
   const { showToast } = useToast();
+  const { id } = useParams<{ id: string }>();
+  const communityId = Number(id);
+
+  if (isLoading) {
+    return <p>Đang tải...</p>;
+  }
 
   if (!isAuthenticated || !user) {
-    showToast({
-      type: "error",
-      message: "Bạn cần đăng nhập để tạo bài viết.",
-    });
-    return null; // Hoặc chuyển hướng đến trang đăng nhập
+    return <p>Bạn cần đăng nhập để tạo bài viết.</p>;
   }
 
   const handlePublish = (dto: ICreateBlogPostDto) => {
@@ -39,10 +42,11 @@ const CreateBlogPostPage = () => {
     <EditPostForm
       mode="create"
       authorId={user.id}
-      postType={EPostType.PERSONAL}
+      postType={EPostType.COMMUNITY}
+      communityId={communityId}
       onPublish={handlePublish as (dto: unknown) => void}
     />
   );
 };
 
-export default CreateBlogPostPage;
+export default CreateCommunityPostPage;

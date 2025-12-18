@@ -9,10 +9,13 @@ import adminUserRoutes from "./admin/user.route";
 import adminPostRoutes from "./admin/post.route";
 import adminReportRoutes from "./admin/report.route";
 import authRoutes from "./auth/auth.route";
+import communityRoutes from "./user/community.route";
+
 import manageBlogPostsRoutes from "./user/manageBlogPosts.route";
 import HomePage from "../pages/home/HomePage";
 import newsfeedRoutes from "./user/newsfeed.route";
 import { SearchResultPage } from "../pages/search/searchResultsPage";
+import MyCommunitiesPage from "../pages/user/community/MyCommunitiesPage";
 import PostDetailsPage from "../pages/user/post/postDetailsPage";
 import { savedPostsRoutes } from "./user/savedPosts.route";
 
@@ -33,6 +36,13 @@ export const router = createBrowserRouter([
         path: "/post/:id",
         element: <PostDetailsPage />,
       },
+      { index: true, element: <HomePage /> },
+      { path: "saved", element: <div>Saved Posts</div> },
+      { path: "groups", element: <MyCommunitiesPage /> },
+
+      { path: "post/:id", element: <PostDetailsPage /> },
+
+      ...communityRoutes,
       ...manageBlogPostsRoutes,
       ...newsfeedRoutes,
       ...savedPostsRoutes,
@@ -45,7 +55,12 @@ export const router = createBrowserRouter([
         <AdminLayout />
       </RoleGuard>
     ),
-    children: [...adminDashboardRoutes, ...adminUserRoutes, ...adminPostRoutes, ...adminReportRoutes],
+    children: [
+      ...adminDashboardRoutes,
+      ...adminUserRoutes,
+      ...adminPostRoutes,
+      ...adminReportRoutes,
+    ],
   },
   ...authRoutes,
 ]);
