@@ -15,3 +15,11 @@ export interface UserReactSummaryDto {
   emojis: EmojiReactSummaryDto[];
   totalReactions: number;
 }
+
+export interface IToggleReactDto {
+  userId: number;
+  emojiId?: number;
+  codepoint?: string;
+  postId?: number;
+  commentId?: number;
+}

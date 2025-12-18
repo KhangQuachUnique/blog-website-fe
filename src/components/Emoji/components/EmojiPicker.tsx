@@ -10,7 +10,13 @@ import type { ICommunityDto } from "../../../types/post";
 interface EmojiPickerProps {
   emojisData: IEmojiCategoryData[];
   recent?: IEmojiResponseDto[];
-  onSelect: (codepoint: string) => void;
+  onSelect: ({
+    emojiId,
+    codepoint,
+  }: {
+    emojiId?: number;
+    codepoint?: string;
+  }) => void;
   onClose: () => void;
 }
 
@@ -98,8 +104,11 @@ export const EmojiPicker: React.FC<EmojiPickerProps> = ({
     return () => container.removeEventListener("scroll", handleScroll);
   }, [categories, isSearching]);
 
-  const handleEmojiClick = (codepoint: string) => {
-    onSelect(codepoint);
+  const handleEmojiClick = (emoji: IEmojiResponseDto) => {
+    onSelect({
+      emojiId: emoji.id,
+      codepoint: emoji.codepoint,
+    });
     onClose(); // Close picker immediately after selection
   };
 
@@ -119,7 +128,7 @@ export const EmojiPicker: React.FC<EmojiPickerProps> = ({
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
-            handleEmojiClick(emoji.codepoint || "");
+            handleEmojiClick(emoji);
           }}
           onMouseDown={(e) => {
             e.preventDefault(); // Prevent focus/active state

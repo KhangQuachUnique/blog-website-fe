@@ -6,9 +6,35 @@ import { recordViewedPost } from "../../services/user/viewedHistory";
 import { useAuth } from "../../contexts/AuthContext";
 import "../../styles/newsfeed/Card.css";
 import ReactionSection from "../emoji";
+import { useTogglePostReact } from "../../hooks/useReactions";
 
 const Card = memo(({ post }: { post: IPostResponseDto }) => {
   const { user } = useAuth();
+
+  /**
+   * Toggle reaction handler
+   */
+  const { mutate } = useTogglePostReact();
+
+  const handleToggleReact = ({
+    emojiId,
+    codepoint,
+  }: {
+    emojiId?: number;
+    codepoint?: string;
+  }) => {
+    if (!user || !user.id) {
+      console.warn("User must be logged in to react to posts.");
+      return;
+    }
+
+    mutate({
+      userId: user.id,
+      postId: post.id,
+      emojiId,
+      codepoint,
+    });
+  };
 
   // Convert reactions to display format
   const reactionData = post.reacts.emojis ?? [];
@@ -106,7 +132,10 @@ const Card = memo(({ post }: { post: IPostResponseDto }) => {
           className="newsfeed-card__interact"
           onClick={(e) => e.stopPropagation()}
         >
-          <ReactionSection reactions={reactionData} />
+          <ReactionSection
+            reactions={reactionData}
+            handleToggleReact={handleToggleReact}
+          />
           <InteractBar
             postId={post.id}
             userId={user?.id ?? 0}

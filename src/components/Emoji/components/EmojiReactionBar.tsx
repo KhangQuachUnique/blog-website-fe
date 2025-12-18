@@ -4,7 +4,13 @@ import { getTwemojiUrl } from "../utils/twemoji";
 
 interface EmojiReactionBarProps {
   reactions: EmojiReactSummaryDto[];
-  onReactionClick: (emojiId: number) => void;
+  onReactionClick: ({
+    emojiId,
+    codepoint,
+  }: {
+    emojiId?: number;
+    codepoint?: string;
+  }) => void;
 }
 
 /**
@@ -50,7 +56,12 @@ export const EmojiReactionBar: React.FC<EmojiReactionBarProps> = React.memo(
         {reactions.map((reaction) => (
           <button
             key={reaction.emojiId}
-            onClick={() => onReactionClick(reaction.emojiId)}
+            onClick={() => {
+              onReactionClick({
+                emojiId: reaction.emojiId,
+                codepoint: reaction.codepoint,
+              });
+            }}
             className={`
               inline-flex items-center rounded-lg font-semibold cursor-pointer transition-all duration-150
               px-2 py-1 gap-[7px]

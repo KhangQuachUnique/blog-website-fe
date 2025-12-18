@@ -1,4 +1,10 @@
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import React, {
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+  useMemo,
+} from "react";
 
 import { EmojiPicker } from "./EmojiPicker";
 import type { IEmojiCategoryData } from "../../../types/emoji";
@@ -8,8 +14,14 @@ import { BsEmojiWinkFill } from "react-icons/bs";
 interface EmojiSelectorProps {
   emojisData: IEmojiCategoryData[];
   recentCodepoints?: string[];
-  onSelect: (codepoint: string) => void;
-  onRecentUpdate?: (codepoints: string[]) => void;
+  onToggleReact: ({
+    emojiId,
+    codepoint,
+  }: {
+    emojiId?: number;
+    codepoint?: string;
+  }) => void;
+  onRecentUpdate?: (codepoint: string) => void;
 }
 
 /**
@@ -17,10 +29,25 @@ interface EmojiSelectorProps {
  */
 export const EmojiSelector: React.FC<EmojiSelectorProps> = ({
   emojisData,
-  recentCodepoints = [],
-  onSelect,
+  recentCodepoints,
+  onToggleReact,
   onRecentUpdate,
 }) => {
+  const recentEmojis = useMemo(() => {
+    if (recentCodepoints && recentCodepoints.length > 0) {
+      return emojisData
+        .flatMap((category) => category.emojis)
+        .filter((emoji) => {
+          return (
+            emoji.type === "UNICODE" &&
+            !!emoji.codepoint &&
+            recentCodepoints.includes(emoji.codepoint)
+          );
+        });
+    }
+    return [];
+  }, [recentCodepoints, emojisData]);
+
   const [isPickerOpen, setIsPickerOpen] = useState(false);
   const [pickerPosition, setPickerPosition] = useState<{
     top: number;
@@ -40,16 +67,18 @@ export const EmojiSelector: React.FC<EmojiSelectorProps> = ({
   // Close picker on outside click
   useClickOutside([buttonRef, pickerRef], closePicker);
 
-  const handleSelect = (codepoint: string) => {
-    onSelect(codepoint);
+  const handleSelect = ({
+    emojiId,
+    codepoint,
+  }: {
+    emojiId?: number;
+    codepoint?: string;
+  }) => {
+    onToggleReact({ emojiId, codepoint });
 
-    // Update recent emojis
-    const updatedRecent = [
-      codepoint,
-      ...recentCodepoints.filter((c) => c !== codepoint),
-    ].slice(0, 20);
-
-    onRecentUpdate?.(updatedRecent);
+    if (codepoint) {
+      onRecentUpdate?.(codepoint);
+    }
 
     // Close picker
     setIsPickerOpen(false);
@@ -187,7 +216,7 @@ export const EmojiSelector: React.FC<EmojiSelectorProps> = ({
         >
           <EmojiPicker
             emojisData={emojisData}
-            // recent={recentEmojis}
+            recent={recentEmojis}
             onSelect={handleSelect}
             onClose={() => setIsPickerOpen(false)}
           />

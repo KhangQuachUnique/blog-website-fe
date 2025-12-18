@@ -6,9 +6,19 @@ import { useRecentEmojis } from "./hooks/useRecentEmoji";
 
 export interface ReactionSectionProps {
   reactions: EmojiReactSummaryDto[];
+  handleToggleReact: ({
+    emojiId,
+    codepoint,
+  }: {
+    emojiId?: number;
+    codepoint?: string;
+  }) => void;
 }
 
-const ReactionSection = ({ reactions }: ReactionSectionProps) => {
+const ReactionSection = ({
+  reactions,
+  handleToggleReact,
+}: ReactionSectionProps) => {
   const { recent, add } = useRecentEmojis();
   const emojisData = useEmojiData();
 
@@ -20,14 +30,13 @@ const ReactionSection = ({ reactions }: ReactionSectionProps) => {
     >
       <EmojiReactionBar
         reactions={reactions}
-        onReactionClick={(emojiId: number) => {}}
+        onReactionClick={handleToggleReact}
       />
       <EmojiSelector
         emojisData={emojisData ?? []}
-        onSelect={(codepoint: string) => {
-          add(codepoint);
-        }}
+        onToggleReact={handleToggleReact}
         recentCodepoints={recent}
+        onRecentUpdate={add}
       />
     </div>
   );
