@@ -36,10 +36,7 @@ export const router = createBrowserRouter([
         path: "/post/:id",
         element: <PostDetailsPage />,
       },
-      { index: true, element: <HomePage /> },
       { path: "groups", element: <MyCommunitiesPage /> },
-
-      { path: "post/:id", element: <PostDetailsPage /> },
 
       ...communityRoutes,
       ...manageBlogPostsRoutes,
