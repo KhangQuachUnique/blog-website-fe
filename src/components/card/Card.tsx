@@ -20,6 +20,11 @@ const Card = memo(({ post }: { post: IPostResponseDto }) => {
   const { data: fetchedOriginal } = originalId ? useGetPostById(Number(originalId)) : { data: undefined };
   const original = post.originalPost ?? (fetchedOriginal as IPostResponseDto | undefined);
   
+  // Extract vote data - support both flat and nested formats from backend
+  const upVotes = post.votes?.upvotes ?? post.upVotes ?? 0;
+  const downVotes = post.votes?.downvotes ?? post.downVotes ?? 0;
+  const userVote = post.votes?.userVote ?? null;
+  
   const formatDate = (dateInput: string | Date) => {
     const date = dateInput instanceof Date ? dateInput : new Date(dateInput);
     const now = new Date();
@@ -189,8 +194,9 @@ const Card = memo(({ post }: { post: IPostResponseDto }) => {
               <InteractBar
                 postId={post.id}
                 userId={user?.id ?? 0}
-                initialUpVotes={post.upVotes}
-                initialDownVotes={post.downVotes}
+                initialUpVotes={upVotes}
+                initialDownVotes={downVotes}
+                initialVoteType={userVote}
                 totalComments={post.totalComments}
               />
             </div>
@@ -283,8 +289,9 @@ const Card = memo(({ post }: { post: IPostResponseDto }) => {
           <InteractBar
             postId={post.id}
             userId={user?.id ?? 0}
-            initialUpVotes={post.upVotes}
-            initialDownVotes={post.downVotes}
+            initialUpVotes={upVotes}
+            initialDownVotes={downVotes}
+            initialVoteType={userVote}
             totalComments={post.totalComments}
           />
         </div>

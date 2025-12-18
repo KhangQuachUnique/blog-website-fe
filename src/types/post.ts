@@ -62,6 +62,13 @@ export interface IHashtagDto {
 }
 
 
+// Matches backend GetVotesInterface
+export interface IGetVotesInterface {
+  upvotes: number;
+  downvotes: number;
+  userVote: 'upvote' | 'downvote' | null;
+}
+
 export interface IPostResponseDto {
   id: number;
   title: string;
@@ -76,8 +83,10 @@ export interface IPostResponseDto {
   community?: ICommunityDto;
   originalPost?: IPostResponseDto;
   blocks?: IBlockResponseDto[];
-  upVotes: number;
-  downVotes: number;
+  // Support both old flat format and new nested format
+  upVotes?: number;
+  downVotes?: number;
+  votes?: IGetVotesInterface;
   totalComments: number;
   totalReacts: number;
 }

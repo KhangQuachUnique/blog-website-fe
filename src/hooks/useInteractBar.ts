@@ -15,6 +15,7 @@ export interface UseInteractBarProps {
   userId: number;
   initialUpVotes?: number;
   initialDownVotes?: number;
+  initialVoteType?: VoteType | null;
 }
 
 export interface UseInteractBarReturn {
@@ -42,9 +43,10 @@ export const useInteractBar = ({
   userId,
   initialUpVotes = 0,
   initialDownVotes = 0,
+  initialVoteType = null,
 }: UseInteractBarProps): UseInteractBarReturn => {
-  // Vote states
-  const [voteType, setVoteType] = useState<VoteType | null>(null);
+  // Vote states - initialize with initialVoteType
+  const [voteType, setVoteType] = useState<VoteType | null>(initialVoteType);
   const [upVotes, setUpVotes] = useState(initialUpVotes);
   const [downVotes, setDownVotes] = useState(initialDownVotes);
   const [isVoting, setIsVoting] = useState(false);

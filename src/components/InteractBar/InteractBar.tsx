@@ -47,6 +47,7 @@ interface InteractBarProps {
   userId: number;
   initialUpVotes?: number;
   initialDownVotes?: number;
+  initialVoteType?: 'upvote' | 'downvote' | null;
   totalComments?: number;
 }
 
@@ -58,6 +59,7 @@ const InteractBar: React.FC<InteractBarProps> = ({
   userId,
   initialUpVotes = 0,
   initialDownVotes = 0,
+  initialVoteType = null,
   totalComments = 0,
 }) => {
   // ========== Hooks ==========
@@ -74,6 +76,7 @@ const InteractBar: React.FC<InteractBarProps> = ({
       userId,
       initialUpVotes,
       initialDownVotes,
+      initialVoteType,
     }
   );
 
