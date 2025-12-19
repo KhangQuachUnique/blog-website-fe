@@ -12,6 +12,8 @@ import authRoutes from "./auth/auth.route";
 import communityRoutes from "./user/community.route";
 
 import manageBlogPostsRoutes from "./user/manageBlogPosts.route";
+import profileRoutes from "./user/profile.route";
+
 import HomePage from "../pages/home/HomePage";
 import newsfeedRoutes from "./user/newsfeed.route";
 import { SearchResultPage } from "../pages/search/searchResultsPage";
@@ -42,6 +44,7 @@ export const router = createBrowserRouter([
       ...manageBlogPostsRoutes,
       ...newsfeedRoutes,
       ...savedPostsRoutes,
+      ...profileRoutes,
     ],
   },
   {
