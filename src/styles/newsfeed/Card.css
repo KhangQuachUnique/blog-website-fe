@@ -219,6 +219,18 @@
   background-color: #f295b673;
   font-size: 0.75rem;
   margin-right: 3px;
+  transition: all 0.2s ease;
+}
+
+.newsfeed-card__hashtag--clickable {
+  cursor: pointer;
+}
+
+.newsfeed-card__hashtag--clickable:hover {
+  background-color: #F295B6;
+  color: white;
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(242, 149, 182, 0.4);
 }
 
 .newsfeed-card__footer {

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import type { IPostResponseDto, IEmojiSummaryDto, IReactionSummaryDto } from "../../types/post";
 import { EPostType } from "../../types/post";
 import { InteractBar } from "../InteractBar";
@@ -11,6 +11,14 @@ import { Repeat2 } from "lucide-react";
 
 const Card = ({ post }: { post: IPostResponseDto }) => {
   const { user } = useAuth();
+  const navigate = useNavigate();
+
+  // Handle hashtag click - navigate to search page
+  const handleHashtagClick = (e: React.MouseEvent, hashtagName: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    navigate(`/search?q=${encodeURIComponent(hashtagName)}&type=hashtag`);
+  };
 
   // Extract reactions safely using typed fields
   const reactionsData: IReactionSummaryDto | undefined = post.reacts ?? post.reactions;
@@ -202,7 +210,13 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
               {post.hashtags && post.hashtags.length > 0 && (
                 <div className="newsfeed-card__hashtags">
                   {post.hashtags.map((h) => (
-                    <span key={h.id} className="newsfeed-card__hashtag">#{h.name}</span>
+                    <span 
+                      key={h.id} 
+                      className="newsfeed-card__hashtag newsfeed-card__hashtag--clickable"
+                      onClick={(e) => handleHashtagClick(e, h.name)}
+                    >
+                      #{h.name}
+                    </span>
                   ))}
                 </div>
               )}
@@ -241,7 +255,13 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
               {post.hashtags && post.hashtags.length > 0 && (
                 <div className="newsfeed-card__hashtags">
                   {post.hashtags.map((h) => (
-                    <span key={h.id} className="newsfeed-card__hashtag">#{h.name}</span>
+                    <span 
+                      key={h.id} 
+                      className="newsfeed-card__hashtag newsfeed-card__hashtag--clickable"
+                      onClick={(e) => handleHashtagClick(e, h.name)}
+                    >
+                      #{h.name}
+                    </span>
                   ))}
                 </div>
               )}
@@ -279,7 +299,13 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
               {original?.hashtags && original.hashtags.length > 0 && (
                 <div className="newsfeed-card__hashtags">
                   {original.hashtags.map((h) => (
-                    <span key={h.id} className="newsfeed-card__hashtag">#{h.name}</span>
+                    <span 
+                      key={h.id} 
+                      className="newsfeed-card__hashtag newsfeed-card__hashtag--clickable"
+                      onClick={(e) => handleHashtagClick(e, h.name)}
+                    >
+                      #{h.name}
+                    </span>
                   ))}
                 </div>
               )}
@@ -378,7 +404,11 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
           {post.hashtags && post.hashtags.length > 0 && (
             <div className="newsfeed-card__hashtags">
               {post.hashtags.map((h) => (
-                <span key={h.id} className="newsfeed-card__hashtag">
+                <span 
+                  key={h.id} 
+                  className="newsfeed-card__hashtag newsfeed-card__hashtag--clickable"
+                  onClick={(e) => handleHashtagClick(e, h.name)}
+                >
                   #{h.name}
                 </span>
               ))}
