@@ -4,6 +4,7 @@ import type { UpdateProfileData, ChangePasswordData, BlockedUser } from "../../.
 import { IoArrowBack, IoSaveOutline, IoCloseOutline } from "react-icons/io5";
 import { AiOutlineUser, AiOutlineLock, AiOutlineEye, AiOutlineUserDelete } from "react-icons/ai";
 import { MdBlock } from "react-icons/md";
+import { CiSearch } from "react-icons/ci";
 import * as userService from "../../../services/user/userService";
 import * as authService from "../../../services/auth";
 import { useAuth } from "../../../hooks/useAuth";
@@ -63,6 +64,9 @@ const EditProfile = () => {
 
   // Blocked users
   const [blockedUsers, setBlockedUsers] = useState<BlockedUser[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<BlockedUser[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
 
   // Avatar upload
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
@@ -105,6 +109,7 @@ const EditProfile = () => {
     };
 
     fetchUserData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Fetch blocked users when switching to blocked tab
@@ -123,6 +128,7 @@ const EditProfile = () => {
       };
       fetchBlockedUsers();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
 
   const handleProfileChange = (field: keyof UpdateProfileData, value: string | boolean | undefined) => {
@@ -396,6 +402,49 @@ const EditProfile = () => {
         type: "error",
         message: error.response?.data?.message || error.message || "Có lỗi xảy ra"
       });
+    }
+  };
+
+  const handleBlockUser = async (userId: number) => {
+    try {
+      await userService.blockUser(userId);
+      const users = await userService.getBlockedUsers();
+      setBlockedUsers(users);
+      setSearchQuery("");
+      setSearchResults([]);
+      showToast({ type: "success", message: "Đã chặn người dùng" });
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } }; message?: string };
+      showToast({
+        type: "error",
+        message: error.response?.data?.message || error.message || "Có lỗi xảy ra"
+      });
+    }
+  };
+
+  const handleSearchUsers = async (query: string) => {
+    setSearchQuery(query);
+    
+    if (!query || query.trim().length === 0) {
+      setSearchResults([]);
+      return;
+    }
+
+    setIsSearching(true);
+    try {
+      const results = await userService.searchUsers(query);
+      // Filter out already blocked users
+      const filteredResults = results.filter(
+        (result) => !blockedUsers.some((blocked) => blocked.id === result.id)
+      );
+      setSearchResults(filteredResults);
+    } catch (err: unknown) {
+      showToast({
+        type: "error",
+        message: err instanceof Error ? err.message : "Không thể tìm kiếm người dùng"
+      });
+    } finally {
+      setIsSearching(false);
     }
   };
 
@@ -767,45 +816,111 @@ const EditProfile = () => {
           {activeTab === "blocked" && (
             <div className="space-y-6">
               <h2 className="text-2xl font-bold" style={{ color: "#8C1D35" }}>
-                Người dùng đã chặn
+                Quản lý chặn
               </h2>
 
-              {blockedUsers.length === 0 ? (
-                <div className="text-center py-12 text-gray-500">
-                  Bạn chưa chặn người dùng nào
+              {/* Search Bar */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Tìm kiếm người dùng để chặn</h3>
+                <div className="flex items-center px-4 py-2 border border-[#FFE4EC] rounded-lg bg-white gap-2 focus-within:border-[#F295B6] transition-colors duration-200">
+                  <input
+                    type="text"
+                    className="outline-none w-full text-md"
+                    placeholder="Tìm kiếm theo tên người dùng..."
+                    value={searchQuery}
+                    onChange={(e) => handleSearchUsers(e.target.value)}
+                  />
+                  <CiSearch fontSize={24} color="#F295B6" />
                 </div>
-              ) : (
-                <div className="space-y-3">
-                  {blockedUsers.map((user) => (
-                    <div
-                      key={user.id}
-                      className="flex items-center justify-between p-4 border border-[#FFE4EC] rounded-lg"
-                    >
-                      <div className="flex items-center gap-4">
-                        {user.avatarUrl ? (
-                          <img
-                            src={user.avatarUrl}
-                            alt={user.username}
-                            className="w-12 h-12 rounded-full object-cover"
-                          />
-                        ) : (
-                          <Avatar {...stringAvatar(user.username, 48, '1.2rem')} />
-                        )}
-                        <div>
-                          <div className="font-bold">{user.username}</div>
-                          <div className="text-sm text-gray-500">@{user.username}</div>
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => handleUnblockUser(user.id)}
-                        className="px-4 py-2 bg-gray-100 text-gray-700 font-semibold rounded-lg hover:bg-gray-200 transition-colors duration-200"
+
+                {/* Search Results */}
+                {isSearching && (
+                  <div className="text-center py-4 text-gray-500">
+                    Đang tìm kiếm...
+                  </div>
+                )}
+                
+                {!isSearching && searchQuery && searchResults.length > 0 && (
+                  <div className="space-y-2">
+                    <p className="text-sm text-gray-600">Kết quả tìm kiếm:</p>
+                    {searchResults.map((user) => (
+                      <div
+                        key={user.id}
+                        className="flex items-center justify-between p-4 border border-[#FFE4EC] rounded-lg hover:bg-[#FFEFF4] transition-colors duration-200"
                       >
-                        Bỏ chặn
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
+                        <div className="flex items-center gap-4">
+                          {user.avatarUrl ? (
+                            <img
+                              src={user.avatarUrl}
+                              alt={user.username}
+                              className="w-12 h-12 rounded-full object-cover"
+                            />
+                          ) : (
+                            <Avatar {...stringAvatar(user.username, 48, '1.2rem')} />
+                          )}
+                          <div>
+                            <div className="font-bold">{user.username}</div>
+                            <div className="text-sm text-gray-500">@{user.username}</div>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => handleBlockUser(user.id)}
+                          className="px-4 py-2 bg-[#F295B6] text-white font-semibold rounded-lg hover:bg-[#FFB8D1] transition-colors duration-200"
+                        >
+                          Chặn
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {!isSearching && searchQuery && searchResults.length === 0 && (
+                  <div className="text-center py-4 text-gray-500">
+                    Không tìm thấy người dùng nào
+                  </div>
+                )}
+              </div>
+
+              {/* Blocked Users List */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Người dùng đã chặn</h3>
+                {blockedUsers.length === 0 ? (
+                  <div className="text-center py-12 text-gray-500">
+                    Bạn chưa chặn người dùng nào
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {blockedUsers.map((user) => (
+                      <div
+                        key={user.id}
+                        className="flex items-center justify-between p-4 border border-[#FFE4EC] rounded-lg"
+                      >
+                        <div className="flex items-center gap-4">
+                          {user.avatarUrl ? (
+                            <img
+                              src={user.avatarUrl}
+                              alt={user.username}
+                              className="w-12 h-12 rounded-full object-cover"
+                            />
+                          ) : (
+                            <Avatar {...stringAvatar(user.username, 48, '1.2rem')} />
+                          )}
+                          <div>
+                            <div className="font-bold">{user.username}</div>
+                            <div className="text-sm text-gray-500">@{user.username}</div>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => handleUnblockUser(user.id)}
+                          className="px-4 py-2 bg-gray-100 text-gray-700 font-semibold rounded-lg hover:bg-gray-200 transition-colors duration-200"
+                        >
+                          Bỏ chặn
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           )}
 

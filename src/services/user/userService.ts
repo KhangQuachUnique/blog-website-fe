@@ -90,6 +90,16 @@ export const togglePrivacy = async (): Promise<{ isPrivate: boolean }> => {
 };
 
 /**
+ * Tìm kiếm người dùng theo username
+ */
+export const searchUsers = async (query: string): Promise<BlockedUser[]> => {
+  const response = await axiosCustomize.get("/users/search", {
+    params: { q: query },
+  });
+  return unwrap(response);
+};
+
+/**
  * Lấy danh sách người dùng đã chặn
  */
 export const getBlockedUsers = async (): Promise<BlockedUser[]> => {
@@ -142,6 +152,22 @@ export const unfollowUser = async (
   userId: number
 ): Promise<{ message: string }> => {
   const response = await axiosCustomize.delete(`/users/${userId}/follow`);
+  return unwrap(response);
+};
+
+/**
+ * Lấy danh sách followers
+ */
+export const getFollowers = async (userId: number): Promise<any[]> => {
+  const response = await axiosCustomize.get(`/users/${userId}/followers`);
+  return unwrap(response);
+};
+
+/**
+ * Lấy danh sách following
+ */
+export const getFollowing = async (userId: number): Promise<any[]> => {
+  const response = await axiosCustomize.get(`/users/${userId}/following`);
   return unwrap(response);
 };
 

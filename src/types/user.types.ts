@@ -75,6 +75,14 @@ export interface BlockedUser {
   avatarUrl?: string;
 }
 
+export interface UserListItem {
+  id: number;
+  username: string;
+  avatarUrl?: string;
+  bio?: string;
+  isFollowing?: boolean;
+}
+
 export interface ChangeEmailRequest {
   newEmail: string;
 }
