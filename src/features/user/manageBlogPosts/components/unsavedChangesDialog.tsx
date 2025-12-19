@@ -1,12 +1,11 @@
 import { Dialog, DialogActions, DialogTitle, DialogContent, IconButton } from "@mui/material";
-import { Close, WarningAmber, Save, ExitToApp, Edit } from "@mui/icons-material";
+import { Close, WarningAmber, ExitToApp, Edit } from "@mui/icons-material";
 import CustomButton from "../../../../components/button";
 
 interface UnsavedChangesDialogProps {
   open: boolean;
   onClose: () => void;
   onConfirmLeave: () => void;
-  onSaveDraft: () => void;
 }
 
 // Theme colors matching the website
@@ -27,7 +26,6 @@ const UnsavedChangesDialog = ({
   open,
   onClose,
   onConfirmLeave,
-  onSaveDraft,
 }: UnsavedChangesDialogProps) => {
   return (
     <Dialog
@@ -101,9 +99,9 @@ const UnsavedChangesDialog = ({
           className="text-center text-sm leading-relaxed"
           style={{ color: THEME.textMuted, fontFamily: THEME.fontFamily }}
         >
-          Nếu bạn rời đi, những thay đổi chưa lưu sẽ bị mất.
+          Bạn có chắc chắn muốn thoát không?
           <br />
-          Bạn có muốn lưu nháp trước khi rời đi không?
+          Những thay đổi chưa lưu sẽ bị mất.
         </p>
       </DialogContent>
 
@@ -137,24 +135,6 @@ const UnsavedChangesDialog = ({
         >
           <Edit sx={{ fontSize: 18 }} />
           Tiếp tục chỉnh sửa
-        </CustomButton>
-        <CustomButton
-          onClick={onSaveDraft}
-          variant="outline"
-          style={{
-            borderColor: THEME.success,
-            color: THEME.success,
-            fontWeight: 600,
-            padding: "10px 20px",
-            borderRadius: 8,
-            fontFamily: THEME.fontFamily,
-            display: "flex",
-            alignItems: "center",
-            gap: 6,
-          }}
-        >
-          <Save sx={{ fontSize: 18 }} />
-          Lưu nháp
         </CustomButton>
         <CustomButton
           onClick={onConfirmLeave}

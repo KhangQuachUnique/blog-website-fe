@@ -7,11 +7,6 @@ const CreateBlogPostPage = () => {
   const { mutate } = useCreatePost();
   const navigate = useNavigate();
 
-  const handleSaveDraft = (dto: ICreateBlogPostDto) => {
-    console.log("Saving Draft:", dto);
-    // TODO: Call API to save draft
-  };
-
   const handlePublish = (dto: ICreateBlogPostDto) => {
     console.log("Publishing Post:", dto);
     mutate(dto, {
@@ -39,7 +34,6 @@ const CreateBlogPostPage = () => {
       mode="create"
       authorId={3}
       postType={EPostType.PERSONAL}
-      onSaveDraft={handleSaveDraft as (dto: unknown) => void}
       onPublish={handlePublish as (dto: unknown) => void}
     />
   );

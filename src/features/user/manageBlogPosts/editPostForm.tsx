@@ -4,7 +4,6 @@ import { InputBase } from "@mui/material";
 import {
   GRID_SETTINGS,
   BLOCK_WRAPPER,
-  BUTTON_STYLE_OUTLINE,
   BUTTON_STYLE_PRIMARY,
 } from "./layoutConstants";
 
@@ -16,7 +15,6 @@ import BlockSidebar from "./components/blockSidebar";
 import ConfigDialog from "./components/configDialog";
 import ValidationDialog from "./components/validationDialog";
 import UnsavedChangesDialog from "./components/unsavedChangesDialog";
-import DraftSavedDialog from "./components/draftSavedDialog";
 import { EBlockType, type ICreateBlockDto } from "../../../types/block";
 import { usePostForm, type LayoutItem, type ValidationError } from "./usePostForm";
 import type {
@@ -34,7 +32,6 @@ import { isBlobUrl } from "../../../utils/url";
 export interface EditPostFormProps {
   mode: "create" | "update";
   post?: IPostResponseDto;
-  onSaveDraft?: (dto: ICreateBlogPostDto) => void;
   onPublish?: (dto: ICreateBlogPostDto | IUpdateBlogPostDto) => void;
   authorId: number;
   postType: EPostType;
@@ -48,7 +45,6 @@ export interface EditPostFormProps {
 const EditPostForm = ({
   mode,
   post,
-  onSaveDraft,
   onPublish,
   authorId,
   postType,
@@ -98,7 +94,6 @@ const EditPostForm = ({
     validate,
     getNonEmptyBlocks,
     getNonEmptyLayout,
-    saveDraft,
     clearDraft,
     hasUnsavedChanges,
     hasUnsavedChangesRef,
@@ -114,7 +109,6 @@ const EditPostForm = ({
   const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
   const [isValidationDialogOpen, setIsValidationDialogOpen] = useState(false);
   const [isUnsavedDialogOpen, setIsUnsavedDialogOpen] = useState(false);
-  const [isDraftSavedDialogOpen, setIsDraftSavedDialogOpen] = useState(false);
   const pendingNavigationRef = useRef<(() => void) | null>(null);
 
   /**
@@ -297,35 +291,12 @@ const EditPostForm = ({
     }
   };
 
-  const handleSaveDraft = () => {
-    // Save to localStorage
-    const saved = saveDraft();
-    if (saved) {
-      console.log("Draft saved to localStorage (valid for 10 minutes)");
-      setIsDraftSavedDialogOpen(true);
-    }
-    
-    // Also call the API if provided
-    if (onSaveDraft) {
-      onSaveDraft(buildCreateDto({}));
-    }
-  };
-
   /**
    * Handle unsaved changes dialog actions
    */
   const handleConfirmLeave = () => {
     setIsUnsavedDialogOpen(false);
     markAsClean();
-    if (pendingNavigationRef.current) {
-      pendingNavigationRef.current();
-      pendingNavigationRef.current = null;
-    }
-  };
-
-  const handleSaveDraftAndLeave = () => {
-    handleSaveDraft();
-    setIsUnsavedDialogOpen(false);
     if (pendingNavigationRef.current) {
       pendingNavigationRef.current();
       pendingNavigationRef.current = null;
@@ -460,27 +431,9 @@ const EditPostForm = ({
       </div>
 
       {/* Action Buttons */}
-      {mode === "create" ? (
-        <div className="flex w-[900px] justify-center gap-4 items-center p-4">
-          <CustomButton
-            variant="outline"
-            onClick={handleSaveDraft}
-            style={BUTTON_STYLE_OUTLINE}
-          >
-            Lưu nháp
-          </CustomButton>
-          <CustomButton
-            onClick={handleNextStepClick}
-            style={{ width: "auto", ...BUTTON_STYLE_PRIMARY }}
-          >
-            Bước tiếp theo
-          </CustomButton>
-        </div>
-      ) : (
-        <CustomButton onClick={handleNextStepClick} style={{ width: "auto", ...BUTTON_STYLE_PRIMARY }}>
-          Bước tiếp theo
-        </CustomButton>
-      )}
+      <CustomButton onClick={handleNextStepClick} style={{ width: "auto", ...BUTTON_STYLE_PRIMARY }}>
+        Bước tiếp theo
+      </CustomButton>
 
       {/* Config Dialog */}
       <ConfigDialog
@@ -512,14 +465,9 @@ const EditPostForm = ({
         open={isUnsavedDialogOpen}
         onClose={handleCancelLeave}
         onConfirmLeave={handleConfirmLeave}
-        onSaveDraft={handleSaveDraftAndLeave}
       />
 
-      {/* Draft Saved Dialog */}
-      <DraftSavedDialog
-        open={isDraftSavedDialogOpen}
-        onClose={() => setIsDraftSavedDialogOpen(false)}
-      />
+
     </div>
   );
 };
