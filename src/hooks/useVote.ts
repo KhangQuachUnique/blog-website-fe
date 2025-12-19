@@ -21,7 +21,13 @@ export const voteKeys = {
 export const useVoteStatus = (userId: number | null, postId: number) => {
   return useQuery({
     queryKey: voteKeys.status(userId ?? 0, postId),
-    queryFn: () => getVoteStatus(userId!, postId),
+    queryFn: async () => {
+      if (!userId || userId <= 0) {
+        return { voteType: null };
+      }
+      const result = await getVoteStatus(userId, postId);
+      return result || { voteType: null };
+    },
     enabled: !!userId && userId > 0,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });

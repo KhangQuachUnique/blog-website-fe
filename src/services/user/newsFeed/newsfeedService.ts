@@ -28,5 +28,7 @@ export const getNewsfeed = async (after?: string | null, seed?: number) => {
   } catch (e) {
     console.debug("newsfeedService.getNewsfeed unwrapped (raw)=", out);
   }
+  console.log(out)
   return out;
+
 };

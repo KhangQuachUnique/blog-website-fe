@@ -1,4 +1,5 @@
 import type { IBlockResponseDto, ICreateBlockDto } from "./block";
+import type { UserVoteDto } from "./user-vote";
 
 export const EPostType = {
   PERSONAL: "PERSONAL",
@@ -76,8 +77,7 @@ export interface IPostResponseDto {
   community?: ICommunityDto;
   originalPost?: IPostResponseDto;
   blocks?: IBlockResponseDto[];
-  upVotes: number;
-  downVotes: number;
+  votes: UserVoteDto;
   totalComments: number;
   totalReacts: number;
 }

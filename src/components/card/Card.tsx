@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import type { IPostResponseDto } from "../../types/post";
 import { EPostType } from "../../types/post";
-import { InteractBar } from "../InteractBar";
+import InteractBar from "../interactBar/InteractBar";
 import { recordViewedPost } from '../../services/user/viewedHistory';
 import { useAuth } from "../../contexts/AuthContext";
 import { useGetPostById } from "../../hooks/usePost";
@@ -188,8 +188,7 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
               <InteractBar
                 postId={post.id}
                 userId={user?.id ?? 0}
-                initialUpVotes={post.upVotes}
-                initialDownVotes={post.downVotes}
+                votes={post.votes}
                 totalComments={post.totalComments}
               />
             </div>
@@ -277,8 +276,7 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
           <InteractBar
             postId={post.id}
             userId={user?.id ?? 0}
-            initialUpVotes={post.upVotes}
-            initialDownVotes={post.downVotes}
+            votes={post.votes}
             totalComments={post.totalComments}
           />
         </div>

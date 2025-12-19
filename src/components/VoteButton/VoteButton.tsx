@@ -1,5 +1,5 @@
-import React, { useState, useCallback, useRef } from 'react';
-import { useVoteStatus, useVote } from '../../hooks/useVote';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
+import { useVote } from '../../hooks/useVote';
 import type { VoteButtonProps, VoteType } from '../../types/vote.types';
 import UpvoteIcon from './UpvoteIcon';
 import DownvoteIcon from './DownvoteIcon';
@@ -109,30 +109,26 @@ const VoteButtonInternal: React.FC<VoteButtonInternalProps> = ({
  * VoteButton Component - Reusable vote button with optimistic updates
  * 
  * @example
- * // Basic usage
- * <VoteButton postId={1} userId={123} />
+ * // Using vote from post response (recommended)
+ * <VoteButton 
+ *   postId={1} 
+ *   userId={123}
+ *   vote={post.vote}
+ * />
  * 
  * @example
- * // With initial values
+ * // With fallback values
  * <VoteButton 
  *   postId={1} 
  *   userId={123}
  *   initialUpVotes={10}
  *   initialDownVotes={2}
  * />
- * 
- * @example
- * // Small size without count
- * <VoteButton 
- *   postId={1} 
- *   userId={123}
- *   size="sm"
- *   showCount={false}
- * />
  */
 const VoteButton: React.FC<VoteButtonProps> = ({
   postId,
   userId,
+  votes,
   initialVoteType = null,
   initialUpVotes = 0,
   initialDownVotes = 0,
@@ -142,16 +138,25 @@ const VoteButton: React.FC<VoteButtonProps> = ({
 }) => {
   const config = SIZE_CONFIG[size];
   
-  // Local state for vote counts
-  const [upVotes, setUpVotes] = useState(initialUpVotes);
-  const [downVotes, setDownVotes] = useState(initialDownVotes);
+  // Use vote from props or fallback to initial values
+  const [upVotes, setUpVotes] = useState(votes?.upvotes ?? initialUpVotes);
+  const [downVotes, setDownVotes] = useState(votes?.downvotes ?? initialDownVotes);
+  const [currentVoteType, setCurrentVoteType] = useState<VoteType | null>(
+    votes?.userVote ?? initialVoteType
+  );
   
-  // React Query hooks
-  const { data: voteStatus } = useVoteStatus(userId > 0 ? userId : null, postId);
+  // Sync state when vote prop changes (e.g., from server refetch)
+  useEffect(() => {
+    if (votes) {
+      setUpVotes(votes.upvotes);
+      setDownVotes(votes.downvotes);
+      setCurrentVoteType(votes.userVote);
+    }
+  }, [votes]);
+  
+  // React Query mutation hook
   const voteMutation = useVote(userId, postId);
   
-  // Use server data if available, fallback to initial/local
-  const voteType = voteStatus?.voteType ?? initialVoteType;
   const netVotes = upVotes - downVotes;
   
   // Debounce mechanism
@@ -176,7 +181,7 @@ const VoteButton: React.FC<VoteButtonProps> = ({
       lastVoteTimeRef.current = now;
 
       // Save previous state for rollback
-      const prevVoteType = voteType;
+      const prevVoteType = currentVoteType;
       const prevUpVotes = upVotes;
       const prevDownVotes = downVotes;
 
@@ -185,21 +190,23 @@ const VoteButton: React.FC<VoteButtonProps> = ({
       let newUpVotes = upVotes;
       let newDownVotes = downVotes;
 
-      if (voteType === type) {
+      if (currentVoteType === type) {
         // Toggle off
         newVoteType = null;
         if (type === 'upvote') newUpVotes = Math.max(0, upVotes - 1);
         else newDownVotes = Math.max(0, downVotes - 1);
       } else {
         // Switch or new vote
-        if (voteType === 'upvote') newUpVotes = Math.max(0, upVotes - 1);
-        if (voteType === 'downvote') newDownVotes = Math.max(0, downVotes - 1);
+        if (currentVoteType === 'upvote') newUpVotes = Math.max(0, upVotes - 1);
+        if (currentVoteType === 'downvote') newDownVotes = Math.max(0, downVotes - 1);
         if (type === 'upvote') newUpVotes += 1;
         else newDownVotes += 1;
       }
 
+      // Update local state immediately (optimistic)
       setUpVotes(newUpVotes);
       setDownVotes(newDownVotes);
+      setCurrentVoteType(newVoteType);
       onVoteChange?.(newVoteType, newUpVotes, newDownVotes);
 
       // API call
@@ -209,16 +216,18 @@ const VoteButton: React.FC<VoteButtonProps> = ({
         // Update with server data
         setUpVotes(response.upVotes);
         setDownVotes(response.downVotes);
+        setCurrentVoteType(response.voteType);
         onVoteChange?.(response.voteType, response.upVotes, response.downVotes);
       } catch (error) {
         // Rollback on error
         setUpVotes(prevUpVotes);
         setDownVotes(prevDownVotes);
+        setCurrentVoteType(prevVoteType);
         onVoteChange?.(prevVoteType, prevUpVotes, prevDownVotes);
         console.error('Vote failed:', error);
       }
     },
-    [userId, postId, voteType, upVotes, downVotes, voteMutation, onVoteChange]
+    [userId, postId, currentVoteType, upVotes, downVotes, voteMutation, onVoteChange]
   );
 
   return (
@@ -236,7 +245,7 @@ const VoteButton: React.FC<VoteButtonProps> = ({
     >
       <VoteButtonInternal
         direction="up"
-        active={voteType === 'upvote'}
+        active={currentVoteType === 'upvote'}
         disabled={voteMutation.isPending}
         onClick={() => handleVote('upvote')}
         size={size}
@@ -250,9 +259,9 @@ const VoteButton: React.FC<VoteButtonProps> = ({
             fontSize: config.fontSize,
             fontWeight: 700,
             color:
-              voteType === 'upvote'
+              currentVoteType === 'upvote'
                 ? THEME.upvoteActive
-                : voteType === 'downvote'
+                : currentVoteType === 'downvote'
                 ? THEME.downvoteActive
                 : THEME.text,
             fontFamily: "'Quicksand', sans-serif",
@@ -266,7 +275,7 @@ const VoteButton: React.FC<VoteButtonProps> = ({
 
       <VoteButtonInternal
         direction="down"
-        active={voteType === 'downvote'}
+        active={currentVoteType === 'downvote'}
         disabled={voteMutation.isPending}
         onClick={() => handleVote('downvote')}
         size={size}

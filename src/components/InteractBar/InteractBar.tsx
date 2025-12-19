@@ -9,11 +9,11 @@ import {
   Flag,
   Bookmark,
 } from "lucide-react";
-import { useInteractBar } from "../../hooks/useInteractBar";
 import { useCheckSaved, useToggleSavePost } from "../../hooks/useSavedPost";
 import ReportButton from "../report/ReportButton";
 import { EReportType } from "../../types/report";
 import VoteButton from "../VoteButton";
+import type { UserVoteDto } from "../../types/user-vote";
 
 // ============================================
 // 🎨 BLOOKIE DESIGN SYSTEM - PASTEL PINK EDITION
@@ -39,18 +39,6 @@ const THEME = {
   shadowMedium: "0 4px 20px rgba(242, 149, 182, 0.2)",
   shadowStrong: "0 8px 32px rgba(242, 149, 182, 0.25)",
 };
-
-// Backward compatibility - removed unused COLORS constant
-
-// Emoji reactions with pastel vibes
-const EMOJI_LIST = [
-  { id: 1, emoji: "💖", label: "Love" },
-  { id: 2, emoji: "😊", label: "Happy" },
-  { id: 3, emoji: "🥺", label: "Cute" },
-  { id: 4, emoji: "😂", label: "Haha" },
-  { id: 5, emoji: "😮", label: "Wow" },
-  { id: 6, emoji: "🎀", label: "Pretty" },
-];
 
 // ============================================
 // 🧩 SUB-COMPONENTS
@@ -241,16 +229,15 @@ const MoreMenu: React.FC<{
 interface InteractBarProps {
   postId: number;
   userId: number;
-  initialUpVotes?: number;
-  initialDownVotes?: number;
+  /** Vote data từ post response */
+  votes?: UserVoteDto;
   totalComments?: number;
 }
 
 const InteractBar: React.FC<InteractBarProps> = ({
   postId,
   userId,
-  initialUpVotes = 0,
-  initialDownVotes = 0,
+  votes,
   totalComments = 0,
 }) => {
   const navigate = useNavigate();
@@ -266,17 +253,6 @@ const InteractBar: React.FC<InteractBarProps> = ({
 
   const moreMenuRef = useRef<HTMLDivElement>(null);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
-
-  const {
-    voteType,
-    upVotes,
-    downVotes,
-  } = useInteractBar({
-    postId,
-    userId,
-    initialUpVotes,
-    initialDownVotes,
-  });
 
   const isLoggedIn = userId > 0;
 
@@ -400,9 +376,7 @@ const InteractBar: React.FC<InteractBarProps> = ({
       <VoteButton
         postId={postId}
         userId={userId}
-        initialVoteType={voteType}
-        initialUpVotes={upVotes}
-        initialDownVotes={downVotes}
+        votes={votes}
         size="md"
       />
 
