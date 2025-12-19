@@ -14,7 +14,6 @@ import communityRoutes from "./user/community.route";
 import manageBlogPostsRoutes from "./user/manageBlogPosts.route";
 import profileRoutes from "./user/profile.route";
 
-import HomePage from "../pages/home/HomePage";
 import newsfeedRoutes from "./user/newsfeed.route";
 import { SearchResultPage } from "../pages/search/searchResultsPage";
 import MyCommunitiesPage from "../pages/user/community/MyCommunitiesPage";
@@ -26,10 +25,7 @@ export const router = createBrowserRouter([
     path: "/",
     element: <UserLayout />,
     children: [
-      {
-        index: true,
-        element: <HomePage />,
-      },
+      ...newsfeedRoutes,
       {
         path: "search",
         element: <SearchResultPage />,
@@ -42,7 +38,6 @@ export const router = createBrowserRouter([
 
       ...communityRoutes,
       ...manageBlogPostsRoutes,
-      ...newsfeedRoutes,
       ...savedPostsRoutes,
       ...profileRoutes,
     ],

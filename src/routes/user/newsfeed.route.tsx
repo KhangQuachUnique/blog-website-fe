@@ -1,7 +1,7 @@
 import Newsfeed from "../../pages/user/newsfeed/Newsfeed";
 const newsfeedRoutes = [
     {
-        path: "newsfeed",
+        index: true,
         element: <Newsfeed />,
     },
 ];
