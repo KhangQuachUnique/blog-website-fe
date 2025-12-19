@@ -16,7 +16,11 @@ export default function Newsfeed() {
     isError, // ← thêm dòng này
   } = useGetNewsFeed();
 
-  const posts = data?.pages.flatMap((page) => page.items) ?? [];
+  // Deduplicate posts by id to avoid duplicate key errors
+  const allPosts = data?.pages.flatMap((page) => page.items) ?? [];
+  const posts = allPosts.filter(
+    (post, index, self) => self.findIndex((p) => p.id === post.id) === index
+  );
 
   // ← Sửa lỗi useRef
   const observer = useRef<IntersectionObserver | null>(null);

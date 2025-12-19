@@ -1,11 +1,11 @@
 // src/components/NewsfeedList.tsx
 import Card from "../card/Card";
-import type { IPostResponseDto } from "../../types/post";
+import type { INewsfeedItemDto } from "../../types/newsfeed";
 import Masonry from "react-masonry-css";
 import "../../styles/newsfeed/NewsfeedList.css";
 
 interface Props {
-  posts: IPostResponseDto[];
+  posts: INewsfeedItemDto[];
   isFetchingNextPage?: boolean;
   hasNextPage?: boolean;
   loadMoreRef?: (node: HTMLDivElement | null) => void;
@@ -28,9 +28,9 @@ const NewsfeedList = ({ posts, loadMoreRef }: Props) => {
           const isLast = idx === posts.length - 1;
           return (
             <div
-              key={post.id}
+              key={`${post.id}-${idx}`}
               className="newsfeed-masonry-item"
-              ref={isLast ? (loadMoreRef as any) : undefined}
+              ref={isLast ? loadMoreRef : undefined}
             >
               <Card post={post} />
             </div>

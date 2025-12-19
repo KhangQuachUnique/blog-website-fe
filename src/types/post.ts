@@ -107,21 +107,29 @@ export interface IPostResponseDto {
   status: EBlogPostStatus;
   type: EPostType;
   hashtags: IHashtagDto[];
-  createdAt: Date;
+  createdAt: Date | string;
+  
+  // Community & Repost fields
   community?: ICommunityDto;
-  originalPost?: IPostResponseDto;
-  originalPostId?: number;            // For repost: ID of original post
+  originalPost?: IPostResponseDto | null;
+  originalPostId?: number | null;
+  
+  // Blocks (full post detail)
   blocks?: IBlockResponseDto[];
-  upVotes: number;
-  downVotes: number;
-  totalComments: number;
-  totalReacts: number;
-
-  // Newsfeed-specific fields (optional, present only in newsfeed response)
+  
+  // Vote & React summaries from newsfeed
   votes?: IVotesSummaryDto;
   reacts?: IReactionSummaryDto;
-  reactions?: IReactionSummaryDto;    // Alias (some endpoints use this name)
-  finalScore?: number;
+  reactions?: IReactionSummaryDto;  // Alias (some endpoints use this name)
+  
+  // Aggregate counts
+  upVotes?: number;
+  downVotes?: number;
+  totalComments?: number;
+  totalReacts?: number;
+  
+  // Newsfeed-specific fields
+  final_score?: number;
   isViewed?: boolean;
 }
 
