@@ -22,6 +22,13 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
     navigate(`/search?q=${encodeURIComponent(hashtagName)}&type=hashtag`);
   };
 
+  // Handle avatar/username click - navigate to profile
+  const handleAvatarClick = (e: React.MouseEvent, authorId: number) => {
+    e.preventDefault();
+    e.stopPropagation();
+    navigate(`/profile/${authorId}`);
+  };
+
   // Extract reactions safely using typed fields
   const reactionsData: IReactionSummaryDto | undefined = post.reacts ?? post.reactions;
   const reactionEmojis: Array<{ node: React.ReactNode; count: number }> = [];
@@ -73,6 +80,8 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
         el.scrollLeft += e.deltaY;
       }
     };
+   
+      
 
     const onPointerDown = (ev: PointerEvent) => {
       isDown = true;
@@ -134,7 +143,7 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
   const formatDate = (dateInput: string | Date) => {
     const date = dateInput instanceof Date ? dateInput : new Date(dateInput);
     const now = new Date();
-    const diff = Math.floor((now.getTime() - dateObj.getTime()) / 1000);
+    const diff = Math.floor((now.getTime() - date.getTime()) / 1000);
 
     if (diff < 60) return "vừa xong";
     if (diff < 3600) return `${Math.floor(diff / 60)} phút trước`;
@@ -199,11 +208,19 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
                 <div className="newsfeed-card__author">
                   <img
                     src={post.author.avatarUrl}
-                    alt={post.author.username}
+                    alt={post.author.username } 
                     className="newsfeed-card__avatar"
+                    onClick={(e) => handleAvatarClick(e, post.author.id)}
+                    style={{ cursor: "pointer" }}
                   />
                   <div className="newsfeed-card__author-info">
-                    <span className="newsfeed-card__username">{post.author.username}</span>
+                    <span 
+                      className="newsfeed-card__username"
+                      onClick={(e) => handleAvatarClick(e, post.author.id)}
+                      style={{ cursor: "pointer" }}
+                    >
+                      {post.author.username}
+                    </span>
                   </div>
                 </div>
                 <time className="newsfeed-card__time">{formatDate(post.createdAt)}</time>
@@ -285,9 +302,17 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
                     src={original?.author?.avatarUrl ?? post.author.avatarUrl}
                     alt={original?.author?.username ?? post.author.username}
                     className="newsfeed-card__avatar"
+                    onClick={(e) => handleAvatarClick(e, original?.author?.id ?? post.author.id)}
+                    style={{ cursor: "pointer" }}
                   />
                   <div className="newsfeed-card__author-info">
-                    <span className="newsfeed-card__username">{original?.author?.username ?? post.author.username}</span>
+                    <span 
+                      className="newsfeed-card__username"
+                      onClick={(e) => handleAvatarClick(e, original?.author?.id ?? post.author.id)}
+                      style={{ cursor: "pointer" }}
+                    >
+                      {original?.author?.username ?? post.author.username}
+                    </span>
                     {original?.community && (
                       <span className="newsfeed-card__community">
                         {typeof original.community === "string" ? original.community : original.community.name}
@@ -375,12 +400,23 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
                   src={post.author.avatarUrl}
                   alt={post.author.username}
                   className="newsfeed-card__avatar"
+                  onClick={(e) => handleAvatarClick(e, post.author.id)}
+                  style={{ cursor: "pointer" }}
                 />
               ) : (
-                <Avatar {...stringAvatar(post.author.username, 40, "1rem")} />
+                <div
+                  onClick={(e) => handleAvatarClick(e, post.author.id)}
+                  style={{ cursor: "pointer" }}
+                >
+                  <Avatar {...stringAvatar(post.author.username, 40, "1rem")} />
+                </div>
               )}
               <div className="newsfeed-card__author-info">
-                <span className="newsfeed-card__username">
+                <span 
+                  className="newsfeed-card__username"
+                  onClick={(e) => handleAvatarClick(e, post.author.id)}
+                  style={{ cursor: "pointer" }}
+                >
                   {post.author.username}
                 </span>
                 {/* <span className="newsfeed-card__username">
