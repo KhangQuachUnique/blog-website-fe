@@ -18,6 +18,7 @@ import { MdEmail, MdPhone } from "react-icons/md";
 import CustomButton from "../../../components/button";
 import { useToast } from "../../../contexts/toast";
 import { useAuth } from "../../../hooks/useAuth";
+import FollowModal from "../../../components/profile/FollowModal";
 
 const ViewProfile = () => {
   const { userId } = useParams<{ userId: string }>();
@@ -33,6 +34,8 @@ const ViewProfile = () => {
   const [isFollowing, setIsFollowing] = useState(false);
   const [followersCount, setFollowersCount] = useState(0);
   const [followLoading, setFollowLoading] = useState(false);
+  const [followModalOpen, setFollowModalOpen] = useState(false);
+  const [followModalType, setFollowModalType] = useState<"followers" | "following">("followers");
 
   // Đóng dropdown khi click bên ngoài
   useEffect(() => {
@@ -263,13 +266,25 @@ const ViewProfile = () => {
                 <div className="profile-stat-value">{profile.posts.length}</div>
                 <div className="profile-stat-label">Bài viết</div>
               </div>
-              <div className="flex items-center gap-2">
+              <div 
+                className="flex items-center gap-2 cursor-pointer hover:opacity-70 transition-opacity"
+                onClick={() => {
+                  setFollowModalType("followers");
+                  setFollowModalOpen(true);
+                }}
+              >
                 <div className="profile-stat-value">
                   {followersCount}
                 </div>
                 <div className="profile-stat-label">Người theo dõi</div>
               </div>
-              <div className="flex items-center gap-2">
+              <div 
+                className="flex items-center gap-2 cursor-pointer hover:opacity-70 transition-opacity"
+                onClick={() => {
+                  setFollowModalType("following");
+                  setFollowModalOpen(true);
+                }}
+              >
                 <div className="profile-stat-value">
                   {profile.followingCount}
                 </div>
@@ -479,6 +494,15 @@ const ViewProfile = () => {
           )}
         </div>
       </div>
+
+      {/* Follow Modal */}
+      <FollowModal
+        open={followModalOpen}
+        onClose={() => setFollowModalOpen(false)}
+        userId={profile.id}
+        type={followModalType}
+        currentUserId={currentUser?.id}
+      />
     </div>
   );
 };
