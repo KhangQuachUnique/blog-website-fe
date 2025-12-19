@@ -451,13 +451,6 @@ const EditPostForm = ({
       {mode === "create" ? (
         <div className="flex w-[900px] justify-center gap-4 items-center p-4">
           <CustomButton
-            variant="outline"
-            onClick={handleSaveDraft}
-            style={BUTTON_STYLE_OUTLINE}
-          >
-            Lưu nháp
-          </CustomButton>
-          <CustomButton
             onClick={handleNextStepClick}
             style={{ width: "auto", ...BUTTON_STYLE_PRIMARY }}
           >

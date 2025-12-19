@@ -28,7 +28,6 @@ export interface UsePostFormOptions {
   post?: IPostResponseDto;
 }
 
-<<<<<<< HEAD
 export interface ValidationError {
   field: string;
   message: string;
@@ -49,7 +48,7 @@ export interface DraftData {
 const DRAFT_EXPIRATION_MS = 10 * 60 * 1000;
 
 // Fixed draft key - only one draft is saved at a time
-const DRAFT_STORAGE_KEY = 'blog-post-draft';
+const DRAFT_STORAGE_KEY = "blog-post-draft";
 
 /**
  * Load draft from localStorage if valid (not expired)
@@ -58,10 +57,10 @@ const loadDraftFromStorage = (): DraftData | null => {
   try {
     const savedDraft = localStorage.getItem(DRAFT_STORAGE_KEY);
     if (!savedDraft) return null;
-    
+
     const draft: DraftData = JSON.parse(savedDraft);
     const now = Date.now();
-    
+
     // Check if draft is still valid (not expired)
     if (now - draft.savedAt < DRAFT_EXPIRATION_MS) {
       return draft;
@@ -71,16 +70,13 @@ const loadDraftFromStorage = (): DraftData | null => {
       return null;
     }
   } catch (error) {
-    console.error('Error loading draft:', error);
+    console.error("Error loading draft:", error);
     localStorage.removeItem(DRAFT_STORAGE_KEY);
     return null;
   }
 };
 
 // Default values
-=======
-// Default values - h values adjusted for rowHeight: 20
->>>>>>> origin/main
 const DEFAULT_LAYOUT: LayoutItem[] = [
   { i: "1", x: 0, y: 0, w: 8, h: 8, minW: 3, minH: 2 },
   { i: "2", x: 8, y: 0, w: 8, h: 8, minW: 3, minH: 2 },
@@ -180,9 +176,7 @@ export const usePostForm = (options: UsePostFormOptions = {}) => {
   }, []);
 
   // Basic Info - use draft if available, then post, then defaults
-  const [title, setTitle] = useState(
-    initialDraft?.title ?? post?.title ?? ""
-  );
+  const [title, setTitle] = useState(initialDraft?.title ?? post?.title ?? "");
   const [shortDescription, setShortDescription] = useState(
     initialDraft?.shortDescription ?? post?.shortDescription ?? ""
   );
@@ -228,53 +222,52 @@ export const usePostForm = (options: UsePostFormOptions = {}) => {
     [markAsDirty]
   );
 
-  const handleThumbnailChange = useCallback((url: string | null) => {
-    setThumbnailUrl(url);
-    markAsDirty();
-  }, [markAsDirty]);
+  const handleThumbnailChange = useCallback(
+    (url: string | null) => {
+      setThumbnailUrl(url);
+      markAsDirty();
+    },
+    [markAsDirty]
+  );
 
-  const handleIsPublicChange = useCallback((value: boolean) => {
-    setIsPublic(value);
-    markAsDirty();
-  }, [markAsDirty]);
+  const handleIsPublicChange = useCallback(
+    (value: boolean) => {
+      setIsPublic(value);
+      markAsDirty();
+    },
+    [markAsDirty]
+  );
 
   // Handlers: Hashtags
-  const addHashtag = useCallback((hashtag: string) => {
-    const trimmed = hashtag.trim().replace(/^#/, "");
-    if (trimmed) {
-      setHashtags((prev) =>
-        prev.includes(trimmed) ? prev : [...prev, trimmed]
-      );
-      markAsDirty();
-    }
-  }, [markAsDirty]);
+  const addHashtag = useCallback(
+    (hashtag: string) => {
+      const trimmed = hashtag.trim().replace(/^#/, "");
+      if (trimmed) {
+        setHashtags((prev) =>
+          prev.includes(trimmed) ? prev : [...prev, trimmed]
+        );
+        markAsDirty();
+      }
+    },
+    [markAsDirty]
+  );
 
-  const removeHashtag = useCallback((hashtag: string) => {
-    setHashtags((prev) => prev.filter((h) => h !== hashtag));
-    markAsDirty();
-  }, [markAsDirty]);
+  const removeHashtag = useCallback(
+    (hashtag: string) => {
+      setHashtags((prev) => prev.filter((h) => h !== hashtag));
+      markAsDirty();
+    },
+    [markAsDirty]
+  );
 
   // Handlers: Layout
-  // Merge new layout from react-grid-layout with existing minW/minH constraints
-  const handleLayoutChange = useCallback((newLayout: LayoutItem[]) => {
-<<<<<<< HEAD
-    setLayout(newLayout);
-    markAsDirty();
-  }, [markAsDirty]);
-=======
-    setLayout((prev) => {
-      return newLayout.map((newItem) => {
-        const existingItem = prev.find((item) => item.i === newItem.i);
-        // Preserve minW and minH from existing layout, or use defaults
-        return {
-          ...newItem,
-          minW: existingItem?.minW ?? 3,
-          minH: existingItem?.minH ?? 2,
-        };
-      });
-    });
-  }, []);
->>>>>>> origin/main
+  const handleLayoutChange = useCallback(
+    (newLayout: LayoutItem[]) => {
+      setLayout(newLayout);
+      markAsDirty();
+    },
+    [markAsDirty]
+  );
 
   // Handlers: Blocks
   const handleBlockContentChange = useCallback(
@@ -407,7 +400,8 @@ export const usePostForm = (options: UsePostFormOptions = {}) => {
     if (nonEmptyBlocks.length === 0) {
       errors.push({
         field: "Nội dung",
-        message: "Bài viết cần có ít nhất một block có nội dung (văn bản hoặc hình ảnh)",
+        message:
+          "Bài viết cần có ít nhất một block có nội dung (văn bản hoặc hình ảnh)",
       });
     }
 
@@ -451,16 +445,25 @@ export const usePostForm = (options: UsePostFormOptions = {}) => {
       blocks,
       savedAt: Date.now(),
     };
-    
+
     try {
       localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draft));
       markAsClean();
       return true;
     } catch (error) {
-      console.error('Error saving draft:', error);
+      console.error("Error saving draft:", error);
       return false;
     }
-  }, [title, shortDescription, thumbnailUrl, isPublic, hashtags, layout, blocks, markAsClean]);
+  }, [
+    title,
+    shortDescription,
+    thumbnailUrl,
+    isPublic,
+    hashtags,
+    layout,
+    blocks,
+    markAsClean,
+  ]);
 
   /**
    * Clear draft from localStorage
@@ -469,7 +472,7 @@ export const usePostForm = (options: UsePostFormOptions = {}) => {
     try {
       localStorage.removeItem(DRAFT_STORAGE_KEY);
     } catch (error) {
-      console.error('Error clearing draft:', error);
+      console.error("Error clearing draft:", error);
     }
   }, []);
 
@@ -480,7 +483,7 @@ export const usePostForm = (options: UsePostFormOptions = {}) => {
     try {
       const savedDraft = localStorage.getItem(DRAFT_STORAGE_KEY);
       if (!savedDraft) return false;
-      
+
       const draft: DraftData = JSON.parse(savedDraft);
       const now = Date.now();
       return now - draft.savedAt < DRAFT_EXPIRATION_MS;
