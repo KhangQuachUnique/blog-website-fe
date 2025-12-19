@@ -16,7 +16,11 @@ import ConfigDialog from "./components/configDialog";
 import ValidationDialog from "./components/validationDialog";
 import UnsavedChangesDialog from "./components/unsavedChangesDialog";
 import { EBlockType, type ICreateBlockDto } from "../../../types/block";
-import { usePostForm, type LayoutItem, type ValidationError } from "./usePostForm";
+import {
+  usePostForm,
+  type LayoutItem,
+  type ValidationError,
+} from "./usePostForm";
 import type {
   IPostResponseDto,
   EPostType,
@@ -38,7 +42,9 @@ export interface EditPostFormProps {
   communityId?: number;
   originalPostId?: number;
   /** Callback when user tries to navigate away - returns confirmNavigation function */
-  onNavigationCheck?: (confirmNavigation: (onNavigate: () => void) => boolean) => void;
+  onNavigationCheck?: (
+    confirmNavigation: (onNavigate: () => void) => boolean
+  ) => void;
 }
 
 // ============ Component ============
@@ -106,7 +112,9 @@ const EditPostForm = ({
   const [isCtrlPressed, setIsCtrlPressed] = useState(false);
   const [isConfigDialogOpen, setIsConfigDialogOpen] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
-  const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
+  const [validationErrors, setValidationErrors] = useState<ValidationError[]>(
+    []
+  );
   const [isValidationDialogOpen, setIsValidationDialogOpen] = useState(false);
   const [isUnsavedDialogOpen, setIsUnsavedDialogOpen] = useState(false);
   const pendingNavigationRef = useRef<(() => void) | null>(null);
@@ -279,7 +287,7 @@ const EditPostForm = ({
           : buildUpdateDto(imageUrls);
 
       onPublish(dto);
-      
+
       // Clear draft after successful publish
       clearDraft();
       markAsClean();
@@ -312,14 +320,17 @@ const EditPostForm = ({
    * Check for unsaved changes before navigation
    * Call this function when user tries to navigate away
    */
-  const confirmNavigation = useCallback((onNavigate: () => void) => {
-    if (hasUnsavedChanges) {
-      pendingNavigationRef.current = onNavigate;
-      setIsUnsavedDialogOpen(true);
-      return false;
-    }
-    return true;
-  }, [hasUnsavedChanges]);
+  const confirmNavigation = useCallback(
+    (onNavigate: () => void) => {
+      if (hasUnsavedChanges) {
+        pendingNavigationRef.current = onNavigate;
+        setIsUnsavedDialogOpen(true);
+        return false;
+      }
+      return true;
+    },
+    [hasUnsavedChanges]
+  );
 
   // Expose confirmNavigation to parent component
   useEffect(() => {
@@ -365,7 +376,7 @@ const EditPostForm = ({
       </div>
 
       {/* Grid Layout */}
-      <div style={{ width: GRID_SETTINGS.width, margin: '0 auto' }}>
+      <div style={{ width: GRID_SETTINGS.width, margin: "0 auto" }}>
         <GridLayout
           layout={layout}
           onLayoutChange={(newLayout) =>
@@ -374,18 +385,24 @@ const EditPostForm = ({
           cols={GRID_SETTINGS.cols}
           rowHeight={GRID_SETTINGS.rowHeight}
           width={GRID_SETTINGS.width}
+          margin={GRID_SETTINGS.margin}
           isDraggable={isCtrlPressed}
           isResizable={true}
           draggableCancel=".rgl-no-drag"
           isDroppable={true}
           onDrop={handleGridDrop}
-          droppingItem={{ i: "__dropping-elem__", ...GRID_SETTINGS.defaultItem }}
+          droppingItem={{
+            i: "__dropping-elem__",
+            ...GRID_SETTINGS.defaultItem,
+          }}
         >
           {blocks.map((block) => (
             <div
               key={block.id}
               className={`${BLOCK_WRAPPER.base} ${
-                isCtrlPressed ? BLOCK_WRAPPER.ctrlPressed : BLOCK_WRAPPER.default
+                isCtrlPressed
+                  ? BLOCK_WRAPPER.ctrlPressed
+                  : BLOCK_WRAPPER.default
               }`}
             >
               {block.type === EBlockType.TEXT ? (
@@ -431,9 +448,30 @@ const EditPostForm = ({
       </div>
 
       {/* Action Buttons */}
-      <CustomButton onClick={handleNextStepClick} style={{ width: "auto", ...BUTTON_STYLE_PRIMARY }}>
-        Bước tiếp theo
-      </CustomButton>
+      {mode === "create" ? (
+        <div className="flex w-[900px] justify-center gap-4 items-center p-4">
+          <CustomButton
+            variant="outline"
+            onClick={handleSaveDraft}
+            style={BUTTON_STYLE_OUTLINE}
+          >
+            Lưu nháp
+          </CustomButton>
+          <CustomButton
+            onClick={handleNextStepClick}
+            style={{ width: "auto", ...BUTTON_STYLE_PRIMARY }}
+          >
+            Bước tiếp theo
+          </CustomButton>
+        </div>
+      ) : (
+        <CustomButton
+          onClick={handleNextStepClick}
+          style={{ width: "auto", ...BUTTON_STYLE_PRIMARY }}
+        >
+          Bước tiếp theo
+        </CustomButton>
+      )}
 
       {/* Config Dialog */}
       <ConfigDialog
@@ -466,8 +504,6 @@ const EditPostForm = ({
         onClose={handleCancelLeave}
         onConfirmLeave={handleConfirmLeave}
       />
-
-
     </div>
   );
 };

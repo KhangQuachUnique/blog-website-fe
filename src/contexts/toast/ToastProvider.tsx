@@ -100,6 +100,12 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
     }, 300); // Match animation duration
   }, []);
 
+  /**
+   * Hiển thị toast mới
+   * @param type Loại toast "success" | "error" | "info"
+   * @param message Nội dung thông báo
+   * @param duration Thời gian hiển thị (ms)
+   */
   const showToast = useCallback(
     (options: Omit<Toast, "id">) => {
       const id = `toast-${Date.now()}-${Math.random()

@@ -1,14 +1,23 @@
-import React, {useEffect, useLayoutEffect, useRef, useState } from "react";
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import GridLayout from "react-grid-layout";
+import { Search } from "lucide-react";
 
 import { useGetPostById } from "../../../hooks/usePost";
 import TextBlock from "../../../components/block/textBlock";
 import ImageBlock from "../../../components/block/imageBlock";
+import { CommentsSection } from "../../../components/comments/CommentsSection";
+import { BlockCommentsSidebar } from "../../../components/comments/BlockCommentsSidebar";
+import { SearchSidebar } from "../../../components/searchBar/SearchSidebar";
+import { useAuthUser } from "../../../hooks/useAuth";
 
 import { EBlockType, ObjectFitType } from "../../../types/block";
 import type { IBlockResponseDto } from "../../../types/block";
-import type { IPostResponseDto, IReactionSummaryDto, IEmojiSummaryDto } from "../../../types/post";
+import type {
+  IPostResponseDto,
+  IReactionSummaryDto,
+  IEmojiSummaryDto,
+} from "../../../types/post";
 
 import {
   GRID_SETTINGS,
@@ -62,12 +71,34 @@ const PostDetailsPage: React.FC = () => {
 
   // Container width for GridLayout
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const [containerWidth, setContainerWidth] = useState<number>(GRID_SETTINGS.width);
+  const [containerWidth, setContainerWidth] = useState<number>(
+    GRID_SETTINGS.width
+  );
+
+  // [SỬA] State quản lý block đang được chọn để bình luận (cả Text và Image)
+  // Field 'url' là optional vì Text block không có url ảnh
+  const [selectedBlock, setSelectedBlock] = useState<{
+    id: number;
+    url?: string;
+  } | null>(null);
+
+  // State cho tính năng tô đen tìm kiếm
+  const [selection, setSelection] = useState<{
+    text: string;
+    x: number;
+    y: number;
+    show: boolean;
+  }>({ text: "", x: 0, y: 0, show: false });
+
+  const [searchKeyword, setSearchKeyword] = useState("");
+  const [isSearchSidebarOpen, setIsSearchSidebarOpen] = useState(false);
 
   useLayoutEffect(() => {
     if (!containerRef.current) return;
 
-    const ROCtor = (window as unknown as { ResizeObserver?: typeof ResizeObserver }).ResizeObserver;
+    const ROCtor = (
+      window as unknown as { ResizeObserver?: typeof ResizeObserver }
+    ).ResizeObserver;
     if (ROCtor) {
       const ro = new ROCtor((entries) => {
         const w = entries[0]?.contentRect?.width;
@@ -89,11 +120,71 @@ const PostDetailsPage: React.FC = () => {
   // Initialize container width after first render
   useEffect(() => {
     if (containerRef.current) {
-      const initialWidth = containerRef.current.clientWidth || GRID_SETTINGS.width;
+      const initialWidth =
+        containerRef.current.clientWidth || GRID_SETTINGS.width;
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setContainerWidth(initialWidth);
     }
   }, []);
+
+  // Xử lý sự kiện bôi đen text
+  useEffect(() => {
+    const handleSelection = () => {
+      const selectedText = window.getSelection()?.toString().trim();
+
+      if (selectedText && selectedText.length > 0) {
+        const selectionObj = window.getSelection();
+        if (!selectionObj || selectionObj.rangeCount === 0) return;
+
+        const selectionRange = selectionObj.getRangeAt(0);
+        const rect = selectionRange.getBoundingClientRect();
+
+        if (rect) {
+          // Tính toán vị trí hiển thị nút tìm kiếm (ngay trên đoạn text)
+          setSelection({
+            text: selectedText,
+            x: rect.left + rect.width / 2, // Canh giữa
+            y: rect.top + window.scrollY - 40, // Cách bên trên 40px
+            show: true,
+          });
+        }
+      } else {
+        // Ẩn nút nếu không bôi đen
+        setSelection((prev) => ({ ...prev, show: false }));
+      }
+    };
+
+    // Chỉ lắng nghe sự kiện mouseup (khi nhả chuột ra)
+    document.addEventListener("mouseup", handleSelection);
+    return () => document.removeEventListener("mouseup", handleSelection);
+  }, []);
+
+  const handleQuickSearch = () => {
+    setSearchKeyword(selection.text);
+    setIsSearchSidebarOpen(true);
+    setSelection((prev) => ({ ...prev, show: false })); // Ẩn nút đi sau khi bấm
+    // Xóa bôi đen (UX optional)
+    window.getSelection()?.removeAllRanges();
+  };
+
+  // Current logged in user (for comments)
+  const { user: currentUser } = useAuthUser();
+
+  // Normalize user object for comments components
+  if (!currentUser) return null;
+
+  const normalizedUser = {
+    id: currentUser.id,
+    username: currentUser.username,
+    avatarUrl: currentUser.avatarUrl ?? undefined,
+  };
+
+  // [SỬA] Handler click vào block (cả Text và Image)
+  const handleBlockClick = (blockId: number, type: string, content: string) => {
+    // Nếu là ảnh thì lấy content làm url, nếu là text thì url = undefined
+    const imageUrl = type === EBlockType.IMAGE ? content : undefined;
+    setSelectedBlock({ id: blockId, url: imageUrl });
+  };
 
   // ============================================
   // Early returns
@@ -107,11 +198,17 @@ const PostDetailsPage: React.FC = () => {
   }
 
   if (isError) {
-    return <div className="p-6 text-center text-red-500">Lỗi: {String(error)}</div>;
+    return (
+      <div className="p-6 text-center text-red-500">Lỗi: {String(error)}</div>
+    );
   }
 
   if (!post) {
-    return <div className="p-6 text-center text-gray-500">Không tìm thấy bài viết</div>;
+    return (
+      <div className="p-6 text-center text-gray-500">
+        Không tìm thấy bài viết
+      </div>
+    );
   }
 
   // ============================================
@@ -144,7 +241,8 @@ const PostDetailsPage: React.FC = () => {
   });
 
   // Reactions from backend (if present on the post DTO)
-  const reactionsData: IReactionSummaryDto | undefined = post.reacts ?? post.reactions;
+  const reactionsData: IReactionSummaryDto | undefined =
+    post.reacts ?? post.reactions;
   const reactionEmojis: Array<{ node: React.ReactNode; count: number }> = [];
   if (reactionsData && Array.isArray(reactionsData.emojis)) {
     for (const r of reactionsData.emojis as IEmojiSummaryDto[]) {
@@ -152,16 +250,20 @@ const PostDetailsPage: React.FC = () => {
       let node: React.ReactNode;
 
       if (r.emojiUrl) {
-        node = <img src={r.emojiUrl} alt="emoji" style={{ width: 18, height: 18 }} />;
+        node = (
+          <img src={r.emojiUrl} alt="emoji" style={{ width: 18, height: 18 }} />
+        );
       } else if (r.codepoint) {
         try {
-          const parts = r.codepoint.split('-').map((p: string) => parseInt(p, 16));
+          const parts = r.codepoint
+            .split("-")
+            .map((p: string) => parseInt(p, 16));
           node = String.fromCodePoint(...parts);
         } catch {
-          node = '💗';
+          node = "💗";
         }
       } else {
-        node = '💗';
+        node = "💗";
       }
 
       reactionEmojis.push({ node, count: cnt });
@@ -173,7 +275,30 @@ const PostDetailsPage: React.FC = () => {
   // ============================================
   return (
     <div className="w-full relative p-9 flex flex-col gap-4 items-center justify-center">
-      {/* Title & Short Description - same style as editPostForm */}
+      {/* Tooltip Button Tìm Kiếm */}
+      {selection.show && (
+        <button
+          className="fixed z-50 flex items-center gap-2 bg-gray-900 text-white px-3 py-1.5 rounded-full shadow-xl hover:bg-black transition-all animate-in fade-in zoom-in duration-200"
+          style={{
+            left: selection.x,
+            top: selection.y,
+            transform: "translateX(-50%)", // Căn giữa theo toạ độ X
+          }}
+          onClick={handleQuickSearch}
+          onMouseDown={(e) => e.preventDefault()} // Prevent text deselection
+        >
+          <Search size={14} />
+          <span className="text-xs font-medium">
+            Tìm "
+            {selection.text.length > 15
+              ? selection.text.substring(0, 15) + "..."
+              : selection.text}
+            "
+          </span>
+        </button>
+      )}
+
+      {/* Title & Short Description */}
       <div style={{ width: GRID_SETTINGS.width, padding: 12 }}>
         {/* Title */}
         <h1
@@ -226,33 +351,41 @@ const PostDetailsPage: React.FC = () => {
           <div>
             <div>
               Bởi{" "}
-              <Link to={`/user/${post.author?.id}`} className="font-medium text-[#F295B6] hover:underline">
+              <Link
+                to={`/user/${post.author?.id}`}
+                className="font-medium text-[#F295B6] hover:underline"
+              >
                 {post.author?.username ?? "Người dùng"}
               </Link>
             </div>
-            <div className="text-xs text-gray-400">{formatDate(post.createdAt)}</div>
+            <div className="text-xs text-gray-400">
+              {formatDate(post.createdAt)}
+            </div>
           </div>
         </div>
 
-        {/* Hashtags */}
+        {/* Hashtags - Clickable */}
         {post.hashtags && post.hashtags.length > 0 && (
           <div className="mt-4 flex flex-wrap gap-2">
             {post.hashtags.map((h) => (
-              <span
+              <Link
                 key={h.id}
-                className="text-sm text-[#F295B6] bg-[#FFF0F5] px-2 py-1 rounded-full"
+                to={`/search?q=${encodeURIComponent(h.name)}&type=hashtag`}
+                className="text-sm text-[#F295B6] bg-[#FFF0F5] px-2 py-1 rounded-full hover:bg-[#F295B6] hover:text-white transition-colors cursor-pointer"
               >
                 #{h.name}
-              </span>
+              </Link>
             ))}
           </div>
         )}
       </div>
 
-      {/* Grid Layout - same as editPostForm */}
+      {/* Grid Layout */}
       <div style={{ width: GRID_SETTINGS.width }}>
         {blocks.length === 0 ? (
-          <div className="text-gray-500 text-center py-8">Không có nội dung.</div>
+          <div className="text-gray-500 text-center py-8">
+            Không có nội dung.
+          </div>
         ) : (
           <div ref={containerRef} style={{ width: GRID_SETTINGS.width }}>
             <GridLayout
@@ -260,32 +393,92 @@ const PostDetailsPage: React.FC = () => {
               cols={GRID_SETTINGS.cols}
               rowHeight={GRID_SETTINGS.rowHeight}
               width={containerWidth}
+              margin={GRID_SETTINGS.margin}
               isDraggable={false}
               isResizable={false}
               draggableCancel=".rgl-no-drag"
               isDroppable={false}
             >
-              {blocks.map((block) => (
-                <div
-                  key={block.id}
-                  className={`${BLOCK_WRAPPER.readMode}`}
-                >
-                  {block.type === EBlockType.TEXT ? (
-                    <TextBlock id={String(block.id)} content={block.content || ""} />
-                  ) : (
-                    <ImageBlock
-                      id={String(block.id)}
-                      imageUrl={block.content}
-                      imageCaption={block.imageCaption}
-                      objectFit={parseObjectFit(block.objectFit)}
-                    />
-                  )}
-                </div>
-              ))}
+              {blocks.map((block) => {
+                // [SỬA] Kiểm tra block có thể tương tác (comment) được không
+                const isInteractable =
+                  block.type === EBlockType.IMAGE ||
+                  block.type === EBlockType.TEXT;
+                const isImage = block.type === EBlockType.IMAGE;
+
+                return (
+                  <div
+                    key={block.id}
+                    className={`
+                      ${BLOCK_WRAPPER.readMode} 
+                      ${BLOCK_WRAPPER.default}
+                      h-full
+                      ${
+                        isInteractable
+                          ? "cursor-pointer group hover:ring-2 hover:ring-blue-300 transition-all relative"
+                          : ""
+                      }
+                    `}
+                    onClick={(e) => {
+                      if (!isInteractable) return;
+                      const selection = window.getSelection();
+                      if (selection && selection.toString().length > 0) return;
+                      if ((e.target as HTMLElement).closest("a")) return;
+                      handleBlockClick(block.id, block.type, block.content);
+                    }}
+                  >
+                    {block.type === EBlockType.TEXT ? (
+                      <TextBlock
+                        id={String(block.id)}
+                        content={block.content || ""}
+                      />
+                    ) : (
+                      <ImageBlock
+                        id={String(block.id)}
+                        imageUrl={block.content}
+                        imageCaption={block.imageCaption}
+                        objectFit={parseObjectFit(block.objectFit)}
+                      />
+                    )}
+
+                    {/* [SỬA] Overlay hint khi hover vào block (Text hoặc Image) */}
+                    {isInteractable && (
+                      <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-black/60 text-white text-xs px-2 py-1 rounded-full pointer-events-none z-10 flex items-center gap-1">
+                        <span>
+                          💬 {isImage ? "Bình luận ảnh" : "Bình luận đoạn này"}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </GridLayout>
           </div>
         )}
       </div>
+
+      {/* Post Comments Section */}
+      <div style={{ width: GRID_SETTINGS.width, marginTop: 32 }}>
+        <CommentsSection postId={post.id} currentUser={normalizedUser} />
+      </div>
+
+      {/* --- SIDEBARS --- */}
+
+      {/* 1. Sidebar Comment Block (Text hoặc Image) */}
+      <BlockCommentsSidebar
+        isOpen={!!selectedBlock}
+        onClose={() => setSelectedBlock(null)}
+        blockId={selectedBlock?.id || 0}
+        imageUrl={selectedBlock?.url}
+        currentUser={normalizedUser}
+      />
+
+      {/* 2. Sidebar Search Text */}
+      <SearchSidebar
+        isOpen={isSearchSidebarOpen}
+        onClose={() => setIsSearchSidebarOpen(false)}
+        keyword={searchKeyword}
+      />
     </div>
   );
 };
