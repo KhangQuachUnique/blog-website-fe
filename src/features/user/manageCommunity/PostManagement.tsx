@@ -1,86 +1,65 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { useParams } from "react-router-dom";
+import {
+  useApprovePost,
+  useDeletePost,
+  useGetCommunityManagePosts,
+} from "../../../hooks/usePost"; // chỉnh path nếu khác
 
-type PostStatus = "approved" | "pending";
+type TabFilter = "all" | "approved" | "pending";
 
-interface Post {
-  id: number;
-  author: string;
-  avatar: string;
-  title: string;
-  content: string;
-  date: string;
-  status: PostStatus;
-  image?: string;
-}
+const mapTabToStatusParam = (tab: TabFilter): string | undefined => {
+  if (tab === "approved") return "ACTIVE";
+  if (tab === "pending") return "DRAFT";
+  return undefined; // all
+};
 
-const mockPosts: Post[] = [
-  {
-    id: 1,
-    author: "Nguyễn Văn A",
-    avatar: "https://i.pravatar.cc/60?img=1",
-    title: "Hôm nay là một ngày đẹp trời!",
-    content:
-      "Hôm nay trời nhiều nắng, ngồi code React mà thấy cuộc đời cũng dịu dàng hơn 😆. Mọi người hôm nay học gì rồi?",
-    date: "2025-01-12",
-    status: "approved",
-    image: "https://images.pexels.com/photos/34088/pexels-photo.jpg",
-  },
-  {
-    id: 2,
-    author: "Trần Thị B",
-    avatar: "https://i.pravatar.cc/60?img=2",
-    title: "Mọi người cho em hỏi về React với ạ.",
-    content:
-      "Em mới học React, chưa hiểu rõ về useEffect và dependency array. Anh chị có thể giải thích dễ hiểu giúp em được không ạ?",
-    date: "2025-01-13",
-    status: "pending",
-  },
-];
+const formatDate = (dateInput: string | Date) => {
+  const d = dateInput instanceof Date ? dateInput : new Date(dateInput);
+  return d.toLocaleDateString("vi-VN");
+};
 
 const PostManagement = () => {
-  const [posts, setPosts] = useState<Post[]>(mockPosts);
-  const [filter, setFilter] = useState<"all" | PostStatus>("all");
+  const { id } = useParams();
+  const communityId = Number(id);
+
+  const [filter, setFilter] = useState<TabFilter>("all");
 
   // modal xem chi tiết
-  const [selectedPost, setSelectedPost] = useState<Post | null>(null);
+  const [selectedPost, setSelectedPost] = useState<any | null>(null);
 
   // modal xoá
-  const [postToDelete, setPostToDelete] = useState<Post | null>(null);
+  const [postToDelete, setPostToDelete] = useState<any | null>(null);
 
-  const filteredPosts =
-    filter === "all"
-      ? posts
-      : posts.filter((post) => post.status === filter);
+  const statusParam = useMemo(() => mapTabToStatusParam(filter), [filter]);
 
-  const handleApprove = (id: number) => {
-    setPosts((prev) =>
-      prev.map((p) =>
-        p.id === id ? { ...p, status: "approved" } : p
-      )
-    );
+  const {
+    data: posts,
+    isLoading,
+    isError,
+  } = useGetCommunityManagePosts(communityId, statusParam);
+
+  const approveMutation = useApprovePost(communityId);
+  const deleteMutation = useDeletePost(communityId);
+
+  const handleApprove = (postId: number) => {
+    approveMutation.mutate(postId);
   };
 
-  const handleOpenView = (post: Post) => {
-    setSelectedPost(post);
-  };
+  const handleOpenView = (post: any) => setSelectedPost(post);
+  const handleCloseView = () => setSelectedPost(null);
 
-  const handleCloseView = () => {
-    setSelectedPost(null);
-  };
-
-  const handleOpenDelete = (post: Post) => {
-    setPostToDelete(post);
-  };
-
-  const handleCloseDelete = () => {
-    setPostToDelete(null);
-  };
+  const handleOpenDelete = (post: any) => setPostToDelete(post);
+  const handleCloseDelete = () => setPostToDelete(null);
 
   const handleConfirmDelete = () => {
     if (!postToDelete) return;
-    setPosts((prev) => prev.filter((p) => p.id !== postToDelete.id));
-    setPostToDelete(null);
+    deleteMutation.mutate(postToDelete.id, {
+      onSuccess: () => setPostToDelete(null),
+    });
   };
+
+  const list = Array.isArray(posts) ? posts : [];
 
   return (
     <div style={{ paddingTop: 20 }}>
@@ -92,113 +71,123 @@ const PostManagement = () => {
       {/* Tabs filter */}
       <div className="community-tabs" style={{ marginBottom: 24 }}>
         <button
-          className={`community-tab ${
-            filter === "all" ? "community-tab-active" : ""
-          }`}
+          className={`community-tab ${filter === "all" ? "community-tab-active" : ""}`}
           onClick={() => setFilter("all")}
         >
           Tất cả
         </button>
 
         <button
-          className={`community-tab ${
-            filter === "approved" ? "community-tab-active" : ""
-          }`}
+          className={`community-tab ${filter === "approved" ? "community-tab-active" : ""}`}
           onClick={() => setFilter("approved")}
         >
           Đã duyệt
         </button>
 
         <button
-          className={`community-tab ${
-            filter === "pending" ? "community-tab-active" : ""
-          }`}
+          className={`community-tab ${filter === "pending" ? "community-tab-active" : ""}`}
           onClick={() => setFilter("pending")}
         >
           Chờ duyệt
         </button>
       </div>
 
+      {/* Loading / Error */}
+      {isLoading && <p style={{ color: "#888" }}>Đang tải bài viết...</p>}
+      {isError && <p style={{ color: "#ff5370" }}>Lỗi khi tải danh sách bài viết.</p>}
+
       {/* Danh sách bài viết */}
-      {filteredPosts.map((post) => (
-        <div
-          key={post.id}
-          className="community-card"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 16,
-          }}
-        >
-          <img
-            src={post.avatar}
-            alt=""
-            style={{
-              width: 50,
-              height: 50,
-              borderRadius: "50%",
-              objectFit: "cover",
-            }}
-          />
+      {!isLoading &&
+        !isError &&
+        list.map((post: any) => {
+          const isPending = post.status === "DRAFT";
+          const authorName = post.author?.fullName || post.author?.username || "Người dùng";
+          const avatar = post.author?.avatarUrl || post.author?.avatar || "https://i.pravatar.cc/60";
+          const date = post.createdAt ? formatDate(post.createdAt) : "";
 
-          <div style={{ flex: 1 }}>
-            <div style={{ fontWeight: 600 }}>{post.title}</div>
-            <div style={{ fontSize: 13, color: "#666" }}>
-              {post.author} • {post.date}
+          return (
+            <div
+              key={post.id}
+              className="community-card"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 16,
+              }}
+            >
+              <img
+                src={avatar}
+                alt=""
+                style={{
+                  width: 50,
+                  height: 50,
+                  borderRadius: "50%",
+                  objectFit: "cover",
+                }}
+              />
+
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 600 }}>{post.title}</div>
+                <div style={{ fontSize: 13, color: "#666" }}>
+                  {authorName} {date ? `• ${date}` : ""}
+                </div>
+              </div>
+
+              <div style={{ marginRight: 12, fontSize: 13 }}>
+                {isPending ? (
+                  <span style={{ color: "#ff9800" }}>Chờ duyệt</span>
+                ) : (
+                  <span style={{ color: "#4caf50" }}>Đã duyệt</span>
+                )}
+              </div>
+
+              {/* Actions */}
+              <div style={{ display: "flex", gap: 10 }}>
+                {isPending && (
+                  <button
+                    className="community-save-btn"
+                    style={{ padding: "6px 14px" }}
+                    onClick={() => handleApprove(post.id)}
+                    disabled={approveMutation.isPending}
+                  >
+                    {approveMutation.isPending ? "Đang duyệt..." : "Duyệt"}
+                  </button>
+                )}
+
+                <button
+                  style={{
+                    padding: "6px 14px",
+                    background: "white",
+                    border: "1px solid #f8bcd0",
+                    borderRadius: 999,
+                    cursor: "pointer",
+                  }}
+                  onClick={() => handleOpenView(post)}
+                >
+                  Xem
+                </button>
+
+                <button
+                  style={{
+                    padding: "6px 14px",
+                    background: "#ff5370",
+                    color: "white",
+                    border: "none",
+                    borderRadius: 999,
+                    cursor: "pointer",
+                    opacity: deleteMutation.isPending ? 0.7 : 1,
+                  }}
+                  onClick={() => handleOpenDelete(post)}
+                  disabled={deleteMutation.isPending}
+                >
+                  {deleteMutation.isPending ? "Đang xóa..." : "Xóa"}
+                </button>
+              </div>
             </div>
-          </div>
+          );
+        })}
 
-          <div style={{ marginRight: 12, fontSize: 13 }}>
-            {post.status === "approved" ? (
-              <span style={{ color: "#4caf50" }}>Đã duyệt</span>
-            ) : (
-              <span style={{ color: "#ff9800" }}>Chờ duyệt</span>
-            )}
-          </div>
-
-          {/* Actions */}
-          <div style={{ display: "flex", gap: 10 }}>
-            {post.status === "pending" && (
-              <button
-                className="community-save-btn"
-                style={{ padding: "6px 14px" }}
-                onClick={() => handleApprove(post.id)}
-              >
-                Duyệt
-              </button>
-            )}
-
-            <button
-              style={{
-                padding: "6px 14px",
-                background: "white",
-                border: "1px solid #f8bcd0",
-                borderRadius: 999,
-                cursor: "pointer",
-              }}
-              onClick={() => handleOpenView(post)}
-            >
-              Xem
-            </button>
-
-            <button
-              style={{
-                padding: "6px 14px",
-                background: "#ff5370",
-                color: "white",
-                border: "none",
-                borderRadius: 999,
-                cursor: "pointer",
-              }}
-              onClick={() => handleOpenDelete(post)}
-            >
-              Xóa
-            </button>
-          </div>
-        </div>
-      ))}
-
-      {filteredPosts.length === 0 && (
+      {!isLoading && !isError && list.length === 0 && (
         <p style={{ color: "#888", marginTop: 20 }}>
           Không có bài viết nào trong mục này.
         </p>
@@ -207,20 +196,18 @@ const PostManagement = () => {
       {/* Modal xem chi tiết */}
       {selectedPost && (
         <div className="community-modal-overlay" onClick={handleCloseView}>
-          <div
-            className="community-modal"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              className="community-modal-close"
-              onClick={handleCloseView}
-            >
+          <div className="community-modal" onClick={(e) => e.stopPropagation()}>
+            <button className="community-modal-close" onClick={handleCloseView}>
               ×
             </button>
 
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
               <img
-                src={selectedPost.avatar}
+                src={
+                  selectedPost.author?.avatarUrl ||
+                  selectedPost.author?.avatar ||
+                  "https://i.pravatar.cc/60"
+                }
                 alt=""
                 style={{
                   width: 48,
@@ -230,25 +217,27 @@ const PostManagement = () => {
                 }}
               />
               <div>
-                <div style={{ fontWeight: 600 }}>{selectedPost.author}</div>
+                <div style={{ fontWeight: 600 }}>
+                  {selectedPost.author?.fullName ||
+                    selectedPost.author?.username ||
+                    "Người dùng"}
+                </div>
                 <div style={{ fontSize: 13, color: "#666" }}>
-                  {selectedPost.date} ·{" "}
-                  {selectedPost.status === "approved"
-                    ? "Đã duyệt"
-                    : "Chờ duyệt"}
+                  {selectedPost.createdAt ? formatDate(selectedPost.createdAt) : ""} ·{" "}
+                  {selectedPost.status === "DRAFT" ? "Chờ duyệt" : "Đã duyệt"}
                 </div>
               </div>
             </div>
 
             <h4 style={{ marginTop: 16 }}>{selectedPost.title}</h4>
             <p style={{ fontSize: 14, whiteSpace: "pre-line" }}>
-              {selectedPost.content}
+              {selectedPost.shortDescription || "—"}
             </p>
 
-            {selectedPost.image && (
+            {selectedPost.thumbnailUrl && (
               <div style={{ marginTop: 12 }}>
                 <img
-                  src={selectedPost.image}
+                  src={selectedPost.thumbnailUrl}
                   alt=""
                   style={{
                     width: "100%",
@@ -265,26 +254,19 @@ const PostManagement = () => {
 
       {/* Modal xoá */}
       {postToDelete && (
-        <div
-          className="community-modal-overlay"
-          onClick={handleCloseDelete}
-        >
+        <div className="community-modal-overlay" onClick={handleCloseDelete}>
           <div
             className="community-modal community-modal-small"
             onClick={(e) => e.stopPropagation()}
           >
-            <button
-              className="community-modal-close"
-              onClick={handleCloseDelete}
-            >
+            <button className="community-modal-close" onClick={handleCloseDelete}>
               ×
             </button>
 
             <h4 style={{ marginBottom: 8 }}>Xóa bài viết?</h4>
             <p style={{ fontSize: 14, color: "#666", marginBottom: 20 }}>
-              Bạn có chắc chắn muốn xóa bài{" "}
-              <strong>{postToDelete.title}</strong> không? Hành động này
-              không thể hoàn tác.
+              Bạn có chắc chắn muốn xóa bài <strong>{postToDelete.title}</strong> không? Hành động
+              này không thể hoàn tác.
             </p>
 
             <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
@@ -309,10 +291,12 @@ const PostManagement = () => {
                   background: "#ff5370",
                   color: "#fff",
                   cursor: "pointer",
+                  opacity: deleteMutation.isPending ? 0.7 : 1,
                 }}
                 onClick={handleConfirmDelete}
+                disabled={deleteMutation.isPending}
               >
-                Xóa
+                {deleteMutation.isPending ? "Đang xóa..." : "Xóa"}
               </button>
             </div>
           </div>

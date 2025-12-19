@@ -1,9 +1,13 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   createPost,
   getPostById,
   getAllPosts,
   updatePost,
+  getPostsByCommunityId,
+  getManagePostsByCommunityId,
+  approvePost,
+  deletePost,
 } from "../services/user/post/postService";
 
 /**
@@ -46,5 +50,43 @@ export const useCreatePost = () => {
 export const useUpdatePost = () => {
   return useMutation({
     mutationFn: updatePost,
+  });
+};
+
+export const useGetCommunityPosts = (communityId: number) => {
+  return useQuery({
+    queryKey: ["community-posts", communityId],
+    queryFn: () => getPostsByCommunityId(communityId),
+    enabled: Number.isFinite(communityId) && communityId > 0,
+  });
+};
+
+export const useGetCommunityManagePosts = (communityId: number, status?: string) => {
+  return useQuery({
+    queryKey: ["community-manage-posts", communityId, status ?? "ALL"],
+    queryFn: async () => (await getManagePostsByCommunityId(communityId, status)),
+    enabled: Number.isFinite(communityId) && communityId > 0,
+  });
+};
+
+export const useApprovePost = (communityId: number) => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (postId: number) => approvePost(postId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["community-manage-posts", communityId] });
+      qc.invalidateQueries({ queryKey: ["community-posts", communityId] });
+    },
+  });
+};
+
+export const useDeletePost = (communityId: number) => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (postId: number) => deletePost(postId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["community-manage-posts", communityId] });
+      qc.invalidateQueries({ queryKey: ["community-posts", communityId] });
+    },
   });
 };

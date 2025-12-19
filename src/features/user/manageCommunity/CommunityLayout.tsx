@@ -196,18 +196,22 @@ const CommunityLayout = () => {
               </button>
             )}
           </div>
+
+          {/* ✅ FIX: chỉ member/admin/mod mới thấy nút tạo bài viết */}
           <div>
-            <CustomButton
-              variant="outline"
-              style={{
-                width: "auto",
-                border: "2px solid #F295B6",
-                color: "#F295B6",
-              }}
-              onClick={() => navigate(`/community/${communityId}/create-post`)}
-            >
-              Tạo bài viết
-            </CustomButton>
+            {isMemberApproved && (
+              <CustomButton
+                variant="outline"
+                style={{
+                  width: "auto",
+                  border: "2px solid #F295B6",
+                  color: "#F295B6",
+                }}
+                onClick={() => navigate(`/community/${communityId}/create-post`)}
+              >
+                Tạo bài viết
+              </CustomButton>
+            )}
           </div>
         </div>
 
