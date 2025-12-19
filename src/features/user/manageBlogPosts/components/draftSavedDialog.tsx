@@ -57,35 +57,13 @@ const DraftSavedDialog = ({
       }}
     >
       {/* Header with gradient */}
-      <div
-        className="relative px-6 pt-5 pb-4"
-        style={{
-          background: `linear-gradient(135deg, ${THEME.successLight} 0%, white 100%)`,
-          borderBottom: `1px solid ${THEME.success}20`,
-        }}
-      >
-        <IconButton
-          onClick={onClose}
-          sx={{
-            position: "absolute",
-            right: 12,
-            top: 12,
-            color: THEME.textMuted,
-            "&:hover": {
-              backgroundColor: `${THEME.primary}15`,
-              color: THEME.primary,
-            },
-          }}
-        >
-          <Close fontSize="small" />
-        </IconButton>
-
+      <div className="relative px-6 pt-3 pb-2 bg-green-50 border-b border-green-200 flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <div
-            className="flex items-center justify-center w-12 h-12 rounded-full"
+            className="flex items-center justify-center w-10 h-10 rounded-full"
             style={{ backgroundColor: `${THEME.success}15` }}
           >
-            <CheckCircle sx={{ color: THEME.success, fontSize: 28 }} />
+            <CheckCircle sx={{ color: THEME.success, fontSize: 20 }} />
           </div>
           <DialogTitle
             sx={{
@@ -99,6 +77,10 @@ const DraftSavedDialog = ({
             Đã lưu nháp!
           </DialogTitle>
         </div>
+
+        <IconButton onClick={onClose}>
+          <Close fontSize="small" />
+        </IconButton>
       </div>
 
       {/* Content */}

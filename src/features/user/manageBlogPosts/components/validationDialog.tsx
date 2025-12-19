@@ -1,4 +1,10 @@
-import { Dialog, DialogActions, DialogTitle, DialogContent, IconButton } from "@mui/material";
+import {
+  Dialog,
+  DialogActions,
+  DialogTitle,
+  DialogContent,
+  IconButton,
+} from "@mui/material";
 import { Close, ErrorOutline } from "@mui/icons-material";
 import CustomButton from "../../../../components/button";
 
@@ -42,7 +48,8 @@ const ValidationDialog = ({
           overflow: "hidden",
           width: 440,
           bgcolor: "white",
-          boxShadow: "0 25px 50px -12px rgba(242, 149, 182, 0.25)",
+          border: `1px solid rgba(242, 149, 182, 0.5)`,
+          boxShadow: "0 25px 50px -12px rgba(242, 149, 182, 0.39)",
         },
       }}
       sx={{
@@ -53,35 +60,10 @@ const ValidationDialog = ({
       }}
     >
       {/* Header with gradient */}
-      <div
-        className="relative px-6 pt-5 pb-4"
-        style={{
-          background: `linear-gradient(135deg, ${THEME.primaryLight} 0%, white 100%)`,
-          borderBottom: `1px solid ${THEME.primary}20`,
-        }}
-      >
-        <IconButton
-          onClick={onClose}
-          sx={{
-            position: "absolute",
-            right: 12,
-            top: 12,
-            color: THEME.textMuted,
-            "&:hover": {
-              backgroundColor: `${THEME.primary}15`,
-              color: THEME.primary,
-            },
-          }}
-        >
-          <Close fontSize="small" />
-        </IconButton>
-
+      <div className="relative px-6 pt-3 pb-2 bg-red-50 border-b border-red-200 flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <div
-            className="flex items-center justify-center w-12 h-12 rounded-full"
-            style={{ backgroundColor: `${THEME.error}15` }}
-          >
-            <ErrorOutline sx={{ color: THEME.error, fontSize: 28 }} />
+          <div className="flex items-center justify-center w-10 h-10 rounded-full bg-red-100">
+            <ErrorOutline sx={{ color: THEME.error, fontSize: 20 }} />
           </div>
           <DialogTitle
             sx={{
@@ -95,6 +77,10 @@ const ValidationDialog = ({
             {title}
           </DialogTitle>
         </div>
+
+        <IconButton onClick={onClose} className="hover:bg-[#FFECF7]">
+          <Close fontSize="small" />
+        </IconButton>
       </div>
 
       {/* Content */}
@@ -109,14 +95,14 @@ const ValidationDialog = ({
           {errors.map((error, index) => (
             <li
               key={index}
-              className="flex items-start gap-3 p-3 rounded-lg"
+              className="flex items-center gap-3 p-3 rounded-lg"
               style={{
                 backgroundColor: `${THEME.error}08`,
                 border: `1px solid ${THEME.error}20`,
               }}
             >
               <div
-                className="w-2 h-2 rounded-full mt-1.5 flex-shrink-0"
+                className="w-2 h-2 rounded-full flex-shrink-0"
                 style={{ backgroundColor: THEME.error }}
               />
               <div>
@@ -141,10 +127,9 @@ const ValidationDialog = ({
       {/* Actions */}
       <DialogActions
         sx={{
+          py: 2,
           px: 3,
-          py: 2.5,
           borderTop: `1px solid ${THEME.primary}15`,
-          backgroundColor: "#fafafa",
         }}
       >
         <CustomButton
@@ -153,6 +138,7 @@ const ValidationDialog = ({
           style={{
             backgroundColor: THEME.primary,
             color: "white",
+            width: "fit-content",
             fontWeight: 600,
             padding: "10px 28px",
             borderRadius: 8,
