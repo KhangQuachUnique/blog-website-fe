@@ -34,14 +34,14 @@ export const EmojiReactionBar: React.FC<EmojiReactionBarProps> = React.memo(
         className="
           inline-flex flex-wrap items-center gap-1.5
           p-2
-          max-h-[78px] overflow-y-auto
+          max-h-[80px] overflow-y-auto
         "
       >
         <style>
           {`
             div::-webkit-scrollbar {
-              width: 6px;
-              height: 6px;
+              width: 3px;
+              height: 3px;
             }
             div::-webkit-scrollbar-thumb {
               background-color: #FFE4EC;
@@ -64,10 +64,10 @@ export const EmojiReactionBar: React.FC<EmojiReactionBarProps> = React.memo(
             }}
             className={`
               inline-flex items-center rounded-lg font-semibold cursor-pointer transition-all duration-150
-              px-2 py-1 gap-[7px]
-              ${reaction.reactedByCurrentUser ? "bg-[#FFE7F0]" : "bg-[#F2F2F2]"}
+              px-2 py-1 gap-[7px] border-1 border-transparent
+              ${reaction.reactedByCurrentUser ? "bg-[#FFECF7]" : "bg-[#F2F2F2]"}
               text-[#4A3C42]
-              hover:bg-[#FFE7F0] hover:border-[#F295B6]
+              hover:bg-[#FFE7F0] hover:border-1 hover:border-[#F295B6] hover:translate-y-[-2px]
             `}
             title={`${reaction.totalCount} người đã react`}
           >
