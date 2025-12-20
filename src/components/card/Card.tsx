@@ -336,10 +336,6 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
                         {typeof post.community === "string"
                           ? post.community
                           : post.community.name}
-                        trong{" "}
-                        {typeof post.community === "string"
-                          ? post.community
-                          : post.community.name}
                       </span>
                     )}
                   </div>
