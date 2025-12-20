@@ -38,10 +38,11 @@ export const useGetAllPosts = () => {
  * Hook to get visible blog posts with pagination
  * @returns
  */
-export const useGetPostVisibleWithPagination = (page: number, limit: number) => {
+export const useGetPostVisibleWithPagination = (page: number, limit: number, statusFilter: string) => {
   return useQuery({
-    queryKey: ["posts", page, limit],
-    queryFn: () => getPostVisibleWithPagination(page, limit),
+    queryKey: ["posts", page, limit, statusFilter],
+    queryFn: () => getPostVisibleWithPagination(page, limit, statusFilter),
+    staleTime: 0,
   });
 }
 

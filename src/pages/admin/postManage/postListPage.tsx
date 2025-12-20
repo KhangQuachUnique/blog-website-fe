@@ -14,18 +14,21 @@ const ITEMS_PER_PAGE = 10;
 
 const PostListPage = () => {
   const [filterStatus, setFilterStatus] = useState<StatusFilter>("ALL");
-  const [actionLoading, setActionLoading] = useState<number | null>(null);
+  const [actionLoading, setActionLoading] = useState<number | null>(null); // State quản lý Animation Spinner
   const [currentPage, setCurrentPage] = useState<number>(1);
 
+  // Hook lấy dữ liệu từ Server
   const {
     data: responseData, 
     isLoading,
     isFetching,
     isError,
     refetch,
-  } = useGetPostVisibleWithPagination(currentPage, ITEMS_PER_PAGE);
+  } = useGetPostVisibleWithPagination(currentPage, ITEMS_PER_PAGE, filterStatus);
 
+  // Fallback dữ liệu an toàn
   const posts = responseData?.items || [];
+  
   const meta = responseData?.meta || {
     page: currentPage,
     limit: ITEMS_PER_PAGE,
@@ -42,84 +45,133 @@ const PostListPage = () => {
   const queryClient = useQueryClient();
   const { showToast } = useToast();
 
-  const updateLocalCache = (postId: number, newStatus: string) => {
-    queryClient.setQueryData(["posts", currentPage, ITEMS_PER_PAGE], (old: any) => {
-       if (!old || !old.items) return old;
+  // --- HÀM CẬP NHẬT CACHE LẠC QUAN (OPTIMISTIC UPDATE) ---
+  const updateLocalCacheOptimistically = (postId: number, newStatus: string) => {
+    // Key Cache phải khớp chính xác với Key trong Hook usePost
+    const currentKey = ["posts", currentPage, ITEMS_PER_PAGE, filterStatus];
 
-       const targetPost = old.items.find((p: any) => p.id === postId);
+    queryClient.setQueryData(currentKey, (old: any) => {
+        if (!old || !old.items) return old;
 
-       if (!targetPost || targetPost.status === newStatus) return old;
+        const targetPost = old.items.find((p: any) => p.id === postId);
+        // Nếu không tìm thấy hoặc trạng thái đã khớp thì bỏ qua
+        if (!targetPost || targetPost.status === newStatus) return old;
 
-       const newStats = { ...(old.statistics || { all: 0, active: 0, hidden: 0 }) };
-
-       if (newStatus === "HIDDEN" && targetPost.status === "ACTIVE") {
+        // 1. Cập nhật Thống kê (Statistics)
+        const newStats = { ...(old.statistics || { all: 0, active: 0, hidden: 0 }) };
+        
+        if (newStatus === "HIDDEN" && targetPost.status === "ACTIVE") {
           newStats.active = Math.max(0, newStats.active - 1);
           newStats.hidden += 1;
-       } else if (newStatus === "ACTIVE" && targetPost.status === "HIDDEN") {
+        } else if (newStatus === "ACTIVE" && targetPost.status === "HIDDEN") {
           newStats.active += 1;
           newStats.hidden = Math.max(0, newStats.hidden - 1);
-       }
+        }
 
-       return {
-         ...old,
-         statistics: newStats,
-         items: old.items.map((p: any) => 
-           p.id === postId ? { ...p, status: newStatus } : p
-         )
-       };
-    });
+        // 2. Cập nhật Danh sách bài viết (Items List)
+        let newItems = [];
+        let totalAdjust = 0;
+
+        // Logic lọc: Nếu đang ở tab Active mà ẩn bài -> Xóa bài đó khỏi list
+        const shouldRemove = 
+            (filterStatus === "ACTIVE" && newStatus === "HIDDEN") ||
+            (filterStatus === "HIDDEN" && newStatus === "ACTIVE");
+
+        if (shouldRemove) {
+            newItems = old.items.filter((p: any) => p.id !== postId);
+            totalAdjust = -1; // Giảm tổng số item hiển thị đi 1
+        } else {
+            // Trường hợp ALL: Giữ nguyên dòng, chỉ đổi status và màu sắc
+            newItems = old.items.map((p: any) => 
+               p.id === postId ? { ...p, status: newStatus } : p
+           );
+        }
+
+        return {
+          ...old,
+          statistics: newStats,
+          items: newItems,
+          // Cập nhật lại meta total để thanh phân trang hiển thị đúng
+          meta: old.meta ? { ...old.meta, total: old.meta.total + totalAdjust } : old.meta
+        };
+      }
+    );
   };
 
+  // --- XỬ LÝ ẨN BÀI VIẾT ---
   const handleHide = async (postId: number) => {
+    // 1. Bật Spinner
+    setActionLoading(postId);
+
+    // 2. Cập nhật UI ngay lập tức
+    updateLocalCacheOptimistically(postId, "HIDDEN");
+
     try {
-      setActionLoading(postId);
+      // 3. Gọi API
       const response = await fetch(
-        `http://localhost:8080/blog-posts/${postId}/hide`,
+        `${import.meta.env.VITE_BACKEND_URL || 'http://localhost:8080'}/blog-posts/${postId}/hide`,
         { method: "PATCH" }
       );
+
       if (!response.ok) throw new Error("Lỗi khi ẩn bài viết");
-
-      updateLocalCache(postId, "HIDDEN");
-
       showToast({ type: "success", message: "Ẩn bài viết thành công!" });
+      
     } catch (err: any) {
+      // 4. Nếu lỗi -> Reset Cache (Rollback)
+      queryClient.invalidateQueries({ queryKey: ["posts"] });
       showToast({ type: "error", message: err.message });
     } finally {
+      // 5. Tắt Spinner
       setActionLoading(null);
     }
   };
 
+  // --- XỬ LÝ KHÔI PHỤC BÀI VIẾT ---
   const handleRestore = async (postId: number) => {
+    setActionLoading(postId);
+    updateLocalCacheOptimistically(postId, "ACTIVE");
+
     try {
-      setActionLoading(postId);
       const response = await fetch(
-        `http://localhost:8080/blog-posts/${postId}/restore`,
+        `${import.meta.env.VITE_BACKEND_URL || 'http://localhost:8080'}/blog-posts/${postId}/restore`,
         { method: "PATCH" }
       );
+
       if (!response.ok) throw new Error("Lỗi khi phục hồi bài viết");
-
-      updateLocalCache(postId, "ACTIVE");
-
       showToast({ type: "success", message: "Phục hồi bài viết thành công!" });
+
     } catch (err: any) {
+      queryClient.invalidateQueries({ queryKey: ["posts"] });
       showToast({ type: "error", message: err.message });
     } finally {
       setActionLoading(null);
     }
   };
 
+  // Reset về trang 1 khi đổi bộ lọc
   useEffect(() => {
     setCurrentPage(1);
   }, [filterStatus]);
 
-  const currentViewPosts = posts.filter((post: any) => {
-    if (filterStatus === "ALL") return true;
-    return post.status === filterStatus;
-  });
+  // --- LOGIC TỰ ĐỘNG LẤP ĐẦY TRANG (AUTO REFILL) ---
+  // Nếu số lượng bài trên trang < 10 và không phải trang cuối -> Tự động load thêm bài
+  const currentItemsCount = posts.length;
+  const totalPages = meta?.totalPages || 1;
 
-  const totalPages = meta?.totalPages || 1; 
+  useEffect(() => {
+    if (
+        currentItemsCount > 0 && 
+        currentItemsCount < ITEMS_PER_PAGE && 
+        currentPage < totalPages && 
+        !isFetching // Chỉ gọi khi không đang tải
+    ) {
+      refetch();
+    }
+  }, [currentItemsCount, currentPage, totalPages, isFetching, refetch]);
 
-  const normalizedPosts: BlogPost[] = currentViewPosts.map((p: any) => ({
+
+  // Chuẩn hoá dữ liệu cho bảng
+  const normalizedPosts: BlogPost[] = posts.map((p: any) => ({
     id: p.id,
     title: p.title,
     status: p.status,
@@ -136,6 +188,8 @@ const PostListPage = () => {
   const displayStart = totalRecords === 0 ? 0 : (currentPage - 1) * ITEMS_PER_PAGE + 1;
   const displayEnd = Math.min(displayStart + ITEMS_PER_PAGE - 1, totalRecords);
 
+  // --- RENDER ---
+  
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen bg-white">
@@ -190,6 +244,7 @@ const PostListPage = () => {
           </button>
         </div>
 
+        {/* THẺ THỐNG KÊ (STATS CARDS) */}
         <div className="grid grid-cols-3 gap-4 mb-6">
           {["ALL", "ACTIVE", "HIDDEN"].map((status) => {
             let count = 0;
@@ -219,16 +274,17 @@ const PostListPage = () => {
                 className={`${colors.bg} border-2 ${colors.border} rounded-xl p-4 text-center`}
               >
                 <p className={`${colors.text} text-sm font-medium uppercase tracking-wide`}>
-                  {label} {}
+                  {label}
                 </p>
                 <p className={`${colors.text} text-3xl font-bold mt-1`}>
-                  {count} {}
+                  {count}
                 </p>
               </div>
             );
           })}
         </div>
 
+        {/* BỘ LỌC (FILTER BUTTONS) */}
         <div className="flex gap-3 overflow-x-auto pb-2">
           {(["ALL", "ACTIVE", "HIDDEN"] as StatusFilter[]).map((status) => {
             const isActive = filterStatus === status;
@@ -249,11 +305,12 @@ const PostListPage = () => {
         </div>
       </div>
 
+      {/* BẢNG DỮ LIỆU */}
       <PostsTable
         posts={normalizedPosts}
         onHide={handleHide}
         onRestore={handleRestore}
-        loadingId={actionLoading}
+        loadingId={actionLoading} // Truyền state Loading để hiển thị Spinner
         emptyMessage={
           filterStatus !== "ALL"
             ? `Không có bài viết nào với trạng thái "${filterStatus}" trong trang này`
@@ -261,6 +318,7 @@ const PostListPage = () => {
         }
       />
 
+      {/* CHÂN TRANG & PHÂN TRANG */}
       <div className="mt-8">
         <div className="flex justify-between items-center mb-6">
           <p className="text-gray-600">
