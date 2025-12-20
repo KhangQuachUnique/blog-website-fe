@@ -1,4 +1,5 @@
 import type { IBlockResponseDto, ICreateBlockDto } from "./block";
+import type { UserVoteDto } from "./user-vote";
 
 export const EPostType = {
   PERSONAL: "PERSONAL",
@@ -66,14 +67,14 @@ export interface IHashtagDto {
 // ============================================
 
 /** Emoji types supported by backend */
-export type EmojiType = 'UNICODE' | 'CUSTOM';
+export type EmojiType = "UNICODE" | "CUSTOM";
 
 /** Single emoji summary in a reactions list */
 export interface IEmojiSummaryDto {
   emojiId: number;
   type: EmojiType;
-  codepoint?: string;       // e.g. "1f60d" for Unicode emojis
-  emojiUrl?: string;        // URL for custom emoji images
+  codepoint?: string; // e.g. "1f60d" for Unicode emojis
+  emojiUrl?: string; // URL for custom emoji images
   totalCount: number;
   reactedByCurrentUser: boolean;
 }
@@ -81,7 +82,7 @@ export interface IEmojiSummaryDto {
 /** Reactions summary for a post or comment */
 export interface IReactionSummaryDto {
   targetId: number;
-  targetType: 'post' | 'comment';
+  targetType: "post" | "comment";
   emojis: IEmojiSummaryDto[];
   totalReactions: number;
 }
@@ -90,7 +91,7 @@ export interface IReactionSummaryDto {
 export interface IVotesSummaryDto {
   upvotes: number;
   downvotes: number;
-  userVote: 'upvote' | 'downvote' | null;
+  userVote: "upvote" | "downvote" | null;
 }
 
 // ============================================
@@ -108,26 +109,25 @@ export interface IPostResponseDto {
   type: EPostType;
   hashtags: IHashtagDto[];
   createdAt: Date | string;
-  
+
   // Community & Repost fields
   community?: ICommunityDto;
   originalPost?: IPostResponseDto | null;
   originalPostId?: number | null;
-  
+
   // Blocks (full post detail)
   blocks?: IBlockResponseDto[];
-  
-  // Vote & React summaries from newsfeed
-  votes?: IVotesSummaryDto;
+
+  votes: UserVoteDto;
   reacts?: IReactionSummaryDto;
-  reactions?: IReactionSummaryDto;  // Alias (some endpoints use this name)
-  
+  reactions?: IReactionSummaryDto; // Alias (some endpoints use this name)
+
   // Aggregate counts
   upVotes?: number;
   downVotes?: number;
   totalComments?: number;
   totalReacts?: number;
-  
+
   // Newsfeed-specific fields
   final_score?: number;
   isViewed?: boolean;

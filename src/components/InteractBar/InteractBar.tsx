@@ -9,10 +9,11 @@ import {
   Flag,
   Bookmark,
 } from "lucide-react";
-import { useInteractBar } from "../../hooks/useInteractBar";
 import { useCheckSaved, useToggleSavePost } from "../../hooks/useSavedPost";
 import ReportButton from "../report/ReportButton";
 import { EReportType } from "../../types/report";
+import VoteButton from "../VoteButton";
+import type { UserVoteDto } from "../../types/user-vote";
 
 // ============================================
 // 🎨 BLOOKIE DESIGN SYSTEM - PASTEL PINK EDITION
@@ -38,68 +39,6 @@ const THEME = {
   shadowMedium: "0 4px 20px rgba(242, 149, 182, 0.2)",
   shadowStrong: "0 8px 32px rgba(242, 149, 182, 0.25)",
 };
-
-// Backward compatibility - removed unused COLORS constant
-
-// Emoji reactions with pastel vibes
-const EMOJI_LIST = [
-  { id: 1, emoji: "💖", label: "Love" },
-  { id: 2, emoji: "😊", label: "Happy" },
-  { id: 3, emoji: "🥺", label: "Cute" },
-  { id: 4, emoji: "😂", label: "Haha" },
-  { id: 5, emoji: "😮", label: "Wow" },
-  { id: 6, emoji: "🎀", label: "Pretty" },
-];
-
-// ============================================
-// 🎯 CUSTOM ICONS - Soft Outline Style
-// ============================================
-
-// Upvote Arrow - Soft rounded style
-const UpvoteArrow: React.FC<{ active?: boolean; size?: number }> = ({
-  active = false,
-  size = 18,
-}) => (
-  <svg
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill="none"
-    style={{ transition: "all 0.2s ease" }}
-  >
-    <path
-      d="M12 4L4 14H9V20H15V14H20L12 4Z"
-      fill={active ? THEME.upvoteActive : "transparent"}
-      stroke={active ? THEME.upvoteActive : THEME.secondary}
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-  </svg>
-);
-
-// Downvote Arrow - Soft rounded style
-const DownvoteArrow: React.FC<{ active?: boolean; size?: number }> = ({
-  active = false,
-  size = 18,
-}) => (
-  <svg
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill="none"
-    style={{ transition: "all 0.2s ease" }}
-  >
-    <path
-      d="M12 20L20 10H15V4H9V10H4L12 20Z"
-      fill={active ? THEME.downvoteActive : "transparent"}
-      stroke={active ? THEME.downvoteActive : THEME.secondary}
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-  </svg>
-);
 
 // ============================================
 // 🧩 SUB-COMPONENTS
@@ -151,134 +90,6 @@ const Toast: React.FC<{
   );
 
   return createPortal(toast, document.body);
-};
-
-// Vote Button Component
-const VoteButton: React.FC<{
-  direction: "up" | "down";
-  active: boolean;
-  disabled: boolean;
-  onClick: () => void;
-}> = ({ direction, active, disabled, onClick }) => {
-  const [isHovered, setIsHovered] = useState(false);
-
-  return (
-    <button
-      onClick={onClick}
-      disabled={disabled}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      style={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        width: "28px",
-        height: "28px",
-        borderRadius: "50px",
-        border: "none",
-        background: active
-          ? direction === "up"
-            ? THEME.tertiary
-            : "#F0E8EA"
-          : isHovered
-          ? THEME.tertiary
-          : "transparent",
-        cursor: disabled ? "not-allowed" : "pointer",
-        opacity: disabled ? 0.5 : 1,
-        transition: "all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)",
-        transform: isHovered && !disabled ? "scale(1.08)" : "scale(1)",
-      }}
-    >
-      {direction === "up" ? (
-        <UpvoteArrow active={active} size={14} />
-      ) : (
-        <DownvoteArrow active={active} size={14} />
-      )}
-    </button>
-  );
-};
-
-// Emoji Picker Popup
-const EmojiPicker: React.FC<{
-  visible: boolean;
-  selectedId: number | null;
-  onSelect: (id: number) => void;
-  anchorRect?: DOMRect | null;
-}> = ({ visible, selectedId, onSelect, anchorRect }) => {
-  if (!visible) return null;
-
-  const picker = (
-    <>
-      <style>{`
-        @keyframes emojiPickerPop {
-          0% { opacity: 0; transform: translateX(-50%) scale(0.9) translateY(8px); }
-          100% { opacity: 1; transform: translateX(-50%) scale(1) translateY(0); }
-        }
-        @keyframes emojiWiggle {
-          0%, 100% { transform: scale(1) rotate(0deg); }
-          25% { transform: scale(1.15) rotate(-5deg); }
-          75% { transform: scale(1.15) rotate(5deg); }
-        }
-      `}</style>
-      <div
-        style={{
-          position: "fixed",
-          left: anchorRect
-            ? `${anchorRect.left + anchorRect.width / 2}px`
-            : "50%",
-          top: anchorRect ? `${anchorRect.top}px` : undefined,
-          transform: anchorRect
-            ? "translateX(-50%) translateY(-8px)"
-            : "translateX(-50%)",
-          display: "flex",
-          gap: "4px",
-          padding: "10px 14px",
-          background: THEME.white,
-          borderRadius: "28px",
-          border: `1.5px solid ${THEME.secondary}`,
-          boxShadow: THEME.shadowStrong,
-          animation: "emojiPickerPop 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)",
-          zIndex: 1000,
-        }}
-        onMouseDown={(e) => e.stopPropagation()}
-      >
-        {EMOJI_LIST.map((item) => (
-          <button
-            key={item.id}
-            onClick={() => onSelect(item.id)}
-            title={item.label}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: "40px",
-              height: "40px",
-              borderRadius: "50%",
-              border: "none",
-              background:
-                selectedId === item.id ? THEME.tertiary : "transparent",
-              cursor: "pointer",
-              fontSize: "22px",
-              transition: "all 0.2s ease",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = THEME.tertiary;
-              e.currentTarget.style.animation = "emojiWiggle 0.4s ease";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background =
-                selectedId === item.id ? THEME.tertiary : "transparent";
-              e.currentTarget.style.animation = "none";
-            }}
-          >
-            {item.emoji}
-          </button>
-        ))}
-      </div>
-    </>
-  );
-
-  return createPortal(picker, document.body);
 };
 
 // More Menu Dropdown (rendered in a portal so it overlays without affecting layout)
@@ -418,20 +229,18 @@ const MoreMenu: React.FC<{
 interface InteractBarProps {
   postId: number;
   userId: number;
-  initialUpVotes?: number;
-  initialDownVotes?: number;
+  /** Vote data từ post response */
+  votes?: UserVoteDto;
   totalComments?: number;
 }
 
 const InteractBar: React.FC<InteractBarProps> = ({
   postId,
   userId,
-  initialUpVotes = 0,
-  initialDownVotes = 0,
+  votes,
   totalComments = 0,
 }) => {
   const navigate = useNavigate();
-  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [showLoginToast, setShowLoginToast] = useState(false);
   const [showShareToast, setShowShareToast] = useState(false);
@@ -445,23 +254,6 @@ const InteractBar: React.FC<InteractBarProps> = ({
   const moreMenuRef = useRef<HTMLDivElement>(null);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
 
-  const {
-    voteType,
-    upVotes,
-    downVotes,
-    isVoting,
-    handleVote,
-    selectedEmojiId,
-    isReacting,
-    handleEmojiReact,
-  } = useInteractBar({
-    postId,
-    userId,
-    initialUpVotes,
-    initialDownVotes,
-  });
-
-  const netVotes = upVotes - downVotes;
   const isLoggedIn = userId > 0;
 
   // 🔖 Saved post hooks
@@ -477,25 +269,6 @@ const InteractBar: React.FC<InteractBarProps> = ({
     setTimeout(() => setShowLoginToast(false), 2500);
   };
 
-  // Vote with login check
-  const onVoteClick = (type: "upvote" | "downvote") => {
-    if (!isLoggedIn) {
-      showLoginRequired();
-      return;
-    }
-    handleVote(type);
-  };
-
-  // Emoji with login check
-  const onEmojiClick = (emojiId: number) => {
-    if (!isLoggedIn) {
-      showLoginRequired();
-      setShowEmojiPicker(false);
-      return;
-    }
-    handleEmojiReact(emojiId);
-    setShowEmojiPicker(false);
-  };
 
   // Bookmark with login check
   const onBookmarkClick = () => {
@@ -529,22 +302,13 @@ const InteractBar: React.FC<InteractBarProps> = ({
       if (
         emojiPickerRef.current &&
         !emojiPickerRef.current.contains(event.target as Node)
-      ) {
-        setShowEmojiPicker(false);
-      }
+      ) {}
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Get current emoji display
-  const getCurrentEmoji = () => {
-    if (selectedEmojiId) {
-      const found = EMOJI_LIST.find((e) => e.id === selectedEmojiId);
-      if (found) return found.emoji;
-    }
-    return "💗";
-  };
+
 
   // Menu handlers
   const handleShare = () => {
@@ -609,52 +373,12 @@ const InteractBar: React.FC<InteractBarProps> = ({
       />
 
       {/* ===== LEFT: Vote Group ===== */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "1px",
-          padding: "3px 5px",
-          background: THEME.white,
-          borderRadius: "50px",
-          border: `1.5px solid ${THEME.secondary}`,
-          boxShadow: THEME.shadowSoft,
-        }}
-      >
-        <VoteButton
-          direction="up"
-          active={voteType === "upvote"}
-          disabled={isVoting}
-          onClick={() => onVoteClick("upvote")}
-        />
-
-        <span
-          style={{
-            minWidth: "28px",
-            textAlign: "center",
-            fontSize: "13px",
-            fontWeight: 700,
-            color:
-              voteType === "upvote"
-                ? THEME.upvoteActive
-                : voteType === "downvote"
-                ? THEME.downvoteActive
-                : THEME.text,
-            fontFamily: "'Quicksand', sans-serif",
-            userSelect: "none",
-            transition: "color 0.2s ease",
-          }}
-        >
-          {netVotes}
-        </span>
-
-        <VoteButton
-          direction="down"
-          active={voteType === "downvote"}
-          disabled={isVoting}
-          onClick={() => onVoteClick("downvote")}
-        />
-      </div>
+      <VoteButton
+        postId={postId}
+        userId={userId}
+        votes={votes}
+        size="md"
+      />
 
       {/* ===== MIDDLE: Bookmark Button ===== */}
       <button
@@ -702,50 +426,7 @@ const InteractBar: React.FC<InteractBarProps> = ({
         </span>
       </button>
 
-      {/* ===== RIGHT: Emoji, Comment & More ===== */}
-      <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-        {/* Emoji React */}
-        <div ref={emojiPickerRef} style={{ position: "relative" }}>
-          <button
-            onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-            disabled={isReacting}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: "28px",
-              height: "28px",
-              borderRadius: "50px",
-              border: `1.5px solid ${
-                selectedEmojiId ? THEME.primary : THEME.secondary
-              }`,
-              background: selectedEmojiId ? THEME.tertiary : THEME.white,
-              cursor: isReacting ? "not-allowed" : "pointer",
-              opacity: isReacting ? 0.5 : 1,
-              fontSize: "14px",
-              boxShadow: THEME.shadowSoft,
-              transition: "all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)",
-              transform: showEmojiPicker ? "scale(1.05)" : "scale(1)",
-            }}
-            onMouseEnter={(e) => {
-              if (!isReacting) e.currentTarget.style.transform = "scale(1.05)";
-            }}
-            onMouseLeave={(e) => {
-              if (!showEmojiPicker)
-                e.currentTarget.style.transform = "scale(1)";
-            }}
-          >
-            {getCurrentEmoji()}
-          </button>
-
-          <EmojiPicker
-            visible={showEmojiPicker}
-            selectedId={selectedEmojiId}
-            onSelect={onEmojiClick}
-            anchorRect={emojiPickerRef.current?.getBoundingClientRect() ?? null}
-          />
-        </div>
-
+ 
         {/* Comment Button */}
         <button
           onClick={() => navigate(`/post/${postId}`)}
@@ -827,7 +508,6 @@ const InteractBar: React.FC<InteractBarProps> = ({
           />
         </div>
       </div>
-    </div>
   );
 };
 
