@@ -19,7 +19,7 @@
 
 /* make cards narrower (55% width) and centered inside each column */
 .newsfeed-masonry-item .newsfeed-card {
-  width: 65%;
+  width: 70%;
   margin-left: auto;
   margin-right: auto;
 }
