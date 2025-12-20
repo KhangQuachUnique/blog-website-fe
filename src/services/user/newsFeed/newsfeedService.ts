@@ -1,12 +1,16 @@
 import axiosCustomize from "../../../config/axiosCustomize";
+import type { IGetNewsfeedResponseDto } from "../../../types/newsfeed";
 
-const unwrap = (res: any) => {
+const unwrap = (res: any): IGetNewsfeedResponseDto => {
   if (res?.data?.data?.data) return res.data.data.data;
   if (res?.data?.data) return res.data.data;
   return res?.data || res;
 };
 
-export const getNewsfeed = async (after?: string | null, seed?: number) => {
+export const getNewsfeed = async (
+  after?: string | null,
+  seed?: number
+): Promise<IGetNewsfeedResponseDto> => {
   // Always include limit and seed to keep ordering stable during the session
   const limit = 15;
   const seedParam = typeof seed === "number" ? `&seed=${seed}` : "";
@@ -28,5 +32,7 @@ export const getNewsfeed = async (after?: string | null, seed?: number) => {
   } catch (e) {
     console.debug("newsfeedService.getNewsfeed unwrapped (raw)=", out);
   }
+  console.log(out)
   return out;
+
 };

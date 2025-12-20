@@ -1,4 +1,5 @@
 import type { IBlockResponseDto, ICreateBlockDto } from "./block";
+import type { IVotesSummaryDto } from "./user-vote";
 
 export const EPostType = {
   PERSONAL: "PERSONAL",
@@ -61,6 +62,34 @@ export interface IHashtagDto {
   name: string;
 }
 
+// ============================================
+// Reaction / Emoji types (from backend UserReactSummaryDto)
+// ============================================
+
+/** Emoji types supported by backend */
+export type EmojiType = "UNICODE" | "CUSTOM";
+
+/** Single emoji summary in a reactions list */
+export interface IEmojiSummaryDto {
+  emojiId: number;
+  type: EmojiType;
+  codepoint?: string; // e.g. "1f60d" for Unicode emojis
+  emojiUrl?: string; // URL for custom emoji images
+  totalCount: number;
+  reactedByCurrentUser: boolean;
+}
+
+/** Reactions summary for a post or comment */
+export interface IReactionSummaryDto {
+  targetId: number;
+  targetType: "post" | "comment";
+  emojis: IEmojiSummaryDto[];
+  totalReactions: number;
+}
+
+// ============================================
+// Post Response DTO
+// ============================================
 
 export interface IPostResponseDto {
   id: number;
@@ -72,14 +101,29 @@ export interface IPostResponseDto {
   status: EBlogPostStatus;
   type: EPostType;
   hashtags: IHashtagDto[];
-  createdAt: Date;
+  createdAt: Date | string;
+
+  // Community & Repost fields
   community?: ICommunityDto;
-  originalPost?: IPostResponseDto;
+  originalPost?: IPostResponseDto | null;
+  originalPostId?: number | null;
+
+  // Blocks (full post detail)
   blocks?: IBlockResponseDto[];
-  upVotes: number;
-  downVotes: number;
-  totalComments: number;
-  totalReacts: number;
+
+  votes: IVotesSummaryDto;
+  reacts?: IReactionSummaryDto;
+  reactions?: IReactionSummaryDto; // Alias (some endpoints use this name)
+
+  // Aggregate counts
+  upVotes?: number;
+  downVotes?: number;
+  totalComments?: number;
+  totalReacts?: number;
+
+  // Newsfeed-specific fields
+  final_score?: number;
+  isViewed?: boolean;
 }
 
 export interface BlogPost {

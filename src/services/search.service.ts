@@ -21,39 +21,90 @@ export interface SearchResultItem {
   };
 }
 
+export interface ISearchPaginationDto {
+  hasMore: boolean;
+  nextCursor?: string | null;
+}
+
+export interface ISearchResponseDto {
+  items: SearchResultItem[];
+  pagination: ISearchPaginationDto;
+}
+
+interface RawSearchResponse {
+  posts?: SearchResultItem[];
+  users?: SearchResultItem[];
+  communities?: SearchResultItem[];
+  pagination?: ISearchPaginationDto;
+}
+
+/**
+ * Search with pagination support for infinite scroll
+ */
+export const searchWithPagination = async (
+  keyword: string, 
+  type: string,
+  after?: string
+): Promise<ISearchResponseDto> => {
+  const params: Record<string, string | number> = { 
+    q: keyword,
+    limit: 15,
+  };
+  
+  if (type) {
+    params.type = type;
+  }
+  
+  if (after) {
+    params.after = after;
+  }
+
+  const response = await axios.get<RawSearchResponse>('/search', { params });
+  const data = response as unknown as RawSearchResponse;
+  
+  // Convert response to unified format
+  let items: SearchResultItem[] = [];
+  
+  if ((type === 'post' || type === 'hashtag') && data.posts) {
+    items = data.posts;
+  } else if (type === 'community' && data.communities) {
+    items = data.communities;
+  } else if (type === 'user' && data.users) {
+    items = data.users;
+  } else if (!type) {
+    // Tìm kiếm tổng hợp
+    if (data.posts) items = [...items, ...data.posts];
+    if (data.users) items = [...items, ...data.users];
+    if (data.communities) items = [...items, ...data.communities];
+  }
+
+  return {
+    items,
+    pagination: data.pagination ?? { hasMore: false, nextCursor: null },
+  };
+};
+
 export const searchAPI = {
   search: async (keyword: string, type: string): Promise<SearchResultItem[]> => {
     try {
-      // [FIX] Tạo object params động
-      const params: any = { q: keyword };
+      const params: Record<string, string> = { q: keyword };
       
-      // Chỉ thêm 'type' vào params nếu nó có giá trị (không rỗng, không null)
       if (type) {
         params.type = type;
       }
 
-      // Lúc này axios sẽ chỉ gửi /search?q=M (không có &type=)
-      const response = await axios.get('/search', { params });
+      const response = await axios.get<RawSearchResponse>('/search', { params });
+      const data = response as unknown as RawSearchResponse;
       
-      // Case 1: Tìm cụ thể Post hoặc Hashtag -> Trả về mảng posts
-      if ((type === 'post' || type === 'hashtag') && response.posts) return response.posts;
-      
-      // Case 2: Tìm Community
-      if (type === 'community' && response.communities) return response.communities;
-      
-      // Case 3: Tìm User
-      if (type === 'user' && response.users) return response.users;
+      if ((type === 'post' || type === 'hashtag') && data.posts) return data.posts;
+      if (type === 'community' && data.communities) return data.communities;
+      if (type === 'user' && data.users) return data.users;
 
-      // Case 4 [QUAN TRỌNG]: Tìm tổng hợp (Sidebar Search) - Type rỗng
       if (!type) {
         let results: SearchResultItem[] = [];
-        // Ưu tiên hiển thị bài viết trước
-        if (response.posts) results = [...results, ...response.posts];
-        // Sau đó đến user
-        if (response.users) results = [...results, ...response.users];
-        // Cuối cùng là community
-        if (response.communities) results = [...results, ...response.communities];
-        
+        if (data.posts) results = [...results, ...data.posts];
+        if (data.users) results = [...results, ...data.users];
+        if (data.communities) results = [...results, ...data.communities];
         return results;
       }
 

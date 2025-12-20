@@ -154,7 +154,7 @@ const HomePage = () => {
         {/* Quick Actions */}
         <div className="mt-8 flex gap-4 justify-center">
           <a 
-            href="/newsfeed" 
+            href="/" 
             className="bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white font-semibold px-6 py-3 rounded-lg shadow-lg transition-all"
           >
             📰 Go to Newsfeed

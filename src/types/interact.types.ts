@@ -5,6 +5,7 @@
 export type VoteType = 'upvote' | 'downvote';
 
 export interface VoteResponse {
+  message?: string;
   voteType: VoteType | null;
   upVotes?: number;
   downVotes?: number;

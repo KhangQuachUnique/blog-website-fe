@@ -78,7 +78,7 @@ instance.interceptors.response.use(
     if (error.response && error.response.data)
       error = error.response.data || error;
 
-    return Promise.reject(error);
+    return Promise.reject(error as BackendResError);
   }
 );
 

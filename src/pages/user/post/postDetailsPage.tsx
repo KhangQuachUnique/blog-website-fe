@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import GridLayout from "react-grid-layout";
 import { Search } from "lucide-react";
@@ -13,7 +13,11 @@ import { useAuthUser } from "../../../hooks/useAuth";
 
 import { EBlockType, ObjectFitType } from "../../../types/block";
 import type { IBlockResponseDto } from "../../../types/block";
-import type { IPostResponseDto } from "../../../types/post";
+import type {
+  IPostResponseDto,
+  IReactionSummaryDto,
+  IEmojiSummaryDto,
+} from "../../../types/post";
 
 import {
   GRID_SETTINGS,
@@ -89,10 +93,8 @@ const PostDetailsPage: React.FC = () => {
   const [searchKeyword, setSearchKeyword] = useState("");
   const [isSearchSidebarOpen, setIsSearchSidebarOpen] = useState(false);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!containerRef.current) return;
-
-    setContainerWidth(containerRef.current.clientWidth || GRID_SETTINGS.width);
 
     const ROCtor = (
       window as unknown as { ResizeObserver?: typeof ResizeObserver }
@@ -112,6 +114,16 @@ const PostDetailsPage: React.FC = () => {
       };
       window.addEventListener("resize", onResize);
       return () => window.removeEventListener("resize", onResize);
+    }
+  }, []);
+
+  // Initialize container width after first render
+  useEffect(() => {
+    if (containerRef.current) {
+      const initialWidth =
+        containerRef.current.clientWidth || GRID_SETTINGS.width;
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setContainerWidth(initialWidth);
     }
   }, []);
 
@@ -159,13 +171,13 @@ const PostDetailsPage: React.FC = () => {
   const { user: currentUser } = useAuthUser();
 
   // Normalize user object for comments components
-  const normalizedUser = currentUser
-    ? {
-        id: currentUser.id,
-        username: currentUser.username,
-        avatarUrl: currentUser.avatarUrl,
-      }
-    : undefined;
+  if (!currentUser) return null;
+
+  const normalizedUser = {
+    id: currentUser.id,
+    username: currentUser.username,
+    avatarUrl: currentUser.avatarUrl ?? undefined,
+  };
 
   // [SỬA] Handler click vào block (cả Text và Image)
   const handleBlockClick = (blockId: number, type: string, content: string) => {
@@ -228,6 +240,36 @@ const PostDetailsPage: React.FC = () => {
     };
   });
 
+  // Reactions from backend (if present on the post DTO)
+  const reactionsData: IReactionSummaryDto | undefined =
+    post.reacts ?? post.reactions;
+  const reactionEmojis: Array<{ node: React.ReactNode; count: number }> = [];
+  if (reactionsData && Array.isArray(reactionsData.emojis)) {
+    for (const r of reactionsData.emojis as IEmojiSummaryDto[]) {
+      const cnt = r.totalCount ?? 0;
+      let node: React.ReactNode;
+
+      if (r.emojiUrl) {
+        node = (
+          <img src={r.emojiUrl} alt="emoji" style={{ width: 18, height: 18 }} />
+        );
+      } else if (r.codepoint) {
+        try {
+          const parts = r.codepoint
+            .split("-")
+            .map((p: string) => parseInt(p, 16));
+          node = String.fromCodePoint(...parts);
+        } catch {
+          node = "💗";
+        }
+      } else {
+        node = "💗";
+      }
+
+      reactionEmojis.push({ node, count: cnt });
+    }
+  }
+
   // ============================================
   // Render
   // ============================================
@@ -270,6 +312,18 @@ const PostDetailsPage: React.FC = () => {
         >
           {post.title}
         </h1>
+
+        {/* Reactions (display under title) */}
+        {reactionEmojis.length > 0 && (
+          <div className="newsfeed-card__reactions" style={{ marginTop: 8 }}>
+            {reactionEmojis.map((r, idx) => (
+              <div key={idx} className="newsfeed-card__reaction">
+                <span className="newsfeed-card__reaction-emoji">{r.node}</span>
+                <span className="newsfeed-card__reaction-count">{r.count}</span>
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* Short Description */}
         {post.shortDescription && (

@@ -5,11 +5,12 @@ import type { VoteType, VoteResponse, EmojiReaction } from '../types/interact.ty
 export type { VoteType, VoteResponse, EmojiReaction } from '../types/interact.types';
 
 // ============================================
-// 1. VOTE APIs
+// 1. VOTE APIs (Legacy - Use vote.service.ts instead)
 // ============================================
 
 /**
  * Toggle vote (upvote/downvote)
+ * @deprecated Use votePost from '../services/vote.service' instead
  */
 export const votePost = async (
   userId: number,
@@ -21,11 +22,12 @@ export const votePost = async (
     postId: Number(postId),
     voteType,
   });
-  return response as unknown as VoteResponse;
+  return response.data as VoteResponse;
 };
 
 /**
  * Lấy trạng thái vote hiện tại
+ * @deprecated Use getVoteStatus from '../services/vote.service' instead
  */
 export const getVoteStatus = async (
   userId: number,
@@ -34,7 +36,7 @@ export const getVoteStatus = async (
   const response = await axiosInstance.get('/votes/status', {
     params: { userId, postId },
   });
-  return response as unknown as VoteResponse;
+  return response.data as VoteResponse;
 };
 
 // ============================================

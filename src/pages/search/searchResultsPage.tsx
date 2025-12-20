@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useRef, useCallback } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { searchAPI } from '../../services/search.service';
-import type { SearchResultItem } from '../../services/search.service';
+import { useSearch } from '../../hooks/useSearch';
+import type { SearchResultItem, ISearchResponseDto } from '../../services/search.service';
 import { Loader2 } from 'lucide-react';
 import Masonry from 'react-masonry-css';
 import Card from '../../components/card/Card';
@@ -13,30 +13,43 @@ export const SearchResultPage = () => {
   const [searchParams] = useSearchParams();
   
   // Lấy params từ URL (ví dụ: /search?q=abc&type=post)
-  const q = searchParams.get('q');
-  const type = searchParams.get('type');
+  const q = searchParams.get('q') || '';
+  const type = searchParams.get('type') || '';
 
-  const [results, setResults] = useState<SearchResultItem[]>([]);
-  const [loading, setLoading] = useState(false);
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+    isError,
+  } = useSearch({ keyword: q, type, enabled: !!q && !!type });
 
-  // Gọi API mỗi khi 'q' hoặc 'type' thay đổi
-  useEffect(() => {
-    const fetchData = async () => {
-      if (!q || !type) return;
-      
-      setLoading(true);
-      try {
-        const data = await searchAPI.search(q, type);
-        setResults(data);
-      } catch (error) {
-        console.error('Search error:', error);
-      } finally {
-        setLoading(false);
+  // Flatten all pages into a single array and deduplicate
+  const allResults: SearchResultItem[] = data?.pages.flatMap((page: ISearchResponseDto) => page.items) ?? [];
+  const results: SearchResultItem[] = allResults.filter(
+    (item: SearchResultItem, index: number, self: SearchResultItem[]) => 
+      self.findIndex((i: SearchResultItem) => i.id === item.id) === index
+  );
+
+  // Infinite scroll observer
+  const observer = useRef<IntersectionObserver | null>(null);
+  const lastItemRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      if (isFetchingNextPage) return;
+      if (observer.current) observer.current.disconnect();
+
+      if (node) {
+        observer.current = new IntersectionObserver((entries) => {
+          if (entries[0].isIntersecting && hasNextPage) {
+            fetchNextPage();
+          }
+        });
+        observer.current.observe(node);
       }
-    };
-
-    fetchData();
-  }, [q, type]);
+    },
+    [isFetchingNextPage, hasNextPage, fetchNextPage]
+  );
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return '';
@@ -181,10 +194,19 @@ export const SearchResultPage = () => {
     }
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex justify-center py-20">
         <Loader2 className="h-12 w-12 animate-spin" />
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="text-center py-20 text-red-500">
+        <p className="text-xl">Có lỗi xảy ra khi tìm kiếm.</p>
+        <p className="mt-2">Vui lòng thử lại sau</p>
       </div>
     );
   }
@@ -205,12 +227,31 @@ export const SearchResultPage = () => {
             className="newsfeed-masonry-grid"
             columnClassName="newsfeed-masonry-grid_column"
           >
-            {results.map((item) => (
-              <div key={item.id} className="newsfeed-masonry-item">
-                {renderItem(item)}
-              </div>
-            ))}
+            {results.map((item: SearchResultItem, idx: number) => {
+              const isLast = idx === results.length - 1;
+              return (
+                <div 
+                  key={item.id} 
+                  className="newsfeed-masonry-item"
+                  ref={isLast ? lastItemRef : undefined}
+                >
+                  {renderItem(item)}
+                </div>
+              );
+            })}
           </Masonry>
+
+          {isFetchingNextPage && (
+            <div className="flex justify-center py-8">
+              <Loader2 className="h-8 w-8 animate-spin" />
+            </div>
+          )}
+
+          {!hasNextPage && results.length > 0 && (
+            <p className="text-center text-muted-foreground py-12">
+              Đã hết kết quả tìm kiếm
+            </p>
+          )}
         </div>
       ) : (
         <div className="text-center py-20 text-gray-500">
