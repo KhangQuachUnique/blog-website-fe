@@ -65,15 +65,19 @@
 
 .newsfeed-card__header {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.75rem;
+  align-items: center; /* Căn giữa theo trục dọc */
+  justify-content: space-between; /* Đẩy Time sang phải, Author sang trái */
+  flex-wrap: wrap; /* Xuống dòng nếu màn hình quá bé */
+  gap: 10px; /* Khoảng cách giữa Author và Time */
+  margin-bottom: 8px;
 }
 
 .newsfeed-card__author {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 8px;
+  flex: 1; /* Chiếm phần lớn diện tích */
+  min-width: 0; /* Fix lỗi flexbox text overflow */
 }
 
 .newsfeed-card__avatar {
@@ -102,18 +106,21 @@
 }
 
 .newsfeed-card__time {
-  font-size: 0.75rem;
-  color: hsl(var(--muted-foreground));
+  font-size: 12px;
+  color: #888;
+  white-space: nowrap; /* Không cho ngày tháng xuống dòng lung tung */
+  flex-shrink: 0; /* Không cho phép bị co lại */
 }
 
 .newsfeed-card__title {
   font-size: 1.35rem;
   font-weight: 800;
   color: #F295B6; /* more attention-grabbing */
-  margin-bottom: 0.5rem;
+  margin-bottom: 8px;
   line-height: 1.15;
   display: -webkit-box;
   -webkit-line-clamp: 2; /* slightly fewer lines to keep title prominent */
+  line-clamp: 2; /* standard property */
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -227,8 +234,16 @@
     border-radius: 12px 12px 0 0;
   }
 
-  .newsfeed-card__content {
+  /* .newsfeed-card__content {
     padding: 1rem;
+  } */
+
+  .newsfeed-card__content {
+  display: flex;
+  flex-direction: column; /* Xếp chồng: Title -> Header -> Description */
+  justify-content: center;
+  height: 100%;
+  padding-right: 10px;
   }
 
   .newsfeed-card__title {

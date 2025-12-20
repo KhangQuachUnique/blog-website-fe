@@ -1,5 +1,7 @@
 import { useAuth } from "../../hooks/useAuth";
 import { ACCESS_TOKEN_KEY } from "../../constants/auth";
+import Avatar from '@mui/material/Avatar';
+import { stringAvatar } from '../../utils/avatarHelper';
 
 const HomePage = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -97,16 +99,20 @@ const HomePage = () => {
                 <p className="text-sm text-gray-600 mb-1">Role</p>
                 <p className="text-lg font-semibold text-gray-800">{user.role || 'N/A'}</p>
               </div>
-              {user.avatarUrl && (
-                <div className="bg-yellow-50 p-4 rounded-lg md:col-span-2">
-                  <p className="text-sm text-gray-600 mb-2">Avatar</p>
+              <div className="bg-yellow-50 p-4 rounded-lg md:col-span-2">
+                <p className="text-sm text-gray-600 mb-2">Avatar</p>
+                {user.avatarUrl ? (
                   <img 
                     src={user.avatarUrl} 
                     alt="User avatar" 
                     className="w-20 h-20 rounded-full border-2 border-pink-300"
                   />
-                </div>
-              )}
+                ) : (
+                  <div className="w-20 h-20">
+                    <Avatar {...stringAvatar(user.username, 80, '1.8rem')} />
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         ) : (

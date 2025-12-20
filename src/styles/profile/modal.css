@@ -1,0 +1,218 @@
+/* ============================================
+   MODAL STYLES - Profile Feature
+   Styles cho các modal trong profile (Delete, Forgot Password)
+   ============================================ */
+
+/* --- MODAL OVERLAY --- */
+.profile-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+
+/* --- MODAL CONTAINER --- */
+.profile-modal {
+  background-color: white;
+  border-radius: 1rem;
+  padding: 2rem;
+  max-width: 28rem;
+  width: 100%;
+  margin: 0 1rem;
+  box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+}
+
+.profile-modal-border-primary {
+  border: 2px solid #F295B6;
+}
+
+.profile-modal-border-danger {
+  border: 2px solid #ef4444;
+}
+
+/* --- MODAL HEADER --- */
+.profile-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.profile-modal-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.profile-modal-title-primary {
+  color: #8C1D35;
+}
+
+.profile-modal-title-danger {
+  color: #dc2626;
+}
+
+.profile-modal-close-btn {
+  color: #6b7280;
+  transition: color 0.2s;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+}
+
+.profile-modal-close-btn:hover {
+  color: #374151;
+}
+
+/* --- MODAL CONTENT --- */
+.profile-modal-text {
+  color: #374151;
+  margin-bottom: 1rem;
+}
+
+.profile-modal-text-danger {
+  color: #dc2626;
+  margin-bottom: 1rem;
+}
+
+.profile-modal-text-bold {
+  font-weight: 600;
+}
+
+.profile-modal-warning-box {
+  color: #b91c1c;
+  font-weight: 700;
+  text-align: center;
+  background-color: #fef2f2;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+}
+
+/* --- MODAL ALERT BOX --- */
+.profile-modal-alert-box {
+  border: 1px solid #fecaca;
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  background-color: #fef2f2;
+}
+
+.profile-modal-alert-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #991b1b;
+  margin-bottom: 0.5rem;
+}
+
+.profile-modal-alert-text {
+  color: #b91c1c;
+}
+
+.profile-modal-alert-list {
+  list-style-type: disc;
+  list-style-position: inside;
+  color: #b91c1c;
+  margin-bottom: 1rem;
+}
+
+.profile-modal-alert-list li {
+  margin-top: 0.25rem;
+}
+
+/* --- MODAL FORM --- */
+.profile-modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.profile-modal-form-hint {
+  font-size: 0.875rem;
+  color: #4b5563;
+  margin-bottom: 1rem;
+}
+
+/* --- MODAL BUTTONS --- */
+.profile-modal-btn-container {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.profile-modal-btn-container-single {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.profile-modal-btn-full {
+  width: 100%;
+  padding: 0.75rem 1.5rem;
+  font-weight: 700;
+  border-radius: 0.5rem;
+  transition: all 0.2s;
+  border: none;
+  cursor: pointer;
+}
+
+.profile-modal-btn-full:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.profile-modal-btn-flex {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  font-weight: 700;
+  border-radius: 0.5rem;
+  transition: all 0.2s;
+  border: none;
+  cursor: pointer;
+}
+
+.profile-modal-btn-flex:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Button variants */
+.profile-modal-btn-primary {
+  background-color: #F295B6;
+  color: white;
+}
+
+.profile-modal-btn-primary:hover:not(:disabled) {
+  background-color: #FFB8D1;
+}
+
+.profile-modal-btn-secondary {
+  background-color: #f3f4f6;
+  color: #374151;
+}
+
+.profile-modal-btn-secondary:hover:not(:disabled) {
+  background-color: #e5e7eb;
+}
+
+.profile-modal-btn-danger {
+  background-color: #dc2626;
+  color: white;
+}
+
+.profile-modal-btn-danger:hover:not(:disabled) {
+  background-color: #b91c1c;
+}
+
+/* --- MODAL ALERT (inside modal) --- */
+.profile-modal-inner-alert {
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 0.5rem;
+  color: #dc2626;
+  font-size: 0.875rem;
+}

@@ -1,0 +1,55 @@
+/* ============================================
+   SIDEBAR TAB STYLES - Profile Feature
+   Styles cho sidebar navigation trong edit profile
+   ============================================ */
+
+.profile-sidebar {
+  width: 100%;
+  background-color: white;
+  border-radius: 1rem;
+  border: 1px solid #FFE4EC;
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  padding: 1rem;
+}
+
+@media (min-width: 1024px) {
+  .profile-sidebar {
+    width: 16rem;
+  }
+}
+
+.profile-sidebar-tabs {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Individual tab button */
+.profile-sidebar-tab {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  transition: all 0.2s;
+  color: #4b5563;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.profile-sidebar-tab:hover {
+  background-color: #FFF8FB;
+}
+
+.profile-sidebar-tab-active {
+  background-color: #FFEFF4;
+  color: #F295B6;
+}
+
+/* Tab icon */
+.profile-sidebar-tab-icon {
+  font-size: 1.25rem;
+}

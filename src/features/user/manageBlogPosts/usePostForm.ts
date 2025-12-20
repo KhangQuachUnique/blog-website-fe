@@ -28,10 +28,10 @@ export interface UsePostFormOptions {
   post?: IPostResponseDto;
 }
 
-// Default values
+// Default values - h values adjusted for rowHeight: 20
 const DEFAULT_LAYOUT: LayoutItem[] = [
-  { i: "1", x: 0, y: 0, w: 8, h: 6, minW: 3, minH: 4 },
-  { i: "2", x: 8, y: 0, w: 8, h: 6, minW: 3, minH: 4 },
+  { i: "1", x: 0, y: 0, w: 8, h: 8, minW: 3, minH: 2 },
+  { i: "2", x: 8, y: 0, w: 8, h: 8, minW: 3, minH: 2 },
 ];
 
 const DEFAULT_BLOCKS: BlockData[] = [
@@ -57,16 +57,16 @@ const createNewBlock = (id: string, type: EBlockType): BlockData => ({
 });
 
 /**
- * Tạo layout item mới
+ * Tạo layout item mới - h adjusted for rowHeight: 20
  */
 const createNewLayoutItem = (id: string, x: number, y: number): LayoutItem => ({
   i: id,
   x,
   y,
   w: 8,
-  h: 6,
+  h: 8,
   minW: 3,
-  minH: 4,
+  minH: 2, // Small minH to allow auto-resize to work properly
 });
 
 /**
@@ -82,7 +82,7 @@ const mapPostToLayout = (post: IPostResponseDto): LayoutItem[] => {
     w: block.width,
     h: block.height,
     minW: 3,
-    minH: 4,
+    minH: 2, // Small minH to allow auto-resize to work properly
   }));
 };
 
@@ -170,8 +170,19 @@ export const usePostForm = (options: UsePostFormOptions = {}) => {
   }, []);
 
   // Handlers: Layout
+  // Merge new layout from react-grid-layout with existing minW/minH constraints
   const handleLayoutChange = useCallback((newLayout: LayoutItem[]) => {
-    setLayout(newLayout);
+    setLayout((prev) => {
+      return newLayout.map((newItem) => {
+        const existingItem = prev.find((item) => item.i === newItem.i);
+        // Preserve minW and minH from existing layout, or use defaults
+        return {
+          ...newItem,
+          minW: existingItem?.minW ?? 3,
+          minH: existingItem?.minH ?? 2,
+        };
+      });
+    });
   }, []);
 
   // Handlers: Blocks

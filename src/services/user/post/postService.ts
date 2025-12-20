@@ -53,3 +53,12 @@ export const approvePost = async (postId: number) => {
 export const deletePost = async (postId: number) => {
   return axios.delete(`/blog-posts/${postId}`);
 };
+
+export const togglePostPrivacy = async (
+  postId: number
+): Promise<{ message: string; data: IPostResponseDto }> => {
+  const response = await axios.patch(
+    `/blog-posts/${postId}/toggle-privacy`
+  );
+  return response;
+};

@@ -2,9 +2,11 @@ import { Link } from "react-router-dom";
 import type { IPostResponseDto } from "../../types/post";
 import { EPostType } from "../../types/post";
 import { InteractBar } from "../InteractBar";
-import { recordViewedPost } from '../../services/user/viewedHistory';
+import { recordViewedPost } from "../../services/user/viewedHistory";
 import { useAuth } from "../../contexts/AuthContext";
 import { useGetPostById } from "../../hooks/usePost";
+import Avatar from "@mui/material/Avatar";
+import { stringAvatar } from "../../utils/avatarHelper";
 import "../../styles/newsfeed/Card.css";
 import { Repeat2 } from "lucide-react";
 
@@ -22,7 +24,7 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
   const formatDate = (dateInput: string | Date) => {
     const date = dateInput instanceof Date ? dateInput : new Date(dateInput);
     const now = new Date();
-    const diff = Math.floor((now.getTime() - date.getTime()) / 1000);
+    const diff = Math.floor((now.getTime() - dateObj.getTime()) / 1000);
 
     if (diff < 60) return "vừa xong";
     if (diff < 3600) return `${Math.floor(diff / 60)} phút trước`;
@@ -215,7 +217,7 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
           />
         </Link>
       )}
-      
+
       {/* Content + InteractBar bên phải */}
       <div className="newsfeed-card__right">
         <Link
@@ -228,11 +230,15 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
           <h2 className="newsfeed-card__title">{post.title}</h2>
           <div className="newsfeed-card__header">
             <div className="newsfeed-card__author">
-              <img
-                src={post.author.avatarUrl}
-                alt={post.author.username}
-                className="newsfeed-card__avatar"
-              />
+              {post.author.avatarUrl ? (
+                <img
+                  src={post.author.avatarUrl}
+                  alt={post.author.username}
+                  className="newsfeed-card__avatar"
+                />
+              ) : (
+                <Avatar {...stringAvatar(post.author.username, 40, "1rem")} />
+              )}
               <div className="newsfeed-card__author-info">
                 <span className="newsfeed-card__username">
                   {post.author.username}
@@ -271,9 +277,12 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
             </div>
           )}
         </Link>
-        
+
         {/* InteractBar nằm dưới content */}
-        <div className="newsfeed-card__interact" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="newsfeed-card__interact"
+          onClick={(e) => e.stopPropagation()}
+        >
           <InteractBar
             postId={post.id}
             userId={user?.id ?? 0}

@@ -4,7 +4,7 @@ import {
   Outlet,
   useParams,
   useNavigate,
-  useLocation,
+  // useLocation,
 } from "react-router-dom";
 import { useGetCommunitySettings } from "../../../hooks/useCommunity";
 import {
@@ -20,7 +20,7 @@ const CommunityLayout = () => {
   const communityId = Number(id);
 
   const navigate = useNavigate();
-  const location = useLocation();
+  // const location = useLocation();
 
   // ✅ luôn gọi hooks đủ, kể cả id không hợp lệ
   const safeCommunityId =
