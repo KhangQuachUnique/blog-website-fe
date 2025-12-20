@@ -6,9 +6,9 @@ import React, {
   useMemo,
 } from "react";
 
-import { EmojiPicker } from "./EmojiPicker";
+import { EmojiPicker } from "../../Emoji/components/EmojiPicker";
 import type { IEmojiCategoryData } from "../../../types/emoji";
-import { useClickOutside } from "../hooks/useClickOutside";
+import { useClickOutside } from "../../Emoji/hooks/useClickOutside";
 import { BsEmojiWinkFill } from "react-icons/bs";
 
 interface EmojiSelectorProps {

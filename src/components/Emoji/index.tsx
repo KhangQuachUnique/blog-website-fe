@@ -1,26 +1,45 @@
+import { useAuthUser } from "../../hooks/useAuth";
+import { useTogglePostReact } from "../../hooks/useReactions";
 import type { EmojiReactSummaryDto } from "../../types/userReact";
-import { EmojiReactionBar } from "./components/EmojiReactionBar";
+import { EmojiReactionBar } from "../Emoji/components/EmojiReactionBar";
 import { EmojiSelector } from "./components/EmojiSelector";
-import { useEmojiData } from "./hooks/useEmojiData";
-import { useRecentEmojis } from "./hooks/useRecentEmoji";
+import { useEmojiData } from "../Emoji/hooks/useEmojiData";
+import { useRecentEmojis } from "../Emoji/hooks/useRecentEmoji";
 
 export interface ReactionSectionProps {
+  postId: number;
   reactions: EmojiReactSummaryDto[];
-  handleToggleReact: ({
-    emojiId,
-    codepoint,
-  }: {
-    emojiId?: number;
-    codepoint?: string;
-  }) => void;
 }
 
-const ReactionSection = ({
-  reactions,
-  handleToggleReact,
-}: ReactionSectionProps) => {
+const ReactionSection = ({ postId, reactions }: ReactionSectionProps) => {
+  const { user, isAuthenticated } = useAuthUser();
   const { recent, add } = useRecentEmojis();
   const emojisData = useEmojiData();
+  const mutation = useTogglePostReact();
+
+  if (!isAuthenticated || !user) {
+    return null;
+  }
+
+  const handleToggleReact = ({
+    emojiId,
+    codePoint,
+  }: {
+    emojiId?: number;
+    codePoint?: string;
+  }) => {
+    mutation.mutate(
+      { emojiId, codePoint, postId, userId: user.id },
+      {
+        onSuccess: () => {
+          // Cập nhật recent nếu là unicode
+          if (codePoint) {
+            add(codePoint);
+          }
+        },
+      }
+    );
+  };
 
   return (
     <div

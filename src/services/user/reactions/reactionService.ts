@@ -7,7 +7,7 @@ import axios from "../../../config/axiosCustomize";
  * @returns
  */
 export const togglePostReact = async (data: IToggleReactDto): Promise<void> => {
-  const response = await axios.post("/user-reacts/post/toggle", data);
+  const response = await axios.post("/user-reacts/posts/toggle", data);
   return response;
 };
 
@@ -19,6 +19,6 @@ export const togglePostReact = async (data: IToggleReactDto): Promise<void> => {
 export const toggleCommentReact = async (
   data: IToggleReactDto
 ): Promise<void> => {
-  const response = await axios.post("/user-reacts/comment/toggle", data);
+  const response = await axios.post("/user-reacts/comments/toggle", data);
   return response;
 };

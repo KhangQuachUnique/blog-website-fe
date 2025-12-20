@@ -1,7 +1,7 @@
 import { EEmojiType } from "./emoji";
 
 export interface EmojiReactSummaryDto {
-  emojiId: number;
+  emojiId?: number;
   type: EEmojiType;
   codepoint?: string;
   emojiUrl?: string;
@@ -19,7 +19,7 @@ export interface UserReactSummaryDto {
 export interface IToggleReactDto {
   userId: number;
   emojiId?: number;
-  codepoint?: string;
+  codePoint?: string;
   postId?: number;
   commentId?: number;
 }

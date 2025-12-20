@@ -4,12 +4,14 @@ import { getNewsfeed } from "../services/user/newsFeed/newsfeedService";
 const NEWSFEED_SEED_KEY = "newsfeed_session_seed";
 let __newsfeed_seed_reload_handled = false;
 
-const getOrCreateSessionSeed = (): number => {
+export const getOrCreateSessionSeed = (): number => {
   // Run reload-detection only once per page load to avoid clearing the seed repeatedly
   if (!__newsfeed_seed_reload_handled) {
     try {
-      const navEntries = (performance && (performance.getEntriesByType?.("navigation") || [])) as any[];
-      const navType = navEntries[0]?.type ?? (performance as any).navigation?.type;
+      const navEntries = (performance &&
+        (performance.getEntriesByType?.("navigation") || [])) as any[];
+      const navType =
+        navEntries[0]?.type ?? (performance as any).navigation?.type;
       // In older browsers performance.navigation.type === 1 indicates reload
       const isReload = navType === "reload" || navType === 1;
       if (isReload) {
@@ -34,7 +36,8 @@ export const useGetNewsFeed = () => {
 
   return useInfiniteQuery({
     queryKey: ["newsfeed", sessionSeed],
-    queryFn: ({ pageParam }) => getNewsfeed(pageParam ?? undefined, sessionSeed),
+    queryFn: ({ pageParam }) =>
+      getNewsfeed(pageParam ?? undefined, sessionSeed),
     initialPageParam: undefined,
     getNextPageParam: (lastPage) => {
       // Try several common locations for the next-cursor
@@ -47,7 +50,8 @@ export const useGetNewsFeed = () => {
         undefined;
 
       // If items array exists and is shorter than page limit, assume no next page
-      const items = lastPage?.items ?? lastPage?.data?.items ?? lastPage?.results ?? null;
+      const items =
+        lastPage?.items ?? lastPage?.data?.items ?? lastPage?.results ?? null;
       if (Array.isArray(items) && items.length < limit) return undefined;
 
       return nextCursor ?? undefined;

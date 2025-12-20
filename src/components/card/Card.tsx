@@ -1,43 +1,37 @@
 import { Link } from "react-router-dom";
-import { memo } from "react";
+import { memo, useMemo } from "react";
 import type { IPostResponseDto } from "../../types/post";
 import InteractBar from "../interactBar/InteractBar";
 import { recordViewedPost } from "../../services/user/viewedHistory";
 import { useAuth } from "../../contexts/AuthContext";
 import "../../styles/newsfeed/Card.css";
-import ReactionSection from "../emoji";
-import { useTogglePostReact } from "../../hooks/useReactions";
+import ReactionSection from "../Emoji";
+import { useQueryClient } from "@tanstack/react-query";
+import { getOrCreateSessionSeed } from "../../hooks/useNewsFeed";
+import type { EmojiReactSummaryDto } from "../../types/userReact";
 
 const Card = memo(({ post }: { post: IPostResponseDto }) => {
+  const queryClient = useQueryClient();
+  const sessionSeed = getOrCreateSessionSeed();
   const { user } = useAuth();
 
-  /**
-   * Toggle reaction handler
-   */
-  const { mutate } = useTogglePostReact();
+  const reactions = useMemo<EmojiReactSummaryDto[]>(() => {
+    const cacheData = queryClient.getQueryData<any>(["newsfeed", sessionSeed]);
 
-  const handleToggleReact = ({
-    emojiId,
-    codepoint,
-  }: {
-    emojiId?: number;
-    codepoint?: string;
-  }) => {
-    if (!user || !user.id) {
-      console.warn("User must be logged in to react to posts.");
-      return;
+    if (!cacheData?.pages) return post.reacts?.emojis ?? [];
+
+    for (const page of cacheData.pages) {
+      const items = page.items ?? page.data?.items ?? page.results ?? page;
+      if (!Array.isArray(items)) continue;
+
+      const foundPost = items.find((p: any) => p.id === post.id);
+      if (foundPost?.reacts?.emojis) {
+        return foundPost.reacts.emojis;
+      }
     }
 
-    mutate({
-      userId: user.id,
-      postId: post.id,
-      emojiId,
-      codepoint,
-    });
-  };
-
-  // Convert reactions to display format
-  const reactionData = post.reacts.emojis ?? [];
+    return post.reacts?.emojis ?? [];
+  }, [queryClient, sessionSeed, post.id, post.reacts?.emojis]);
 
   const formatDate = (dateString: Date) => {
     const date = new Date(dateString);
@@ -132,10 +126,7 @@ const Card = memo(({ post }: { post: IPostResponseDto }) => {
           className="newsfeed-card__interact"
           onClick={(e) => e.stopPropagation()}
         >
-          <ReactionSection
-            reactions={reactionData}
-            handleToggleReact={handleToggleReact}
-          />
+          <ReactionSection postId={post.id} reactions={reactions} />
           <InteractBar
             postId={post.id}
             userId={user?.id ?? 0}

@@ -1,6 +1,6 @@
 import React from "react";
 import type { EmojiReactSummaryDto } from "../../../types/userReact";
-import { getTwemojiUrl } from "../utils/twemoji";
+import { getTwemojiUrl } from "../../Emoji/utils/twemoji";
 
 interface EmojiReactionBarProps {
   reactions: EmojiReactSummaryDto[];

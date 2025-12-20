@@ -16,7 +16,9 @@ export const getNewsfeed = async (after?: string | null, seed?: number) => {
   const response = await axiosCustomize.get(url);
   try {
     // Try to stringify the response (useful for pasting here)
-    const safe = JSON.stringify(response, (_k, v) => (typeof v === 'bigint' ? String(v) : v));
+    const safe = JSON.stringify(response, (_k, v) =>
+      typeof v === "bigint" ? String(v) : v
+    );
     console.debug("newsfeedService.getNewsfeed response (json)=", safe);
   } catch (e) {
     console.debug("newsfeedService.getNewsfeed response (raw)=", response);
@@ -24,7 +26,10 @@ export const getNewsfeed = async (after?: string | null, seed?: number) => {
 
   const out = unwrap(response);
   try {
-    console.debug("newsfeedService.getNewsfeed unwrapped=", JSON.stringify(out));
+    console.debug(
+      "newsfeedService.getNewsfeed unwrapped=",
+      JSON.stringify(out)
+    );
   } catch (e) {
     console.debug("newsfeedService.getNewsfeed unwrapped (raw)=", out);
   }

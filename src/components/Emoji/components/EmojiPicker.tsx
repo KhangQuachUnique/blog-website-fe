@@ -4,7 +4,7 @@ import type {
   IEmojiResponseDto,
 } from "../../../types/emoji";
 import { DEFAULT_CATEGORY_TABS } from "../../../types/emoji";
-import { searchEmoji, debounce } from "../utils/utils";
+import { searchEmoji, debounce } from "../../Emoji/utils/utils";
 import type { ICommunityDto } from "../../../types/post";
 
 interface EmojiPickerProps {
