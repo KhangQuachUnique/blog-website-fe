@@ -1,5 +1,5 @@
 import type { IBlockResponseDto, ICreateBlockDto } from "./block";
-import type { UserVoteDto } from "./user-vote";
+import type { IVotesSummaryDto } from "./user-vote";
 
 export const EPostType = {
   PERSONAL: "PERSONAL",
@@ -87,13 +87,6 @@ export interface IReactionSummaryDto {
   totalReactions: number;
 }
 
-/** Votes summary (from newsfeed) */
-export interface IVotesSummaryDto {
-  upvotes: number;
-  downvotes: number;
-  userVote: "upvote" | "downvote" | null;
-}
-
 // ============================================
 // Post Response DTO
 // ============================================
@@ -118,7 +111,7 @@ export interface IPostResponseDto {
   // Blocks (full post detail)
   blocks?: IBlockResponseDto[];
 
-  votes: UserVoteDto;
+  votes: IVotesSummaryDto;
   reacts?: IReactionSummaryDto;
   reactions?: IReactionSummaryDto; // Alias (some endpoints use this name)
 

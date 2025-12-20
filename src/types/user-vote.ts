@@ -1,6 +1,6 @@
-export type VoteType = 'upvote' | 'downvote';
+export type VoteType = "upvote" | "downvote";
 
-export interface UserVoteDto {
+export interface IVotesSummaryDto {
   upvotes: number;
   downvotes: number;
   userVote: VoteType | null;

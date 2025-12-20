@@ -2,10 +2,10 @@
 // VOTE TYPES
 // ============================================
 
-import type { UserVoteDto, VoteType } from './user-vote';
+import type { IVotesSummaryDto, VoteType } from "./user-vote";
 
 // Re-export từ user-vote để các file khác có thể import từ đây
-export type { VoteType } from './user-vote';
+export type { VoteType } from "./user-vote";
 
 /**
  * Response khi lấy trạng thái vote
@@ -32,12 +32,16 @@ export interface VoteButtonProps {
   postId: number;
   userId: number;
   /** Vote data từ post response - ưu tiên dùng cái này */
-  votes?: UserVoteDto;
+  votes?: IVotesSummaryDto;
   /** Fallback nếu không có vote object */
   initialVoteType?: VoteType | null;
   initialUpVotes?: number;
   initialDownVotes?: number;
-  onVoteChange?: (voteType: VoteType | null, upVotes: number, downVotes: number) => void;
-  size?: 'sm' | 'md' | 'lg';
+  onVoteChange?: (
+    voteType: VoteType | null,
+    upVotes: number,
+    downVotes: number
+  ) => void;
+  size?: "sm" | "md" | "lg";
   showCount?: boolean;
 }
