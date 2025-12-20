@@ -8,7 +8,7 @@
   display: flex;
   gap: 0;
   align-items: stretch;
-  height: 300px; /* desktop fixed height - responsive via media queries */
+  height: 350px; /* desktop fixed height - responsive via media queries */
 }
 
 .newsfeed-card:hover {
@@ -95,7 +95,7 @@
   width: 8px;
 }
 .newsfeed-card__reactions::-webkit-scrollbar-thumb {
-  background: rgba(242,149,182,0.35);
+  background: rgba(242, 149, 182, 0.35);
   border-radius: 8px;
 }
 .newsfeed-card__reactions::-webkit-scrollbar-track {
@@ -163,11 +163,10 @@
 }
 
 .newsfeed-card__avatar {
-  width: 40px;
-  height: 40px;
+  width: 50px;
+  height: 50px;
   border-radius: 50%;
   object-fit: cover;
-  border: 2px solid #f295b6; /* viền avatar hồng đậm */
 }
 
 .newsfeed-card__author-info {
@@ -178,8 +177,8 @@
 
 .newsfeed-card__username {
   font-weight: 600;
-  font-size: 0.875rem;
-  color: hsl(var(--foreground));
+  font-size: 0.9rem;
+  color: #333;
 }
 
 .newsfeed-card__community {
@@ -197,7 +196,7 @@
 .newsfeed-card__title {
   font-size: 1.35rem;
   font-weight: 800;
-  color: #F295B6; /* more attention-grabbing */
+  color: #62535b; /* more attention-grabbing */
   margin-bottom: 8px;
   line-height: 1.15;
   display: -webkit-box;
@@ -228,7 +227,7 @@
 }
 
 .newsfeed-card__hashtag--clickable:hover {
-  background-color: #F295B6;
+  background-color: #f295b6;
   color: white;
   transform: scale(1.05);
   box-shadow: 0 2px 8px rgba(242, 149, 182, 0.4);
@@ -314,7 +313,6 @@
 
 /* Responsive */
 @media (max-width: 768px) {
-
   .newsfeed-card {
     flex-direction: column;
     height: 360px; /* mobile fixed height (thumbnail + content area) */
@@ -333,11 +331,11 @@
   } */
 
   .newsfeed-card__content {
-  display: flex;
-  flex-direction: column; /* Xếp chồng: Title -> Header -> Description */
-  justify-content: center;
-  height: 100%;
-  padding-right: 10px;
+    display: flex;
+    flex-direction: column; /* Xếp chồng: Title -> Header -> Description */
+    justify-content: center;
+    height: 100%;
+    padding-right: 10px;
   }
 
   .newsfeed-card__title {
