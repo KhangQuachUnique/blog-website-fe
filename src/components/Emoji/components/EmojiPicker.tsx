@@ -319,6 +319,7 @@ export const EmojiPicker: React.FC<EmojiPickerProps> = ({
         {/* Emoji Grid */}
         <div
           ref={scrollContainerRef}
+          className="emoji-scrollbar"
           style={{
             flex: 1,
             overflowY: "auto",
@@ -326,22 +327,24 @@ export const EmojiPicker: React.FC<EmojiPickerProps> = ({
             scrollbarColor: "#FFB8D1 #FFF8FA",
             backgroundColor: "#FFFFFF",
           }}
-          css={`
-            &::-webkit-scrollbar {
-              width: 8px;
-            }
-            &::-webkit-scrollbar-track {
-              background: #fff8fa;
-            }
-            &::-webkit-scrollbar-thumb {
-              background-color: #ffb8d1;
-              border-radius: 8px;
-            }
-            &::-webkit-scrollbar-thumb:hover {
-              background-color: #f295b6;
-            }
-          `}
         >
+          <style>
+            {`
+              .emoji-scrollbar::-webkit-scrollbar {
+                width: 8px;
+              }
+              .emoji-scrollbar::-webkit-scrollbar-track {
+                background: #fff8fa;
+              }
+              .emoji-scrollbar::-webkit-scrollbar-thumb {
+                background-color: #ffb8d1;
+                border-radius: 8px;
+              }
+              .emoji-scrollbar::-webkit-scrollbar-thumb:hover {
+                background-color: #f295b6;
+              }
+            `}
+          </style>
           {isSearching ? (
             // Search Results
             <div>

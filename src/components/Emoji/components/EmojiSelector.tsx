@@ -5,6 +5,7 @@ import React, {
   useCallback,
   useMemo,
 } from "react";
+import { createPortal } from "react-dom";
 
 import { EmojiPicker } from "../../Emoji/components/EmojiPicker";
 import type { IEmojiCategoryData } from "../../../types/emoji";
@@ -202,26 +203,29 @@ export const EmojiSelector: React.FC<EmojiSelectorProps> = ({
       </button>
 
       {/* Emoji Picker Popup */}
-      {isPickerOpen && pickerPosition && (
-        <div
-          ref={pickerRef}
-          style={{
-            position: "fixed",
-            zIndex: 999999,
-            top: pickerPosition.top,
-            left: pickerPosition.left,
-            opacity: isPositionReady ? 1 : 0,
-            transition: "opacity 0.1s ease",
-          }}
-        >
-          <EmojiPicker
-            emojisData={emojisData}
-            recent={recentEmojis}
-            onSelect={handleSelect}
-            onClose={() => setIsPickerOpen(false)}
-          />
-        </div>
-      )}
+      {isPickerOpen &&
+        pickerPosition &&
+        createPortal(
+          <div
+            ref={pickerRef}
+            style={{
+              position: "fixed",
+              zIndex: 999999,
+              top: pickerPosition.top,
+              left: pickerPosition.left,
+              opacity: isPositionReady ? 1 : 0,
+              transition: "opacity 0.1s ease",
+            }}
+          >
+            <EmojiPicker
+              emojisData={emojisData}
+              recent={recentEmojis}
+              onSelect={handleSelect}
+              onClose={() => setIsPickerOpen(false)}
+            />
+          </div>,
+          document.body
+        )}
     </div>
   );
 };

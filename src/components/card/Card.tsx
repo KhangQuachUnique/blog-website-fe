@@ -1,23 +1,42 @@
-import React, { useEffect, useRef } from "react";
+import React, { useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import type {
-  IPostResponseDto,
-  IEmojiSummaryDto,
-  IReactionSummaryDto,
-} from "../../types/post";
+import Avatar from "@mui/material/Avatar";
+import { Repeat2 } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+
+import type { IPostResponseDto } from "../../types/post";
 import { EPostType } from "../../types/post";
 import InteractBar from "../interactBar/InteractBar";
 import { recordViewedPost } from "../../services/user/viewedHistory";
 import { useAuth } from "../../contexts/AuthContext";
 import { useGetPostById } from "../../hooks/usePost";
-import Avatar from "@mui/material/Avatar";
 import { stringAvatar } from "../../utils/avatarHelper";
 import "../../styles/newsfeed/Card.css";
-import { Repeat2 } from "lucide-react";
+import ReactionSection from "../Emoji";
+import type { EmojiReactSummaryDto } from "../../types/userReact";
+import type { IGetNewsfeedResponseDto } from "../../types/newsfeed";
+import { getOrCreateSessionSeed } from "../../hooks/useNewsFeed";
 
 const Card = ({ post }: { post: IPostResponseDto }) => {
+  const queryClient = useQueryClient();
+  const sessionSeed = getOrCreateSessionSeed();
   const { user } = useAuth();
   const navigate = useNavigate();
+
+  const reactions = useMemo<EmojiReactSummaryDto[]>(() => {
+    const cacheData = queryClient.getQueryData<IGetNewsfeedResponseDto>([
+      "newsfeed",
+      sessionSeed,
+    ]);
+
+    if (!cacheData?.items) {
+      return post.reacts?.emojis ?? [];
+    }
+
+    const foundPost = cacheData.items.find((p) => p.id === post.id);
+
+    return foundPost?.reacts?.emojis ?? post.reacts?.emojis ?? [];
+  }, [queryClient, sessionSeed, post.id, post.reacts?.emojis]);
 
   // Handle hashtag click - navigate to search page
   const handleHashtagClick = (e: React.MouseEvent, hashtagName: string) => {
@@ -33,111 +52,8 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
     navigate(`/profile/${authorId}`);
   };
 
-  // Extract reactions safely using typed fields
-  const reactionsData: IReactionSummaryDto | undefined =
-    post.reacts ?? post.reactions;
-  const reactionEmojis: Array<{ node: React.ReactNode; count: number }> = [];
-  if (reactionsData && Array.isArray(reactionsData.emojis)) {
-    for (const r of reactionsData.emojis as IEmojiSummaryDto[]) {
-      const cnt = r.totalCount ?? 0;
-      let node: React.ReactNode;
-
-      // Prefer emoji image url if provided (custom emoji asset), otherwise construct from codepoint, otherwise fallback to raw char
-      if (r.emojiUrl) {
-        node = (
-          <img src={r.emojiUrl} alt="emoji" style={{ width: 18, height: 18 }} />
-        );
-      } else if (r.codepoint) {
-        let ch: string;
-        try {
-          const parts = r.codepoint
-            .split("-")
-            .map((p: string) => parseInt(p, 16));
-          ch = String.fromCodePoint(...parts);
-        } catch {
-          ch = "💗";
-        }
-        node = <span>{ch}</span>;
-      } else {
-        node = <span>💗</span>;
-      }
-
-      reactionEmojis.push({ node, count: cnt });
-    }
-  }
-
-  // Reactions container ref (used for repost horizontal scroll behavior)
-  const reactionsRef = useRef<HTMLDivElement | null>(null);
-
   // Check if this is a repost
   const isRepost = post.type === EPostType.REPOST;
-
-  // For repost cards: convert vertical wheel to horizontal scroll and enable drag-to-scroll
-  useEffect(() => {
-    if (!isRepost) return;
-    const el = reactionsRef.current;
-    if (!el) return;
-
-    let isDown = false;
-    let startX = 0;
-    let startScrollLeft = 0;
-
-    const onWheel = (e: WheelEvent) => {
-      // Prefer vertical delta -> horizontal scroll
-      if (Math.abs(e.deltaY) > 0) {
-        e.preventDefault();
-        el.scrollLeft += e.deltaY;
-      }
-    };
-
-    const onPointerDown = (ev: PointerEvent) => {
-      isDown = true;
-      startX = ev.clientX;
-      startScrollLeft = el.scrollLeft;
-      try {
-        el.setPointerCapture(ev.pointerId);
-      } catch {
-        // Ignore pointer capture errors
-      }
-      el.style.cursor = "grabbing";
-    };
-
-    const onPointerMove = (ev: PointerEvent) => {
-      if (!isDown) return;
-      const dx = ev.clientX - startX;
-      el.scrollLeft = startScrollLeft - dx;
-    };
-
-    const endDrag = (ev?: PointerEvent) => {
-      isDown = false;
-      try {
-        if (ev && typeof ev.pointerId !== "undefined") {
-          try {
-            el.releasePointerCapture(ev.pointerId);
-          } catch {
-            // Ignore pointer release errors
-          }
-        }
-      } catch {
-        // Ignore errors
-      }
-      el.style.cursor = "grab";
-    };
-
-    el.addEventListener("wheel", onWheel, { passive: false });
-    el.addEventListener("pointerdown", onPointerDown as EventListener);
-    window.addEventListener("pointermove", onPointerMove as EventListener);
-    window.addEventListener("pointerup", endDrag as EventListener);
-    el.addEventListener("pointerleave", endDrag as EventListener);
-
-    return () => {
-      el.removeEventListener("wheel", onWheel as EventListener);
-      el.removeEventListener("pointerdown", onPointerDown as EventListener);
-      window.removeEventListener("pointermove", onPointerMove as EventListener);
-      window.removeEventListener("pointerup", endDrag as EventListener);
-      el.removeEventListener("pointerleave", endDrag as EventListener);
-    };
-  }, [isRepost, reactionEmojis.length]);
 
   // Always call the hook at top level (not conditionally)
   const originalId = post.originalPost?.id ?? post.originalPostId;
@@ -266,45 +182,6 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
               </div>
             </Link>
 
-            {/* Repost metadata (links to the repost itself): title, time, hashtags, avatar
-            <Link
-              to={`/post/${post.id}`}
-              className="newsfeed-card__repost-meta"
-              onClick={() => {
-                if (user && user.id) recordViewedPost(post.id);
-              }}
-            >
-              <h2 className="newsfeed-card__title">{post.title}</h2>
-
-              <div className="newsfeed-card__header">
-                <div className="newsfeed-card__author">
-                  <img
-                    src={post.author.avatarUrl}
-                    alt={post.author.username}
-                    className="newsfeed-card__avatar"
-                  />
-                  <div className="newsfeed-card__author-info">
-                    <span className="newsfeed-card__username">{post.author.username}</span>
-                  </div>
-                </div>
-                <time className="newsfeed-card__time">{formatDate(post.createdAt)}</time>
-              </div>
-
-              {post.hashtags && post.hashtags.length > 0 && (
-                <div className="newsfeed-card__hashtags">
-                  {post.hashtags.map((h) => (
-                    <span 
-                      key={h.id} 
-                      className="newsfeed-card__hashtag newsfeed-card__hashtag--clickable"
-                      onClick={(e) => handleHashtagClick(e, h.name)}
-                    >
-                      #{h.name}
-                    </span>
-                  ))}
-                </div>
-              )}
-            </Link> */}
-
             {/* Original post content — links to original post */}
             <Link
               to={`/post/${original?.id ?? post.originalPostId ?? post.id}`}
@@ -377,25 +254,6 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
             </Link>
 
             {/* InteractBar của người repost */}
-            {/* Reactions (up to 2 rows) */}
-            {reactionEmojis.length > 0 && (
-              <div
-                ref={reactionsRef}
-                className="newsfeed-card__reactions"
-                onClick={(e) => e.stopPropagation()}
-              >
-                {reactionEmojis.map((r, idx) => (
-                  <div key={idx} className="newsfeed-card__reaction">
-                    <span className="newsfeed-card__reaction-emoji">
-                      {r.node}
-                    </span>
-                    <span className="newsfeed-card__reaction-count">
-                      {r.count}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
 
             <div
               className="newsfeed-card__interact"
@@ -509,29 +367,12 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
             </Link>
 
             {/* InteractBar nằm dưới content */}
-            {/* Reactions (up to 2 rows) */}
-            {reactionEmojis.length > 0 && (
-              <div
-                className="newsfeed-card__reactions"
-                onClick={(e) => e.stopPropagation()}
-              >
-                {reactionEmojis.map((r, idx) => (
-                  <div key={idx} className="newsfeed-card__reaction">
-                    <span className="newsfeed-card__reaction-emoji">
-                      {r.node}
-                    </span>
-                    <span className="newsfeed-card__reaction-count">
-                      {r.count}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
 
             <div
               className="newsfeed-card__interact"
               onClick={(e) => e.stopPropagation()}
             >
+              <ReactionSection postId={post.id} reactions={reactions} />
               <InteractBar
                 postId={post.id}
                 userId={user?.id ?? 0}

@@ -1,7 +1,15 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQueryClient,
+  type InfiniteData,
+} from "@tanstack/react-query";
 import { togglePostReact } from "../services/user/reactions/reactionService";
 import { getOrCreateSessionSeed } from "./useNewsFeed";
 import type { EmojiReactSummaryDto, IToggleReactDto } from "../types/userReact";
+import {
+  type IGetNewsfeedResponseDto,
+  type INewsfeedItemDto,
+} from "../types/newsfeed";
 
 /**
  * Hook to toggle reaction on a post.
@@ -18,40 +26,43 @@ export const useTogglePostReact = () => {
       await queryClient.cancelQueries({
         queryKey: ["newsfeed", sessionSeed],
       });
-      const previousFeed = queryClient.getQueryData(["newsfeed", sessionSeed]);
+      const previousFeed = queryClient.getQueryData<
+        InfiniteData<IGetNewsfeedResponseDto>
+      >(["newsfeed", sessionSeed]);
 
-      const newFeed = {
+      console.log("Previous feed:", previousFeed);
+
+      const newFeed: InfiniteData<IGetNewsfeedResponseDto> = {
         pages:
-          previousFeed?.pages?.map((page: any) => {
-            const items =
-              page.items ?? page.data?.items ?? page.results ?? page;
+          previousFeed?.pages?.map((page: IGetNewsfeedResponseDto) => {
+            const items = page.items;
+
+            console.log("Page", page);
+            console.log("Items:", items);
 
             if (!Array.isArray(items)) {
               return page; // không thay đổi nếu không có items
             }
 
             // Tìm post cần update
-            const updatedItems = items.map((post: any) => {
+            const updatedItems = items.map((post: INewsfeedItemDto) => {
               if (post.id !== toggleData.postId || !post.reacts?.emojis) {
                 return post;
               }
 
-              // Sao chép mảng emojis
               const newEmojis = [...post.reacts.emojis];
 
-              const { emojiId, codePoint } = toggleData;
+              const { emojiId, codepoint } = toggleData;
               const existingIndex = newEmojis.findIndex(
                 (r: EmojiReactSummaryDto) =>
-                  emojiId ? r.emojiId === emojiId : r.codepoint === codePoint
+                  emojiId ? r.emojiId === emojiId : r.codepoint === codepoint
               );
 
               if (existingIndex !== -1) {
                 const existing = newEmojis[existingIndex];
 
                 if (existing.reactedByCurrentUser) {
-                  // Đang react → bỏ react
                   if (existing.totalCount <= 1) {
-                    // Xóa luôn nếu count về 0
                     newEmojis.splice(existingIndex, 1);
                   } else {
                     newEmojis[existingIndex] = {
@@ -61,7 +72,6 @@ export const useTogglePostReact = () => {
                     };
                   }
                 } else {
-                  // Chưa react → thêm react
                   newEmojis[existingIndex] = {
                     ...existing,
                     totalCount: existing.totalCount + 1,
@@ -69,19 +79,16 @@ export const useTogglePostReact = () => {
                   };
                 }
               } else {
-                // Reaction hoàn toàn mới
                 const newReaction: EmojiReactSummaryDto = {
                   emojiId: emojiId,
-                  codepoint: codePoint,
+                  codepoint: codepoint,
                   totalCount: 1,
                   reactedByCurrentUser: true,
                   type: emojiId ? "CUSTOM" : "UNICODE",
-                  // emojiUrl nếu cần có thể truyền từ component hoặc để backend bổ sung sau
                 };
                 newEmojis.push(newReaction);
               }
 
-              // Tính lại totalReactions nếu có field này
               const totalReactions = newEmojis.reduce(
                 (sum: number, r: EmojiReactSummaryDto) => sum + r.totalCount,
                 0
@@ -97,17 +104,12 @@ export const useTogglePostReact = () => {
               };
             });
 
-            // Trả về page mới với items đã update
-            if (page.items) {
-              return { ...page, items: updatedItems };
-            }
-            if (page.data?.items) {
-              return { ...page, data: { ...page.data, items: updatedItems } };
-            }
-            if (page.results) {
-              return { ...page, results: updatedItems };
-            }
-            return { ...page, ...updatedItems }; // fallback nếu items là chính page
+            // Trả về page mới (the expected shape is IGetNewsfeedResponseDto)
+            return {
+              ...page,
+              items: updatedItems,
+              pagination: page.pagination,
+            } as IGetNewsfeedResponseDto;
           }) || [],
         pageParams: previousFeed?.pageParams || [],
       };

@@ -19,7 +19,7 @@ export interface UserReactSummaryDto {
 export interface IToggleReactDto {
   userId: number;
   emojiId?: number;
-  codePoint?: string;
+  codepoint?: string;
   postId?: number;
   commentId?: number;
 }

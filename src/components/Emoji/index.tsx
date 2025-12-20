@@ -23,18 +23,18 @@ const ReactionSection = ({ postId, reactions }: ReactionSectionProps) => {
 
   const handleToggleReact = ({
     emojiId,
-    codePoint,
+    codepoint,
   }: {
     emojiId?: number;
-    codePoint?: string;
+    codepoint?: string;
   }) => {
     mutation.mutate(
-      { emojiId, codePoint, postId, userId: user.id },
+      { emojiId, codepoint, postId, userId: user.id },
       {
         onSuccess: () => {
           // Cập nhật recent nếu là unicode
-          if (codePoint) {
-            add(codePoint);
+          if (codepoint) {
+            add(codepoint);
           }
         },
       }
