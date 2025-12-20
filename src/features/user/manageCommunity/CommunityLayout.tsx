@@ -4,7 +4,7 @@ import {
   Outlet,
   useParams,
   useNavigate,
-  useLocation,
+  // useLocation,
 } from "react-router-dom";
 import { useGetCommunitySettings } from "../../../hooks/useCommunity";
 import {
@@ -20,7 +20,7 @@ const CommunityLayout = () => {
   const communityId = Number(id);
 
   const navigate = useNavigate();
-  const location = useLocation();
+  // const location = useLocation();
 
   // ✅ luôn gọi hooks đủ, kể cả id không hợp lệ
   const safeCommunityId =
@@ -196,18 +196,22 @@ const CommunityLayout = () => {
               </button>
             )}
           </div>
+
+          {/* ✅ FIX: chỉ member/admin/mod mới thấy nút tạo bài viết */}
           <div>
-            <CustomButton
-              variant="outline"
-              style={{
-                width: "auto",
-                border: "2px solid #F295B6",
-                color: "#F295B6",
-              }}
-              onClick={() => navigate(`/community/${communityId}/create-post`)}
-            >
-              Tạo bài viết
-            </CustomButton>
+            {isMemberApproved && (
+              <CustomButton
+                variant="outline"
+                style={{
+                  width: "auto",
+                  border: "2px solid #F295B6",
+                  color: "#F295B6",
+                }}
+                onClick={() => navigate(`/community/${communityId}/create-post`)}
+              >
+                Tạo bài viết
+              </CustomButton>
+            )}
           </div>
         </div>
 

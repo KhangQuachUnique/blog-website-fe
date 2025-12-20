@@ -47,6 +47,24 @@ export const updatePost = async (
   return response;
 };
 
+export const getPostsByCommunityId = async (communityId: number) => {
+  return axios.get(`/blog-posts/community/${communityId}`);
+};
+
+export const getManagePostsByCommunityId = async (communityId: number, status?: string) => {
+  return axios.get(`/blog-posts/community/${communityId}/manage`, {
+    params: status ? { status } : {},
+  });
+};
+
+export const approvePost = async (postId: number) => {
+  return axios.patch(`/blog-posts/${postId}/publish`);
+};
+
+export const deletePost = async (postId: number) => {
+  return axios.delete(`/blog-posts/${postId}`);
+};
+
 export const togglePostPrivacy = async (
   postId: number
 ): Promise<{ message: string; data: IPostResponseDto }> => {

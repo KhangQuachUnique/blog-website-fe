@@ -1,6 +1,7 @@
 import { HiOutlineX } from "react-icons/hi";
 
 import logo from "../../assets/logo.png";
+import { Link } from "react-router-dom";
 
 interface NavLink {
   name: string;
@@ -36,15 +37,15 @@ const SideBar = ({ navLinks, collapsed, setCollapsed }: SideBarProps) => {
         <ul className="space-y-1">
           {navLinks.map((link) => (
             <li key={link.name}>
-              <a
-                href={link.href}
+              <Link
+                to={link.href}
                 className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 hover:bg-[#FFE4EC] hover:text-[#8C1D35] hover:translate-x-1 group font-label"
               >
                 <div className="text-[#F295B6] group-hover:scale-110 transition-transform duration-200">
                   {link.icon}
                 </div>
                 <div>{link.name}</div>
-              </a>
+              </Link>
             </li>
           ))}
         </ul>
