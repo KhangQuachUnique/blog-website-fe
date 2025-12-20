@@ -4,14 +4,14 @@ import {
   useApprovePost,
   useDeletePost,
   useGetCommunityManagePosts,
-} from "../../../hooks/usePost"; // chỉnh path nếu khác
+} from "../../../hooks/usePost";
 
 type TabFilter = "all" | "approved" | "pending";
 
 const mapTabToStatusParam = (tab: TabFilter): string | undefined => {
   if (tab === "approved") return "ACTIVE";
   if (tab === "pending") return "DRAFT";
-  return undefined; // all
+  return undefined;
 };
 
 const formatDate = (dateInput: string | Date) => {
@@ -24,26 +24,28 @@ const PostManagement = () => {
   const communityId = Number(id);
 
   const [filter, setFilter] = useState<TabFilter>("all");
-
-  // modal xem chi tiết
   const [selectedPost, setSelectedPost] = useState<any | null>(null);
-
-  // modal xoá
   const [postToDelete, setPostToDelete] = useState<any | null>(null);
+
+  // ✅ per-item loading
+  const [approvingPostId, setApprovingPostId] = useState<number | null>(null);
+  const [deletingPostId, setDeletingPostId] = useState<number | null>(null);
 
   const statusParam = useMemo(() => mapTabToStatusParam(filter), [filter]);
 
-  const {
-    data: posts,
-    isLoading,
-    isError,
-  } = useGetCommunityManagePosts(communityId, statusParam);
+  const { data: posts, isLoading, isError } = useGetCommunityManagePosts(
+    communityId,
+    statusParam
+  );
 
   const approveMutation = useApprovePost(communityId);
   const deleteMutation = useDeletePost(communityId);
 
   const handleApprove = (postId: number) => {
-    approveMutation.mutate(postId);
+    setApprovingPostId(postId);
+    approveMutation.mutate(postId, {
+      onSettled: () => setApprovingPostId(null),
+    });
   };
 
   const handleOpenView = (post: any) => setSelectedPost(post);
@@ -54,8 +56,12 @@ const PostManagement = () => {
 
   const handleConfirmDelete = () => {
     if (!postToDelete) return;
-    deleteMutation.mutate(postToDelete.id, {
+    const id = postToDelete.id;
+
+    setDeletingPostId(id);
+    deleteMutation.mutate(id, {
       onSuccess: () => setPostToDelete(null),
+      onSettled: () => setDeletingPostId(null),
     });
   };
 
@@ -71,49 +77,60 @@ const PostManagement = () => {
       {/* Tabs filter */}
       <div className="community-tabs" style={{ marginBottom: 24 }}>
         <button
-          className={`community-tab ${filter === "all" ? "community-tab-active" : ""}`}
+          className={`community-tab ${
+            filter === "all" ? "community-tab-active" : ""
+          }`}
           onClick={() => setFilter("all")}
         >
           Tất cả
         </button>
 
         <button
-          className={`community-tab ${filter === "approved" ? "community-tab-active" : ""}`}
+          className={`community-tab ${
+            filter === "approved" ? "community-tab-active" : ""
+          }`}
           onClick={() => setFilter("approved")}
         >
           Đã duyệt
         </button>
 
         <button
-          className={`community-tab ${filter === "pending" ? "community-tab-active" : ""}`}
+          className={`community-tab ${
+            filter === "pending" ? "community-tab-active" : ""
+          }`}
           onClick={() => setFilter("pending")}
         >
           Chờ duyệt
         </button>
       </div>
 
-      {/* Loading / Error */}
       {isLoading && <p style={{ color: "#888" }}>Đang tải bài viết...</p>}
-      {isError && <p style={{ color: "#ff5370" }}>Lỗi khi tải danh sách bài viết.</p>}
+      {isError && (
+        <p style={{ color: "#ff5370" }}>Lỗi khi tải danh sách bài viết.</p>
+      )}
 
-      {/* Danh sách bài viết */}
       {!isLoading &&
         !isError &&
         list.map((post: any) => {
           const isPending = post.status === "DRAFT";
-          const authorName = post.author?.fullName || post.author?.username || "Người dùng";
-          const avatar = post.author?.avatarUrl || post.author?.avatar || "https://i.pravatar.cc/60";
+          const authorName =
+            post.author?.fullName || post.author?.username || "Người dùng";
+          const avatar =
+            post.author?.avatarUrl ||
+            post.author?.avatar ||
+            "https://i.pravatar.cc/60";
           const date = post.createdAt ? formatDate(post.createdAt) : "";
+
+          const isApprovingThis =
+            approveMutation.isPending && approvingPostId === post.id;
+          const isDeletingThis =
+            deleteMutation.isPending && deletingPostId === post.id;
 
           return (
             <div
               key={post.id}
               className="community-card"
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 16,
-              }}
+              style={{ display: "flex", alignItems: "center", gap: 16 }}
             >
               <img
                 src={avatar}
@@ -141,7 +158,6 @@ const PostManagement = () => {
                 )}
               </div>
 
-              {/* Actions */}
               <div style={{ display: "flex", gap: 10 }}>
                 {isPending && (
                   <button
@@ -150,7 +166,7 @@ const PostManagement = () => {
                     onClick={() => handleApprove(post.id)}
                     disabled={approveMutation.isPending}
                   >
-                    {approveMutation.isPending ? "Đang duyệt..." : "Duyệt"}
+                    {isApprovingThis ? "Đang duyệt..." : "Duyệt"}
                   </button>
                 )}
 
@@ -167,21 +183,26 @@ const PostManagement = () => {
                   Xem
                 </button>
 
-                <button
-                  style={{
-                    padding: "6px 14px",
-                    background: "#ff5370",
-                    color: "white",
-                    border: "none",
-                    borderRadius: 999,
-                    cursor: "pointer",
-                    opacity: deleteMutation.isPending ? 0.7 : 1,
-                  }}
-                  onClick={() => handleOpenDelete(post)}
-                  disabled={deleteMutation.isPending}
-                >
-                  {deleteMutation.isPending ? "Đang xóa..." : "Xóa"}
-                </button>
+                {/* ✅ CHỈ HIỆN NÚT XÓA CHO BÀI CHỜ DUYỆT (DRAFT) */}
+                {isPending && (
+                  <button
+                    style={{
+                      padding: "6px 14px",
+                      background: "#ff5370",
+                      color: "white",
+                      border: "none",
+                      borderRadius: 999,
+                      cursor: deleteMutation.isPending
+                        ? "not-allowed"
+                        : "pointer",
+                      opacity: deleteMutation.isPending ? 0.7 : 1,
+                    }}
+                    onClick={() => handleOpenDelete(post)}
+                    disabled={deleteMutation.isPending}
+                  >
+                    {isDeletingThis ? "Đang xóa..." : "Xóa"}
+                  </button>
+                )}
               </div>
             </div>
           );
@@ -223,8 +244,10 @@ const PostManagement = () => {
                     "Người dùng"}
                 </div>
                 <div style={{ fontSize: 13, color: "#666" }}>
-                  {selectedPost.createdAt ? formatDate(selectedPost.createdAt) : ""} ·{" "}
-                  {selectedPost.status === "DRAFT" ? "Chờ duyệt" : "Đã duyệt"}
+                  {selectedPost.createdAt
+                    ? formatDate(selectedPost.createdAt)
+                    : ""}{" "}
+                  · {selectedPost.status === "DRAFT" ? "Chờ duyệt" : "Đã duyệt"}
                 </div>
               </div>
             </div>
@@ -265,11 +288,13 @@ const PostManagement = () => {
 
             <h4 style={{ marginBottom: 8 }}>Xóa bài viết?</h4>
             <p style={{ fontSize: 14, color: "#666", marginBottom: 20 }}>
-              Bạn có chắc chắn muốn xóa bài <strong>{postToDelete.title}</strong> không? Hành động
-              này không thể hoàn tác.
+              Bạn có chắc chắn muốn xóa bài <strong>{postToDelete.title}</strong>{" "}
+              không? Hành động này không thể hoàn tác.
             </p>
 
-            <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
+            <div
+              style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}
+            >
               <button
                 style={{
                   padding: "8px 16px",
@@ -279,6 +304,7 @@ const PostManagement = () => {
                   cursor: "pointer",
                 }}
                 onClick={handleCloseDelete}
+                disabled={deleteMutation.isPending}
               >
                 Hủy
               </button>
@@ -290,7 +316,7 @@ const PostManagement = () => {
                   border: "none",
                   background: "#ff5370",
                   color: "#fff",
-                  cursor: "pointer",
+                  cursor: deleteMutation.isPending ? "not-allowed" : "pointer",
                   opacity: deleteMutation.isPending ? 0.7 : 1,
                 }}
                 onClick={handleConfirmDelete}

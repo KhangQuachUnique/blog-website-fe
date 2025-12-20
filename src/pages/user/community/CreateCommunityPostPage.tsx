@@ -63,17 +63,38 @@ const CreateCommunityPostPage = () => {
 
   const handlePublish = (dto: ICreateBlogPostDto) => {
     mutate(dto, {
-      onSuccess: () => {
-        showToast({
-          type: "success",
-          message: "Đăng bài thành công!",
-        });
-        navigate(`/community/${communityId}`);
+      onSuccess: (createdPost: any) => {
+        // BE sẽ trả status: "ACTIVE" hoặc "DRAFT"
+        const status = createdPost?.status;
+
+        if (status === "DRAFT") {
+          showToast({
+            type: "info",
+            message: "Bài viết đã được gửi và đang chờ duyệt.",
+            duration: 3000,
+          });
+        } else {
+          showToast({
+            type: "success",
+            message: "Đăng bài thành công!",
+            duration: 2500,
+          });
+        }
+
+        // ✅ điều hướng về trang cộng đồng sau khi submit
+        // setTimeout nhỏ để toast kịp render ổn định
+        setTimeout(() => {
+          navigate(`/community/${communityId}`, { replace: true });
+        }, 50);
       },
       onError: (err: any) => {
         showToast({
           type: "error",
-          message: `Xảy ra lỗi khi đăng bài: ${err?.message ?? "Unknown error"}`,
+          message:
+            err?.message ||
+            err?.response?.data?.message ||
+            "Xảy ra lỗi khi đăng bài.",
+          duration: 3000,
         });
       },
     });
