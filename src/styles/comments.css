@@ -1,0 +1,54 @@
+.comments-section {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.comment-item {
+  transition: background-color 0.2s ease;
+}
+
+.comment-item:hover {
+  background-color: #f9fafb;
+}
+
+.child-comment-item {
+  padding: 12px;
+  background-color: #f8fafc;
+  border-radius: 8px;
+  border-left: 3px solid #e5e7eb;
+}
+
+.reply-form textarea {
+  min-height: 80px;
+}
+
+.comment-form textarea {
+  min-height: 100px;
+}
+
+/* Responsive design */
+@media (max-width: 640px) {
+  .comments-section {
+    padding: 0 16px;
+  }
+  
+  .comment-item .ml-8 {
+    margin-left: 1rem;
+  }
+}
+
+/* Animation for new comments */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.comment-item.new-comment {
+  animation: fadeInUp 0.3s ease-out;
+}

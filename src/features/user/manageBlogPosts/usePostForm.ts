@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { EBlockType, ObjectFitType } from "../../../types/block";
 import type { IPostResponseDto } from "../../../types/post";
 import { useImageForm } from "../../../hooks/useImage";
@@ -28,10 +28,58 @@ export interface UsePostFormOptions {
   post?: IPostResponseDto;
 }
 
+export interface ValidationError {
+  field: string;
+  message: string;
+}
+
+export interface DraftData {
+  title: string;
+  shortDescription: string;
+  thumbnailUrl: string | null;
+  isPublic: boolean;
+  hashtags: string[];
+  layout: LayoutItem[];
+  blocks: BlockData[];
+  savedAt: number; // timestamp
+}
+
+// Draft expiration time: 10 minutes
+const DRAFT_EXPIRATION_MS = 10 * 60 * 1000;
+
+// Fixed draft key - only one draft is saved at a time
+const DRAFT_STORAGE_KEY = "blog-post-draft";
+
+/**
+ * Load draft from localStorage if valid (not expired)
+ */
+const loadDraftFromStorage = (): DraftData | null => {
+  try {
+    const savedDraft = localStorage.getItem(DRAFT_STORAGE_KEY);
+    if (!savedDraft) return null;
+
+    const draft: DraftData = JSON.parse(savedDraft);
+    const now = Date.now();
+
+    // Check if draft is still valid (not expired)
+    if (now - draft.savedAt < DRAFT_EXPIRATION_MS) {
+      return draft;
+    } else {
+      // Draft expired, remove it
+      localStorage.removeItem(DRAFT_STORAGE_KEY);
+      return null;
+    }
+  } catch (error) {
+    console.error("Error loading draft:", error);
+    localStorage.removeItem(DRAFT_STORAGE_KEY);
+    return null;
+  }
+};
+
 // Default values
 const DEFAULT_LAYOUT: LayoutItem[] = [
-  { i: "1", x: 0, y: 0, w: 8, h: 6, minW: 3, minH: 4 },
-  { i: "2", x: 8, y: 0, w: 8, h: 6, minW: 3, minH: 4 },
+  { i: "1", x: 0, y: 0, w: 8, h: 8, minW: 3, minH: 2 },
+  { i: "2", x: 8, y: 0, w: 8, h: 8, minW: 3, minH: 2 },
 ];
 
 const DEFAULT_BLOCKS: BlockData[] = [
@@ -57,16 +105,16 @@ const createNewBlock = (id: string, type: EBlockType): BlockData => ({
 });
 
 /**
- * Tạo layout item mới
+ * Tạo layout item mới - h adjusted for rowHeight: 20
  */
 const createNewLayoutItem = (id: string, x: number, y: number): LayoutItem => ({
   i: id,
   x,
   y,
   w: 8,
-  h: 6,
+  h: 8,
   minW: 3,
-  minH: 4,
+  minH: 2, // Small minH to allow auto-resize to work properly
 });
 
 /**
@@ -82,7 +130,7 @@ const mapPostToLayout = (post: IPostResponseDto): LayoutItem[] => {
     w: block.width,
     h: block.height,
     minW: 3,
-    minH: 4,
+    minH: 2, // Small minH to allow auto-resize to work properly
   }));
 };
 
@@ -108,26 +156,51 @@ const mapPostToBlocks = (post: IPostResponseDto): BlockData[] => {
 export const usePostForm = (options: UsePostFormOptions = {}) => {
   const { post } = options;
 
-  // Basic Info
-  const [title, setTitle] = useState(post?.title || "");
+  // Load draft once during initialization (only for create mode)
+  const initialDraft = !post ? loadDraftFromStorage() : null;
+
+  // Track if form has unsaved changes
+  const hasUnsavedChangesRef = useRef(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
+  // Helper to mark form as dirty
+  const markAsDirty = useCallback(() => {
+    hasUnsavedChangesRef.current = true;
+    setHasUnsavedChanges(true);
+  }, []);
+
+  // Helper to mark form as clean
+  const markAsClean = useCallback(() => {
+    hasUnsavedChangesRef.current = false;
+    setHasUnsavedChanges(false);
+  }, []);
+
+  // Basic Info - use draft if available, then post, then defaults
+  const [title, setTitle] = useState(initialDraft?.title ?? post?.title ?? "");
   const [shortDescription, setShortDescription] = useState(
-    post?.shortDescription || ""
+    initialDraft?.shortDescription ?? post?.shortDescription ?? ""
   );
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(
-    post?.thumbnailUrl || null
+    initialDraft?.thumbnailUrl ?? post?.thumbnailUrl ?? null
   );
-  const [isPublic, setIsPublic] = useState(post?.isPublic ?? true);
+  const [isPublic, setIsPublic] = useState(
+    initialDraft?.isPublic ?? post?.isPublic ?? true
+  );
   const [hashtags, setHashtags] = useState<string[]>(
-    post?.hashtags?.map((h) => h.name) || []
+    initialDraft?.hashtags ?? post?.hashtags?.map((h) => h.name) ?? []
   );
 
-  // Layout & Blocks
-  const [layout, setLayout] = useState<LayoutItem[]>(() =>
-    post ? mapPostToLayout(post) : DEFAULT_LAYOUT
-  );
-  const [blocks, setBlocks] = useState<BlockData[]>(() =>
-    post ? mapPostToBlocks(post) : DEFAULT_BLOCKS
-  );
+  // Layout & Blocks - use draft if available, then post, then defaults
+  const [layout, setLayout] = useState<LayoutItem[]>(() => {
+    if (initialDraft?.layout) return initialDraft.layout;
+    if (post) return mapPostToLayout(post);
+    return DEFAULT_LAYOUT;
+  });
+  const [blocks, setBlocks] = useState<BlockData[]>(() => {
+    if (initialDraft?.blocks) return initialDraft.blocks;
+    if (post) return mapPostToBlocks(post);
+    return DEFAULT_BLOCKS;
+  });
 
   // Image Form
   const imageForm = useImageForm();
@@ -136,43 +209,65 @@ export const usePostForm = (options: UsePostFormOptions = {}) => {
   const handleTitleChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => {
       setTitle(e.target.value);
+      markAsDirty();
     },
-    []
+    [markAsDirty]
   );
 
   const handleShortDescriptionChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => {
       setShortDescription(e.target.value);
+      markAsDirty();
     },
-    []
+    [markAsDirty]
   );
 
-  const handleThumbnailChange = useCallback((url: string | null) => {
-    setThumbnailUrl(url);
-  }, []);
+  const handleThumbnailChange = useCallback(
+    (url: string | null) => {
+      setThumbnailUrl(url);
+      markAsDirty();
+    },
+    [markAsDirty]
+  );
 
-  const handleIsPublicChange = useCallback((value: boolean) => {
-    setIsPublic(value);
-  }, []);
+  const handleIsPublicChange = useCallback(
+    (value: boolean) => {
+      setIsPublic(value);
+      markAsDirty();
+    },
+    [markAsDirty]
+  );
 
   // Handlers: Hashtags
-  const addHashtag = useCallback((hashtag: string) => {
-    const trimmed = hashtag.trim().replace(/^#/, "");
-    if (trimmed) {
-      setHashtags((prev) =>
-        prev.includes(trimmed) ? prev : [...prev, trimmed]
-      );
-    }
-  }, []);
+  const addHashtag = useCallback(
+    (hashtag: string) => {
+      const trimmed = hashtag.trim().replace(/^#/, "");
+      if (trimmed) {
+        setHashtags((prev) =>
+          prev.includes(trimmed) ? prev : [...prev, trimmed]
+        );
+        markAsDirty();
+      }
+    },
+    [markAsDirty]
+  );
 
-  const removeHashtag = useCallback((hashtag: string) => {
-    setHashtags((prev) => prev.filter((h) => h !== hashtag));
-  }, []);
+  const removeHashtag = useCallback(
+    (hashtag: string) => {
+      setHashtags((prev) => prev.filter((h) => h !== hashtag));
+      markAsDirty();
+    },
+    [markAsDirty]
+  );
 
   // Handlers: Layout
-  const handleLayoutChange = useCallback((newLayout: LayoutItem[]) => {
-    setLayout(newLayout);
-  }, []);
+  const handleLayoutChange = useCallback(
+    (newLayout: LayoutItem[]) => {
+      setLayout(newLayout);
+      markAsDirty();
+    },
+    [markAsDirty]
+  );
 
   // Handlers: Blocks
   const handleBlockContentChange = useCallback(
@@ -180,8 +275,9 @@ export const usePostForm = (options: UsePostFormOptions = {}) => {
       setBlocks((prev) =>
         prev.map((block) => (block.id === id ? { ...block, content } : block))
       );
+      markAsDirty();
     },
-    []
+    [markAsDirty]
   );
 
   const handleBlockCaptionChange = useCallback(
@@ -191,9 +287,10 @@ export const usePostForm = (options: UsePostFormOptions = {}) => {
           block.id === id ? { ...block, imageCaption } : block
         )
       );
+      markAsDirty();
       console.log("Caption changed");
     },
-    []
+    [markAsDirty]
   );
 
   const handleBlockObjectFitChange = useCallback(
@@ -201,8 +298,9 @@ export const usePostForm = (options: UsePostFormOptions = {}) => {
       setBlocks((prev) =>
         prev.map((block) => (block.id === id ? { ...block, objectFit } : block))
       );
+      markAsDirty();
     },
-    []
+    [markAsDirty]
   );
 
   // Auto-resize block height when content changes
@@ -224,8 +322,9 @@ export const usePostForm = (options: UsePostFormOptions = {}) => {
       setBlocks((prev) => prev.filter((block) => block.id !== id));
       setLayout((prev) => prev.filter((item) => item.i !== id));
       imageForm.removeFile(id);
+      markAsDirty();
     },
-    [imageForm]
+    [imageForm, markAsDirty]
   );
 
   const handleAddBlock = useCallback(
@@ -241,8 +340,9 @@ export const usePostForm = (options: UsePostFormOptions = {}) => {
         createNewLayoutItem(newId, x ?? 0, y ?? maxY),
       ]);
       setBlocks((prev) => [...prev, createNewBlock(newId, type)]);
+      markAsDirty();
     },
-    [layout]
+    [layout, markAsDirty]
   );
 
   const handleGridDrop = useCallback(
@@ -257,9 +357,140 @@ export const usePostForm = (options: UsePostFormOptions = {}) => {
 
       setLayout(updatedLayout);
       setBlocks((prev) => [...prev, createNewBlock(newId, blockType)]);
+      markAsDirty();
     },
-    []
+    [markAsDirty]
   );
+
+  /**
+   * Validation function - kiểm tra các trường bắt buộc
+   * Optional fields: hashtags, thumbnailUrl
+   * Empty blocks sẽ tự động bị lọc khi build DTO
+   */
+  const validate = useCallback((): ValidationError[] => {
+    const errors: ValidationError[] = [];
+
+    // Required: title
+    if (!title.trim()) {
+      errors.push({
+        field: "Tiêu đề",
+        message: "Vui lòng nhập tiêu đề bài viết",
+      });
+    }
+
+    // Required: shortDescription
+    if (!shortDescription.trim()) {
+      errors.push({
+        field: "Mô tả ngắn",
+        message: "Vui lòng nhập mô tả ngắn cho bài viết",
+      });
+    }
+
+    // Check if there's at least one non-empty block
+    const nonEmptyBlocks = blocks.filter((block) => {
+      if (block.type === EBlockType.TEXT) {
+        return block.content && block.content.trim() !== "";
+      }
+      if (block.type === EBlockType.IMAGE) {
+        return block.content && block.content.trim() !== "";
+      }
+      return false;
+    });
+
+    if (nonEmptyBlocks.length === 0) {
+      errors.push({
+        field: "Nội dung",
+        message:
+          "Bài viết cần có ít nhất một block có nội dung (văn bản hoặc hình ảnh)",
+      });
+    }
+
+    return errors;
+  }, [title, shortDescription, blocks]);
+
+  /**
+   * Get non-empty blocks only (for building DTO)
+   */
+  const getNonEmptyBlocks = useCallback((): BlockData[] => {
+    return blocks.filter((block) => {
+      if (block.type === EBlockType.TEXT) {
+        return block.content && block.content.trim() !== "";
+      }
+      if (block.type === EBlockType.IMAGE) {
+        return block.content && block.content.trim() !== "";
+      }
+      return false;
+    });
+  }, [blocks]);
+
+  /**
+   * Get layout for non-empty blocks only
+   */
+  const getNonEmptyLayout = useCallback((): LayoutItem[] => {
+    const nonEmptyBlockIds = new Set(getNonEmptyBlocks().map((b) => b.id));
+    return layout.filter((item) => nonEmptyBlockIds.has(item.i));
+  }, [layout, getNonEmptyBlocks]);
+
+  /**
+   * Save draft to localStorage (valid for 10 minutes)
+   */
+  const saveDraft = useCallback(() => {
+    const draft: DraftData = {
+      title,
+      shortDescription,
+      thumbnailUrl,
+      isPublic,
+      hashtags,
+      layout,
+      blocks,
+      savedAt: Date.now(),
+    };
+
+    try {
+      localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draft));
+      markAsClean();
+      return true;
+    } catch (error) {
+      console.error("Error saving draft:", error);
+      return false;
+    }
+  }, [
+    title,
+    shortDescription,
+    thumbnailUrl,
+    isPublic,
+    hashtags,
+    layout,
+    blocks,
+    markAsClean,
+  ]);
+
+  /**
+   * Clear draft from localStorage
+   */
+  const clearDraft = useCallback(() => {
+    try {
+      localStorage.removeItem(DRAFT_STORAGE_KEY);
+    } catch (error) {
+      console.error("Error clearing draft:", error);
+    }
+  }, []);
+
+  /**
+   * Check if there's a valid draft in localStorage
+   */
+  const hasDraft = useCallback((): boolean => {
+    try {
+      const savedDraft = localStorage.getItem(DRAFT_STORAGE_KEY);
+      if (!savedDraft) return false;
+
+      const draft: DraftData = JSON.parse(savedDraft);
+      const now = Date.now();
+      return now - draft.savedAt < DRAFT_EXPIRATION_MS;
+    } catch {
+      return false;
+    }
+  }, []);
 
   return {
     // Basic Info
@@ -298,6 +529,19 @@ export const usePostForm = (options: UsePostFormOptions = {}) => {
     handleRemoveImageForm: imageForm.removeFile,
     clearImageForm: imageForm.clear,
     hasImageFiles: imageForm.hasFiles,
+
+    // Validation
+    validate,
+    getNonEmptyBlocks,
+    getNonEmptyLayout,
+
+    // Draft management
+    saveDraft,
+    clearDraft,
+    hasDraft,
+    hasUnsavedChanges,
+    hasUnsavedChangesRef,
+    markAsClean,
   };
 };
 

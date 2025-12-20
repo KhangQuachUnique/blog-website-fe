@@ -1,10 +1,9 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import GridLayout from "react-grid-layout";
 import { InputBase } from "@mui/material";
 import {
   GRID_SETTINGS,
   BLOCK_WRAPPER,
-  BUTTON_STYLE_OUTLINE,
   BUTTON_STYLE_PRIMARY,
 } from "./layoutConstants";
 
@@ -14,8 +13,14 @@ import DeleteConfirmButton from "../../../components/deleteConfirmButton";
 import CustomButton from "../../../components/button";
 import BlockSidebar from "./components/blockSidebar";
 import ConfigDialog from "./components/configDialog";
+import ValidationDialog from "./components/validationDialog";
+import UnsavedChangesDialog from "./components/unsavedChangesDialog";
 import { EBlockType, type ICreateBlockDto } from "../../../types/block";
-import { usePostForm, type LayoutItem } from "./usePostForm";
+import {
+  usePostForm,
+  type LayoutItem,
+  type ValidationError,
+} from "./usePostForm";
 import type {
   IPostResponseDto,
   EPostType,
@@ -31,24 +36,27 @@ import { isBlobUrl } from "../../../utils/url";
 export interface EditPostFormProps {
   mode: "create" | "update";
   post?: IPostResponseDto;
-  onSaveDraft?: (dto: ICreateBlogPostDto) => void;
   onPublish?: (dto: ICreateBlogPostDto | IUpdateBlogPostDto) => void;
   authorId: number;
   postType: EPostType;
   communityId?: number;
   originalPostId?: number;
+  /** Callback when user tries to navigate away - returns confirmNavigation function */
+  onNavigationCheck?: (
+    confirmNavigation: (onNavigate: () => void) => boolean
+  ) => void;
 }
 
 // ============ Component ============
 const EditPostForm = ({
   mode,
   post,
-  onSaveDraft,
   onPublish,
   authorId,
   postType,
   communityId,
   originalPostId,
+  onNavigationCheck,
 }: EditPostFormProps) => {
   /**
    * Use Post Form Hook
@@ -87,6 +95,15 @@ const EditPostForm = ({
     handleAppendImageForm,
     handleRemoveImageForm,
     clearImageForm,
+
+    // Validation & Draft
+    validate,
+    getNonEmptyBlocks,
+    getNonEmptyLayout,
+    clearDraft,
+    hasUnsavedChanges,
+    hasUnsavedChangesRef,
+    markAsClean,
   } = usePostForm({ post });
 
   /**
@@ -95,6 +112,12 @@ const EditPostForm = ({
   const [isCtrlPressed, setIsCtrlPressed] = useState(false);
   const [isConfigDialogOpen, setIsConfigDialogOpen] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<ValidationError[]>(
+    []
+  );
+  const [isValidationDialogOpen, setIsValidationDialogOpen] = useState(false);
+  const [isUnsavedDialogOpen, setIsUnsavedDialogOpen] = useState(false);
+  const pendingNavigationRef = useRef<(() => void) | null>(null);
 
   /**
    * Keyboard Events
@@ -115,35 +138,60 @@ const EditPostForm = ({
   }, []);
 
   /**
+   * Beforeunload warning - warn user about unsaved changes
+   */
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChangesRef.current) {
+        e.preventDefault();
+        // Modern browsers ignore custom messages, but we still need to set returnValue
+        e.returnValue = "Bạn có thay đổi chưa lưu. Bạn có chắc muốn rời đi?";
+        return e.returnValue;
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [hasUnsavedChangesRef]);
+
+  /**
    * Build DTOs
    */
   const buildBlocksDto = useCallback(
     (imageUrls: Record<string, string>): ICreateBlockDto[] => {
-      return blocks.map((block) => {
-        const layoutItem = layout.find((item) => item.i === block.id);
+      // Use non-empty blocks and layout
+      const nonEmptyBlocks = getNonEmptyBlocks();
+      const nonEmptyLayout = getNonEmptyLayout();
 
-        let content = block.content || "";
-        if (block.type === EBlockType.IMAGE) {
-          if (imageUrls[block.id]) {
-            content = imageUrls[block.id];
-          } else if (isBlobUrl(block.content)) {
-            content = ""; // Don't send blob URL to server
+      return nonEmptyBlocks
+        .map((block) => {
+          const layoutItem = nonEmptyLayout.find((item) => item.i === block.id);
+
+          let content = block.content || "";
+          if (block.type === EBlockType.IMAGE) {
+            if (imageUrls[block.id]) {
+              content = imageUrls[block.id];
+            } else if (isBlobUrl(block.content)) {
+              content = ""; // Don't send blob URL to server
+            }
           }
-        }
 
-        return {
-          x: layoutItem?.x ?? 0,
-          y: layoutItem?.y ?? 0,
-          width: layoutItem?.w ?? 8,
-          height: layoutItem?.h ?? 6,
-          type: block.type,
-          content,
-          imageCaption: block.imageCaption,
-          objectFit: block.objectFit,
-        };
-      });
+          return {
+            x: layoutItem?.x ?? 0,
+            y: layoutItem?.y ?? 0,
+            width: layoutItem?.w ?? 8,
+            height: layoutItem?.h ?? 6,
+            type: block.type,
+            content,
+            imageCaption: block.imageCaption,
+            objectFit: block.objectFit,
+          };
+        })
+        .filter((block) => block.content.trim() !== ""); // Filter out empty blocks
     },
-    [blocks, layout]
+    [getNonEmptyBlocks, getNonEmptyLayout]
   );
 
   const buildThumbnailUrl = useCallback(
@@ -207,7 +255,16 @@ const EditPostForm = ({
    * Action Handlers
    * @returns
    */
-  const handleNextStepClick = () => setIsConfigDialogOpen(true);
+  const handleNextStepClick = () => {
+    // Validate before proceeding
+    const errors = validate();
+    if (errors.length > 0) {
+      setValidationErrors(errors);
+      setIsValidationDialogOpen(true);
+      return;
+    }
+    setIsConfigDialogOpen(true);
+  };
 
   const handlePublish = async () => {
     if (isPublishing || !onPublish) return;
@@ -230,6 +287,10 @@ const EditPostForm = ({
           : buildUpdateDto(imageUrls);
 
       onPublish(dto);
+
+      // Clear draft after successful publish
+      clearDraft();
+      markAsClean();
     } catch (error) {
       console.error("Error publishing:", error);
     } finally {
@@ -238,10 +299,45 @@ const EditPostForm = ({
     }
   };
 
-  const handleSaveDraft = () => {
-    if (!onSaveDraft) return;
-    onSaveDraft(buildCreateDto({}));
+  /**
+   * Handle unsaved changes dialog actions
+   */
+  const handleConfirmLeave = () => {
+    setIsUnsavedDialogOpen(false);
+    markAsClean();
+    if (pendingNavigationRef.current) {
+      pendingNavigationRef.current();
+      pendingNavigationRef.current = null;
+    }
   };
+
+  const handleCancelLeave = () => {
+    setIsUnsavedDialogOpen(false);
+    pendingNavigationRef.current = null;
+  };
+
+  /**
+   * Check for unsaved changes before navigation
+   * Call this function when user tries to navigate away
+   */
+  const confirmNavigation = useCallback(
+    (onNavigate: () => void) => {
+      if (hasUnsavedChanges) {
+        pendingNavigationRef.current = onNavigate;
+        setIsUnsavedDialogOpen(true);
+        return false;
+      }
+      return true;
+    },
+    [hasUnsavedChanges]
+  );
+
+  // Expose confirmNavigation to parent component
+  useEffect(() => {
+    if (onNavigationCheck) {
+      onNavigationCheck(confirmNavigation);
+    }
+  }, [onNavigationCheck, confirmNavigation]);
 
   return (
     <div className="w-full relative p-9 flex flex-col gap-4 items-center justify-center">
@@ -280,7 +376,7 @@ const EditPostForm = ({
       </div>
 
       {/* Grid Layout */}
-      <div style={{ width: GRID_SETTINGS.width, margin: '0 auto' }}>
+      <div style={{ width: GRID_SETTINGS.width, margin: "0 auto" }}>
         <GridLayout
           layout={layout}
           onLayoutChange={(newLayout) =>
@@ -289,18 +385,24 @@ const EditPostForm = ({
           cols={GRID_SETTINGS.cols}
           rowHeight={GRID_SETTINGS.rowHeight}
           width={GRID_SETTINGS.width}
+          margin={GRID_SETTINGS.margin}
           isDraggable={isCtrlPressed}
           isResizable={true}
           draggableCancel=".rgl-no-drag"
           isDroppable={true}
           onDrop={handleGridDrop}
-          droppingItem={{ i: "__dropping-elem__", ...GRID_SETTINGS.defaultItem }}
+          droppingItem={{
+            i: "__dropping-elem__",
+            ...GRID_SETTINGS.defaultItem,
+          }}
         >
           {blocks.map((block) => (
             <div
               key={block.id}
               className={`${BLOCK_WRAPPER.base} ${
-                isCtrlPressed ? BLOCK_WRAPPER.ctrlPressed : BLOCK_WRAPPER.default
+                isCtrlPressed
+                  ? BLOCK_WRAPPER.ctrlPressed
+                  : BLOCK_WRAPPER.default
               }`}
             >
               {block.type === EBlockType.TEXT ? (
@@ -349,13 +451,6 @@ const EditPostForm = ({
       {mode === "create" ? (
         <div className="flex w-[900px] justify-center gap-4 items-center p-4">
           <CustomButton
-            variant="outline"
-            onClick={handleSaveDraft}
-            style={BUTTON_STYLE_OUTLINE}
-          >
-            Lưu nháp
-          </CustomButton>
-          <CustomButton
             onClick={handleNextStepClick}
             style={{ width: "auto", ...BUTTON_STYLE_PRIMARY }}
           >
@@ -363,7 +458,10 @@ const EditPostForm = ({
           </CustomButton>
         </div>
       ) : (
-        <CustomButton onClick={handleNextStepClick} style={{ width: "auto", ...BUTTON_STYLE_PRIMARY }}>
+        <CustomButton
+          onClick={handleNextStepClick}
+          style={{ width: "auto", ...BUTTON_STYLE_PRIMARY }}
+        >
           Bước tiếp theo
         </CustomButton>
       )}
@@ -384,6 +482,20 @@ const EditPostForm = ({
         onAppendImageForm={handleAppendImageForm}
         onRemoveImageForm={handleRemoveImageForm}
         confirmButtonText={mode === "create" ? "Đăng bài" : "Cập nhật"}
+      />
+
+      {/* Validation Dialog */}
+      <ValidationDialog
+        open={isValidationDialogOpen}
+        onClose={() => setIsValidationDialogOpen(false)}
+        errors={validationErrors}
+      />
+
+      {/* Unsaved Changes Dialog */}
+      <UnsavedChangesDialog
+        open={isUnsavedDialogOpen}
+        onClose={handleCancelLeave}
+        onConfirmLeave={handleConfirmLeave}
       />
     </div>
   );

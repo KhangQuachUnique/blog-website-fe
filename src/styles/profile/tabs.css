@@ -1,0 +1,49 @@
+/* ============================================
+   TAB NAVIGATION STYLES - Profile Feature  
+   Styles cho tab navigation (Posts/Communities) trong view profile
+   ============================================ */
+
+.profile-tab-nav {
+  display: flex;
+  border-bottom: 1px solid #FFE4EC;
+}
+
+.profile-tab-nav-item {
+  flex: 1;
+  padding: 1rem 1.5rem;
+  font-weight: 600;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  color: #4b5563;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.profile-tab-nav-item:hover {
+  background-color: #FFF8FB;
+}
+
+.profile-tab-nav-item-active {
+  color: #F295B6;
+  border-bottom: 2px solid #F295B6;
+  background-color: #FFEFF4;
+}
+
+.profile-tab-nav-icon {
+  font-size: 1.125rem;
+}
+
+/* Tab content area */
+.profile-tab-content {
+  padding: 1.5rem;
+}
+
+.profile-tab-empty {
+  text-align: center;
+  padding: 3rem 0;
+  color: #6b7280;
+}

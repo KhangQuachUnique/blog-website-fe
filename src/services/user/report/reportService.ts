@@ -1,0 +1,78 @@
+import axios from '../../../config/axiosCustomize';
+import type {
+  ICreateReportRequest,
+  ICreateReportResponse,
+  ICheckReportedResponse,
+  IReportResponse,
+  IReportListResponse,
+  EReportType,
+} from '../../../types/report';
+
+/**
+ * 🚨 Report Service
+ * 
+ * API calls for report functionality
+ * Note: Axios interceptor already extracts response.data.data
+ */
+
+/**
+ * Create a new report
+ */
+export const createReport = async (
+  data: ICreateReportRequest
+): Promise<ICreateReportResponse> => {
+  const response = await axios.post('/reports', data);
+  return response as unknown as ICreateReportResponse;
+};
+
+/**
+ * Check if current user has reported a target
+ */
+export const checkIfReported = async (
+  type: EReportType,
+  targetId: number
+): Promise<ICheckReportedResponse> => {
+  const response = await axios.get('/reports/check', {
+    params: { type, targetId },
+  });
+  return response as unknown as ICheckReportedResponse;
+};
+
+/**
+ * Get all reports (Admin)
+ */
+export const getReports = async (
+  page = 1,
+  limit = 20
+): Promise<IReportListResponse> => {
+  const response = await axios.get('/reports', {
+    params: { page, limit },
+  });
+  return response as unknown as IReportListResponse;
+};
+
+/**
+ * Get reports for a specific post
+ */
+export const getReportsByPost = async (
+  postId: number
+): Promise<IReportResponse[]> => {
+  const response = await axios.get(`/reports/posts/${postId}`);
+  return response as unknown as IReportResponse[];
+};
+
+/**
+ * Get report by ID
+ */
+export const getReportById = async (id: number): Promise<IReportResponse> => {
+  const response = await axios.get(`/reports/${id}`);
+  return response as unknown as IReportResponse;
+};
+
+/**
+ * Delete a report (Admin)
+ */
+export const deleteReport = async (id: number): Promise<{ message: string }> => {
+  const response = await axios.delete(`/reports/${id}`);
+  return response as unknown as { message: string };
+};

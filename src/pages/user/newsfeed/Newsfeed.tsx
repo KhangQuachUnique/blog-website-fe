@@ -3,7 +3,6 @@ import { useRef } from "react";
 import { Loader2 } from "lucide-react";
 import { useCallback } from "react";
 import { useGetNewsFeed } from "../../../hooks/useNewsFeed";
-// import "../../styles/newsfeed/Newsfeed.css";
 
 export default function Newsfeed() {
   const {
@@ -16,7 +15,11 @@ export default function Newsfeed() {
     isError, // ← thêm dòng này
   } = useGetNewsFeed();
 
-  const posts = data?.pages.flatMap((page) => page.items) ?? [];
+  // Deduplicate posts by id to avoid duplicate key errors
+  const allPosts = data?.pages.flatMap((page) => page.items) ?? [];
+  const posts = allPosts.filter(
+    (post, index, self) => self.findIndex((p) => p.id === post.id) === index
+  );
 
   // ← Sửa lỗi useRef
   const observer = useRef<IntersectionObserver | null>(null);
@@ -73,24 +76,33 @@ export default function Newsfeed() {
   }
 
   return (
-    <div className=" mx-auto px-4 py-8">
-      <h1 className="text-3xl text-[#F295B6] font-bold mb-8 text-center">
-        Newsfeed
-      </h1>
+    <div className="newsfeed-page">
+  
+     
 
-      <NewsfeedList posts={posts} loadMoreRef={lastPostRef} isFetchingNextPage={isFetchingNextPage} hasNextPage={hasNextPage} />
+      {/* Main Content - Posts */}
+      <main className="newsfeed-page__main">
+        <h1 className="text-3xl text-[#F295B6] font-bold mb-8 text-center">
+          Newsfeed
+        </h1>
 
-      {isFetchingNextPage && (
-        <div className="flex justify-center py-8">
-          <Loader2 className="h-8 w-8 animate-spin" />
-        </div>
-      )}
+        <NewsfeedList posts={posts} loadMoreRef={lastPostRef} isFetchingNextPage={isFetchingNextPage} hasNextPage={hasNextPage} />
 
-      {!hasNextPage && posts.length > 0 && (
-        <p className="text-center text-muted-foreground py-12">
-          Đã hết bài viết rồi nha
-        </p>
-      )}
+        {isFetchingNextPage && (
+          <div className="flex justify-center py-8">
+            <Loader2 className="h-8 w-8 animate-spin" />
+          </div>
+        )}
+
+        {!hasNextPage && posts.length > 0 && (
+          <p className="text-center text-muted-foreground py-12">
+            Đã hết bài viết rồi nha
+          </p>
+        )}
+      </main>
+
+    
+     
     </div>
   );
 }

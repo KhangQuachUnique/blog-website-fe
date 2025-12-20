@@ -1,5 +1,5 @@
 import { useEditor, EditorContent } from "@tiptap/react";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
@@ -23,6 +23,7 @@ import {
   FaQuoteLeft,
   FaCode,
 } from "react-icons/fa6";
+import { GRID_SETTINGS } from "../../features/user/manageBlogPosts/layoutConstants";
 
 interface TextBlockProps {
   id: string;
@@ -47,7 +48,6 @@ const TextBlockEdit = ({
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [linkUrl, setLinkUrl] = useState("");
   const [, forceUpdate] = useState({});
-  const [isDragging, setIsDragging] = useState(false);
   const popoverRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -111,9 +111,54 @@ const TextBlockEdit = ({
       onContentChange?.(html);
       forceUpdate({});
     },
-    onSelectionUpdate: () => {
-      // Chỉ update active state, không hiện toolbar khi đang kéo
+    onSelectionUpdate: ({ editor }) => {
       forceUpdate({});
+      
+      // Show toolbar when there's a text selection
+      if (!isEditMode) return;
+      
+      const { from, to } = editor.state.selection;
+      const hasSelection = from !== to;
+      
+      if (hasSelection) {
+        // Use setTimeout to ensure DOM is updated
+        setTimeout(() => {
+          const selection = window.getSelection();
+          if (!selection || selection.rangeCount === 0) return;
+          
+          const range = selection.getRangeAt(0);
+          const rect = range.getBoundingClientRect();
+          
+          // Check if selection is visible in viewport
+          if (rect.top < 0 || rect.bottom > window.innerHeight) {
+            console.log('[Selection] Out of viewport, skipping toolbar');
+            return;
+          }
+          
+          if (rect && rect.width > 0 && rect.height > 0) {
+            // For position: fixed, use viewport coordinates (don't add window.scrollY)
+            let top = rect.top - 60;
+            let left = rect.left + rect.width / 2;
+
+            // Giới hạn trong viewport
+            const toolbarWidth = 650;
+            const minLeft = toolbarWidth / 2 + 10;
+            const maxLeft = window.innerWidth - toolbarWidth / 2 - 10;
+            left = Math.max(minLeft, Math.min(left, maxLeft));
+
+            // Nếu quá gần top thì hiện dưới
+            if (top < 80) {
+              top = rect.bottom + 10;
+            }
+
+            console.log('[Selection] Showing toolbar at (viewport coords):', { top, left });
+            setPopoverPosition({ top, left });
+            setShowPopover(true);
+          }
+        }, 10);
+      } else if (!showLinkInput && !showColorPicker) {
+        setShowPopover(false);
+      }
     },
     editorProps: {
       attributes: {
@@ -144,88 +189,56 @@ const TextBlockEdit = ({
   }, [editor, isEditMode]);
 
   // Auto-resize: monitor content height and notify parent
+  // Uses useCallback to create stable height calculation function
+  const calculateAndNotifyHeight = useCallback(() => {
+    const editorEl = editorRef.current;
+    if (!editorEl || !onHeightChange) return;
+
+    // Find the actual editor content element
+    const proseMirror = editorEl.querySelector(".ProseMirror");
+    if (!proseMirror) return;
+
+    // Get the actual content height
+    const contentHeight = proseMirror.scrollHeight;
+    
+    // Use the same rowHeight as GridLayout for accurate calculation
+    const ROW_HEIGHT = GRID_SETTINGS.rowHeight;
+    const MARGIN = GRID_SETTINGS.margin?.[1] ?? 8; // Vertical margin between grid items
+    
+    // Add minimal padding: small buffer for comfortable display
+    const VERTICAL_PADDING = 16; // 8px top + 8px bottom padding
+    
+    // Calculate rows needed: (contentHeight + padding) / (rowHeight + margin)
+    // The margin is added because GridLayout calculates: actualHeight = rowHeight * rows + margin * (rows - 1)
+    // Simplified: each row contributes (rowHeight + margin) except the last one doesn't add margin
+    const effectiveRowHeight = ROW_HEIGHT + MARGIN;
+    const neededRows = Math.ceil((contentHeight + VERTICAL_PADDING + MARGIN) / effectiveRowHeight);
+
+    // Only update if height changed to avoid render loops
+    onHeightChange(id, Math.max(2, neededRows)); // Minimum 2 rows
+  }, [id, onHeightChange]);
+
   useEffect(() => {
     if (!editorRef.current || !onHeightChange || !editor) return;
 
-    const checkHeight = () => {
-      const editorEl = editorRef.current;
-      if (!editorEl) return;
-
-      // Find the actual editor content element
-      const proseMirror = editorEl.querySelector(".ProseMirror");
-      if (!proseMirror) return;
-
-      // Get the actual content height (use clientHeight for more accurate measurement)
-      const contentHeight = proseMirror.scrollHeight;
-
-      const ROW_HEIGHT = 40;
-      // Minimal padding: just enough to prevent text from touching border
-      const PADDING = 50; // 16px top + minimal bottom (4px for safety)
-
-      // Calculate rows needed, round up to ensure content fits
-      const neededRows = Math.ceil((contentHeight + PADDING) / ROW_HEIGHT);
-
-      // Only update if different to avoid unnecessary re-renders
-      onHeightChange(id, Math.max(1, neededRows));
-    };
-
-    // Check after each content update
-    checkHeight();
+    // Check height after editor is ready
+    const timeoutId = setTimeout(calculateAndNotifyHeight, 50);
 
     // Also use ResizeObserver to detect size changes
     const proseMirror = editorRef.current.querySelector(".ProseMirror");
     if (proseMirror && typeof ResizeObserver !== "undefined") {
       const ro = new ResizeObserver(() => {
-        checkHeight();
+        calculateAndNotifyHeight();
       });
       ro.observe(proseMirror);
-      return () => ro.disconnect();
+      return () => {
+        clearTimeout(timeoutId);
+        ro.disconnect();
+      };
     }
-  }, [id, onHeightChange, editor, content]);
-
-  // Handle mouse events for selection
-  const handleMouseDown = () => {
-    setIsDragging(true);
-    setShowPopover(false); // Ẩn toolbar khi bắt đầu kéo
-  };
-
-  const handleMouseUp = () => {
-    if (!isEditMode || !editor || !isDragging) return;
-
-    setIsDragging(false);
-
-    // Đợi selection update xong
-    setTimeout(() => {
-      const selection = window.getSelection();
-      const selectedText = selection?.toString();
-
-      if (selectedText && selectedText.trim().length > 0) {
-        const range = selection?.getRangeAt(0);
-        const rect = range?.getBoundingClientRect();
-
-        if (rect && rect.width > 0 && rect.height > 0) {
-          let top = rect.top + window.scrollY - 60;
-          let left = rect.left + rect.width / 2;
-
-          // Giới hạn trong viewport
-          const toolbarWidth = 650;
-          const minLeft = toolbarWidth / 2 + 10;
-          const maxLeft = window.innerWidth - toolbarWidth / 2 - 10;
-          left = Math.max(minLeft, Math.min(left, maxLeft));
-
-          // Nếu quá gần top thì hiện dưới
-          if (top < 80) {
-            top = rect.bottom + window.scrollY + 10;
-          }
-
-          setPopoverPosition({ top, left });
-          setShowPopover(true);
-        }
-      } else if (!showLinkInput && !showColorPicker) {
-        setShowPopover(false);
-      }
-    }, 50);
-  };
+    
+    return () => clearTimeout(timeoutId);
+  }, [id, onHeightChange, editor, content, calculateAndNotifyHeight]);
 
   if (!editor) {
     return null;
@@ -244,7 +257,7 @@ const TextBlockEdit = ({
         createPortal(
           <div
             ref={popoverRef}
-            className="fixed z-[9999] bg-white border-2 border-gray-300 rounded-lg shadow-md px-4 py-3 flex items-center gap-2"
+            className="fixed z-9999 bg-white border-2 border-gray-300 rounded-lg shadow-md px-4 py-3 flex items-center gap-2"
             style={{
               backdropFilter: "blur(10px)",
               backgroundColor: "rgba(255, 255, 255, 0.98)",
@@ -529,8 +542,6 @@ const TextBlockEdit = ({
         className={`flex-1 overflow-visible rounded-lg ${
           isEditMode ? "bg-white" : "bg-transparent"
         }`}
-        onMouseDown={handleMouseDown}
-        onMouseUp={handleMouseUp}
       >
         <EditorContent editor={editor} className="h-full" />
         {isEditMode && (

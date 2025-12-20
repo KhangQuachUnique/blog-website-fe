@@ -2,7 +2,7 @@
   background: hsl(var(--card));
   border: 1px solid #ffe7f0;
   border-radius: 10px;
-  overflow: visible; /* Allow emoji picker to overflow */
+  overflow: hidden; /* prevent image from forcing height */
   transition: all 0.3s ease;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   display: flex;
@@ -12,6 +12,7 @@
 }
 
 .newsfeed-card:hover {
+  transform: translateY(-4px);
   box-shadow: 4px 4px 24px rgba(126, 126, 126, 0.25);
 }
 
@@ -57,28 +58,108 @@
   text-decoration: none;
 }
 
-/* Emoji Selector container */
-.newsfeed-card__emoji-selector {
-  position: relative;
-  z-index: 10;
-}
-
 /* InteractBar container */
 .newsfeed-card__interact {
   margin-top: auto;
 }
 
+/* Reactions area shown above InteractBar: up to 2 rows, then clipped */
+.newsfeed-card__reactions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  /* nudge emoji row slightly up: smaller top padding + slight negative margin */
+  padding: 0.35rem 1.25rem 0.25rem 1.25rem;
+  margin-top: -6px;
+  align-items: center;
+  /* each reaction pill approx 32px tall; two rows -> ~72px including gaps */
+  /* max-height: 72px; */
+  overflow: hidden;
+  transition: max-height 0.18s ease, margin-top 0.12s ease;
+}
+
+/* For repost cards: show only 1 visible row by default. On hover, allow scrolling to reveal hidden emojis. */
+.newsfeed-card--repost .newsfeed-card__reactions {
+  max-height: 40px; /* ~1 row */
+}
+
+.newsfeed-card--repost:hover .newsfeed-card__reactions {
+  /* expand and allow vertical scroll so user can scroll to see all reactions */
+  max-height: 180px; /* allow up to several rows when hovering */
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Thin scrollbar for reactions on hover */
+.newsfeed-card__reactions::-webkit-scrollbar {
+  width: 8px;
+}
+.newsfeed-card__reactions::-webkit-scrollbar-thumb {
+  background: rgba(242,149,182,0.35);
+  border-radius: 8px;
+}
+.newsfeed-card__reactions::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Repost: make reactions horizontal (single row) and hide visible scrollbar */
+.newsfeed-card--repost .newsfeed-card__reactions {
+  flex-wrap: nowrap;
+  white-space: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-behavior: smooth;
+}
+
+.newsfeed-card--repost .newsfeed-card__reactions::-webkit-scrollbar {
+  display: none;
+}
+.newsfeed-card--repost .newsfeed-card__reactions {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+.newsfeed-card--repost .newsfeed-card__reactions {
+  cursor: grab;
+}
+
+.newsfeed-card__reaction {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  background: #fff8fb;
+  border: 1px solid #ffe7f0;
+  border-radius: 999px;
+  font-size: 0.875rem;
+  color: hsl(var(--foreground));
+  min-height: 32px;
+}
+
+.newsfeed-card__reaction-emoji {
+  font-size: 16px;
+}
+
+.newsfeed-card__reaction-count {
+  font-weight: 700;
+  color: #f295b6;
+}
+
 .newsfeed-card__header {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.75rem;
+  align-items: center; /* Căn giữa theo trục dọc */
+  justify-content: space-between; /* Đẩy Time sang phải, Author sang trái */
+  flex-wrap: wrap; /* Xuống dòng nếu màn hình quá bé */
+  gap: 10px; /* Khoảng cách giữa Author và Time */
+  margin-bottom: 8px;
 }
 
 .newsfeed-card__author {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 8px;
+  flex: 1; /* Chiếm phần lớn diện tích */
+  min-width: 0; /* Fix lỗi flexbox text overflow */
 }
 
 .newsfeed-card__avatar {
@@ -107,18 +188,21 @@
 }
 
 .newsfeed-card__time {
-  font-size: 0.75rem;
-  color: hsl(var(--muted-foreground));
+  font-size: 12px;
+  color: #888;
+  white-space: nowrap; /* Không cho ngày tháng xuống dòng lung tung */
+  flex-shrink: 0; /* Không cho phép bị co lại */
 }
 
 .newsfeed-card__title {
   font-size: 1.35rem;
   font-weight: 800;
   color: #F295B6; /* more attention-grabbing */
-  margin-bottom: 0.5rem;
+  margin-bottom: 8px;
   line-height: 1.15;
   display: -webkit-box;
   -webkit-line-clamp: 2; /* slightly fewer lines to keep title prominent */
+  line-clamp: 2; /* standard property */
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -130,10 +214,24 @@
 }
 
 .newsfeed-card__hashtag {
-  color: #f295b6;
+  color: white;
   padding: 0.2rem 0.5rem;
   border-radius: 999px;
+  background-color: #f295b673;
   font-size: 0.75rem;
+  margin-right: 3px;
+  transition: all 0.2s ease;
+}
+
+.newsfeed-card__hashtag--clickable {
+  cursor: pointer;
+}
+
+.newsfeed-card__hashtag--clickable:hover {
+  background-color: #F295B6;
+  color: white;
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(242, 149, 182, 0.4);
 }
 
 .newsfeed-card__footer {
@@ -230,8 +328,16 @@
     border-radius: 12px 12px 0 0;
   }
 
-  .newsfeed-card__content {
+  /* .newsfeed-card__content {
     padding: 1rem;
+  } */
+
+  .newsfeed-card__content {
+  display: flex;
+  flex-direction: column; /* Xếp chồng: Title -> Header -> Description */
+  justify-content: center;
+  height: 100%;
+  padding-right: 10px;
   }
 
   .newsfeed-card__title {
@@ -253,5 +359,74 @@
 
   .newsfeed-card__thumbnail {
     height: 100%;
+  }
+}
+
+/* Repost meta block: larger area to show repost title and hashtags */
+.newsfeed-card__repost-meta {
+  /* smaller meta block for repost (reduced vertical space) */
+  padding: 0.5rem 1rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  min-height: 80px; /* reduced space so meta block is smaller */
+}
+
+@media (max-width: 768px) {
+  .newsfeed-card__repost-meta {
+    min-height: 110px;
+  }
+}
+
+/* Repost card modifier: make repost cards taller than normal */
+.newsfeed-card--repost {
+  height: 360px; /* slightly taller than default 300px */
+}
+
+@media (max-width: 1200px) and (min-width: 769px) {
+  .newsfeed-card--repost {
+    height: 320px;
+  }
+}
+
+@media (max-width: 768px) {
+  .newsfeed-card--repost {
+    height: 420px; /* mobile: stack, allow more vertical space */
+  }
+}
+
+/* Slightly reduce the repost meta title size so it fits */
+.newsfeed-card__repost-meta .newsfeed-card__title {
+  font-size: 1.125rem; /* smaller than normal card title */
+  font-weight: 700;
+  color: #f295b6;
+  margin-bottom: 0.25rem;
+}
+
+/* position repost label (time + icon + label) at top-right */
+.newsfeed-card__right {
+  position: relative;
+}
+
+.newsfeed-card__repost-label {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #6b7280;
+  font-size: 12px;
+}
+
+/* hide duplicate time inside repost-meta header since we show it in the label */
+.newsfeed-card__repost-meta .newsfeed-card__time {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .newsfeed-card__repost-label {
+    position: static;
+    margin-top: 6px;
   }
 }

@@ -35,3 +35,12 @@ export const updatePost = async (
   );
   return response;
 };
+
+export const togglePostPrivacy = async (
+  postId: number
+): Promise<{ message: string; data: IPostResponseDto }> => {
+  const response = await axios.patch(
+    `/blog-posts/${postId}/toggle-privacy`
+  );
+  return response;
+};

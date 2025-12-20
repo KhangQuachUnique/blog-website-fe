@@ -1,13 +1,10 @@
 import { useAuth } from "../../hooks/useAuth";
 import { ACCESS_TOKEN_KEY } from "../../constants/auth";
-import { EmojiSelector } from "../../components/emoji/components/EmojiSelector";
-import emojiData from "../../assets/twemoji_valid_by_category.json";
-import { useState } from "react";
+import Avatar from "@mui/material/Avatar";
+import { stringAvatar } from "../../utils/avatarHelper";
 
 const HomePage = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
-  const [recentEmojis, setRecentEmojis] = useState<string[]>([]);
-  const [selectedEmoji, setSelectedEmoji] = useState<string | null>(null);
 
   if (isLoading) {
     return (
@@ -122,16 +119,20 @@ const HomePage = () => {
                   {user.role || "N/A"}
                 </p>
               </div>
-              {user.avatarUrl && (
-                <div className="bg-yellow-50 p-4 rounded-lg md:col-span-2">
-                  <p className="text-sm text-gray-600 mb-2">Avatar</p>
+              <div className="bg-yellow-50 p-4 rounded-lg md:col-span-2">
+                <p className="text-sm text-gray-600 mb-2">Avatar</p>
+                {user.avatarUrl ? (
                   <img
                     src={user.avatarUrl}
                     alt="User avatar"
                     className="w-20 h-20 rounded-full border-2 border-pink-300"
                   />
-                </div>
-              )}
+                ) : (
+                  <div className="w-20 h-20">
+                    <Avatar {...stringAvatar(user.username, 80, "1.8rem")} />
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         ) : (
@@ -171,62 +172,10 @@ const HomePage = () => {
           </div>
         )}
 
-        {/* Emoji Selector Demo */}
-        <div className="bg-white rounded-lg shadow-lg p-6 mt-6 border-l-4 border-yellow-500">
-          <h2 className="text-2xl font-semibold text-gray-800 mb-4 flex items-center">
-            <span className="mr-2">😄</span>
-            Emoji Selector Demo
-          </h2>
-          <p className="text-gray-600 mb-4">
-            Test thử Discord-style emoji picker với full categories, search, và
-            recent tracking
-          </p>
-
-          <div className="flex items-center gap-4 mb-4">
-            <EmojiSelector
-              data={emojiData}
-              recentCodepoints={recentEmojis}
-              onSelect={(codepoint) => {
-                console.log("Selected emoji codepoint:", codepoint);
-                setSelectedEmoji(codepoint);
-              }}
-              onRecentUpdate={setRecentEmojis}
-            />
-
-            {selectedEmoji && (
-              <div className="bg-pink-50 p-4 rounded-lg flex items-center gap-3">
-                <img
-                  src={`https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/svg/${selectedEmoji.replace(
-                    /\s+/g,
-                    "-"
-                  )}.svg`}
-                  alt="Selected"
-                  style={{ width: "32px", height: "32px" }}
-                />
-                <div>
-                  <p className="text-sm text-gray-600">Selected:</p>
-                  <p className="font-mono text-xs text-gray-800">
-                    {selectedEmoji}
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {recentEmojis.length > 0 && (
-            <div className="bg-gray-50 p-3 rounded-lg">
-              <p className="text-sm text-gray-600 mb-2">Recent emojis:</p>
-              <p className="font-mono text-xs text-gray-700">
-                {recentEmojis.join(", ")}
-              </p>
-            </div>
-          )}
-        </div>
-
         {/* Quick Actions */}
         <div className="mt-8 flex gap-4 justify-center">
           <a
-            href="/newsfeed"
+            href="/"
             className="bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white font-semibold px-6 py-3 rounded-lg shadow-lg transition-all"
           >
             📰 Go to Newsfeed
