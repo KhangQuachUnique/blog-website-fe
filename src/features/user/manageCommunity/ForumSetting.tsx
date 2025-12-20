@@ -8,13 +8,15 @@ import ForumInfoForm from "./components/ForumInfoForm";
 
 import { updateCommunitySettings } from "./community.api";
 import { useGetCommunitySettings } from "../../../hooks/useCommunity";
-import { useToast } from "../../../contexts/toast"; // ✅ thêm
+import { useToast } from "../../../contexts/toast";
+import { useQueryClient } from "@tanstack/react-query";
 
 const ForumSetting = () => {
   const { id } = useParams();
   const communityId = Number(id);
 
-  const { showToast } = useToast(); // ✅ thêm
+  const { showToast } = useToast();
+  const queryClient = useQueryClient();
 
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
@@ -50,6 +52,11 @@ const ForumSetting = () => {
     try {
       setSaving(true);
       await updateCommunitySettings(communityId, form);
+
+      // ✅ IMPORTANT: refetch settings để ảnh bìa cập nhật ngay (khỏi F5)
+      await queryClient.invalidateQueries({
+        queryKey: ["communitySettings", communityId],
+      });
 
       showToast({
         type: "success",
