@@ -4,6 +4,7 @@ import {
   getPostById,
   getAllPosts,
   updatePost,
+  getPostVisibleWithPagination,
 } from "../services/user/post/postService";
 
 /**
@@ -28,6 +29,17 @@ export const useGetAllPosts = () => {
     queryFn: getAllPosts,
   });
 };
+
+/**
+ * Hook to get visible blog posts with pagination
+ * @returns
+ */
+export const useGetPostVisibleWithPagination = (page: number, limit: number) => {
+  return useQuery({
+    queryKey: ["posts", page, limit],
+    queryFn: () => getPostVisibleWithPagination(page, limit),
+  });
+}
 
 /**
  * Hook to create a new blog post

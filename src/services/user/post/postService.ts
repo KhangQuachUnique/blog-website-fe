@@ -3,6 +3,7 @@ import type {
   ICreateBlogPostDto,
   IPostResponseDto,
   IUpdateBlogPostDto,
+  IPostPaginatedResponse,
 } from "../../../types/post";
 
 export const getPostById = async (
@@ -16,6 +17,16 @@ export const getPostById = async (
 export const getAllPosts = async (): Promise<IPostResponseDto[]> => {
   const response = await axios.get<IPostResponseDto[]>("/blog-posts");
   return response;
+};
+
+export const getPostVisibleWithPagination = async (
+  page: number, 
+  limit: number
+): Promise<IPostPaginatedResponse> => {
+
+  return await axios.get(`/blog-posts/visible`, {
+    params: { page, limit },
+  });
 };
 
 export const createPost = async (

@@ -135,3 +135,22 @@ export interface BlogPost {
   upVotes?: number | null;
   downVotes?: number | null;
 }
+
+export interface IPaginationMeta {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
+export interface IPostStatistics {
+  all: number;
+  active: number;
+  hidden: number;
+}
+
+export interface IPostPaginatedResponse {
+  items: BlogPost[];
+  meta: IPaginationMeta;
+  statistics: IPostStatistics;
+}
