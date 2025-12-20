@@ -231,7 +231,7 @@ const EditProfile = () => {
       const error = err as { response?: { data?: { message?: string } }; message?: string };
       showToast({
         type: "error",
-        message: error.response?.data?.message || error.message || "Có lỗi xảy ra"
+        message: error.response?.data?.message || error.message || "Có lỗi xảy ra rùi"
       });
     } finally {
       setLoading(false);
@@ -240,7 +240,7 @@ const EditProfile = () => {
 
   const handleRequestPasswordReset = async () => {
     if (!forgotPasswordEmail) {
-      showToast({ type: "error", message: "Vui lòng nhập email" });
+      showToast({ type: "error", message: "Vui lòng nhập email :3" });
       return;
     }
     
@@ -248,13 +248,13 @@ const EditProfile = () => {
     try {
       await authService.sendResetOtp(forgotPasswordEmail);
       setForgotPasswordStep('otp');
-      showToast({ type: "success", message: "Mã OTP đã được gửi đến email của bạn" });
+      showToast({ type: "success", message: "Mã OTP đã được gửi đến email của bạn rùi á" });
       setTimeout(() => inputRefs.current[0]?.focus(), 100);
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } }; message?: string };
       showToast({
         type: "error",
-        message: error.response?.data?.message || error.message || "Có lỗi xảy ra"
+        message: error.response?.data?.message || error.message || "Có lỗi xảy ra huhu"
       });
     } finally {
       setSendingOtp(false);
@@ -297,7 +297,7 @@ const EditProfile = () => {
   const handleVerifyOtp = () => {
     const otpCode = otp.join("");
     if (otpCode.length !== 6) {
-      showToast({ type: "error", message: "Vui lòng nhập đủ 6 số OTP" });
+      showToast({ type: "error", message: "Vui lòng nhập đủ 6 số OTP :3" });
       return;
     }
     setForgotPasswordStep('password');
@@ -323,7 +323,7 @@ const EditProfile = () => {
       return;
     }
     if (resetPasswordData.newPassword !== resetPasswordData.confirmPassword) {
-      showToast({ type: "error", message: "Mật khẩu không khớp" });
+      showToast({ type: "error", message: "Mật khẩu hăm có khớp" });
       return;
     }
     
@@ -332,7 +332,7 @@ const EditProfile = () => {
     try {
       await authService.resetPassword(forgotPasswordEmail, otpCode, resetPasswordData.newPassword);
       
-      showToast({ type: "success", message: "Mật khẩu đã được đặt lại thành công!" });
+      showToast({ type: "success", message: "Mật khẩu đã được đặt lại thành công roài!" });
       setShowForgotPasswordModal(false);
       setForgotPasswordStep('email');
       setForgotPasswordEmail('');
@@ -342,7 +342,7 @@ const EditProfile = () => {
       const error = err as { response?: { data?: { message?: string } }; message?: string };
       showToast({ 
         type: "error", 
-        message: error.response?.data?.message || error.message || "Có lỗi xảy ra" 
+        message: error.response?.data?.message || error.message || "Có lỗi xảy ra huhu" 
       });
     } finally {
       setLoading(false);
@@ -395,7 +395,7 @@ const EditProfile = () => {
     try {
       await userService.unblockUser(userId);
       setBlockedUsers((prev) => prev.filter((user) => user.id !== userId));
-      showToast({ type: "success", message: "Đã bỏ chặn người dùng" });
+      showToast({ type: "success", message: "Đã bỏ chặn người dùng :3" });
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } }; message?: string };
       showToast({
@@ -412,7 +412,7 @@ const EditProfile = () => {
       setBlockedUsers(users);
       setSearchQuery("");
       setSearchResults([]);
-      showToast({ type: "success", message: "Đã chặn người dùng" });
+      showToast({ type: "success", message: "Đã chặn người dùng :((" });
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } }; message?: string };
       showToast({

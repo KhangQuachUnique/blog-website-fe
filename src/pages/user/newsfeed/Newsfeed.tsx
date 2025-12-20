@@ -106,7 +106,7 @@ export default function Newsfeed() {
 
         {!hasNextPage && posts.length > 0 && (
           <p className="text-center text-muted-foreground py-12">
-            Đã hết bài viết rồi nha
+            Đã hết bài viết rồi nha, đi chạm cỏ thôi
           </p>
         )}
       </main>

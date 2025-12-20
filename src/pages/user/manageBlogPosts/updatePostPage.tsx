@@ -59,7 +59,7 @@ const UpdatePostPage = () => {
         </svg>
         <span className="text-lg font-semibold">Không thể tải bài viết</span>
         <span className="text-sm mt-1">
-          Vui lòng thử lại hoặc kiểm tra kết nối.
+          Vui lòng thử lại hoặc kiểm tra kết nối nha.
         </span>
       </div>
     );
@@ -82,10 +82,10 @@ const UpdatePostPage = () => {
           />
         </svg>
         <span className="text-lg font-semibold">
-          Bạn không có quyền chỉnh sửa bài viết này
+          Bạn không có quyền chỉnh sửa bài viết này đâu
         </span>
         <span className="text-sm mt-1">
-          Chỉ tác giả mới được chỉnh sửa nội dung.
+          Chỉ tác giả mới được chỉnh sửa nội dung thôi.
         </span>
       </div>
     );
