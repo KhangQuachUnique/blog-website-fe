@@ -37,23 +37,23 @@ export const useTogglePostReact = () => {
       >(["newsfeed", sessionSeed]);
 
       console.log(toggleData.postId, "toggled reaction for post");
-      const prevPost = queryClient.getQueryData<IPostResponseDto>([
+      const previousPost = queryClient.getQueryData<IPostResponseDto>([
         "post",
         toggleData.postId,
       ]);
 
       const newFeed = await updateNewsfeedReacts(previousFeed, toggleData);
-      const newPost = await updateSinglePostReacts(prevPost, toggleData);
+      const newPost = await updateSinglePostReacts(previousPost, toggleData);
 
       // Cập nhật cache ngay lập tức (phải dùng cùng queryKey với các thao tác khác)
       queryClient.setQueryData(["newsfeed", sessionSeed], newFeed);
       queryClient.setQueryData(["post", toggleData.postId], newPost);
 
-      console.log("Previous Post ??????????????:", prevPost);
+      console.log("Previous Post ??????????????:", previousPost);
       console.log("After Toggle - New Post????????????????:", newPost);
 
       // Trả về context để rollback nếu lỗi
-      return { previousFeed, prevPost };
+      return { previousFeed, previousPost };
     },
 
     onError: (_err, _vars, context) => {
@@ -63,8 +63,8 @@ export const useTogglePostReact = () => {
           context.previousFeed
         );
       }
-      if (context?.prevPost) {
-        queryClient.setQueryData(["post", _vars.postId], context.prevPost);
+      if (context?.previousPost) {
+        queryClient.setQueryData(["post", _vars.postId], context.previousPost);
       }
     },
 
