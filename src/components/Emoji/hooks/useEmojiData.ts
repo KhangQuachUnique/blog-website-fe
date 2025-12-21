@@ -32,7 +32,6 @@ export function useEmojiData(): IEmojiCategoryData[] {
       category,
       emojis: emojis as IEmojiResponseDto[],
     }));
-    console.log("unicodeCategories", unicodeCategories);
 
     // Convert custom emojis thành IEmojiCategoryData[]
     const customCategories: IEmojiCategoryData[] =
@@ -44,7 +43,6 @@ export function useEmojiData(): IEmojiCategoryData[] {
           type: "CUSTOM",
         })),
       })) ?? [];
-    console.log("customCategories", customCategories);
 
     // Merge Unicode + Custom
     return mergeEmojiCategories(unicodeCategories, customCategories);

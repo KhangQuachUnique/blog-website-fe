@@ -1,4 +1,10 @@
-import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
+import React, {
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useParams, Link } from "react-router-dom";
 import GridLayout from "react-grid-layout";
 import { Search } from "lucide-react";
@@ -13,16 +19,14 @@ import { useAuthUser } from "../../../hooks/useAuth";
 
 import { EBlockType, ObjectFitType } from "../../../types/block";
 import type { IBlockResponseDto } from "../../../types/block";
-import type {
-  IPostResponseDto,
-  IReactionSummaryDto,
-  IEmojiSummaryDto,
-} from "../../../types/post";
 
 import {
   GRID_SETTINGS,
   BLOCK_WRAPPER,
 } from "../../../features/user/manageBlogPosts/layoutConstants";
+import ReactionSection from "../../../components/Emoji";
+import { useQueryClient } from "@tanstack/react-query";
+import type { IPostResponseDto } from "../../../types/post";
 
 // ============================================
 // Types
@@ -62,12 +66,26 @@ const parseObjectFit = (value: unknown): ObjectFitType => {
 // Component
 // ============================================
 const PostDetailsPage: React.FC = () => {
+  const queryClient = useQueryClient();
   const { id } = useParams<{ id: string }>();
   const postId = Number(id ?? 0);
 
   // Fetch post data
   const { data: postData, isLoading, isError, error } = useGetPostById(postId);
-  const post = postData as IPostResponseDto | undefined;
+  console.log("Post Data //////////////////////////:", postData);
+
+  const reacts = useMemo(() => {
+    const results = queryClient.getQueryData<IPostResponseDto>([
+      "post",
+      postId,
+    ]);
+    if (results) {
+      const reactsData = results.reacts?.emojis || [];
+      return reactsData;
+    } else {
+      return postData?.reacts?.emojis || [];
+    }
+  }, [postData, queryClient, postId]);
 
   // Container width for GridLayout
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -203,7 +221,7 @@ const PostDetailsPage: React.FC = () => {
     );
   }
 
-  if (!post) {
+  if (!postData) {
     return (
       <div className="p-6 text-center text-gray-500">
         Không tìm thấy bài viết
@@ -214,7 +232,7 @@ const PostDetailsPage: React.FC = () => {
   // ============================================
   // Prepare blocks & layout
   // ============================================
-  const blocks: IBlockResponseDto[] = post.blocks ?? [];
+  const blocks: IBlockResponseDto[] = postData.blocks ?? [];
   const COLS = GRID_SETTINGS.cols;
 
   const layout: LayoutItem[] = blocks.map((b) => {
@@ -239,36 +257,6 @@ const PostDetailsPage: React.FC = () => {
       h,
     };
   });
-
-  // Reactions from backend (if present on the post DTO)
-  const reactionsData: IReactionSummaryDto | undefined =
-    post.reacts ?? post.reactions;
-  const reactionEmojis: Array<{ node: React.ReactNode; count: number }> = [];
-  if (reactionsData && Array.isArray(reactionsData.emojis)) {
-    for (const r of reactionsData.emojis as IEmojiSummaryDto[]) {
-      const cnt = r.totalCount ?? 0;
-      let node: React.ReactNode;
-
-      if (r.emojiUrl) {
-        node = (
-          <img src={r.emojiUrl} alt="emoji" style={{ width: 18, height: 18 }} />
-        );
-      } else if (r.codepoint) {
-        try {
-          const parts = r.codepoint
-            .split("-")
-            .map((p: string) => parseInt(p, 16));
-          node = String.fromCodePoint(...parts);
-        } catch {
-          node = "💗";
-        }
-      } else {
-        node = "💗";
-      }
-
-      reactionEmojis.push({ node, count: cnt });
-    }
-  }
 
   // ============================================
   // Render
@@ -310,23 +298,11 @@ const PostDetailsPage: React.FC = () => {
             overflowWrap: "break-word",
           }}
         >
-          {post.title}
+          {postData.title}
         </h1>
 
-        {/* Reactions (display under title) */}
-        {reactionEmojis.length > 0 && (
-          <div className="newsfeed-card__reactions" style={{ marginTop: 8 }}>
-            {reactionEmojis.map((r, idx) => (
-              <div key={idx} className="newsfeed-card__reaction">
-                <span className="newsfeed-card__reaction-emoji">{r.node}</span>
-                <span className="newsfeed-card__reaction-count">{r.count}</span>
-              </div>
-            ))}
-          </div>
-        )}
-
         {/* Short Description */}
-        {post.shortDescription && (
+        {postData.shortDescription && (
           <p
             className="w-full"
             style={{
@@ -337,37 +313,37 @@ const PostDetailsPage: React.FC = () => {
               fontFamily: "Quicksand, Mona Sans, Open Sans, Outfit, sans-serif",
             }}
           >
-            {post.shortDescription}
+            {postData.shortDescription}
           </p>
         )}
 
         {/* Author Info */}
-        <div className="flex items-center gap-3 text-sm text-gray-500 mt-4">
+        <div className="flex items-center gap-3 text-md text-gray-500 mt-10">
           <img
-            src={post.author?.avatarUrl ?? "/assets/default-avatar.png"}
-            alt={post.author?.username ?? "avatar"}
-            className="w-10 h-10 rounded-full object-cover"
+            src={postData.author?.avatarUrl ?? "/assets/default-avatar.png"}
+            alt={postData.author?.username ?? "avatar"}
+            className="w-15 h-15 rounded-full object-cover"
           />
           <div>
             <div>
               Bởi{" "}
               <Link
-                to={`/user/${post.author?.id}`}
-                className="font-medium text-[#F295B6] hover:underline"
+                to={`/user/${postData.author?.id}`}
+                className="text-md text-[#F295B6] hover:underline"
               >
-                {post.author?.username ?? "Người dùng"}
+                {postData.author?.username ?? "Người dùng"}
               </Link>
             </div>
-            <div className="text-xs text-gray-400">
-              {formatDate(post.createdAt)}
+            <div className="text-md text-gray-400">
+              {formatDate(postData.createdAt)}
             </div>
           </div>
         </div>
 
         {/* Hashtags - Clickable */}
-        {post.hashtags && post.hashtags.length > 0 && (
+        {postData.hashtags && postData.hashtags.length > 0 && (
           <div className="mt-4 flex flex-wrap gap-2">
-            {post.hashtags.map((h) => (
+            {postData.hashtags.map((h) => (
               <Link
                 key={h.id}
                 to={`/search?q=${encodeURIComponent(h.name)}&type=hashtag`}
@@ -378,6 +354,11 @@ const PostDetailsPage: React.FC = () => {
             ))}
           </div>
         )}
+
+        {/*Reactions section*/}
+        <div className="mt-10">
+          <ReactionSection postId={postId} reactions={reacts} />
+        </div>
       </div>
 
       {/* Grid Layout */}
@@ -459,7 +440,7 @@ const PostDetailsPage: React.FC = () => {
 
       {/* Post Comments Section */}
       <div style={{ width: GRID_SETTINGS.width, marginTop: 32 }}>
-        <CommentsSection postId={post.id} currentUser={normalizedUser} />
+        <CommentsSection postId={postData.id} currentUser={normalizedUser} />
       </div>
 
       {/* --- SIDEBARS --- */}
