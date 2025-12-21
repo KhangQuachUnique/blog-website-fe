@@ -60,7 +60,7 @@ const ManageLayout = () => {
       });
 
       setOpenDelete(false);
-      navigate("/groups"); // ✅ đổi route nếu bạn có trang danh sách community riêng
+      navigate("/groups");
     } catch (e: any) {
       console.error(e);
 
@@ -72,6 +72,15 @@ const ManageLayout = () => {
     }
   };
 
+  // ✅ giữ nguyên "kích cỡ" theo CommunityLayout (padding 150px)
+  const headerWrapStyle: React.CSSProperties = {
+    padding: "20px 150px 0 150px",
+  };
+
+  const outletWrapStyle: React.CSSProperties = {
+    padding: "0 150px 40px 150px",
+  };
+
   // MEMBER → chỉ xem
   if (role === "MEMBER") {
     return (
@@ -80,17 +89,19 @@ const ManageLayout = () => {
           <img src={coverSrc} alt="cover" />
         </div>
 
-        <h2>{data.name}</h2>
-        <p>{data.description}</p>
+        <div style={headerWrapStyle}>
+          <h2 className="community-header-title">{data.name}</h2>
+          <p className="community-header-sub">{data.description}</p>
 
-        <div style={{ marginTop: 12 }}>
-          <BackButton />
+          <div style={{ marginTop: 12 }}>
+            <BackButton />
+          </div>
+
+          <p style={{ marginTop: 16 }}>
+            Bạn là <strong>Thành viên</strong>. Bạn không có quyền quản lý cộng
+            đồng.
+          </p>
         </div>
-
-        <p style={{ marginTop: 16 }}>
-          Bạn là <strong>Thành viên</strong>. Bạn không có quyền quản lý cộng
-          đồng.
-        </p>
       </div>
     );
   }
@@ -103,11 +114,15 @@ const ManageLayout = () => {
           <img src={coverSrc} alt="cover" />
         </div>
 
-        <h2>{data.name}</h2>
-        <p>Yêu cầu tham gia cộng đồng của bạn đang chờ duyệt.</p>
+        <div style={headerWrapStyle}>
+          <h2 className="community-header-title">{data.name}</h2>
+          <p className="community-header-sub">
+            Yêu cầu tham gia cộng đồng của bạn đang chờ duyệt.
+          </p>
 
-        <div style={{ marginTop: 12 }}>
-          <BackButton />
+          <div style={{ marginTop: 12 }}>
+            <BackButton />
+          </div>
         </div>
       </div>
     );
@@ -120,7 +135,8 @@ const ManageLayout = () => {
         <img src={coverSrc} alt="cover" />
       </div>
 
-      <div style={{ marginTop: 20 }}>
+      {/* ✅ Header + Tabs được bọc padding 150px */}
+      <div style={headerWrapStyle}>
         <h2 className="community-header-title">{data.name}</h2>
         <p className="community-header-sub">{data.description}</p>
 
@@ -185,7 +201,10 @@ const ManageLayout = () => {
         </div>
       </div>
 
-      <Outlet />
+      {/* ✅ Outlet cũng được bọc padding 150px => 3 tab khớp kích cỡ */}
+      <div style={outletWrapStyle}>
+        <Outlet />
+      </div>
 
       {/* ✅ Modal: Delete */}
       {openDelete && (
