@@ -1,6 +1,5 @@
 import axios from "../config/axiosCustomize";
 import type { IPostResponseDto } from "../types/post";
-import type { UserListItem } from "../types/user";
 
 // ============================================
 // Search DTOs - tách biệt cho từng loại
@@ -188,7 +187,10 @@ export const searchAll = async (
 // ============================================
 
 // Union type for search result items (legacy support)
-export type SearchResultItem = IPostResponseDto | IUserSearchDto | ICommunitySearchDto;
+export type SearchResultItem =
+  | IPostResponseDto
+  | IUserSearchDto
+  | ICommunitySearchDto;
 
 // Legacy unified response format
 export interface ISearchResponseDto {
