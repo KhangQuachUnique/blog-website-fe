@@ -8,6 +8,13 @@ export interface Toast {
 }
 
 export interface ToastContextValue {
+  /**
+   *
+   * @param type: "success" | "error" | "info"
+   * @param message: string
+   * @param duration: number (in milliseconds)
+   * @returns
+   */
   showToast: (toast: Omit<Toast, "id">) => void;
   removeToast: (id: string) => void;
 }

@@ -13,7 +13,8 @@ import { useCheckSaved, useToggleSavePost } from "../../hooks/useSavedPost";
 import ReportButton from "../report/ReportButton";
 import { EReportType } from "../../types/report";
 import VoteButton from "../VoteButton";
-import type { UserVoteDto } from "../../types/user-vote";
+import type { IVotesSummaryDto } from "../../types/user-vote";
+import { useToast } from "../../contexts/toast";
 
 // ============================================
 // 🎨 BLOOKIE DESIGN SYSTEM - PASTEL PINK EDITION
@@ -38,58 +39,6 @@ const THEME = {
   shadowSoft: "0 2px 12px rgba(242, 149, 182, 0.15)",
   shadowMedium: "0 4px 20px rgba(242, 149, 182, 0.2)",
   shadowStrong: "0 8px 32px rgba(242, 149, 182, 0.25)",
-};
-
-// ============================================
-// 🧩 SUB-COMPONENTS
-// ============================================
-
-// Floating Toast Notification
-const Toast: React.FC<{
-  message: string;
-  visible: boolean;
-  anchorRect?: DOMRect | null;
-}> = ({ message, visible, anchorRect }) => {
-  if (!visible) return null;
-
-  const toast = (
-    <>
-      <style>{`
-        @keyframes toastSlideIn {
-          0% { opacity: 0; transform: translateX(-50%) translateY(8px) scale(0.95); }
-          100% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
-        }
-      `}</style>
-      <div
-        style={{
-          position: "fixed",
-          left: anchorRect
-            ? `${anchorRect.left + anchorRect.width / 2}px`
-            : "50%",
-          top: anchorRect ? `${anchorRect.top - 8}px` : undefined,
-          transform: anchorRect
-            ? "translateX(-50%) translateY(-100%)"
-            : "translateX(-50%)",
-          background: `linear-gradient(135deg, ${THEME.primary} 0%, ${THEME.secondary} 100%)`,
-          color: THEME.white,
-          padding: "10px 20px",
-          borderRadius: "24px",
-          fontSize: "13px",
-          fontWeight: 600,
-          fontFamily: "'Quicksand', sans-serif",
-          whiteSpace: "nowrap",
-          boxShadow: THEME.shadowStrong,
-          animation: "toastSlideIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)",
-          zIndex: 1000,
-        }}
-        onMouseDown={(e) => e.stopPropagation()}
-      >
-        {message}
-      </div>
-    </>
-  );
-
-  return createPortal(toast, document.body);
 };
 
 // More Menu Dropdown (rendered in a portal so it overlays without affecting layout)
@@ -176,7 +125,6 @@ const MoreMenu: React.FC<{
           background: THEME.white,
           borderRadius: "16px",
           border: `1.5px solid ${THEME.secondary}`,
-          boxShadow: THEME.shadowStrong,
           overflow: "hidden",
           // animation: 'menuSlideIn 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
           zIndex: 1000,
@@ -230,7 +178,7 @@ interface InteractBarProps {
   postId: number;
   userId: number;
   /** Vote data từ post response */
-  votes?: UserVoteDto;
+  votes?: IVotesSummaryDto;
   totalComments?: number;
 }
 
@@ -242,14 +190,10 @@ const InteractBar: React.FC<InteractBarProps> = ({
 }) => {
   const navigate = useNavigate();
   const [showMoreMenu, setShowMoreMenu] = useState(false);
-  const [showLoginToast, setShowLoginToast] = useState(false);
-  const [showShareToast, setShowShareToast] = useState(false);
-  const [showSaveToast, setShowSaveToast] = useState(false);
-  const [saveToastMessage, setSaveToastMessage] = useState("");
   const [commentHovered, setCommentHovered] = useState(false);
   const [moreHovered, setMoreHovered] = useState(false);
-  const [bookmarkHovered, setBookmarkHovered] = useState(false);
   const wrapperRef = React.useRef<HTMLDivElement | null>(null);
+  const { showToast } = useToast();
 
   const moreMenuRef = useRef<HTMLDivElement>(null);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
@@ -263,28 +207,17 @@ const InteractBar: React.FC<InteractBarProps> = ({
   );
   const { mutate: toggleSave, isPending: isSaving } = useToggleSavePost();
 
-  // Toast handler
-  const showLoginRequired = () => {
-    setShowLoginToast(true);
-    setTimeout(() => setShowLoginToast(false), 2500);
-  };
-
-
   // Bookmark with login check
   const onBookmarkClick = () => {
-    if (!isLoggedIn) {
-      showLoginRequired();
-      return;
-    }
     toggleSave(
       { userId, postId },
       {
         onSuccess: (result) => {
-          setSaveToastMessage(
-            result.isSaved ? "Đã lưu bài viết 🔖" : "Đã bỏ lưu bài viết"
-          );
-          setShowSaveToast(true);
-          setTimeout(() => setShowSaveToast(false), 2000);
+          showToast({
+            type: "success",
+            message: result.message,
+            duration: 2000,
+          });
         },
       }
     );
@@ -302,25 +235,32 @@ const InteractBar: React.FC<InteractBarProps> = ({
       if (
         emojiPickerRef.current &&
         !emojiPickerRef.current.contains(event.target as Node)
-      ) {}
+      ) {
+        // setShowEmojiPicker(false);
+      }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-
-
   // Menu handlers
   const handleShare = () => {
     navigator.clipboard.writeText(`${window.location.origin}/post/${postId}`);
     setShowMoreMenu(false);
-    setShowShareToast(true);
-    setTimeout(() => setShowShareToast(false), 2000);
+    showToast({
+      type: "success",
+      message: "Link đã được sao chép vào clipboard",
+      duration: 2000,
+    });
   };
 
   const handleRepost = () => {
     if (!isLoggedIn) {
-      showLoginRequired();
+      showToast({
+        type: "error",
+        message: "Vui lòng đăng nhập để đăng lại bài viết",
+        duration: 3000,
+      });
       setShowMoreMenu(false);
       return;
     }
@@ -348,166 +288,128 @@ const InteractBar: React.FC<InteractBarProps> = ({
         gap: "10px",
         padding: "8px 12px",
         paddingBottom: `${computedPaddingBottom}px`,
-        background: THEME.cream,
-        borderTop: `1px solid ${THEME.tertiary}`,
         borderRadius: "0 0 10px 10px",
         fontFamily: "'Quicksand', sans-serif",
         position: "relative",
       }}
     >
-      {/* Toast (portal) */}
-      <Toast
-        message="Đăng nhập để tương tác 💕"
-        visible={showLoginToast}
-        anchorRect={wrapperRef.current?.getBoundingClientRect() ?? null}
-      />
-      <Toast
-        message="Đã sao chép link! 📋"
-        visible={showShareToast}
-        anchorRect={wrapperRef.current?.getBoundingClientRect() ?? null}
-      />
-      <Toast
-        message={saveToastMessage}
-        visible={showSaveToast}
-        anchorRect={wrapperRef.current?.getBoundingClientRect() ?? null}
-      />
-
       {/* ===== LEFT: Vote Group ===== */}
-      <VoteButton
-        postId={postId}
-        userId={userId}
-        votes={votes}
-        size="md"
-      />
+      <VoteButton postId={postId} userId={userId} votes={votes} size="md" />
 
       {/* ===== MIDDLE: Bookmark Button ===== */}
       <button
         onClick={onBookmarkClick}
         disabled={isSaving}
-        onMouseEnter={() => setBookmarkHovered(true)}
-        onMouseLeave={() => setBookmarkHovered(false)}
         style={{
           display: "flex",
           alignItems: "center",
           gap: "5px",
-          padding: "6px 12px",
-          background: isSaved
-            ? THEME.tertiary
-            : bookmarkHovered
-            ? THEME.tertiary
-            : THEME.white,
-          border: `1.5px solid ${isSaved ? THEME.primary : THEME.secondary}`,
-          borderRadius: "50px",
           cursor: isSaving ? "not-allowed" : "pointer",
           opacity: isSaving ? 0.5 : 1,
           boxShadow: THEME.shadowSoft,
           transition: "all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)",
-          transform: bookmarkHovered ? "scale(1.05)" : "scale(1)",
         }}
       >
-        <Bookmark
+        <div className="hover:translate-y-[-2px] transition-transform duration-100">
+          <Bookmark
+            size={23}
+            strokeWidth={2.5}
+            fill={isSaved ? THEME.primary : "none"}
+            style={{
+              color: isSaved ? THEME.primary : THEME.textMuted,
+              transition: "all 0.2s ease",
+            }}
+          />
+        </div>
+      </button>
+
+      {/* Comment Button */}
+      <button
+        onClick={() => navigate(`/post/${postId}`)}
+        onMouseEnter={() => setCommentHovered(true)}
+        onMouseLeave={() => setCommentHovered(false)}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "4px",
+          padding: "6px 10px",
+          background: commentHovered ? THEME.tertiary : THEME.white,
+          border: `1.5px solid ${THEME.secondary}`,
+          borderRadius: "50px",
+          cursor: "pointer",
+          boxShadow: THEME.shadowSoft,
+          transition: "all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)",
+          transform: commentHovered ? "scale(1.05)" : "scale(1)",
+        }}
+      >
+        <MessageCircle
           size={14}
           strokeWidth={2.5}
-          fill={isSaved ? THEME.primary : "none"}
-          style={{
-            color: isSaved ? THEME.primary : THEME.textMuted,
-            transition: "all 0.2s ease",
-          }}
+          style={{ color: THEME.primary }}
         />
         <span
           style={{
             fontSize: "12px",
             fontWeight: 600,
-            color: isSaved ? THEME.primary : THEME.text,
+            color: THEME.text,
             fontFamily: "'Quicksand', sans-serif",
           }}
         >
-          {isSaved ? "Đã lưu" : "Lưu"}
+          {totalComments}
         </span>
       </button>
 
- 
-        {/* Comment Button */}
+      {/* More Menu Button */}
+      <div ref={moreMenuRef} style={{ position: "relative" }}>
         <button
-          onClick={() => navigate(`/post/${postId}`)}
-          onMouseEnter={() => setCommentHovered(true)}
-          onMouseLeave={() => setCommentHovered(false)}
+          onClick={() => setShowMoreMenu(!showMoreMenu)}
+          onMouseEnter={() => setMoreHovered(true)}
+          onMouseLeave={() => setMoreHovered(false)}
           style={{
             display: "flex",
             alignItems: "center",
-            gap: "4px",
-            padding: "6px 10px",
-            background: commentHovered ? THEME.tertiary : THEME.white,
-            border: `1.5px solid ${THEME.secondary}`,
+            justifyContent: "center",
+            width: "28px",
+            height: "28px",
             borderRadius: "50px",
+            border: `1.5px solid ${
+              showMoreMenu ? THEME.primary : THEME.secondary
+            }`,
+            background: showMoreMenu
+              ? THEME.tertiary
+              : moreHovered
+              ? THEME.tertiary
+              : THEME.white,
             cursor: "pointer",
-            boxShadow: THEME.shadowSoft,
             transition: "all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)",
-            transform: commentHovered ? "scale(1.05)" : "scale(1)",
+            transform: moreHovered ? "scale(1.05)" : "scale(1)",
           }}
         >
-          <MessageCircle
+          <MoreHorizontal
             size={14}
             strokeWidth={2.5}
             style={{ color: THEME.primary }}
           />
-          <span
-            style={{
-              fontSize: "12px",
-              fontWeight: 600,
-              color: THEME.text,
-              fontFamily: "'Quicksand', sans-serif",
-            }}
-          >
-            {totalComments}
-          </span>
         </button>
 
-        {/* More Menu Button */}
-        <div ref={moreMenuRef} style={{ position: "relative" }}>
-          <button
-            onClick={() => setShowMoreMenu(!showMoreMenu)}
-            onMouseEnter={() => setMoreHovered(true)}
-            onMouseLeave={() => setMoreHovered(false)}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: "28px",
-              height: "28px",
-              borderRadius: "50px",
-              border: `1.5px solid ${
-                showMoreMenu ? THEME.primary : THEME.secondary
-              }`,
-              background: showMoreMenu
-                ? THEME.tertiary
-                : moreHovered
-                ? THEME.tertiary
-                : THEME.white,
-              cursor: "pointer",
-              transition: "all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)",
-              transform: moreHovered ? "scale(1.05)" : "scale(1)",
-            }}
-          >
-            <MoreHorizontal
-              size={14}
-              strokeWidth={2.5}
-              style={{ color: THEME.primary }}
-            />
-          </button>
-
-          <MoreMenu
-            visible={showMoreMenu}
-            onShare={handleShare}
-            onRepost={handleRepost}
-            onClose={handleCloseMoreMenu}
-            postId={postId}
-            currentUserId={userId}
-            onLoginRequired={showLoginRequired}
-            anchorRect={moreMenuRef.current?.getBoundingClientRect() ?? null}
-          />
-        </div>
+        <MoreMenu
+          visible={showMoreMenu}
+          onShare={handleShare}
+          onRepost={handleRepost}
+          onClose={handleCloseMoreMenu}
+          postId={postId}
+          currentUserId={userId}
+          onLoginRequired={() => {
+            showToast({
+              type: "error",
+              message: "Vui lòng đăng nhập để tiếp tục",
+              duration: 3000,
+            });
+            setShowMoreMenu(false);
+          }}
+        />
       </div>
+    </div>
   );
 };
 
