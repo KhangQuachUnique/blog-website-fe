@@ -76,14 +76,12 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
                       : post.community.name}
                   </span>
                 )}
+                {/* Place time below username/community so it won't overlap */}
+                <time className="newsfeed-card__time">
+                  {formatDate(post.createdAt)}
+                </time>
               </div>
             </div>
-            <time className="newsfeed-card__time">
-              {formatDate(post.createdAt)}
-            </time>
-            {/* <time className="newsfeed-card__time">
-              {formatDate(post.createdAt)}
-            </time> */}
           </div>
           {post.hashtags && post.hashtags.length > 0 && (
             <div className="newsfeed-card__hashtags">

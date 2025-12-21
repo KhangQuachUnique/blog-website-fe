@@ -100,6 +100,70 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/auth/send-otp": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AuthController_sendOtp"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/verify-otp": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AuthController_verifyOtp"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/forgot-password/send-otp": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AuthController_sendResetOtp"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/forgot-password/reset": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AuthController_resetPassword"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/users": {
         parameters: {
             query?: never;
@@ -274,6 +338,54 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/users/admin/all": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["UsersController_getAllUsersAdmin"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/users/admin/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["UsersController_deleteUserByAdmin"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/users/admin/{id}/role": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["UsersController_updateUserRole"];
         trace?: never;
     };
     "/blog-posts/repost": {
@@ -567,7 +679,7 @@ export interface paths {
         delete: operations["CommentsController_remove"];
         options?: never;
         head?: never;
-        patch: operations["CommentsController_update"];
+        patch?: never;
         trace?: never;
     };
     "/comments/post/{postId}": {
@@ -650,18 +762,40 @@ export interface paths {
         patch: operations["HashtagsController_update"];
         trace?: never;
     };
-    "/user-reacts": {
+    "/user-reacts/posts/toggle": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Lấy tất cả reactions */
-        get: operations["UserReactsController_findAll"];
+        get?: never;
         put?: never;
-        /** React với emoji cho post/comment */
-        post: operations["UserReactsController_create"];
+        /**
+         * Toggle reaction cho post
+         * @description Hành vi giống Discord: Click 1 lần = react, click lần 2 = unreact
+         */
+        post: operations["UserReactsController_togglePostReact"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/user-reacts/comments/toggle": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Toggle reaction cho comment
+         * @description Hành vi giống Discord: Click 1 lần = react, click lần 2 = unreact
+         */
+        post: operations["UserReactsController_toggleCommentReact"];
         delete?: never;
         options?: never;
         head?: never;
@@ -675,7 +809,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Lấy reactions của post */
+        /**
+         * Lấy reactions của post
+         * @description Trả về danh sách emoji + count + isReactedByCurrentUser
+         */
         get: operations["UserReactsController_getPostReactions"];
         put?: never;
         post?: never;
@@ -685,15 +822,18 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/user-reacts/posts/{postId}/user/{userId}": {
+    "/user-reacts/comments/{commentId}": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Lấy react của user cho post cụ thể */
-        get: operations["UserReactsController_getUserReact"];
+        /**
+         * Lấy reactions của comment
+         * @description Trả về danh sách emoji + count + isReactedByCurrentUser
+         */
+        get: operations["UserReactsController_getCommentReactions"];
         put?: never;
         post?: never;
         delete?: never;
@@ -702,21 +842,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/user-reacts/{id}": {
+    "/user-reacts/posts/batch": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get: operations["UserReactsController_findOne"];
+        /**
+         * Lấy reactions của nhiều posts (batch query)
+         * @description Optimize cho newsfeed: 1 query thay vì N queries
+         */
+        get: operations["UserReactsController_getPostReactionsBatch"];
         put?: never;
         post?: never;
-        /** Xóa react */
-        delete: operations["UserReactsController_remove"];
+        delete?: never;
         options?: never;
         head?: never;
-        patch: operations["UserReactsController_update"];
+        patch?: never;
         trace?: never;
     };
     "/emojis": {
@@ -729,6 +872,38 @@ export interface paths {
         get: operations["EmojisController_findAll"];
         put?: never;
         post: operations["EmojisController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/emojis/user/{userId}/communities": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["EmojisController_findByUserCommunities"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/emojis/community/{communityId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["EmojisController_findByCommunity"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -749,22 +924,6 @@ export interface paths {
         options?: never;
         head?: never;
         patch: operations["EmojisController_update"];
-        trace?: never;
-    };
-    "/emojis/community/{communityId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["EmojisController_findByCommunity"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
         trace?: never;
     };
     "/communities": {
@@ -1133,6 +1292,10 @@ export interface components {
     schemas: {
         LoginDto: Record<string, never>;
         RegisterDto: Record<string, never>;
+        SendOtpDto: Record<string, never>;
+        VerifyOtpDto: Record<string, never>;
+        SendResetOtpDto: Record<string, never>;
+        ResetPasswordDto: Record<string, never>;
         CreateUserDto: Record<string, never>;
         UpdateUserDto: Record<string, never>;
         UpdateProfileDto: Record<string, never>;
@@ -1271,38 +1434,87 @@ export interface components {
         UpdateNotificationDto: Record<string, never>;
         UpdateBlockDto: Record<string, never>;
         CreateCommentDto: Record<string, never>;
-        UpdateCommentDto: Record<string, never>;
         CreateHashtagDto: Record<string, never>;
         UpdateHashtagDto: Record<string, never>;
-        CreateUserReactDto: {
+        ToggleReactDto: {
             /**
-             * @description ID của user
+             * @description ID của user thực hiện react
              * @example 1
              */
             userId: number;
             /**
-             * @description ID của emoji
-             * @example 1
+             * @description ID của emoji (dùng cho custom emoji hoặc emoji đã có sẵn)
+             * @example 5
              */
-            emojiId: number;
+            emojiId?: number;
             /**
-             * @description Loại target
-             * @example post
-             * @enum {string}
+             * @description Unicode codepoint (dùng cho unicode emoji, VD: "1f604" = 😄). BE tự tìm/tạo emoji
+             * @example 1f604
              */
-            type: "post" | "comment";
+            unicodeCodepoint?: string;
             /**
-             * @description ID của post (nếu react post)
-             * @example 1
+             * @description ID của post (chỉ dùng nếu react vào post)
+             * @example 10
              */
             postId?: number;
             /**
-             * @description ID của comment (nếu react comment)
-             * @example 1
+             * @description ID của comment (chỉ dùng nếu react vào comment)
+             * @example 20
              */
             commentId?: number;
         };
-        UpdateUserReactDto: Record<string, never>;
+        EmojiSummaryDto: {
+            /**
+             * @description ID của emoji
+             * @example 5
+             */
+            emojiId: number;
+            /**
+             * @description Loại emoji
+             * @example UNICODE
+             * @enum {string}
+             */
+            type: "CUSTOM" | "UNICODE";
+            /**
+             * @description Unicode codepoint (nếu là unicode emoji)
+             * @example 1f604
+             */
+            codepoint: string;
+            /**
+             * @description URL emoji (nếu là custom)
+             * @example https://cdn.example.com/emoji.png
+             */
+            emojiUrl: string;
+            /**
+             * @description Tổng số người đã react với emoji này
+             * @example 15
+             */
+            totalCount: number;
+            /**
+             * @description User hiện tại đã react với emoji này chưa
+             * @example true
+             */
+            reactedByCurrentUser: boolean;
+        };
+        UserReactSummaryDto: {
+            /**
+             * @description ID của target (postId hoặc commentId)
+             * @example 10
+             */
+            targetId: number;
+            /**
+             * @description Loại target
+             * @example post
+             */
+            targetType: string;
+            /** @description Danh sách emoji reactions */
+            emojis: components["schemas"]["EmojiSummaryDto"][];
+            /**
+             * @description Tổng số reactions (sum của tất cả emojis)
+             * @example 42
+             */
+            totalReactions: number;
+        };
         CreateEmojiDto: Record<string, never>;
         UpdateEmojiDto: Record<string, never>;
         CreateCommunityDto: Record<string, never>;
@@ -1472,6 +1684,90 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AuthController_sendOtp: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SendOtpDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AuthController_verifyOtp: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VerifyOtpDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AuthController_sendResetOtp: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SendResetOtpDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AuthController_resetPassword: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResetPasswordDto"];
+            };
+        };
         responses: {
             200: {
                 headers: {
@@ -1779,6 +2075,61 @@ export interface operations {
             query?: never;
             header?: never;
             path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    UsersController_getAllUsersAdmin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    UsersController_deleteUserByAdmin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    UsersController_updateUserRole: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
             cookie?: never;
         };
         requestBody?: never;
@@ -2402,29 +2753,6 @@ export interface operations {
             };
         };
     };
-    CommentsController_update: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateCommentDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
     CommentsController_findByPost: {
         parameters: {
             query: {
@@ -2583,24 +2911,7 @@ export interface operations {
             };
         };
     };
-    UserReactsController_findAll: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    UserReactsController_create: {
+    UserReactsController_togglePostReact: {
         parameters: {
             query?: never;
             header?: never;
@@ -2609,12 +2920,48 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["CreateUserReactDto"];
+                "application/json": components["schemas"]["ToggleReactDto"];
             };
         };
         responses: {
-            /** @description React thành công */
-            201: {
+            /** @description Toggle thành công */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid input */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    UserReactsController_toggleCommentReact: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ToggleReactDto"];
+            };
+        };
+        responses: {
+            /** @description Toggle thành công */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid input */
+            400: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -2624,95 +2971,67 @@ export interface operations {
     };
     UserReactsController_getPostReactions: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description User ID để check đã react chưa */
+                userId?: number;
+            };
             header?: never;
             path: {
-                postId: string;
+                postId: number;
             };
             cookie?: never;
         };
         requestBody?: never;
         responses: {
+            /** @description Reaction summary */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["UserReactSummaryDto"];
+                };
             };
         };
     };
-    UserReactsController_getUserReact: {
+    UserReactsController_getCommentReactions: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description User ID để check đã react chưa */
+                userId?: number;
+            };
             header?: never;
             path: {
-                postId: string;
-                userId: string;
+                commentId: number;
             };
             cookie?: never;
         };
         requestBody?: never;
         responses: {
+            /** @description Reaction summary */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["UserReactSummaryDto"];
+                };
             };
         };
     };
-    UserReactsController_findOne: {
+    UserReactsController_getPostReactionsBatch: {
         parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
+            query: {
+                /** @description Array post IDs, cách nhau bởi dấu phẩy (VD: 1,2,3) */
+                postIds: string;
+                /** @description User ID để check đã react chưa */
+                userId?: number;
             };
+            header?: never;
+            path?: never;
             cookie?: never;
         };
         requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    UserReactsController_remove: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    UserReactsController_update: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateUserReactDto"];
-            };
-        };
         responses: {
             200: {
                 headers: {
@@ -2753,6 +3072,44 @@ export interface operations {
         };
         responses: {
             201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    EmojisController_findByUserCommunities: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    EmojisController_findByCommunity: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                communityId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -2812,25 +3169,6 @@ export interface operations {
                 "application/json": components["schemas"]["UpdateEmojiDto"];
             };
         };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    EmojisController_findByCommunity: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                communityId: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
         responses: {
             200: {
                 headers: {

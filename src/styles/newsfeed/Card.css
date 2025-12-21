@@ -108,8 +108,9 @@
 .newsfeed-card__time {
   font-size: 12px;
   color: #888;
-  white-space: nowrap; /* Không cho ngày tháng xuống dòng lung tung */
-  flex-shrink: 0; /* Không cho phép bị co lại */
+  display: block; /* ensure it sits on its own line under username */
+  margin-top: 0.125rem;
+  /* keep compact; allow wrapping if needed */
 }
 
 .newsfeed-card__title {

@@ -1,15 +1,35 @@
 import axios from '../config/axiosCustomize';
 
+// 1. Cập nhật Interface khớp với Backend Response
+export interface SearchMeta {
+  postsTotal?: number;
+  postsHasMore?: boolean;
+  usersTotal?: number;
+  usersHasMore?: boolean;
+  communitiesTotal?: number;
+  communitiesHasMore?: boolean;
+}
+
+export interface SearchResponse {
+  posts: SearchResultItem[];
+  users: SearchResultItem[];
+  communities: SearchResultItem[];
+  meta: SearchMeta;
+}
+
+// Interface item giữ nguyên (hoặc bổ sung field nếu thiếu)
 export interface SearchResultItem {
   id: number | string;
-  title?: string;      
-  username?: string;   
-  name?: string;       
-  description?: string; 
+  title?: string;
+  username?: string;
+  name?: string;
+  description?: string;
   avatarUrl?: string;
   thumbnailUrl?: string;
   createdAt?: string;
   hashtags?: { id: number; name: string }[];
+
+  // Fields used by UI / convertToPost
   upVotes?: number;
   downVotes?: number;
   totalComments?: number;
@@ -19,47 +39,62 @@ export interface SearchResultItem {
     username: string;
     avatarUrl?: string;
   };
+
+  // ... các field khác
+  type?: 'POST' | 'USER' | 'COMMUNITY'; // Frontend tự đánh dấu để render
 }
 
 export const searchAPI = {
-  search: async (keyword: string, type: string): Promise<SearchResultItem[]> => {
+  /**
+   * @param keyword Từ khóa
+   * @param type Loại tìm kiếm (để trống nếu tìm tất cả)
+   * @param page Trang số mấy (Bắt đầu từ 1)
+   * @param limit Số lượng item mỗi lần lấy
+   * @returns { items, hasMore }
+   */
+  search: async (
+    keyword: string,
+    type: string,
+    page = 1,
+    limit = 10
+  ): Promise<{ items: SearchResultItem[]; hasMore: boolean }> => {
     try {
-      // [FIX] Tạo object params động
-      const params: any = { q: keyword };
-      
-      // Chỉ thêm 'type' vào params nếu nó có giá trị (không rỗng, không null)
-      if (type) {
-        params.type = type;
-      }
+      // pagination calculation (backend expects skip/take)
+      const skip = (page - 1) * limit;
 
-      // Lúc này axios sẽ chỉ gửi /search?q=M (không có &type=)
-      const response = await axios.get('/search', { params });
-      
-      // Case 1: Tìm cụ thể Post hoặc Hashtag -> Trả về mảng posts
-      if ((type === 'post' || type === 'hashtag') && response.posts) return response.posts;
-      
-      // Case 2: Tìm Community
-      if (type === 'community' && response.communities) return response.communities;
-      
-      // Case 3: Tìm User
-      if (type === 'user' && response.users) return response.users;
+      const params: any = {
+        q: keyword,
+        skip,
+        take: limit,
+      };
 
-      // Case 4 [QUAN TRỌNG]: Tìm tổng hợp (Sidebar Search) - Type rỗng
-      if (!type) {
-        let results: SearchResultItem[] = [];
-        // Ưu tiên hiển thị bài viết trước
-        if (response.posts) results = [...results, ...response.posts];
-        // Sau đó đến user
-        if (response.users) results = [...results, ...response.users];
-        // Cuối cùng là community
-        if (response.communities) results = [...results, ...response.communities];
-        
-        return results;
-      }
+      if (type) params.type = type;
 
-      return [];
+      const response: any = await axios.get('/search', { params });
+
+      // Annotate items with a `type` flag so the UI can distinguish
+      const posts: SearchResultItem[] = (response.posts || []).map((p: any) => ({ ...p, type: 'POST' }));
+      const users: SearchResultItem[] = (response.users || []).map((u: any) => ({ ...u, type: 'USER' }));
+      const communities: SearchResultItem[] = (response.communities || []).map((c: any) => ({ ...c, type: 'COMMUNITY' }));
+
+      let items: SearchResultItem[] = [];
+
+      if (type === 'post' || type === 'hashtag') items = posts;
+      else if (type === 'user') items = users;
+      else if (type === 'community') items = communities;
+      else items = [...users, ...communities, ...posts]; // default order: users -> communities -> posts for quick search
+
+      const meta = response.meta || {};
+      let hasMore = false;
+
+      if (type === 'post') hasMore = typeof meta.postsHasMore === 'boolean' ? meta.postsHasMore : posts.length === limit;
+      else if (type === 'user') hasMore = typeof meta.usersHasMore === 'boolean' ? meta.usersHasMore : users.length === limit;
+      else if (type === 'community') hasMore = typeof meta.communitiesHasMore === 'boolean' ? meta.communitiesHasMore : communities.length === limit;
+      else hasMore = Boolean(meta.postsHasMore || meta.usersHasMore || meta.communitiesHasMore) || items.length === limit;
+
+      return { items, hasMore };
     } catch (error) {
-      console.error("Lỗi khi tìm kiếm:", error);
+      console.error('Lỗi khi tìm kiếm:', error);
       throw error;
     }
   }

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { searchAPI } from '../../services/search.service';
 import type { SearchResultItem } from '../../services/search.service';
@@ -12,32 +12,86 @@ import '../../styles/newsfeed/Card.css';
 export const SearchResultPage = () => {
   const [searchParams] = useSearchParams();
   
-  // Lấy params từ URL (ví dụ: /search?q=abc&type=post)
+  // Lấy params từ URL
   const q = searchParams.get('q');
   const type = searchParams.get('type');
 
+  // --- STATE QUẢN LÝ DỮ LIỆU VÀ PHÂN TRANG ---
   const [results, setResults] = useState<SearchResultItem[]>([]);
   const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
 
-  // Gọi API mỗi khi 'q' hoặc 'type' thay đổi
-  useEffect(() => {
-    const fetchData = async () => {
-      if (!q || !type) return;
+  // Ref cho Sentinel (Mắt thần cuộn trang)
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+
+  // --- HÀM GỌI API ---
+  const fetchPage = useCallback(async (pageNum: number, isNewSearch = false) => {
+    if (!q) return;
+    
+    setLoading(true);
+    try {
+      // Gọi API với page và limit=10
+      const { items, hasMore: serverHasMore } = await searchAPI.search(q, type || '', pageNum, 10);
+
+      // searchAPI already returns the right subset depending on `type` param
+      const newItems = items || [];
+
+      setHasMore(!!serverHasMore);
       
-      setLoading(true);
-      try {
-        const data = await searchAPI.search(q, type);
-        setResults(data);
-      } catch (error) {
-        console.error('Search error:', error);
-      } finally {
-        setLoading(false);
+      if (isNewSearch) {
+        setResults(newItems);
+      } else {
+        // Nối thêm dữ liệu vào danh sách cũ
+        setResults((prev) => [...prev, ...newItems]);
       }
-    };
-
-    fetchData();
+    } catch (error) {
+      console.error('Search page error:', error);
+    } finally {
+      setLoading(false);
+    }
   }, [q, type]);
 
+  // --- EFFECT 1: KHI TỪ KHÓA HOẶC LOẠI THAY ĐỔI (RESET) ---
+  useEffect(() => {
+    if (!q) return;
+    setPage(1);
+    setResults([]);
+    setHasMore(true);
+    // Gọi ngay trang 1
+    fetchPage(1, true);
+  }, [q, type, fetchPage]);
+
+  // --- EFFECT 2: KHI PAGE TĂNG LÊN (LOAD MORE) ---
+  useEffect(() => {
+    if (page > 1) {
+      fetchPage(page, false);
+    }
+  }, [page, fetchPage]);
+
+  // --- EFFECT 3: INFINITE SCROLL (INTERSECTION OBSERVER) ---
+  useEffect(() => {
+    const currentSentinel = sentinelRef.current;
+    if (!currentSentinel) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        // Nếu thấy sentinel VÀ không đang load VÀ còn dữ liệu
+        if (entries[0].isIntersecting && !loading && hasMore) {
+          setPage((prev) => prev + 1);
+        }
+      },
+      { rootMargin: '100px' } // Load trước khi cuộn tới đáy 100px
+    );
+
+    observer.observe(currentSentinel);
+
+    return () => {
+      if (currentSentinel) observer.unobserve(currentSentinel);
+    };
+  }, [loading, hasMore]);
+
+  // --- HELPER FUNCTIONS (FORMAT DATE, CONVERT DTO) ---
   const formatDate = (dateString?: string) => {
     if (!dateString) return '';
     const date = new Date(dateString);
@@ -55,7 +109,6 @@ export const SearchResultPage = () => {
     default: 1,
   };
 
-  // Convert SearchResultItem to IPostResponseDto for Card component
   const convertToPost = (item: SearchResultItem): IPostResponseDto => ({
     id: Number(item.id),
     title: item.title || '',
@@ -77,7 +130,7 @@ export const SearchResultPage = () => {
     totalReacts: item.totalReacts || 0,
   });
 
-  // Render User Card (cùng style với newsfeed card)
+  // --- RENDER CARD COMPONENTS ---
   const renderUserCard = (item: SearchResultItem) => (
     <Link to={`/profile/${item.id}`} className="block">
       <article className="newsfeed-card hover:shadow-lg transition-shadow cursor-pointer">
@@ -113,7 +166,6 @@ export const SearchResultPage = () => {
     </Link>
   );
 
-  // Render Community Card (cùng style với newsfeed card)
   const renderCommunityCard = (item: SearchResultItem) => (
     <Link to={`/community/${item.id}`} className="block">
       <article className="newsfeed-card hover:shadow-lg transition-shadow cursor-pointer">
@@ -139,11 +191,11 @@ export const SearchResultPage = () => {
                 />
                 <div className="newsfeed-card__author-info">
                   <span className="newsfeed-card__username">Cộng đồng</span>
+                  {item.createdAt && (
+                    <time className="newsfeed-card__time">{formatDate(item.createdAt)}</time>
+                  )}
                 </div>
               </div>
-              {item.createdAt && (
-                <time className="newsfeed-card__time">{formatDate(item.createdAt)}</time>
-              )}
             </div>
             {item.description && (
               <p className="text-gray-600 text-sm mt-2 line-clamp-2">{item.description}</p>
@@ -155,7 +207,7 @@ export const SearchResultPage = () => {
     </Link>
   );
 
-  // Chọn render function dựa trên type
+  // Router chọn loại Card
   const renderItem = (item: SearchResultItem) => {
     switch (type) {
       case 'user':
@@ -163,8 +215,6 @@ export const SearchResultPage = () => {
       case 'community':
         return renderCommunityCard(item);
       case 'hashtag':
-        // Hashtag search trả về bài viết có hashtag đó, hiển thị như post
-        return <Card post={convertToPost(item)} />;
       case 'post':
       default:
         return <Card post={convertToPost(item)} />;
@@ -181,10 +231,11 @@ export const SearchResultPage = () => {
     }
   };
 
-  if (loading) {
+  // Loading lần đầu tiên (khi chưa có dữ liệu nào)
+  if (loading && page === 1 && results.length === 0) {
     return (
       <div className="flex justify-center py-20">
-        <Loader2 className="h-12 w-12 animate-spin" />
+        <Loader2 className="h-12 w-12 animate-spin text-blue-500" />
       </div>
     );
   }
@@ -206,17 +257,39 @@ export const SearchResultPage = () => {
             columnClassName="newsfeed-masonry-grid_column"
           >
             {results.map((item) => (
-              <div key={item.id} className="newsfeed-masonry-item">
+              // Kết hợp type + id làm key để tránh trùng lặp
+              <div key={`${type}-${item.id}`} className="newsfeed-masonry-item">
                 {renderItem(item)}
               </div>
             ))}
           </Masonry>
+
+          {/* --- SENTINEL (MẮT THẦN) --- */}
+          {/* Đặt ở cuối danh sách để kích hoạt load more */}
+          <div ref={sentinelRef} className="h-4 w-full" />
+
+          {/* Loader khi đang tải trang tiếp theo */}
+          {loading && page > 1 && (
+            <div className="flex justify-center py-6">
+              <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+            </div>
+          )}
+
+          {/* Thông báo hết dữ liệu */}
+          {!hasMore && (
+            <div className="text-center py-10 text-gray-400 italic">
+              Đã hiển thị hết kết quả.
+            </div>
+          )}
         </div>
       ) : (
-        <div className="text-center py-20 text-gray-500">
-          <p className="text-xl">Không tìm thấy kết quả nào.</p>
-          <p className="mt-2">Thử tìm kiếm với từ khóa khác</p>
-        </div>
+        // Không tìm thấy kết quả nào
+        !loading && (
+          <div className="text-center py-20 text-gray-500">
+            <p className="text-xl">Không tìm thấy kết quả nào.</p>
+            <p className="mt-2">Thử tìm kiếm với từ khóa khác</p>
+          </div>
+        )
       )}
     </div>
   );
