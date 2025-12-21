@@ -34,7 +34,7 @@ export const EmojiReactionBar: React.FC<EmojiReactionBarProps> = React.memo(
         className="
           inline-flex flex-wrap items-center gap-1.5
           p-2
-          max-h-[80px] overflow-y-auto
+          max-h-[82px] overflow-y-auto
         "
       >
         <style>

@@ -199,7 +199,7 @@ export const EmojiSelector: React.FC<EmojiSelectorProps> = ({
             transition-all duration-150
             ${
               isPickerOpen
-                ? "text-[#D24463] scale-150 translate-y-[-8px]"
+                ? "text-[#D24463] scale-150 translate-y-[-5px]"
                 : "text-gray-400"
             }
             group-hover:text-[#D24463] group-hover:scale-150 group-hover:translate-y-[-5px]
