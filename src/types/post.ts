@@ -100,32 +100,3 @@ export interface IPostResponseDto {
   final_score?: number;
   isViewed?: boolean;
 }
-
-export interface BlogPost {
-  id: number;
-  title: string;
-  status: EBlogPostStatus;
-  createdAt: string;
-  thumbnailUrl?: string | null;
-  upVotes?: number | null;
-  downVotes?: number | null;
-}
-
-export interface IPaginationMeta {
-  page: number;
-  limit: number;
-  total: number;
-  totalPages: number;
-}
-
-export interface IPostStatistics {
-  all: number;
-  active: number;
-  hidden: number;
-}
-
-export interface IPostPaginatedResponse {
-  items: BlogPost[];
-  meta: IPaginationMeta;
-  statistics: IPostStatistics;
-}
