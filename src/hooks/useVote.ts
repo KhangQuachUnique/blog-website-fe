@@ -1,14 +1,25 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { votePost, getVoteStatus } from '../services/vote.service';
-import type { VoteType, VoteActionResponse } from '../types/vote.types';
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  type InfiniteData,
+} from "@tanstack/react-query";
+import { votePost, getVoteStatus } from "../services/vote.service";
+import type { VoteType } from "../types/vote.types";
+import { getOrCreateSessionSeed } from "./useNewsFeed";
+import type {
+  IGetNewsfeedResponseDto,
+  INewsfeedItemDto,
+} from "../types/newsfeed";
+import type { IPostResponseDto } from "../types/post";
 
 // ============================================
 // QUERY KEYS
 // ============================================
 export const voteKeys = {
-  all: ['votes'] as const,
-  status: (userId: number, postId: number) => 
-    [...voteKeys.all, 'status', userId, postId] as const,
+  all: ["votes"] as const,
+  status: (userId: number, postId: number) =>
+    [...voteKeys.all, "status", userId, postId] as const,
 };
 
 // ============================================
@@ -38,57 +49,117 @@ export const useVoteStatus = (userId: number | null, postId: number) => {
  */
 export const useVote = (userId: number, postId: number) => {
   const queryClient = useQueryClient();
+  const sessionSeed = getOrCreateSessionSeed();
 
   return useMutation({
     mutationFn: (voteType: VoteType) => votePost(userId, postId, voteType),
-    
+
     // Optimistic update
     onMutate: async (voteType: VoteType) => {
-      // Cancel any outgoing refetches
-      await queryClient.cancelQueries({ 
-        queryKey: voteKeys.status(userId, postId) 
+      await queryClient.cancelQueries({
+        queryKey: ["newsfeed", sessionSeed],
       });
 
-      // Snapshot the previous value
-      const previousStatus = queryClient.getQueryData(
-        voteKeys.status(userId, postId)
-      );
+      const previousFeed = queryClient.getQueryData<
+        InfiniteData<IGetNewsfeedResponseDto>
+      >(["newsfeed", sessionSeed]);
 
-      // Optimistically update to the new value
-      queryClient.setQueryData(
-        voteKeys.status(userId, postId),
-        (old: any) => ({
-          voteType: old?.voteType === voteType ? null : voteType,
-        })
-      );
+      const newFeed = updateNewsfeedVotes(previousFeed, voteType, postId);
+
+      queryClient.setQueryData(["newsfeed", sessionSeed], newFeed);
+
+      console.log("Previous Feed:", previousFeed);
+      console.log("After Vote - New Feed:", newFeed);
 
       // Return context with previous value
-      return { previousStatus };
-    },
-
-    // On success, update with server data
-    onSuccess: (data: VoteActionResponse) => {
-      queryClient.setQueryData(
-        voteKeys.status(userId, postId),
-        { voteType: data.voteType }
-      );
+      return { previousFeed };
     },
 
     // On error, rollback
     onError: (_error, _variables, context) => {
-      if (context?.previousStatus) {
+      if (context?.previousFeed) {
         queryClient.setQueryData(
-          voteKeys.status(userId, postId),
-          context.previousStatus
+          ["newsfeed", sessionSeed],
+          context.previousFeed
         );
       }
     },
 
     // Always refetch after error or success
     onSettled: () => {
-      queryClient.invalidateQueries({ 
-        queryKey: voteKeys.status(userId, postId) 
+      queryClient.invalidateQueries({
+        queryKey: ["newsfeed", sessionSeed],
       });
     },
   });
 };
+
+/**
+ * Utils hỗ trợ update cache sau khi vote
+ */
+const updatePostVotes = (
+  post: IPostResponseDto,
+  voteType: VoteType
+): IPostResponseDto => {
+  if (!post) return post;
+
+  const newVotes = { ...post.votes };
+
+  if (post.votes.userVote === null) {
+    // User chưa vote trước đó
+    if (voteType === "upvote") {
+      newVotes.upvotes += 1;
+    } else if (voteType === "downvote") {
+      newVotes.downvotes += 1;
+    }
+    newVotes.userVote = voteType;
+  } else if (post.votes.userVote === voteType) {
+    // User muốn hủy vote
+    if (voteType === "upvote") {
+      newVotes.upvotes -= 1;
+    } else if (voteType === "downvote") {
+      newVotes.downvotes -= 1;
+    }
+    newVotes.userVote = null;
+  } else {
+    // User đổi vote
+    if (voteType === "upvote") {
+      newVotes.upvotes += 1;
+      newVotes.downvotes -= 1;
+    } else if (voteType === "downvote") {
+      newVotes.downvotes += 1;
+      newVotes.upvotes -= 1;
+    }
+    newVotes.userVote = voteType;
+  }
+
+  return { ...post, votes: newVotes };
+};
+
+/**
+ *
+ * @param feed
+ * @param toggleData
+ * @returns
+ */
+export function updateNewsfeedVotes(
+  feed: InfiniteData<IGetNewsfeedResponseDto> | undefined,
+  voteType: VoteType,
+  postId: number
+): InfiniteData<IGetNewsfeedResponseDto> {
+  if (!feed) {
+    return { pages: [], pageParams: [] };
+  }
+
+  return {
+    ...feed,
+    pages: feed.pages.map((page) => ({
+      ...page,
+      items: Array.isArray(page.items)
+        ? page.items.map((post: INewsfeedItemDto) =>
+            post.id === postId ? updatePostVotes(post, voteType) : post
+          )
+        : page.items,
+    })),
+  };
+}

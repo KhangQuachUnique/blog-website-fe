@@ -89,7 +89,6 @@ export interface IPostResponseDto {
 
   votes: IVotesSummaryDto;
   reacts?: UserReactSummaryDto;
-  reactions?: UserReactSummaryDto; // Alias (some endpoints use this name)
 
   // Aggregate counts
   upVotes?: number;
@@ -100,14 +99,4 @@ export interface IPostResponseDto {
   // Newsfeed-specific fields
   final_score?: number;
   isViewed?: boolean;
-}
-
-export interface BlogPost {
-  id: number;
-  title: string;
-  status: EBlogPostStatus;
-  createdAt: string;
-  thumbnailUrl?: string | null;
-  upVotes?: number | null;
-  downVotes?: number | null;
 }

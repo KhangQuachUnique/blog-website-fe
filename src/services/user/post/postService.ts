@@ -40,7 +40,10 @@ export const getPostsByCommunityId = async (communityId: number) => {
   return axios.get(`/blog-posts/community/${communityId}`);
 };
 
-export const getManagePostsByCommunityId = async (communityId: number, status?: string) => {
+export const getManagePostsByCommunityId = async (
+  communityId: number,
+  status?: string
+) => {
   return axios.get(`/blog-posts/community/${communityId}/manage`, {
     params: status ? { status } : {},
   });
@@ -57,8 +60,6 @@ export const deletePost = async (postId: number) => {
 export const togglePostPrivacy = async (
   postId: number
 ): Promise<{ message: string; data: IPostResponseDto }> => {
-  const response = await axios.patch(
-    `/blog-posts/${postId}/toggle-privacy`
-  );
+  const response = await axios.patch(`/blog-posts/${postId}/toggle-privacy`);
   return response;
 };

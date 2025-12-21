@@ -1,16 +1,25 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import type { UpdateProfileData, ChangePasswordData, BlockedUser } from "../../../types/user.types";
+import type {
+  UpdateProfileData,
+  ChangePasswordData,
+  BlockedUser,
+} from "../../../types/user";
 import { IoArrowBack, IoSaveOutline, IoCloseOutline } from "react-icons/io5";
-import { AiOutlineUser, AiOutlineLock, AiOutlineEye, AiOutlineUserDelete } from "react-icons/ai";
+import {
+  AiOutlineUser,
+  AiOutlineLock,
+  AiOutlineEye,
+  AiOutlineUserDelete,
+} from "react-icons/ai";
 import { MdBlock } from "react-icons/md";
 import { CiSearch } from "react-icons/ci";
 import * as userService from "../../../services/user/userService";
 import * as authService from "../../../services/auth";
 import { useAuth } from "../../../hooks/useAuth";
 import { useToast } from "../../../contexts/toast";
-import Avatar from '@mui/material/Avatar';
-import { stringAvatar } from '../../../utils/avatarHelper';
+import Avatar from "@mui/material/Avatar";
+import { stringAvatar } from "../../../utils/avatarHelper";
 import "../../../styles/profile/profile.css";
 import "../../../styles/profile/modal.css";
 import "../../../styles/profile/sidebar.css";
@@ -23,18 +32,20 @@ const EditProfile = () => {
   const { showToast } = useToast();
   const [activeTab, setActiveTab] = useState<TabType>("profile");
   const [loading, setLoading] = useState(false);
-  
+
   // Delete account modal
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  
+
   // Forgot password modal
   const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false);
-  const [forgotPasswordStep, setForgotPasswordStep] = useState<'email' | 'otp' | 'password'>('email');
-  const [forgotPasswordEmail, setForgotPasswordEmail] = useState('');
+  const [forgotPasswordStep, setForgotPasswordStep] = useState<
+    "email" | "otp" | "password"
+  >("email");
+  const [forgotPasswordEmail, setForgotPasswordEmail] = useState("");
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [resetPasswordData, setResetPasswordData] = useState({
-    newPassword: '',
-    confirmPassword: ''
+    newPassword: "",
+    confirmPassword: "",
   });
   const [sendingOtp, setSendingOtp] = useState(false);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -51,7 +62,7 @@ const EditProfile = () => {
     showEmail: true,
     showPhoneNumber: false,
   });
-  
+
   const [isPrivate, setIsPrivate] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
 
@@ -73,7 +84,9 @@ const EditProfile = () => {
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
 
   // Cover image upload
-  const [coverImagePreview, setCoverImagePreview] = useState<string | null>(null);
+  const [coverImagePreview, setCoverImagePreview] = useState<string | null>(
+    null
+  );
   const [coverImageFile, setCoverImageFile] = useState<File | null>(null);
 
   // Fetch user data on mount
@@ -82,7 +95,7 @@ const EditProfile = () => {
       try {
         setInitialLoading(true);
         const profile = await userService.getMyProfile();
-        console.log('Fetched profile:', profile);
+        console.log("Fetched profile:", profile);
         setProfileData({
           username: profile.username || "",
           bio: profile.bio || "",
@@ -92,16 +105,25 @@ const EditProfile = () => {
           dob: profile.dob || "",
           gender: profile.gender,
           showEmail: profile.showEmail !== undefined ? profile.showEmail : true,
-          showPhoneNumber: profile.showPhoneNumber !== undefined ? profile.showPhoneNumber : false,
+          showPhoneNumber:
+            profile.showPhoneNumber !== undefined
+              ? profile.showPhoneNumber
+              : false,
         });
         setIsPrivate(profile.isPrivate || false);
       } catch (err: unknown) {
-        console.error('Error fetching profile:', err);
-        const error = err as { response?: { data?: { message?: string } }; message?: string };
-        console.error('Error response:', error.response?.data);
+        console.error("Error fetching profile:", err);
+        const error = err as {
+          response?: { data?: { message?: string } };
+          message?: string;
+        };
+        console.error("Error response:", error.response?.data);
         showToast({
           type: "error",
-          message: error.response?.data?.message || error.message || "Không thể tải thông tin người dùng"
+          message:
+            error.response?.data?.message ||
+            error.message ||
+            "Không thể tải thông tin người dùng",
         });
       } finally {
         setInitialLoading(false);
@@ -122,7 +144,10 @@ const EditProfile = () => {
         } catch (err: unknown) {
           showToast({
             type: "error",
-            message: err instanceof Error ? err.message : "Không thể tải danh sách người dùng bị chặn"
+            message:
+              err instanceof Error
+                ? err.message
+                : "Không thể tải danh sách người dùng bị chặn",
           });
         }
       };
@@ -131,11 +156,17 @@ const EditProfile = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
 
-  const handleProfileChange = (field: keyof UpdateProfileData, value: string | boolean | undefined) => {
+  const handleProfileChange = (
+    field: keyof UpdateProfileData,
+    value: string | boolean | undefined
+  ) => {
     setProfileData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handlePasswordChange = (field: keyof ChangePasswordData, value: string) => {
+  const handlePasswordChange = (
+    field: keyof ChangePasswordData,
+    value: string
+  ) => {
     setPasswordData((prev) => ({ ...prev, [field]: value }));
   };
 
@@ -144,7 +175,7 @@ const EditProfile = () => {
     if (file) {
       // Store file for later upload
       setAvatarFile(file);
-      
+
       // Show preview
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -159,7 +190,7 @@ const EditProfile = () => {
     if (file) {
       // Store file for later upload
       setCoverImageFile(file);
-      
+
       // Show preview
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -179,14 +210,16 @@ const EditProfile = () => {
       if (avatarFile) {
         const formData = new FormData();
         formData.append("file", avatarFile);
-        
+
         // Upload using uploadFile from service
-        const { uploadFile } = await import("../../../services/upload/uploadImageService");
+        const { uploadFile } = await import(
+          "../../../services/upload/uploadImageService"
+        );
         uploadedAvatarUrl = await uploadFile(formData);
-        
+
         // Update profileData with new URL to keep the preview
-        setProfileData(prev => ({ ...prev, avatarUrl: uploadedAvatarUrl }));
-        
+        setProfileData((prev) => ({ ...prev, avatarUrl: uploadedAvatarUrl }));
+
         // Clear file but keep preview
         setAvatarFile(null);
       }
@@ -195,14 +228,19 @@ const EditProfile = () => {
       if (coverImageFile) {
         const formData = new FormData();
         formData.append("file", coverImageFile);
-        
+
         // Upload using uploadFile from service
-        const { uploadFile } = await import("../../../services/upload/uploadImageService");
+        const { uploadFile } = await import(
+          "../../../services/upload/uploadImageService"
+        );
         uploadedCoverImageUrl = await uploadFile(formData);
-        
+
         // Update profileData with new URL to keep the preview
-        setProfileData(prev => ({ ...prev, coverImageUrl: uploadedCoverImageUrl }));
-        
+        setProfileData((prev) => ({
+          ...prev,
+          coverImageUrl: uploadedCoverImageUrl,
+        }));
+
         // Clear file but keep preview
         setCoverImageFile(null);
       }
@@ -216,22 +254,26 @@ const EditProfile = () => {
         phoneNumber: profileData.phoneNumber || undefined,
         bio: profileData.bio || undefined,
       };
-      
+
       await userService.updateMyProfile(cleanedData);
-      
+
       // Refresh user data in AuthContext to update avatar everywhere
       await refreshUser();
-      
+
       showToast({ type: "success", message: "Cập nhật hồ sơ thành công!" });
-      
+
       // Clear preview after successful update
       setAvatarPreview(null);
       setCoverImagePreview(null);
     } catch (err: unknown) {
-      const error = err as { response?: { data?: { message?: string } }; message?: string };
+      const error = err as {
+        response?: { data?: { message?: string } };
+        message?: string;
+      };
       showToast({
         type: "error",
-        message: error.response?.data?.message || error.message || "Có lỗi xảy ra rùi"
+        message:
+          error.response?.data?.message || error.message || "Có lỗi xảy ra",
       });
     } finally {
       setLoading(false);
@@ -243,18 +285,25 @@ const EditProfile = () => {
       showToast({ type: "error", message: "Vui lòng nhập email :3" });
       return;
     }
-    
+
     setSendingOtp(true);
     try {
       await authService.sendResetOtp(forgotPasswordEmail);
-      setForgotPasswordStep('otp');
-      showToast({ type: "success", message: "Mã OTP đã được gửi đến email của bạn rùi á" });
+      setForgotPasswordStep("otp");
+      showToast({
+        type: "success",
+        message: "Mã OTP đã được gửi đến email của bạn",
+      });
       setTimeout(() => inputRefs.current[0]?.focus(), 100);
     } catch (err: unknown) {
-      const error = err as { response?: { data?: { message?: string } }; message?: string };
+      const error = err as {
+        response?: { data?: { message?: string } };
+        message?: string;
+      };
       showToast({
         type: "error",
-        message: error.response?.data?.message || error.message || "Có lỗi xảy ra huhu"
+        message:
+          error.response?.data?.message || error.message || "Có lỗi xảy ra",
       });
     } finally {
       setSendingOtp(false);
@@ -263,11 +312,11 @@ const EditProfile = () => {
 
   const handleOtpChange = (index: number, value: string) => {
     if (value && !/^\d+$/.test(value)) return;
-    
+
     const newOtp = [...otp];
     newOtp[index] = value.slice(-1);
     setOtp(newOtp);
-    
+
     if (value && index < 5) {
       inputRefs.current[index + 1]?.focus();
     }
@@ -283,13 +332,13 @@ const EditProfile = () => {
     e.preventDefault();
     const pastedData = e.clipboardData.getData("text").slice(0, 6);
     if (!/^\d+$/.test(pastedData)) return;
-    
+
     const newOtp = [...otp];
     for (let i = 0; i < pastedData.length && i < 6; i++) {
       newOtp[i] = pastedData[i];
     }
     setOtp(newOtp);
-    
+
     const lastIndex = Math.min(pastedData.length, 5);
     inputRefs.current[lastIndex]?.focus();
   };
@@ -300,12 +349,12 @@ const EditProfile = () => {
       showToast({ type: "error", message: "Vui lòng nhập đủ 6 số OTP :3" });
       return;
     }
-    setForgotPasswordStep('password');
+    setForgotPasswordStep("password");
   };
 
   const handleResetPassword = async () => {
     const otpCode = otp.join("");
-    
+
     if (!resetPasswordData.newPassword) {
       showToast({ type: "error", message: "Vui lòng nhập mật khẩu mới" });
       return;
@@ -318,31 +367,47 @@ const EditProfile = () => {
       showToast({ type: "error", message: "Mật khẩu không được quá 50 ký tự" });
       return;
     }
-    if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(resetPasswordData.newPassword)) {
-      showToast({ type: "error", message: "Mật khẩu phải chứa ít nhất 1 chữ hoa, 1 chữ thường và 1 số" });
+    if (
+      !/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(resetPasswordData.newPassword)
+    ) {
+      showToast({
+        type: "error",
+        message: "Mật khẩu phải chứa ít nhất 1 chữ hoa, 1 chữ thường và 1 số",
+      });
       return;
     }
     if (resetPasswordData.newPassword !== resetPasswordData.confirmPassword) {
       showToast({ type: "error", message: "Mật khẩu hăm có khớp" });
       return;
     }
-    
+
     setLoading(true);
 
     try {
-      await authService.resetPassword(forgotPasswordEmail, otpCode, resetPasswordData.newPassword);
-      
-      showToast({ type: "success", message: "Mật khẩu đã được đặt lại thành công roài!" });
+      await authService.resetPassword(
+        forgotPasswordEmail,
+        otpCode,
+        resetPasswordData.newPassword
+      );
+
+      showToast({
+        type: "success",
+        message: "Mật khẩu đã được đặt lại thành công!",
+      });
       setShowForgotPasswordModal(false);
-      setForgotPasswordStep('email');
-      setForgotPasswordEmail('');
+      setForgotPasswordStep("email");
+      setForgotPasswordEmail("");
       setOtp(["", "", "", "", "", ""]);
-      setResetPasswordData({ newPassword: '', confirmPassword: '' });
+      setResetPasswordData({ newPassword: "", confirmPassword: "" });
     } catch (err: unknown) {
-      const error = err as { response?: { data?: { message?: string } }; message?: string };
-      showToast({ 
-        type: "error", 
-        message: error.response?.data?.message || error.message || "Có lỗi xảy ra huhu" 
+      const error = err as {
+        response?: { data?: { message?: string } };
+        message?: string;
+      };
+      showToast({
+        type: "error",
+        message:
+          error.response?.data?.message || error.message || "Có lỗi xảy ra",
       });
     } finally {
       setLoading(false);
@@ -367,24 +432,35 @@ const EditProfile = () => {
       return;
     }
     if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(passwordData.newPassword)) {
-      showToast({ type: "error", message: "Mật khẩu phải chứa ít nhất 1 chữ hoa, 1 chữ thường và 1 số" });
+      showToast({
+        type: "error",
+        message: "Mật khẩu phải chứa ít nhất 1 chữ hoa, 1 chữ thường và 1 số",
+      });
       return;
     }
     if (passwordData.newPassword !== passwordData.confirmPassword) {
       showToast({ type: "error", message: "Mật khẩu không khớp" });
       return;
     }
-    
+
     setLoading(true);
     try {
       await userService.changePassword(passwordData);
       showToast({ type: "success", message: "Đổi mật khẩu thành công!" });
-      setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" });
+      setPasswordData({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      });
     } catch (err: unknown) {
-      const error = err as { response?: { data?: { message?: string } }; message?: string };
-      showToast({ 
-        type: "error", 
-        message: error.response?.data?.message || error.message || "Có lỗi xảy ra" 
+      const error = err as {
+        response?: { data?: { message?: string } };
+        message?: string;
+      };
+      showToast({
+        type: "error",
+        message:
+          error.response?.data?.message || error.message || "Có lỗi xảy ra",
       });
     } finally {
       setLoading(false);
@@ -397,10 +473,14 @@ const EditProfile = () => {
       setBlockedUsers((prev) => prev.filter((user) => user.id !== userId));
       showToast({ type: "success", message: "Đã bỏ chặn người dùng :3" });
     } catch (err: unknown) {
-      const error = err as { response?: { data?: { message?: string } }; message?: string };
+      const error = err as {
+        response?: { data?: { message?: string } };
+        message?: string;
+      };
       showToast({
         type: "error",
-        message: error.response?.data?.message || error.message || "Có lỗi xảy ra"
+        message:
+          error.response?.data?.message || error.message || "Có lỗi xảy ra",
       });
     }
   };
@@ -414,17 +494,21 @@ const EditProfile = () => {
       setSearchResults([]);
       showToast({ type: "success", message: "Đã chặn người dùng :((" });
     } catch (err: unknown) {
-      const error = err as { response?: { data?: { message?: string } }; message?: string };
+      const error = err as {
+        response?: { data?: { message?: string } };
+        message?: string;
+      };
       showToast({
         type: "error",
-        message: error.response?.data?.message || error.message || "Có lỗi xảy ra"
+        message:
+          error.response?.data?.message || error.message || "Có lỗi xảy ra",
       });
     }
   };
 
   const handleSearchUsers = async (query: string) => {
     setSearchQuery(query);
-    
+
     if (!query || query.trim().length === 0) {
       setSearchResults([]);
       return;
@@ -441,7 +525,8 @@ const EditProfile = () => {
     } catch (err: unknown) {
       showToast({
         type: "error",
-        message: err instanceof Error ? err.message : "Không thể tìm kiếm người dùng"
+        message:
+          err instanceof Error ? err.message : "Không thể tìm kiếm người dùng",
       });
     } finally {
       setIsSearching(false);
@@ -456,21 +541,45 @@ const EditProfile = () => {
       setShowDeleteModal(false);
       navigate("/");
     } catch (err: unknown) {
-      const error = err as { response?: { data?: { message?: string } }; message?: string };
+      const error = err as {
+        response?: { data?: { message?: string } };
+        message?: string;
+      };
       showToast({
         type: "error",
-        message: error.response?.data?.message || error.message || "Có lỗi xảy ra"
+        message:
+          error.response?.data?.message || error.message || "Có lỗi xảy ra",
       });
       setLoading(false);
     }
   };
 
   const tabs = [
-    { id: "profile" as TabType, label: "Thông tin cá nhân", icon: <AiOutlineUser fontSize={20} /> },
-    { id: "password" as TabType, label: "Đổi mật khẩu", icon: <AiOutlineLock fontSize={20} /> },
-    { id: "privacy" as TabType, label: "Quyền riêng tư", icon: <AiOutlineEye fontSize={20} /> },
-    { id: "blocked" as TabType, label: "Quản lý chặn", icon: <MdBlock fontSize={20} /> },
-    { id: "delete" as TabType, label: "Xóa tài khoản", icon: <AiOutlineUserDelete fontSize={20} /> },
+    {
+      id: "profile" as TabType,
+      label: "Thông tin cá nhân",
+      icon: <AiOutlineUser fontSize={20} />,
+    },
+    {
+      id: "password" as TabType,
+      label: "Đổi mật khẩu",
+      icon: <AiOutlineLock fontSize={20} />,
+    },
+    {
+      id: "privacy" as TabType,
+      label: "Quyền riêng tư",
+      icon: <AiOutlineEye fontSize={20} />,
+    },
+    {
+      id: "blocked" as TabType,
+      label: "Quản lý chặn",
+      icon: <MdBlock fontSize={20} />,
+    },
+    {
+      id: "delete" as TabType,
+      label: "Xóa tài khoản",
+      icon: <AiOutlineUserDelete fontSize={20} />,
+    },
   ];
 
   if (initialLoading) {
@@ -544,7 +653,9 @@ const EditProfile = () => {
                   ) : null}
                   <div className="flex items-center gap-3">
                     <label className="profile-btn-primary cursor-pointer">
-                      {coverImagePreview || profileData.coverImageUrl ? 'Thay đổi ảnh bìa' : 'Chọn ảnh bìa'}
+                      {coverImagePreview || profileData.coverImageUrl
+                        ? "Thay đổi ảnh bìa"
+                        : "Chọn ảnh bìa"}
                       <input
                         type="file"
                         accept="image/*"
@@ -558,7 +669,10 @@ const EditProfile = () => {
                         onClick={() => {
                           setCoverImagePreview(null);
                           setCoverImageFile(null);
-                          setProfileData(prev => ({ ...prev, coverImageUrl: '' }));
+                          setProfileData((prev) => ({
+                            ...prev,
+                            coverImageUrl: "",
+                          }));
                         }}
                         className="profile-btn-secondary"
                       >
@@ -566,7 +680,9 @@ const EditProfile = () => {
                       </button>
                     )}
                   </div>
-                  <p className="text-sm text-gray-500 mt-2">JPG, PNG, tối đa 5MB. Tỷ lệ khuyên dùng 16:9</p>
+                  <p className="text-sm text-gray-500 mt-2">
+                    JPG, PNG, tối đa 5MB. Tỷ lệ khuyên dùng 16:9
+                  </p>
                 </div>
               </div>
 
@@ -579,7 +695,13 @@ const EditProfile = () => {
                     className="profile-avatar profile-avatar-md"
                   />
                 ) : (
-                  <Avatar {...stringAvatar(profileData.username || 'User', 80, '1.8rem')} />
+                  <Avatar
+                    {...stringAvatar(
+                      profileData.username || "User",
+                      80,
+                      "1.8rem"
+                    )}
+                  />
                 )}
                 <div>
                   <label className="profile-btn-primary cursor-pointer">
@@ -591,7 +713,9 @@ const EditProfile = () => {
                       className="hidden"
                     />
                   </label>
-                  <p className="text-sm text-gray-500 mt-2">JPG, PNG, tối đa 5MB</p>
+                  <p className="text-sm text-gray-500 mt-2">
+                    JPG, PNG, tối đa 5MB
+                  </p>
                 </div>
               </div>
 
@@ -601,7 +725,9 @@ const EditProfile = () => {
                 <input
                   type="text"
                   value={profileData.username}
-                  onChange={(e) => handleProfileChange("username", e.target.value)}
+                  onChange={(e) =>
+                    handleProfileChange("username", e.target.value)
+                  }
                   className="profile-input"
                 />
               </div>
@@ -611,7 +737,9 @@ const EditProfile = () => {
                 <input
                   type="tel"
                   value={profileData.phoneNumber}
-                  onChange={(e) => handleProfileChange("phoneNumber", e.target.value)}
+                  onChange={(e) =>
+                    handleProfileChange("phoneNumber", e.target.value)
+                  }
                   className="profile-input"
                   placeholder="0123456789"
                 />
@@ -631,7 +759,12 @@ const EditProfile = () => {
                 <label className="profile-label">Giới tính</label>
                 <select
                   value={profileData.gender || ""}
-                  onChange={(e) => handleProfileChange("gender", e.target.value as 'MALE' | 'FEMALE' | 'OTHER' | undefined)}
+                  onChange={(e) =>
+                    handleProfileChange(
+                      "gender",
+                      e.target.value as "MALE" | "FEMALE" | "OTHER" | undefined
+                    )
+                  }
                   className="profile-input"
                 >
                   <option value="">Chọn giới tính</option>
@@ -656,17 +789,21 @@ const EditProfile = () => {
                 <h3 className="text-lg font-bold" style={{ color: "#8C1D35" }}>
                   Cài đặt hiển thị thông tin
                 </h3>
-                
+
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="font-semibold">Hiển thị Email công khai</p>
-                    <p className="text-sm text-gray-600">Người khác có thể xem email của bạn</p>
+                    <p className="text-sm text-gray-600">
+                      Người khác có thể xem email của bạn
+                    </p>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input
                       type="checkbox"
                       checked={profileData.showEmail}
-                      onChange={(e) => handleProfileChange("showEmail", e.target.checked)}
+                      onChange={(e) =>
+                        handleProfileChange("showEmail", e.target.checked)
+                      }
                       className="sr-only peer"
                     />
                     <div className="profile-toggle"></div>
@@ -675,14 +812,20 @@ const EditProfile = () => {
 
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="font-semibold">Hiển thị Số điện thoại công khai</p>
-                    <p className="text-sm text-gray-600">Người khác có thể xem số điện thoại của bạn</p>
+                    <p className="font-semibold">
+                      Hiển thị Số điện thoại công khai
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      Người khác có thể xem số điện thoại của bạn
+                    </p>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input
                       type="checkbox"
                       checked={profileData.showPhoneNumber}
-                      onChange={(e) => handleProfileChange("showPhoneNumber", e.target.checked)}
+                      onChange={(e) =>
+                        handleProfileChange("showPhoneNumber", e.target.checked)
+                      }
                       className="sr-only peer"
                     />
                     <div className="profile-toggle"></div>
@@ -719,7 +862,9 @@ const EditProfile = () => {
 
               <div>
                 <div className="flex justify-between items-center mb-2">
-                  <label className="profile-label mb-0">Mật khẩu hiện tại</label>
+                  <label className="profile-label mb-0">
+                    Mật khẩu hiện tại
+                  </label>
                   <button
                     type="button"
                     onClick={() => setShowForgotPasswordModal(true)}
@@ -731,7 +876,9 @@ const EditProfile = () => {
                 <input
                   type="password"
                   value={passwordData.currentPassword}
-                  onChange={(e) => handlePasswordChange("currentPassword", e.target.value)}
+                  onChange={(e) =>
+                    handlePasswordChange("currentPassword", e.target.value)
+                  }
                   className="profile-input"
                 />
               </div>
@@ -741,7 +888,9 @@ const EditProfile = () => {
                 <input
                   type="password"
                   value={passwordData.newPassword}
-                  onChange={(e) => handlePasswordChange("newPassword", e.target.value)}
+                  onChange={(e) =>
+                    handlePasswordChange("newPassword", e.target.value)
+                  }
                   className="profile-input"
                 />
               </div>
@@ -751,7 +900,9 @@ const EditProfile = () => {
                 <input
                   type="password"
                   value={passwordData.confirmPassword}
-                  onChange={(e) => handlePasswordChange("confirmPassword", e.target.value)}
+                  onChange={(e) =>
+                    handlePasswordChange("confirmPassword", e.target.value)
+                  }
                   className="profile-input"
                 />
               </div>
@@ -779,8 +930,9 @@ const EditProfile = () => {
                   <div className="flex-1">
                     <h3 className="text-lg font-bold mb-2">Hồ sơ riêng tư</h3>
                     <p className="text-gray-600 text-sm">
-                      Khi bật chế độ riêng tư, chỉ bạn mới có thể xem hồ sơ và bài viết của mình.
-                      Người khác sẽ không thể xem thông tin cá nhân của bạn.
+                      Khi bật chế độ riêng tư, chỉ bạn mới có thể xem hồ sơ và
+                      bài viết của mình. Người khác sẽ không thể xem thông tin
+                      cá nhân của bạn.
                     </p>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer ml-4">
@@ -793,13 +945,21 @@ const EditProfile = () => {
                           setIsPrivate(result.isPrivate);
                           showToast({
                             type: "success",
-                            message: result.isPrivate ? "Đã chuyển sang chế độ riêng tư" : "Đã công khai hồ sơ"
+                            message: result.isPrivate
+                              ? "Đã chuyển sang chế độ riêng tư"
+                              : "Đã công khai hồ sơ",
                           });
                         } catch (err: unknown) {
-                          const error = err as { response?: { data?: { message?: string } }; message?: string };
+                          const error = err as {
+                            response?: { data?: { message?: string } };
+                            message?: string;
+                          };
                           showToast({
                             type: "error",
-                            message: error.response?.data?.message || error.message || "Có lỗi xảy ra"
+                            message:
+                              error.response?.data?.message ||
+                              error.message ||
+                              "Có lỗi xảy ra",
                           });
                         }
                       }}
@@ -821,7 +981,9 @@ const EditProfile = () => {
 
               {/* Search Bar */}
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Tìm kiếm người dùng để chặn</h3>
+                <h3 className="text-lg font-semibold">
+                  Tìm kiếm người dùng để chặn
+                </h3>
                 <div className="flex items-center px-4 py-2 border border-[#FFE4EC] rounded-lg bg-white gap-2 focus-within:border-[#F295B6] transition-colors duration-200">
                   <input
                     type="text"
@@ -839,7 +1001,7 @@ const EditProfile = () => {
                     Đang tìm kiếm...
                   </div>
                 )}
-                
+
                 {!isSearching && searchQuery && searchResults.length > 0 && (
                   <div className="space-y-2">
                     <p className="text-sm text-gray-600">Kết quả tìm kiếm:</p>
@@ -856,11 +1018,15 @@ const EditProfile = () => {
                               className="w-12 h-12 rounded-full object-cover"
                             />
                           ) : (
-                            <Avatar {...stringAvatar(user.username, 48, '1.2rem')} />
+                            <Avatar
+                              {...stringAvatar(user.username, 48, "1.2rem")}
+                            />
                           )}
                           <div>
                             <div className="font-bold">{user.username}</div>
-                            <div className="text-sm text-gray-500">@{user.username}</div>
+                            <div className="text-sm text-gray-500">
+                              @{user.username}
+                            </div>
                           </div>
                         </div>
                         <button
@@ -903,11 +1069,15 @@ const EditProfile = () => {
                               className="w-12 h-12 rounded-full object-cover"
                             />
                           ) : (
-                            <Avatar {...stringAvatar(user.username, 48, '1.2rem')} />
+                            <Avatar
+                              {...stringAvatar(user.username, 48, "1.2rem")}
+                            />
                           )}
                           <div>
                             <div className="font-bold">{user.username}</div>
-                            <div className="text-sm text-gray-500">@{user.username}</div>
+                            <div className="text-sm text-gray-500">
+                              @{user.username}
+                            </div>
                           </div>
                         </div>
                         <button
@@ -930,9 +1100,12 @@ const EditProfile = () => {
               <h2 className="text-2xl font-bold text-red-600">Xóa tài khoản</h2>
 
               <div className="border border-red-200 rounded-lg p-6 bg-red-50">
-                <h3 className="text-lg font-bold text-red-800 mb-2">⚠️ Cảnh báo</h3>
+                <h3 className="text-lg font-bold text-red-800 mb-2">
+                  ⚠️ Cảnh báo
+                </h3>
                 <p className="text-red-700 mb-4">
-                  Hành động này sẽ xóa vĩnh viễn tài khoản của bạn cùng với tất cả dữ liệu:
+                  Hành động này sẽ xóa vĩnh viễn tài khoản của bạn cùng với tất
+                  cả dữ liệu:
                 </p>
                 <ul className="list-disc list-inside text-red-700 space-y-1 mb-4">
                   <li>Tất cả bài viết và bình luận</li>
@@ -962,16 +1135,19 @@ const EditProfile = () => {
           <div className="profile-modal profile-modal-border-primary">
             <div className="profile-modal-header">
               <h2 className="profile-modal-title profile-modal-title-primary">
-                {forgotPasswordStep === 'email' && 'Quên mật khẩu'}
-                {forgotPasswordStep === 'otp' && 'Xác thực OTP'}
-                {forgotPasswordStep === 'password' && 'Đặt mật khẩu mới'}
+                {forgotPasswordStep === "email" && "Quên mật khẩu"}
+                {forgotPasswordStep === "otp" && "Xác thực OTP"}
+                {forgotPasswordStep === "password" && "Đặt mật khẩu mới"}
               </h2>
               <button
                 onClick={() => {
                   setShowForgotPasswordModal(false);
-                  setForgotPasswordStep('email');
+                  setForgotPasswordStep("email");
                   setOtp(["", "", "", "", "", ""]);
-                  setResetPasswordData({ newPassword: '', confirmPassword: '' });
+                  setResetPasswordData({
+                    newPassword: "",
+                    confirmPassword: "",
+                  });
                 }}
                 className="profile-modal-close-btn"
               >
@@ -980,7 +1156,7 @@ const EditProfile = () => {
             </div>
 
             {/* Step 1: Email */}
-            {forgotPasswordStep === 'email' && (
+            {forgotPasswordStep === "email" && (
               <div className="profile-modal-form">
                 <p className="profile-modal-form-hint">
                   Nhập email của bạn để nhận mã OTP
@@ -1000,24 +1176,28 @@ const EditProfile = () => {
                   disabled={sendingOtp || !forgotPasswordEmail}
                   className="profile-modal-btn-full profile-modal-btn-primary"
                 >
-                  {sendingOtp ? 'Đang gửi...' : 'Gửi mã OTP'}
+                  {sendingOtp ? "Đang gửi..." : "Gửi mã OTP"}
                 </button>
               </div>
             )}
 
             {/* Step 2: OTP */}
-            {forgotPasswordStep === 'otp' && (
+            {forgotPasswordStep === "otp" && (
               <div className="profile-modal-form">
                 <p className="profile-modal-form-hint">
                   Nhập mã OTP đã gửi đến {forgotPasswordEmail}
                 </p>
                 <div>
-                  <label className="profile-label text-center block mb-3">Mã OTP</label>
+                  <label className="profile-label text-center block mb-3">
+                    Mã OTP
+                  </label>
                   <div className="flex justify-center gap-2">
                     {otp.map((digit, index) => (
                       <input
                         key={index}
-                        ref={(el) => { inputRefs.current[index] = el; }}
+                        ref={(el) => {
+                          inputRefs.current[index] = el;
+                        }}
                         type="text"
                         inputMode="numeric"
                         maxLength={1}
@@ -1026,7 +1206,7 @@ const EditProfile = () => {
                         onKeyDown={(e) => handleKeyDown(index, e)}
                         onPaste={handlePaste}
                         className="w-12 h-14 text-center text-xl font-bold border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F295B6] focus:border-[#F295B6]"
-                        style={{ borderColor: '#FFE4EC' }}
+                        style={{ borderColor: "#FFE4EC" }}
                       />
                     ))}
                   </div>
@@ -1042,13 +1222,13 @@ const EditProfile = () => {
                   disabled={sendingOtp}
                   className="w-full py-2 font-medium text-[#F295B6] border border-[#F295B6] rounded-lg hover:bg-[#FFF8FB] transition-colors disabled:opacity-60"
                 >
-                  {sendingOtp ? 'Đang gửi...' : 'Gửi lại mã OTP'}
+                  {sendingOtp ? "Đang gửi..." : "Gửi lại mã OTP"}
                 </button>
               </div>
             )}
 
             {/* Step 3: New Password */}
-            {forgotPasswordStep === 'password' && (
+            {forgotPasswordStep === "password" && (
               <div className="profile-modal-form">
                 <p className="profile-modal-form-hint">
                   Nhập mật khẩu mới cho tài khoản của bạn
@@ -1058,8 +1238,19 @@ const EditProfile = () => {
                   <input
                     type="password"
                     value={resetPasswordData.newPassword}
-                    onChange={(e) => setResetPasswordData({ ...resetPasswordData, newPassword: e.target.value })}
-                    onFocus={() => showToast({ type: "info", message: "Mật khẩu phải có 8-50 ký tự, chứa ít nhất 1 chữ hoa, 1 chữ thường và 1 số" })}
+                    onChange={(e) =>
+                      setResetPasswordData({
+                        ...resetPasswordData,
+                        newPassword: e.target.value,
+                      })
+                    }
+                    onFocus={() =>
+                      showToast({
+                        type: "info",
+                        message:
+                          "Mật khẩu phải có 8-50 ký tự, chứa ít nhất 1 chữ hoa, 1 chữ thường và 1 số",
+                      })
+                    }
                     className="profile-input"
                     placeholder="Tối thiểu 8 ký tự, có chữ hoa, thường và số"
                   />
@@ -1069,7 +1260,12 @@ const EditProfile = () => {
                   <input
                     type="password"
                     value={resetPasswordData.confirmPassword}
-                    onChange={(e) => setResetPasswordData({ ...resetPasswordData, confirmPassword: e.target.value })}
+                    onChange={(e) =>
+                      setResetPasswordData({
+                        ...resetPasswordData,
+                        confirmPassword: e.target.value,
+                      })
+                    }
                     className="profile-input"
                     placeholder="Nhập lại mật khẩu"
                   />
@@ -1079,7 +1275,7 @@ const EditProfile = () => {
                   disabled={loading}
                   className="profile-modal-btn-full profile-modal-btn-primary"
                 >
-                  {loading ? 'Đang xử lý...' : 'Đặt lại mật khẩu'}
+                  {loading ? "Đang xử lý..." : "Đặt lại mật khẩu"}
                 </button>
               </div>
             )}
@@ -1135,7 +1331,7 @@ const EditProfile = () => {
                 disabled={loading}
                 className="profile-modal-btn-flex profile-modal-btn-danger"
               >
-                {loading ? 'Đang xóa...' : 'Xác nhận xóa'}
+                {loading ? "Đang xóa..." : "Xác nhận xóa"}
               </button>
             </div>
           </div>
