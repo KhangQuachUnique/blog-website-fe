@@ -1,20 +1,23 @@
-import { useRef, useCallback } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
-import { useSearch } from '../../hooks/useSearch';
-import type { SearchResultItem, ISearchResponseDto } from '../../services/search.service';
-import { Loader2 } from 'lucide-react';
-import Masonry from 'react-masonry-css';
-import Card from '../../components/card/Card';
-import type { IPostResponseDto } from '../../types/post';
-import '../../styles/newsfeed/NewsfeedList.css';
-import '../../styles/newsfeed/Card.css';
+import { useRef, useCallback } from "react";
+import { useSearchParams, Link } from "react-router-dom";
+import { useSearch } from "../../hooks/useSearch";
+import type {
+  SearchResultItem,
+  ISearchResponseDto,
+} from "../../services/search.service";
+import { Loader2 } from "lucide-react";
+import Masonry from "react-masonry-css";
+import Card from "../../components/card/Card";
+import type { IPostResponseDto } from "../../types/post";
+import "../../styles/newsfeed/NewsfeedList.css";
+import "../../styles/newsfeed/Card.css";
 
 export const SearchResultPage = () => {
   const [searchParams] = useSearchParams();
-  
+
   // Lấy params từ URL (ví dụ: /search?q=abc&type=post)
-  const q = searchParams.get('q') || '';
-  const type = searchParams.get('type') || '';
+  const q = searchParams.get("q") || "";
+  const type = searchParams.get("type") || "";
 
   const {
     data,
@@ -26,9 +29,10 @@ export const SearchResultPage = () => {
   } = useSearch({ keyword: q, type, enabled: !!q && !!type });
 
   // Flatten all pages into a single array and deduplicate
-  const allResults: SearchResultItem[] = data?.pages.flatMap((page: ISearchResponseDto) => page.items) ?? [];
+  const allResults: SearchResultItem[] =
+    data?.pages.flatMap((page: ISearchResponseDto) => page.items) ?? [];
   const results: SearchResultItem[] = allResults.filter(
-    (item: SearchResultItem, index: number, self: SearchResultItem[]) => 
+    (item: SearchResultItem, index: number, self: SearchResultItem[]) =>
       self.findIndex((i: SearchResultItem) => i.id === item.id) === index
   );
 
@@ -52,16 +56,16 @@ export const SearchResultPage = () => {
   );
 
   const formatDate = (dateString?: string) => {
-    if (!dateString) return '';
+    if (!dateString) return "";
     const date = new Date(dateString);
     const now = new Date();
     const diff = Math.floor((now.getTime() - date.getTime()) / 1000);
 
-    if (diff < 60) return 'vừa xong';
+    if (diff < 60) return "vừa xong";
     if (diff < 3600) return `${Math.floor(diff / 60)} phút trước`;
     if (diff < 86400) return `${Math.floor(diff / 3600)} giờ trước`;
     if (diff < 604800) return `${Math.floor(diff / 86400)} ngày trước`;
-    return date.toLocaleDateString('vi-VN');
+    return date.toLocaleDateString("vi-VN");
   };
 
   const breakpointCols = {
@@ -71,17 +75,20 @@ export const SearchResultPage = () => {
   // Convert SearchResultItem to IPostResponseDto for Card component
   const convertToPost = (item: SearchResultItem): IPostResponseDto => ({
     id: Number(item.id),
-    title: item.title || '',
-    shortDescription: '',
+    title: item.title || "",
+    shortDescription: "",
     thumbnailUrl: item.thumbnailUrl,
     isPublic: true,
     author: {
       id: item.author?.id || 0,
-      username: item.author?.username || item.username || 'Ẩn danh',
-      avatarUrl: item.author?.avatarUrl || item.avatarUrl || 'https://via.placeholder.com/40',
+      username: item.author?.username || item.username || "Ẩn danh",
+      avatarUrl:
+        item.author?.avatarUrl ||
+        item.avatarUrl ||
+        "https://via.placeholder.com/40",
     },
-    status: 'ACTIVE' as const,
-    type: 'PERSONAL' as const,
+    status: "ACTIVE" as const,
+    type: "PERSONAL" as const,
     hashtags: item.hashtags || [],
     createdAt: item.createdAt ? new Date(item.createdAt) : new Date(),
     upVotes: item.upVotes || 0,
@@ -110,16 +117,20 @@ export const SearchResultPage = () => {
             <div className="newsfeed-card__header">
               <div className="newsfeed-card__author">
                 <img
-                  src={item.avatarUrl || 'https://via.placeholder.com/40'}
+                  src={item.avatarUrl || "https://via.placeholder.com/40"}
                   alt={item.username}
                   className="newsfeed-card__avatar"
                 />
                 <div className="newsfeed-card__author-info">
-                  <span className="newsfeed-card__username">@{item.username}</span>
+                  <span className="newsfeed-card__username">
+                    @{item.username}
+                  </span>
                 </div>
               </div>
             </div>
-            <span className="text-blue-500 text-sm hover:underline mt-2">Xem trang cá nhân</span>
+            <span className="text-blue-500 text-sm hover:underline mt-2">
+              Xem trang cá nhân
+            </span>
           </div>
         </div>
       </article>
@@ -146,7 +157,7 @@ export const SearchResultPage = () => {
             <div className="newsfeed-card__header">
               <div className="newsfeed-card__author">
                 <img
-                  src={item.thumbnailUrl || 'https://via.placeholder.com/40'}
+                  src={item.thumbnailUrl || "https://via.placeholder.com/40"}
                   alt={item.name}
                   className="newsfeed-card__avatar"
                 />
@@ -155,13 +166,19 @@ export const SearchResultPage = () => {
                 </div>
               </div>
               {item.createdAt && (
-                <time className="newsfeed-card__time">{formatDate(item.createdAt)}</time>
+                <time className="newsfeed-card__time">
+                  {formatDate(item.createdAt)}
+                </time>
               )}
             </div>
             {item.description && (
-              <p className="text-gray-600 text-sm mt-2 line-clamp-2">{item.description}</p>
+              <p className="text-gray-600 text-sm mt-2 line-clamp-2">
+                {item.description}
+              </p>
             )}
-            <span className="text-blue-500 text-sm hover:underline mt-2">Tham gia ngay</span>
+            <span className="text-blue-500 text-sm hover:underline mt-2">
+              Tham gia ngay
+            </span>
           </div>
         </div>
       </article>
@@ -171,14 +188,14 @@ export const SearchResultPage = () => {
   // Chọn render function dựa trên type
   const renderItem = (item: SearchResultItem) => {
     switch (type) {
-      case 'user':
+      case "user":
         return renderUserCard(item);
-      case 'community':
+      case "community":
         return renderCommunityCard(item);
-      case 'hashtag':
+      case "hashtag":
         // Hashtag search trả về bài viết có hashtag đó, hiển thị như post
         return <Card post={convertToPost(item)} />;
-      case 'post':
+      case "post":
       default:
         return <Card post={convertToPost(item)} />;
     }
@@ -186,11 +203,16 @@ export const SearchResultPage = () => {
 
   const getTypeLabel = () => {
     switch (type) {
-      case 'post': return 'Bài viết';
-      case 'user': return 'Người dùng';
-      case 'community': return 'Cộng đồng';
-      case 'hashtag': return 'Hashtag';
-      default: return type;
+      case "post":
+        return "Bài viết";
+      case "user":
+        return "Người dùng";
+      case "community":
+        return "Cộng đồng";
+      case "hashtag":
+        return "Hashtag";
+      default:
+        return type;
     }
   };
 
@@ -230,8 +252,8 @@ export const SearchResultPage = () => {
             {results.map((item: SearchResultItem, idx: number) => {
               const isLast = idx === results.length - 1;
               return (
-                <div 
-                  key={item.id} 
+                <div
+                  key={item.id}
                   className="newsfeed-masonry-item"
                   ref={isLast ? lastItemRef : undefined}
                 >
