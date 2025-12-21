@@ -4,10 +4,10 @@ import { Box } from "@mui/material";
 import GenericTable from "../../../components/table/GenericTable";
 import type { TableColumn, TableAction } from "../../../types/table";
 import { BLOOGIE_COLORS as colors } from "../../../types/table";
-import type { BlogPost, EBlogPostStatus } from "../../../types/post";
+import { type IPostResponseDto, EBlogPostStatus } from "../../../types/post";
 
 interface PostsTableProps {
-  posts: BlogPost[];
+  posts: IPostResponseDto[];
   onHide: (postId: number) => void;
   onRestore: (postId: number) => void;
   loadingId: number | null;
@@ -51,7 +51,7 @@ const PostsTable: React.FC<PostsTableProps> = ({
     }
   };
 
-  const columns: TableColumn<BlogPost>[] = [
+  const columns: TableColumn<IPostResponseDto>[] = [
     {
       id: "id",
       label: "ID",
@@ -143,7 +143,7 @@ const PostsTable: React.FC<PostsTableProps> = ({
     },
   ];
 
-  const actions: TableAction<BlogPost>[] = [
+  const actions: TableAction<IPostResponseDto>[] = [
     {
       id: "hide-restore",
       visible: (post) => post.status === "ACTIVE" || post.status === "HIDDEN",

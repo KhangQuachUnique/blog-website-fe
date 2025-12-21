@@ -6,7 +6,7 @@ import { useGetAllPosts } from "../../../hooks/usePost";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "../../../contexts/toast";
 import PostsTable from "../../../features/admin/postManage/PostsTable";
-import type { BlogPost, EBlogPostStatus } from "../../../types/post";
+import { type IPostResponseDto, EBlogPostStatus } from "../../../types/post";
 
 type StatusFilter = "ALL" | EBlogPostStatus;
 
@@ -18,7 +18,7 @@ const PostListPage = () => {
   const [currentPage, setCurrentPage] = useState<number>(1);
 
   const {
-    data: allPosts = [],
+    data: allPosts = [] as IPostResponseDto[],
     isLoading,
     isFetching,
     isError,
@@ -28,17 +28,19 @@ const PostListPage = () => {
   const queryClient = useQueryClient();
   const { showToast } = useToast();
 
+  // --- CLIENT-SIDE LOGIC ---
+
   const stats = useMemo(() => {
     return {
       all: allPosts.length,
-      active: allPosts.filter((p: any) => p.status === "ACTIVE").length,
-      hidden: allPosts.filter((p: any) => p.status === "HIDDEN").length,
+      active: allPosts.filter((p) => p.status === EBlogPostStatus.ACTIVE).length,
+      hidden: allPosts.filter((p) => p.status === EBlogPostStatus.HIDDEN).length,
     };
   }, [allPosts]);
 
   const filteredPosts = useMemo(() => {
     if (filterStatus === "ALL") return allPosts;
-    return allPosts.filter((p: any) => p.status === filterStatus);
+    return allPosts.filter((p) => p.status === filterStatus);
   }, [allPosts, filterStatus]);
 
   const totalRecords = filteredPosts.length;
@@ -52,15 +54,17 @@ const PostListPage = () => {
     currentPage * ITEMS_PER_PAGE
   );
 
-  const updateLocalCache = (postId: number, newStatus: string) => {
-    queryClient.setQueryData(["posts"], (old: any) => {
+  // --- CACHE UPDATE ---
+  const updateLocalCache = (postId: number, newStatus: EBlogPostStatus) => {
+    queryClient.setQueryData<IPostResponseDto[]>(["posts"], (old) => {
         if (!Array.isArray(old)) return old;
-        return old.map((p: any) => 
+        return old.map((p) => 
             p.id === postId ? { ...p, status: newStatus } : p
         );
     });
   };
 
+  // --- HANDLERS ---
   const handleHide = async (postId: number) => {
     setActionLoading(postId);
     try {
@@ -70,7 +74,8 @@ const PostListPage = () => {
       );
 
       if (!response.ok) throw new Error("Lỗi khi ẩn bài viết");
-      updateLocalCache(postId, "HIDDEN");
+      
+      updateLocalCache(postId, EBlogPostStatus.HIDDEN);
       showToast({ type: "success", message: "Ẩn bài viết thành công!" });
       
     } catch (err: any) {
@@ -89,7 +94,8 @@ const PostListPage = () => {
       );
 
       if (!response.ok) throw new Error("Lỗi khi phục hồi bài viết");
-      updateLocalCache(postId, "ACTIVE");
+      
+      updateLocalCache(postId, EBlogPostStatus.ACTIVE);
       showToast({ type: "success", message: "Phục hồi bài viết thành công!" });
 
     } catch (err: any) {
@@ -110,75 +116,21 @@ const PostListPage = () => {
   }, [filteredPosts.length, totalPages, currentPage]);
 
 
-  const normalizedPosts: BlogPost[] = currentViewPosts.map((p: any) => ({
-    id: p.id,
-    title: p.title,
-    status: p.status,
-    createdAt:
-      typeof p.createdAt === "string"
-        ? p.createdAt
-        : new Date(p.createdAt).toISOString(),
-    thumbnailUrl: p.thumbnailUrl ?? null,
-    upVotes: p.upVotes ?? null,
-    downVotes: p.downVotes ?? null,
+  const normalizedPosts: IPostResponseDto[] = currentViewPosts.map((p) => ({
+    ...p,
+    createdAt: typeof p.createdAt === "string" 
+      ? p.createdAt 
+      : new Date(p.createdAt).toISOString(),
   }));
-
   
-  // --- RENDER LOADING (SKELETON) ---
+  // --- RENDER ---
+
   if (isLoading) {
     return (
-      <div className="py-8 px-6 bg-white min-h-screen px-[80px]">
-        {/* 1. Header Skeleton */}
-        <div className="mb-8">
-          <div className="flex justify-between items-start mb-6">
-            <div className="space-y-3">
-              {/* Title fake */}
-              <div className="h-10 w-64 bg-gray-200 rounded-lg animate-pulse"></div>
-              {/* Subtitle fake */}
-              <div className="h-5 w-96 bg-gray-100 rounded-lg animate-pulse"></div>
-            </div>
-            {/* Button fake */}
-            <div className="h-12 w-32 bg-gray-200 rounded-lg animate-pulse"></div>
-          </div>
-
-          {/* 2. Stats Cards Skeleton (3 ô) */}
-          <div className="grid grid-cols-3 gap-4 mb-6">
-             {[1, 2, 3].map((item) => (
-                <div key={item} className="h-32 bg-gray-100 border-2 border-gray-200 rounded-xl animate-pulse"></div>
-             ))}
-          </div>
-
-          {/* 3. Filter Buttons Skeleton */}
-          <div className="flex gap-3 pb-2">
-             {[1, 2, 3].map((item) => (
-                <div key={item} className="h-10 w-24 bg-gray-200 rounded-lg animate-pulse"></div>
-             ))}
-          </div>
-        </div>
-
-        {/* 4. Table Rows Skeleton (Giả lập 5 dòng) */}
-        <div className="space-y-4">
-           {Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="flex items-center gap-4 p-4 border border-gray-100 rounded-xl shadow-sm animate-pulse">
-                 {/* Thumbnail fake */}
-                 <div className="w-16 h-16 bg-gray-200 rounded-lg flex-shrink-0"></div>
-                 
-                 {/* Content Lines fake */}
-                 <div className="flex-1 space-y-3">
-                    <div className="h-5 bg-gray-200 rounded w-3/4"></div>
-                    <div className="flex gap-2">
-                       <div className="h-4 bg-gray-100 rounded w-20"></div>
-                       <div className="h-4 bg-gray-100 rounded w-20"></div>
-                    </div>
-                 </div>
-
-                 {/* Action Buttons fake */}
-                 <div className="flex gap-2">
-                    <div className="h-8 w-8 bg-gray-200 rounded-full"></div>
-                    <div className="h-8 w-8 bg-gray-200 rounded-full"></div>
-                 </div>
-              </div>
-           ))}
+      <div className="flex items-center justify-center h-screen bg-white">
+        <div className="text-center flex flex-col items-center gap-4">
+          <MdAutorenew size={50} className="animate-spin text-pink-500" />
+          <p className="text-gray-600 font-medium">Đang tải dữ liệu...</p>
         </div>
       </div>
     );
@@ -228,17 +180,17 @@ const PostListPage = () => {
         </div>
 
         <div className="grid grid-cols-3 gap-4 mb-6">
-          {["ALL", "ACTIVE", "HIDDEN"].map((status) => {
+          {["ALL", EBlogPostStatus.ACTIVE, EBlogPostStatus.HIDDEN].map((status) => {
             let count = 0;
             let label = "";
 
             if (status === "ALL") {
                 count = stats.all;
                 label = "Tất cả";
-            } else if (status === "ACTIVE") {
+            } else if (status === EBlogPostStatus.ACTIVE) {
                 count = stats.active;
                 label = "Công khai";
-            } else if (status === "HIDDEN") {
+            } else if (status === EBlogPostStatus.HIDDEN) {
                 count = stats.hidden;
                 label = "Đã ẩn";
             }
@@ -246,7 +198,7 @@ const PostListPage = () => {
             const colors =
               status === "ALL"
                 ? { bg: "bg-blue-50", text: "text-blue-700", border: "border-blue-200" }
-                : status === "ACTIVE"
+                : status === EBlogPostStatus.ACTIVE
                 ? { bg: "bg-emerald-50", text: "text-emerald-700", border: "border-emerald-200" }
                 : { bg: "bg-slate-50", text: "text-slate-700", border: "border-slate-200" };
 
@@ -267,7 +219,7 @@ const PostListPage = () => {
         </div>
 
         <div className="flex gap-3 overflow-x-auto pb-2">
-          {(["ALL", "ACTIVE", "HIDDEN"] as StatusFilter[]).map((status) => {
+          {(["ALL", EBlogPostStatus.ACTIVE, EBlogPostStatus.HIDDEN] as StatusFilter[]).map((status) => {
             const isActive = filterStatus === status;
             return (
               <button
@@ -279,7 +231,7 @@ const PostListPage = () => {
                     : "bg-white border-2 text-gray-700 hover:border-[#F295B6] border-gray-200"
                 }`}
               >
-                {status === "ALL" ? "Tất cả" : status === "ACTIVE" ? "Công khai" : "Ẩn"}
+                {status === "ALL" ? "Tất cả" : status === EBlogPostStatus.ACTIVE ? "Công khai" : "Ẩn"}
               </button>
             );
           })}
