@@ -1,8 +1,10 @@
-import NewsfeedList from "../../../components/newsfeedList/NewsfeedList";
 import { useRef } from "react";
 import { Loader2 } from "lucide-react";
 import { useCallback } from "react";
+
+import NewsfeedList from "../../../components/newsfeedList/NewsfeedList";
 import { useGetNewsFeed } from "../../../hooks/useNewsFeed";
+import { CardSkeleton } from "../../../components/skeleton/CardSkeleton";
 
 export default function Newsfeed() {
   const {
@@ -50,8 +52,14 @@ export default function Newsfeed() {
   // ← HIỂN THỊ LỖI CHI TIẾT
   if (isLoading) {
     return (
-      <div className="flex justify-center py-20">
-        <Loader2 className="h-12 w-12 animate-spin" />
+      <div className="newsfeed-page flex flex-col items-center">
+        {/* Main Content - Posts */}
+        <main className="newsfeed-page__main w-[70%]">
+          <h1 className="text-3xl text-[#F295B6] font-bold mb-8 text-center">
+            Newsfeed
+          </h1>
+          <CardSkeleton />
+        </main>
       </div>
     );
   }
@@ -77,16 +85,18 @@ export default function Newsfeed() {
 
   return (
     <div className="newsfeed-page">
-  
-     
-
       {/* Main Content - Posts */}
       <main className="newsfeed-page__main">
         <h1 className="text-3xl text-[#F295B6] font-bold mb-8 text-center">
           Newsfeed
         </h1>
 
-        <NewsfeedList posts={posts} loadMoreRef={lastPostRef} isFetchingNextPage={isFetchingNextPage} hasNextPage={hasNextPage} />
+        <NewsfeedList
+          posts={posts}
+          loadMoreRef={lastPostRef}
+          isFetchingNextPage={isFetchingNextPage}
+          hasNextPage={hasNextPage}
+        />
 
         {isFetchingNextPage && (
           <div className="flex justify-center py-8">
@@ -100,9 +110,6 @@ export default function Newsfeed() {
           </p>
         )}
       </main>
-
-    
-     
     </div>
   );
 }

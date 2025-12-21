@@ -89,7 +89,6 @@ export interface IPostResponseDto {
 
   votes: IVotesSummaryDto;
   reacts?: UserReactSummaryDto;
-  reactions?: UserReactSummaryDto; // Alias (some endpoints use this name)
 
   // Aggregate counts
   upVotes?: number;

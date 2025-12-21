@@ -298,7 +298,10 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
                 if (user && user.id) recordViewedPost(post.id);
               }}
             >
-              <h2 className="newsfeed-card__title">{post.title}</h2>
+              <div className="flex items-center justify-between">
+                <h2 className="newsfeed-card__title">{post.title}</h2>
+              </div>
+
               <div className="newsfeed-card__header">
                 <div className="newsfeed-card__author">
                   {post.author.avatarUrl ? (
@@ -327,16 +330,29 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
                     >
                       {post.author.username}
                     </span>
-                    {/* <span className="newsfeed-card__username">
-                  {post.author.username}
-                </span> */}
                     {post.community && (
-                      <span className="newsfeed-card__community">
+                      <Link
+                        to={`/community/${
+                          typeof post.community === "string"
+                            ? post.community
+                            : post.community.id
+                        }`}
+                        className="newsfeed-card__community flex items-center gap-1 ml-1 px-2 py-1
+                        hover:bg-gray-100 transition-colors rounded-md"
+                      >
+                        <img
+                          className="w-6 h-6 rounded-full object-cover"
+                          src={
+                            typeof post.community === "string"
+                              ? ""
+                              : post.community.thumbnailUrl
+                          }
+                        />
                         trong{" "}
                         {typeof post.community === "string"
                           ? post.community
                           : post.community.name}
-                      </span>
+                      </Link>
                     )}
                   </div>
                 </div>
