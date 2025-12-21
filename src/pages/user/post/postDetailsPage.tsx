@@ -72,7 +72,6 @@ const PostDetailsPage: React.FC = () => {
 
   // Fetch post data
   const { data: postData, isLoading, isError, error } = useGetPostById(postId);
-  console.log("Post Data //////////////////////////:", postData);
 
   const reacts = useMemo(() => {
     const results = queryClient.getQueryData<IPostResponseDto>([

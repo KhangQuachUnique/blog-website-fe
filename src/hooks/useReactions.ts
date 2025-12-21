@@ -98,7 +98,7 @@ export function updatePostReacts(
   post: IPostResponseDto,
   toggleData: IToggleReactDto
 ): IPostResponseDto {
-  if (Number(post.id) !== toggleData.postId || !post.reacts?.emojis) {
+  if (post.id !== toggleData.postId || !post.reacts?.emojis) {
     console.warn("This post does not have reactions data.");
     return post;
   }
