@@ -1,18 +1,18 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
+import { type Community } from "../../../types/community";
 
 import {
   getMyCommunities,
   createCommunity,
-  type MyCommunity,
-} from "../../../features/user/manageCommunity/communityList.api";
+} from "../../../services/user/community/communityService";
 
 const MyCommunitiesPage = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const { data, isLoading, isError } = useQuery<MyCommunity[]>({
+  const { data, isLoading, isError } = useQuery<Community[]>({
     queryKey: ["myCommunities"],
     queryFn: getMyCommunities,
   });
@@ -36,7 +36,7 @@ const MyCommunitiesPage = () => {
     },
   });
 
-  const handleOpenCommunity = (community: MyCommunity) => {
+  const handleOpenCommunity = (community: Community) => {
     // Tạm thời: tất cả đều đi tới manage của community đó
     // sau này nếu có trang view riêng cho member thì bạn tách ra
     navigate(`/community/${community.id}`);
