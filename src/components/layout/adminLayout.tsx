@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Outlet } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Outlet, useLocation } from "react-router-dom";
 import Header from "../header/header";
 import SideBar from "../sidebar/sideBar";
 
@@ -14,7 +14,11 @@ const navLinks = [
     href: "/admin/dashboard",
     icon: <MdOutlineSpaceDashboard fontSize={18} />,
   },
-  { name: "Quản lí người dùng", href: "/admin/users/list", icon: <FiUser fontSize={18} /> },
+  {
+    name: "Quản lí người dùng",
+    href: "/admin/users/list",
+    icon: <FiUser fontSize={18} />,
+  },
   {
     name: "Quản lí bài đăng",
     href: "/admin/posts/list",
@@ -28,6 +32,12 @@ const navLinks = [
 ];
 
 const AdminLayout = () => {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+
   const [collapsed, setCollapsed] = useState(false);
 
   return (

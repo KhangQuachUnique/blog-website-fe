@@ -27,6 +27,7 @@ import {
 import ReactionSection from "../../../components/Emoji";
 import { useQueryClient } from "@tanstack/react-query";
 import type { IPostResponseDto } from "../../../types/post";
+import DetailPostSkeleton from "../../../components/skeleton/DetailPostSkeleton";
 
 // ============================================
 // Types
@@ -210,7 +211,7 @@ const PostDetailsPage: React.FC = () => {
   }
 
   if (isLoading) {
-    return <div className="p-6 text-center text-gray-500">Đang tải...</div>;
+    return <DetailPostSkeleton />;
   }
 
   if (isError) {
@@ -361,7 +362,9 @@ const PostDetailsPage: React.FC = () => {
       {/* Grid Layout */}
       <div style={{ width: GRID_SETTINGS.width }}>
         {blocks.length === 0 ? (
-          <div className="text-gray-500 text-center py-8">Không có nội dung.</div>
+          <div className="text-gray-500 text-center py-8">
+            Không có nội dung.
+          </div>
         ) : (
           <div ref={containerRef} style={{ width: GRID_SETTINGS.width }}>
             <GridLayout
@@ -407,7 +410,10 @@ const PostDetailsPage: React.FC = () => {
                     }}
                   >
                     {block.type === EBlockType.TEXT ? (
-                      <TextBlock id={String(block.id)} content={block.content || ""} />
+                      <TextBlock
+                        id={String(block.id)}
+                        content={block.content || ""}
+                      />
                     ) : (
                       <ImageBlock
                         id={String(block.id)}
@@ -420,7 +426,9 @@ const PostDetailsPage: React.FC = () => {
                     {/* [CHANGE] Ẩn overlay comment khi review mode */}
                     {canCommentBlock && (
                       <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-black/60 text-white text-xs px-2 py-1 rounded-full pointer-events-none z-10 flex items-center gap-1">
-                        <span>💬 {isImage ? "Bình luận ảnh" : "Bình luận đoạn này"}</span>
+                        <span>
+                          💬 {isImage ? "Bình luận ảnh" : "Bình luận đoạn này"}
+                        </span>
                       </div>
                     )}
                   </div>
