@@ -52,7 +52,7 @@ export const BlockCommentsSidebar: React.FC<BlockCommentsSidebarProps> = ({
           </button>
         </div>
 
-        {/* Image Preview - Chỉ hiện nếu có imageUrl */}
+        {/* Image Preview - Chỉ hiện nếu có imageUrl
         {imageUrl && (
           <div className="p-4 border-b border-gray-200 bg-gray-50">
             <img
@@ -61,12 +61,12 @@ export const BlockCommentsSidebar: React.FC<BlockCommentsSidebarProps> = ({
               className="w-full h-40 object-contain rounded-lg"
             />
           </div>
-        )}
+        )} */}
 
         {/* Text Block Preview (Optional) - Nếu muốn hiện trích đoạn text */}
         {!imageUrl && (
           <div className="p-4 border-b border-gray-200 bg-gray-50 text-sm text-gray-500 italic">
-            Đang xem bình luận cho đoạn văn bản được chọn.
+            
           </div>
         )}
 

@@ -1,20 +1,24 @@
-import { useRef, useCallback } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
-import { useSearch } from '../../hooks/useSearch';
-import type { SearchResultItem, ISearchResponseDto } from '../../services/search.service';
-import { Loader2 } from 'lucide-react';
-import Masonry from 'react-masonry-css';
-import Card from '../../components/card/Card';
-import type { IPostResponseDto } from '../../types/post';
-import '../../styles/newsfeed/NewsfeedList.css';
-import '../../styles/newsfeed/Card.css';
+import { useRef, useCallback } from "react";
+import { useSearchParams, Link } from "react-router-dom";
+import { useSearch } from "../../hooks/useSearch";
+import type {
+  IUserSearchDto,
+  ICommunitySearchDto,
+  ISearchResponseDto,
+} from "../../services/search/search.service";
+import { Loader2 } from "lucide-react";
+import Masonry from "react-masonry-css";
+import Card from "../../components/card/Card";
+import type { IPostResponseDto } from "../../types/post";
+import "../../styles/newsfeed/NewsfeedList.css";
+import "../../styles/newsfeed/Card.css";
 
 export const SearchResultPage = () => {
   const [searchParams] = useSearchParams();
-  
+
   // Lấy params từ URL (ví dụ: /search?q=abc&type=post)
-  const q = searchParams.get('q') || '';
-  const type = searchParams.get('type') || '';
+  const q = searchParams.get("q") || "";
+  const type = searchParams.get("type") || "";
 
   const {
     data,
@@ -25,12 +29,43 @@ export const SearchResultPage = () => {
     isError,
   } = useSearch({ keyword: q, type, enabled: !!q && !!type });
 
-  // Flatten all pages into a single array and deduplicate
-  const allResults: SearchResultItem[] = data?.pages.flatMap((page: ISearchResponseDto) => page.items) ?? [];
-  const results: SearchResultItem[] = allResults.filter(
-    (item: SearchResultItem, index: number, self: SearchResultItem[]) => 
-      self.findIndex((i: SearchResultItem) => i.id === item.id) === index
-  );
+  // Flatten all pages into a single array based on type and deduplicate
+  const getResults = () => {
+    if (!data?.pages) return { posts: [], users: [], communities: [] };
+
+    const allPosts: IPostResponseDto[] = [];
+    const allUsers: IUserSearchDto[] = [];
+    const allCommunities: ICommunitySearchDto[] = [];
+
+    data.pages.forEach((page: ISearchResponseDto) => {
+      page.items.forEach((item) => {
+        // Check what type of item this is based on its properties
+        if ("title" in item && "author" in item) {
+          // This is a post
+          const post = item as IPostResponseDto;
+          if (!allPosts.find((p) => p.id === post.id)) {
+            allPosts.push(post);
+          }
+        } else if ("username" in item && !("name" in item)) {
+          // This is a user
+          const user = item as IUserSearchDto;
+          if (!allUsers.find((u) => u.id === user.id)) {
+            allUsers.push(user);
+          }
+        } else if ("name" in item) {
+          // This is a community
+          const community = item as ICommunitySearchDto;
+          if (!allCommunities.find((c) => c.id === community.id)) {
+            allCommunities.push(community);
+          }
+        }
+      });
+    });
+
+    return { posts: allPosts, users: allUsers, communities: allCommunities };
+  };
+
+  const { posts, users, communities } = getResults();
 
   // Infinite scroll observer
   const observer = useRef<IntersectionObserver | null>(null);
@@ -52,53 +87,31 @@ export const SearchResultPage = () => {
   );
 
   const formatDate = (dateString?: string) => {
-    if (!dateString) return '';
+    if (!dateString) return "";
     const date = new Date(dateString);
     const now = new Date();
     const diff = Math.floor((now.getTime() - date.getTime()) / 1000);
 
-    if (diff < 60) return 'vừa xong';
+    if (diff < 60) return "vừa xong";
     if (diff < 3600) return `${Math.floor(diff / 60)} phút trước`;
     if (diff < 86400) return `${Math.floor(diff / 3600)} giờ trước`;
     if (diff < 604800) return `${Math.floor(diff / 86400)} ngày trước`;
-    return date.toLocaleDateString('vi-VN');
+    return date.toLocaleDateString("vi-VN");
   };
 
   const breakpointCols = {
     default: 1,
   };
 
-  // Convert SearchResultItem to IPostResponseDto for Card component
-  const convertToPost = (item: SearchResultItem): IPostResponseDto => ({
-    id: Number(item.id),
-    title: item.title || '',
-    shortDescription: '',
-    thumbnailUrl: item.thumbnailUrl,
-    isPublic: true,
-    author: {
-      id: item.author?.id || 0,
-      username: item.author?.username || item.username || 'Ẩn danh',
-      avatarUrl: item.author?.avatarUrl || item.avatarUrl || 'https://via.placeholder.com/40',
-    },
-    status: 'ACTIVE' as const,
-    type: 'PERSONAL' as const,
-    hashtags: item.hashtags || [],
-    createdAt: item.createdAt ? new Date(item.createdAt) : new Date(),
-    upVotes: item.upVotes || 0,
-    downVotes: item.downVotes || 0,
-    totalComments: item.totalComments || 0,
-    totalReacts: item.totalReacts || 0,
-  });
-
-  // Render User Card (cùng style với newsfeed card)
-  const renderUserCard = (item: SearchResultItem) => (
-    <Link to={`/profile/${item.id}`} className="block">
+  // Render User Card
+  const renderUserCard = (user: IUserSearchDto) => (
+    <Link to={`/profile/${user.id}`} className="block">
       <article className="newsfeed-card hover:shadow-lg transition-shadow cursor-pointer">
-        {item.avatarUrl && (
+        {user.avatarUrl && (
           <div className="newsfeed-card__thumbnail">
             <img
-              src={item.avatarUrl}
-              alt={item.username}
+              src={user.avatarUrl}
+              alt={user.username}
               className="newsfeed-card__image"
               loading="lazy"
             />
@@ -106,35 +119,44 @@ export const SearchResultPage = () => {
         )}
         <div className="newsfeed-card__right">
           <div className="newsfeed-card__content">
-            <h2 className="newsfeed-card__title">{item.username}</h2>
+            <h2 className="newsfeed-card__title">{user.username}</h2>
             <div className="newsfeed-card__header">
               <div className="newsfeed-card__author">
                 <img
-                  src={item.avatarUrl || 'https://via.placeholder.com/40'}
-                  alt={item.username}
+                  src={user.avatarUrl || "https://via.placeholder.com/40"}
+                  alt={user.username}
                   className="newsfeed-card__avatar"
                 />
                 <div className="newsfeed-card__author-info">
-                  <span className="newsfeed-card__username">@{item.username}</span>
+                  <span className="newsfeed-card__username">
+                    @{user.username}
+                  </span>
                 </div>
               </div>
             </div>
-            <span className="text-blue-500 text-sm hover:underline mt-2">Xem trang cá nhân</span>
+            {user.bio && (
+              <p className="text-gray-600 text-sm mt-2 line-clamp-2">
+                {user.bio}
+              </p>
+            )}
+            <span className="text-blue-500 text-sm hover:underline mt-2">
+              Xem trang cá nhân
+            </span>
           </div>
         </div>
       </article>
     </Link>
   );
 
-  // Render Community Card (cùng style với newsfeed card)
-  const renderCommunityCard = (item: SearchResultItem) => (
-    <Link to={`/community/${item.id}`} className="block">
+  // Render Community Card
+  const renderCommunityCard = (community: ICommunitySearchDto) => (
+    <Link to={`/community/${community.id}`} className="block">
       <article className="newsfeed-card hover:shadow-lg transition-shadow cursor-pointer">
-        {item.thumbnailUrl && (
+        {community.thumbnailUrl && (
           <div className="newsfeed-card__thumbnail">
             <img
-              src={item.thumbnailUrl}
-              alt={item.name}
+              src={community.thumbnailUrl}
+              alt={community.name}
               className="newsfeed-card__image"
               loading="lazy"
             />
@@ -142,55 +164,120 @@ export const SearchResultPage = () => {
         )}
         <div className="newsfeed-card__right">
           <div className="newsfeed-card__content">
-            <h2 className="newsfeed-card__title">{item.name}</h2>
+            <h2 className="newsfeed-card__title">{community.name}</h2>
             <div className="newsfeed-card__header">
               <div className="newsfeed-card__author">
                 <img
-                  src={item.thumbnailUrl || 'https://via.placeholder.com/40'}
-                  alt={item.name}
+                  src={
+                    community.thumbnailUrl || "https://via.placeholder.com/40"
+                  }
+                  alt={community.name}
                   className="newsfeed-card__avatar"
                 />
                 <div className="newsfeed-card__author-info">
-                  <span className="newsfeed-card__username">Cộng đồng</span>
+                  <span className="newsfeed-card__username">
+                    Cộng đồng · {community.memberCount} thành viên
+                  </span>
                 </div>
               </div>
-              {item.createdAt && (
-                <time className="newsfeed-card__time">{formatDate(item.createdAt)}</time>
+              {community.createdAt && (
+                <time className="newsfeed-card__time">
+                  {formatDate(community.createdAt)}
+                </time>
               )}
             </div>
-            {item.description && (
-              <p className="text-gray-600 text-sm mt-2 line-clamp-2">{item.description}</p>
+            {community.description && (
+              <p className="text-gray-600 text-sm mt-2 line-clamp-2">
+                {community.description}
+              </p>
             )}
-            <span className="text-blue-500 text-sm hover:underline mt-2">Tham gia ngay</span>
+            <span className="text-blue-500 text-sm hover:underline mt-2">
+              Tham gia ngay
+            </span>
           </div>
         </div>
       </article>
     </Link>
   );
 
-  // Chọn render function dựa trên type
-  const renderItem = (item: SearchResultItem) => {
-    switch (type) {
-      case 'user':
-        return renderUserCard(item);
-      case 'community':
-        return renderCommunityCard(item);
-      case 'hashtag':
-        // Hashtag search trả về bài viết có hashtag đó, hiển thị như post
-        return <Card post={convertToPost(item)} />;
-      case 'post':
-      default:
-        return <Card post={convertToPost(item)} />;
-    }
-  };
+  // Render Post Card
+  const renderPostCard = (post: IPostResponseDto) => <Card post={post} />;
 
   const getTypeLabel = () => {
     switch (type) {
-      case 'post': return 'Bài viết';
-      case 'user': return 'Người dùng';
-      case 'community': return 'Cộng đồng';
-      case 'hashtag': return 'Hashtag';
-      default: return type;
+      case "post":
+        return "Bài viết";
+      case "user":
+        return "Người dùng";
+      case "community":
+        return "Cộng đồng";
+      case "hashtag":
+        return "Hashtag";
+      default:
+        return type;
+    }
+  };
+
+  // Get total results count based on search type
+  const getTotalResults = () => {
+    switch (type) {
+      case "user":
+        return users.length;
+      case "community":
+        return communities.length;
+      case "post":
+      case "hashtag":
+      default:
+        return posts.length;
+    }
+  };
+
+  const totalResults = getTotalResults();
+
+  // Render content based on search type
+  const renderResults = () => {
+    switch (type) {
+      case "user":
+        return users.map((user, idx) => {
+          const isLast = idx === users.length - 1;
+          return (
+            <div
+              key={user.id}
+              className="newsfeed-masonry-item"
+              ref={isLast ? lastItemRef : undefined}
+            >
+              {renderUserCard(user)}
+            </div>
+          );
+        });
+      case "community":
+        return communities.map((community, idx) => {
+          const isLast = idx === communities.length - 1;
+          return (
+            <div
+              key={community.id}
+              className="newsfeed-masonry-item"
+              ref={isLast ? lastItemRef : undefined}
+            >
+              {renderCommunityCard(community)}
+            </div>
+          );
+        });
+      case "post":
+      case "hashtag":
+      default:
+        return posts.map((post, idx) => {
+          const isLast = idx === posts.length - 1;
+          return (
+            <div
+              key={post.id}
+              className="newsfeed-masonry-item"
+              ref={isLast ? lastItemRef : undefined}
+            >
+              {renderPostCard(post)}
+            </div>
+          );
+        });
     }
   };
 
@@ -220,25 +307,14 @@ export const SearchResultPage = () => {
         </span>
       </h1>
 
-      {results.length > 0 ? (
+      {totalResults > 0 ? (
         <div className="newsfeed-list-wrapper">
           <Masonry
             breakpointCols={breakpointCols}
             className="newsfeed-masonry-grid"
             columnClassName="newsfeed-masonry-grid_column"
           >
-            {results.map((item: SearchResultItem, idx: number) => {
-              const isLast = idx === results.length - 1;
-              return (
-                <div 
-                  key={item.id} 
-                  className="newsfeed-masonry-item"
-                  ref={isLast ? lastItemRef : undefined}
-                >
-                  {renderItem(item)}
-                </div>
-              );
-            })}
+            {renderResults()}
           </Masonry>
 
           {isFetchingNextPage && (
@@ -247,7 +323,7 @@ export const SearchResultPage = () => {
             </div>
           )}
 
-          {!hasNextPage && results.length > 0 && (
+          {!hasNextPage && totalResults > 0 && (
             <p className="text-center text-muted-foreground py-12">
               Đã hết kết quả tìm kiếm
             </p>

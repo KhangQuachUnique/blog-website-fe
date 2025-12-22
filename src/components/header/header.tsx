@@ -3,7 +3,7 @@ import { NavLink, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import Avatar from "@mui/material/Avatar";
 import Box from "@mui/material/Box";
-import { stringAvatar } from '../../utils/avatarHelper';
+import { stringAvatar } from "../../utils/avatarHelper";
 import IconButton from "@mui/material/IconButton";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
@@ -12,10 +12,10 @@ import Divider from "@mui/material/Divider";
 import { GoPerson } from "react-icons/go";
 
 import { HiMenuAlt2 } from "react-icons/hi";
-import { RiNotification4Line } from "react-icons/ri";
 import { IoSettingsOutline } from "react-icons/io5";
 import { IoExitOutline } from "react-icons/io5";
 import { useAuth } from "../../contexts/AuthContext";
+import NotificationBell from "../notificationBell/NotificationBell";
 
 interface HeaderProps {
   layout: "admin" | "user";
@@ -24,14 +24,10 @@ interface HeaderProps {
   isLoggedIn?: boolean; // Optional, kept for backwards compatibility
 }
 
-const Header = ({
-  layout,
-  collapsed,
-  setCollapsed,
-}: HeaderProps) => {
+const Header = ({ layout, collapsed, setCollapsed }: HeaderProps) => {
   const navigate = useNavigate();
   const { user, isAuthenticated, logout } = useAuth();
-  
+
   // Search state
   const [search, setSearch] = useState("");
 
@@ -111,15 +107,15 @@ const Header = ({
           </div>
         ) : (
           <div className="flex items-center gap-4">
-            <button className="hover:bg-[#FFEFF4] p-2 rounded-lg transition-colors duration-100">
-              <RiNotification4Line fontSize={24} style={{ color: "#F295B6" }} />
-            </button>
+            <NotificationBell />
             <Box>
               <IconButton onClick={handleOpen} size="small">
                 {user?.avatarUrl ? (
                   <Avatar alt="User Avatar" src={user.avatarUrl} />
                 ) : (
-                  <Avatar {...stringAvatar(user?.username || 'User', 40, '1rem')} />
+                  <Avatar
+                    {...stringAvatar(user?.username || "User", 40, "1rem")}
+                  />
                 )}
               </IconButton>
 

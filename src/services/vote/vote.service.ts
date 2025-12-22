@@ -1,9 +1,9 @@
-import axiosInstance from '../config/axiosCustomize';
-import type { 
-  VoteType, 
-  VoteActionResponse, 
-  VoteStatusResponse 
-} from '../types/vote.types';
+import axiosInstance from "../../config/axiosCustomize";
+import type {
+  VoteType,
+  VoteActionResponse,
+  VoteStatusResponse,
+} from "../../types/vote.types";
 
 // ============================================
 // VOTE SERVICE
@@ -21,7 +21,7 @@ export const votePost = async (
   postId: number,
   voteType: VoteType
 ): Promise<VoteActionResponse> => {
-  const response = await axiosInstance.post('/votes', {
+  const response = await axiosInstance.post("/votes", {
     userId: Number(userId),
     postId: Number(postId),
     voteType,
@@ -39,7 +39,7 @@ export const getVoteStatus = async (
   userId: number,
   postId: number
 ): Promise<VoteStatusResponse> => {
-  const response = await axiosInstance.get('/votes/status', {
+  const response = await axiosInstance.get("/votes/status", {
     params: { userId, postId },
   });
   return response.data as VoteStatusResponse;
