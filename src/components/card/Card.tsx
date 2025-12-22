@@ -1,7 +1,6 @@
 import React, { useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Avatar from "@mui/material/Avatar";
-import { Repeat2 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 
 import type { IPostResponseDto } from "../../types/post";
@@ -84,7 +83,7 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
     <>
       {/* REPOST layout */}
       {isRepost ? (
-        <article className="newsfeed-card newsfeed-card--repost hover:shadow-lg transition-shadow">
+        <article className="newsfeed-card newsfeed-card--repost hover:shadow-lg transition-shadow !h-[430px]">
           {/* Thumbnail (links to original post) */}
           {(original?.thumbnailUrl || post.thumbnailUrl) && (
             <Link
@@ -109,8 +108,7 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
           {/* Right side: repost header (compact) + original content */}
           <div className="newsfeed-card__right">
             {/* Compact repost header — links to the repost itself */}
-            <Link
-              to={`/post/${post.id}`}
+            <div
               style={{
                 padding: "8px 12px",
                 backgroundColor: "#f9fafb",
@@ -126,21 +124,18 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
                 if (user && user.id) recordViewedPost(post.id);
               }}
             >
-              <Link
-                to={`/post/${post.id}`}
-                className="newsfeed-card__repost-meta"
+              <div
+                className="newsfeed-card__repost-meta w-full"
                 onClick={() => {
                   if (user && user.id) recordViewedPost(post.id);
                 }}
               >
-                <h2 className="newsfeed-card__title">{post.title}</h2>
-
-                <div className="newsfeed-card__header">
+                <div className="newsfeed-card__header w-full">
                   <div className="newsfeed-card__author">
                     <img
                       src={post.author.avatarUrl}
                       alt={post.author.username}
-                      className="newsfeed-card__avatar"
+                      className="newsfeed-card__avatar !w-6 !h-6"
                       onClick={(e) => handleAvatarClick(e, post.author.id)}
                       style={{ cursor: "pointer" }}
                     />
@@ -151,16 +146,20 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
                         style={{ cursor: "pointer" }}
                       >
                         {post.author.username}
+                        <span className="text-gray-500 font-normal ml-3">
+                          đã đăng lại
+                        </span>
                       </span>
                     </div>
                   </div>
-                  <time className="newsfeed-card__time">
+                  <span className="newsfeed-card__time">
                     {formatDate(post.createdAt)}
-                  </time>
+                  </span>
                 </div>
+                <h2 className="newsfeed-card__title">{post.title}</h2>
 
                 {post.hashtags && post.hashtags.length > 0 && (
-                  <div className="newsfeed-card__hashtags">
+                  <div className="newsfeed-card__hashtags mt-2">
                     {post.hashtags.map((h) => (
                       <span
                         key={h.id}
@@ -172,15 +171,8 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
                     ))}
                   </div>
                 )}
-              </Link>
-              <div className="newsfeed-card__repost-label">
-                <time className="newsfeed-card__time">
-                  {formatDate(post.createdAt)}
-                </time>
-                {post.type === "REPOST" && <Repeat2 size={14} />}
-                <span>Đăng lại</span>
               </div>
-            </Link>
+            </div>
 
             {/* Original post content — links to original post */}
             <Link
@@ -259,6 +251,7 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
               className="newsfeed-card__interact"
               onClick={(e) => e.stopPropagation()}
             >
+              <ReactionSection postId={post.id} reactions={reactions} />
               <InteractBar
                 postId={post.id}
                 userId={user?.id ?? 0}

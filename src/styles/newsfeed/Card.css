@@ -418,9 +418,9 @@
   font-size: 12px;
 }
 
-/* hide duplicate time inside repost-meta header since we show it in the label */
+/* show time inside repost-meta header (previously hidden) */
 .newsfeed-card__repost-meta .newsfeed-card__time {
-  display: none;
+  display: block;
 }
 
 @media (max-width: 768px) {
