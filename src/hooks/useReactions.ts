@@ -11,6 +11,11 @@ import {
   type INewsfeedItemDto,
 } from "../types/newsfeed";
 import type { IPostResponseDto } from "../types/post";
+import { useSearchParams } from "react-router-dom";
+import type {
+  ISearchResponseDto,
+  SearchResultItem,
+} from "../services/search.service";
 
 /**
  * Hook to toggle reaction on a post.
@@ -19,6 +24,9 @@ import type { IPostResponseDto } from "../types/post";
 export const useTogglePostReact = () => {
   const queryClient = useQueryClient();
   const sessionSeed = getOrCreateSessionSeed();
+  const [searchParams] = useSearchParams();
+
+  const q = searchParams.get("q") || "";
 
   return useMutation({
     mutationFn: togglePostReact,
@@ -32,28 +40,40 @@ export const useTogglePostReact = () => {
         queryKey: ["post", toggleData.postId],
       });
 
+      await queryClient.cancelQueries({
+        queryKey: ["search", q, "post"],
+      });
+
       const previousFeed = queryClient.getQueryData<
         InfiniteData<IGetNewsfeedResponseDto>
       >(["newsfeed", sessionSeed]);
 
-      console.log(toggleData.postId, "toggled reaction for post");
       const previousPost = queryClient.getQueryData<IPostResponseDto>([
         "post",
         toggleData.postId,
       ]);
 
+      const previousSearchResults = queryClient.getQueryData<
+        InfiniteData<ISearchResponseDto>
+      >(["search", q, "post"]);
+
       const newFeed = await updateNewsfeedReacts(previousFeed, toggleData);
       const newPost = await updateSinglePostReacts(previousPost, toggleData);
+      const newSearchResults = await updateSearchPostReacts(
+        previousSearchResults,
+        toggleData
+      );
 
       // Cập nhật cache ngay lập tức (phải dùng cùng queryKey với các thao tác khác)
       queryClient.setQueryData(["newsfeed", sessionSeed], newFeed);
       queryClient.setQueryData(["post", toggleData.postId], newPost);
+      queryClient.setQueryData(["search", q, "post"], newSearchResults);
 
       console.log("Previous Post ??????????????:", previousPost);
       console.log("After Toggle - New Post????????????????:", newPost);
 
       // Trả về context để rollback nếu lỗi
-      return { previousFeed, previousPost };
+      return { previousFeed, previousPost, previousSearchResults };
     },
 
     onError: (_err, _vars, context) => {
@@ -66,10 +86,6 @@ export const useTogglePostReact = () => {
       if (context?.previousPost) {
         queryClient.setQueryData(["post", _vars.postId], context.previousPost);
       }
-    },
-
-    onSuccess: (_data, vars) => {
-      queryClient.invalidateQueries({ queryKey: ["post", vars.postId] }); // postId từ mutate
     },
   });
 };
@@ -185,3 +201,24 @@ export function updateSinglePostReacts(
 ): IPostResponseDto | undefined {
   return post ? updatePostReacts(post, toggleData) : post;
 }
+
+const updateSearchPostReacts = (
+  searchResults: InfiniteData<ISearchResponseDto> | undefined,
+  toggleData: IToggleReactDto
+): InfiniteData<ISearchResponseDto> | undefined => {
+  if (!searchResults) {
+    return undefined;
+  }
+
+  return {
+    ...searchResults,
+    pages: searchResults.pages.map((page) => ({
+      ...page,
+      items: Array.isArray(page.items)
+        ? page.items.map((post: SearchResultItem) =>
+            updatePostReacts(post as IPostResponseDto, toggleData)
+          )
+        : page.items,
+    })),
+  };
+};
