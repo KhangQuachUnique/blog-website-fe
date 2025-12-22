@@ -3,7 +3,6 @@ import {
   createPost,
   getPostById,
   getAllPosts,
-  getPostVisibleWithPagination,
   updatePost,
   getPostsByCommunityId,
   getManagePostsByCommunityId,
@@ -33,18 +32,6 @@ export const useGetAllPosts = () => {
     queryFn: getAllPosts,
   });
 };
-
-/**
- * Hook to get visible blog posts with pagination
- * @returns
- */
-export const useGetPostVisibleWithPagination = (page: number, limit: number, statusFilter: string) => {
-  return useQuery({
-    queryKey: ["posts", page, limit, statusFilter],
-    queryFn: () => getPostVisibleWithPagination(page, limit, statusFilter),
-    staleTime: 0,
-  });
-}
 
 /**
  * Hook to create a new blog post
