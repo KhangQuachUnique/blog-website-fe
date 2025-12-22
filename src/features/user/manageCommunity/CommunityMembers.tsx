@@ -1,5 +1,5 @@
 // src/pages/community/CommunityMembers.tsx
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useCommunityMembers } from "../../../hooks/useCommunityMembers";
 
 function formatDate(iso: string) {
@@ -48,6 +48,8 @@ function Avatar({
 export default function CommunityMembers() {
   const { id } = useParams();
   const communityId = Number(id);
+
+  const navigate = useNavigate();
 
   const { isLoading, isError, error, total, grouped, refetch } =
     useCommunityMembers(Number.isFinite(communityId) ? communityId : undefined);
@@ -105,6 +107,7 @@ export default function CommunityMembers() {
                 {list.map((m) => (
                   <div
                     key={m.id}
+                    onClick={() => navigate(`/profile/${m.user.id}`)}
                     style={{
                       display: "flex",
                       alignItems: "center",
@@ -112,6 +115,7 @@ export default function CommunityMembers() {
                       padding: 10,
                       border: "1px solid #eee",
                       borderRadius: 12,
+                      cursor: "pointer",
                     }}
                   >
                     <Avatar
