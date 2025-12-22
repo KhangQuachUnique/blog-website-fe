@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Outlet } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Outlet, useLocation } from "react-router-dom";
 import Header from "../header/header";
 import SideBar from "../sidebar/sideBar";
 
@@ -14,6 +14,12 @@ const navLinks = [
 ];
 
 const UserLayout = () => {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+
   const [collapsed, setCollapsed] = useState(false);
 
   return (
