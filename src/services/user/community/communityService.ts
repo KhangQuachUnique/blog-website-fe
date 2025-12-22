@@ -69,9 +69,12 @@ export const updateCommunityMemberRole = (
 // ✅ Kick / Reject
 export const removeCommunityMember = (
   communityId: number,
-  memberId: number
+  memberId: number,
+  opts?: { ban?: boolean }
 ) => {
-  return axios.delete(`/communities/${communityId}/members/${memberId}`);
+  return axios.delete(`/communities/${communityId}/members/${memberId}`,
+    opts?.ban ? { params: { ban: 1 } } : undefined
+  );
 };
 
 // ✅ Leave community (rời cộng đồng)

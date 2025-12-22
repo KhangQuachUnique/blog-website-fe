@@ -43,6 +43,7 @@ const CommunityLayout = () => {
   if (!data) return <p>Không tìm thấy cộng đồng</p>;
 
   const role = data.role; // "ADMIN" | "MODERATOR" | "MEMBER" | "PENDING" | "NONE"(nếu bạn có)
+  const isBanned = !!data.isBanned;
   const isAdminOrMod = role === "ADMIN" || role === "MODERATOR";
   const isMemberApproved =
     role === "ADMIN" || role === "MODERATOR" || role === "MEMBER";
@@ -162,7 +163,7 @@ const CommunityLayout = () => {
               </button>
             )}
 
-            {role === "NONE" && (
+            {role === "NONE" && !isBanned && (
               <button
                 className="btn-join-community"
                 onClick={handleJoin}
@@ -172,6 +173,16 @@ const CommunityLayout = () => {
                 }
               >
                 {joinMutation.isPending ? "Đang xử lý..." : joinLabel}
+              </button>
+            )}
+
+            {role === "NONE" && isBanned && (
+              <button
+                className="btn-join-community"
+                disabled
+                title="Bạn đã bị kick khỏi cộng đồng này nên không thể tham gia lại"
+              >
+                Không thể tham gia
               </button>
             )}
 

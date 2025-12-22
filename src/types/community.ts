@@ -9,6 +9,8 @@ export interface CommunitySettings {
   createdAt: string;
   role: "ADMIN" | "MODERATOR" | "MEMBER" | "PENDING" | "NONE";
   memberCount: number;
+  /** true nếu user hiện tại đã bị kick/ban khỏi community */
+  isBanned?: boolean;
 }
 
 export type MyCommunityRole = "ADMIN" | "MODERATOR" | "MEMBER";

@@ -195,7 +195,8 @@ export default function MemberManagement() {
     }
 
     try {
-      await removeMember.mutateAsync(memberToKick.id);
+      const shouldBan = memberToKick.role !== "PENDING";
+      await removeMember.mutateAsync({ memberId: memberToKick.id, ban: shouldBan });
       const kicked = memberToKick;
       setMemberToKick(null);
       await refetch();
