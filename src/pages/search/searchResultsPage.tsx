@@ -168,7 +168,9 @@ export const SearchResultPage = () => {
             <div className="newsfeed-card__header">
               <div className="newsfeed-card__author">
                 <img
-                  src={community.thumbnailUrl || "https://via.placeholder.com/40"}
+                  src={
+                    community.thumbnailUrl || "https://via.placeholder.com/40"
+                  }
                   alt={community.name}
                   className="newsfeed-card__avatar"
                 />
