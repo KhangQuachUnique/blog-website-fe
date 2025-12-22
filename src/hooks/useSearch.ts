@@ -8,11 +8,19 @@ interface UseSearchParams {
   enabled?: boolean;
 }
 
-export const useSearch = ({ keyword, type, enabled = true }: UseSearchParams) => {
+export const useSearch = ({
+  keyword,
+  type,
+  enabled = true,
+}: UseSearchParams) => {
   return useInfiniteQuery<ISearchResponseDto>({
     queryKey: ["search", keyword, type],
-    queryFn: ({ pageParam }) => 
-      searchWithPagination(keyword, type, (pageParam as string | undefined) ?? undefined),
+    queryFn: ({ pageParam }) =>
+      searchWithPagination(
+        keyword,
+        type,
+        (pageParam as string | undefined) ?? undefined
+      ),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) => {
       const limit = 15;

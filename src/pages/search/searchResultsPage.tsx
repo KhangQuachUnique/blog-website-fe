@@ -52,7 +52,7 @@ export const SearchResultPage = () => {
           if (!allUsers.find((u) => u.id === user.id)) {
             allUsers.push(user);
           }
-        } else if ("name" in item && "memberCount" in item) {
+        } else if ("name" in item) {
           // This is a community
           const community = item as ICommunitySearchDto;
           if (!allCommunities.find((c) => c.id === community.id)) {

@@ -199,7 +199,7 @@ export interface ISearchResponseDto {
 }
 
 /**
- * @deprecated Use specific search functions (searchPosts, searchUsers, etc.) instead
+ * Use specific search functions (searchPosts, searchUsers, etc.) instead
  */
 export const searchWithPagination = async (
   keyword: string,
