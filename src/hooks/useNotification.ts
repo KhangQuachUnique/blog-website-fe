@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getNotifications } from "../services/notification";
-import { useAuth } from "./useAuth";
+import { useAuthUser } from "./useAuth";
 import {
   markNotificationAsRead,
   markAllNotificationsAsRead,
@@ -17,15 +17,15 @@ export const useGetNotifications = (): UseQueryResult<
   NotificationResponseDto[],
   Error
 > => {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated } = useAuthUser();
 
   const userId = user?.id as number;
 
   return useQuery({
     queryKey: ["notifications", userId],
     queryFn: () => getNotifications(userId),
-    enabled: isAuthenticated && typeof user?.id === "number",
-    staleTime: 10000,
+    enabled: isAuthenticated,
+    staleTime: 1000 * 60, // 1 phút
   });
 };
 
@@ -52,7 +52,7 @@ export const useMarkNotificationAsRead = (notificationId: number) => {
  * @returns
  */
 export const useMarkAllNotificationsAsRead = () => {
-  const { user } = useAuth();
+  const { user } = useAuthUser();
   const queryClient = useQueryClient();
   const userId = user?.id as number;
 

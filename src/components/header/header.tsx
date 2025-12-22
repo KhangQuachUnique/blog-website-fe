@@ -12,10 +12,10 @@ import Divider from "@mui/material/Divider";
 import { GoPerson } from "react-icons/go";
 
 import { HiMenuAlt2 } from "react-icons/hi";
-import { RiNotification4Line } from "react-icons/ri";
 import { IoSettingsOutline } from "react-icons/io5";
 import { IoExitOutline } from "react-icons/io5";
 import { useAuth } from "../../contexts/AuthContext";
+import NotificationBell from "../notificationBell/NotificationBell";
 
 interface HeaderProps {
   layout: "admin" | "user";
@@ -107,9 +107,7 @@ const Header = ({ layout, collapsed, setCollapsed }: HeaderProps) => {
           </div>
         ) : (
           <div className="flex items-center gap-4">
-            <button className="hover:bg-[#FFEFF4] p-2 rounded-lg transition-colors duration-100">
-              <RiNotification4Line fontSize={24} style={{ color: "#F295B6" }} />
-            </button>
+            <NotificationBell />
             <Box>
               <IconButton onClick={handleOpen} size="small">
                 {user?.avatarUrl ? (

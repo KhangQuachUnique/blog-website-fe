@@ -1,6 +1,6 @@
 import { Badge, Popover } from "@mui/material";
-import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 import { RiNotification4Line } from "react-icons/ri";
 import { FaInbox } from "react-icons/fa6";
 
@@ -10,11 +10,17 @@ import { Link } from "react-router-dom";
 
 const NotificationBell = () => {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const userId = user?.id as number;
 
-  const { data: notifications } = useQuery<NotificationResponseDto[]>({
-    queryKey: ["notifications", userId],
-  });
+  const notifications = queryClient.getQueryData<NotificationResponseDto[]>([
+    "notifications",
+    userId,
+  ]);
+
+  useEffect(() => {
+    console.log("Notifications updated:", notifications);
+  }, [notifications]);
   /**
    * State to manage the open/close status of the notification dropdown
    */
@@ -77,6 +83,7 @@ const NotificationBell = () => {
           </h3>
           <ul className="">
             {notifications && notifications.length > 0 ? (
+              (console.log(notifications),
               notifications.map((notification) => (
                 <li
                   key={notification.id}
@@ -108,7 +115,7 @@ const NotificationBell = () => {
                     </div>
                   </div>
                 </li>
-              ))
+              )))
             ) : (
               <li className="text-sm text-gray-600 flex justify-center items-center py-[80px]">
                 <div className="flex flex-col items-center ">
