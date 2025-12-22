@@ -5,7 +5,8 @@ import { stringAvatar } from "../../utils/avatarHelper";
 import * as userService from "../../services/user/userService";
 import { useToast } from "../../contexts/toast";
 import { useNavigate } from "react-router-dom";
-import type { UserListItem } from "../../types/user.types";
+import type { UserListItem } from "../../types/user";
+import { IoClose } from "react-icons/io5";
 
 interface FollowModalProps {
   open: boolean;
@@ -31,7 +32,7 @@ const FollowModal = ({
     if (open) {
       fetchUsers();
     }
-  }, [open, type, userId]);
+  }, [open]);
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -94,17 +95,30 @@ const FollowModal = ({
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <div className="p-6">
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth="sm"
+      fullWidth
+      PaperProps={{
+        sx: {
+          borderRadius: "20px",
+          width: "500px",
+          padding: "5px",
+          boxShadow: "none", // tăng tuỳ thích
+        },
+      }}
+    >
+      <div className="p-6 rounded-lg">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-bold" style={{ color: "#8C1D35" }}>
+          <h2 className="text-2xl font-bold" style={{ color: "#F295B6" }}>
             {type === "followers" ? "Người theo dõi" : "Đang theo dõi"}
           </h2>
           <button
             onClick={onClose}
             className="text-gray-500 hover:text-gray-700 text-2xl"
           >
-            ×
+            <IoClose size={30} />
           </button>
         </div>
 

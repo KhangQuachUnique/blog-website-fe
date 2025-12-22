@@ -238,6 +238,8 @@ export const searchWithPagination = async (
     if (data.communities) items = [...items, ...data.communities];
   }
 
+  console.log("Search items:", items);
+
   return {
     items,
     pagination: data.pagination ?? { hasMore: false, nextCursor: null },
