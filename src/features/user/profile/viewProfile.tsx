@@ -16,6 +16,7 @@ import { useToast } from "../../../contexts/toast";
 import { useAuth } from "../../../hooks/useAuth";
 import { useGetUserProfile } from "../../../hooks/useUser";
 import FollowModal from "../../../components/profile/FollowModal";
+import ProfileSkeleton from "../../../components/skeleton/ProfileSkeleton";
 
 const ViewProfile = () => {
   const { userId } = useParams<{ userId: string }>();
@@ -105,11 +106,7 @@ const ViewProfile = () => {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-lg text-gray-500">Đang tải...</div>
-      </div>
-    );
+    return <ProfileSkeleton />;
   }
 
   if (!fetchedProfile) {

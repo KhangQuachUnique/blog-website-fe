@@ -1,7 +1,6 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Avatar from "@mui/material/Avatar";
-import { useQueryClient } from "@tanstack/react-query";
 
 import type { IPostResponseDto } from "../../types/post";
 import { EPostType } from "../../types/post";
@@ -12,30 +11,10 @@ import { useGetPostById } from "../../hooks/usePost";
 import { stringAvatar } from "../../utils/avatarHelper";
 import "../../styles/newsfeed/Card.css";
 import ReactionSection from "../Emoji";
-import type { EmojiReactSummaryDto } from "../../types/userReact";
-import type { IGetNewsfeedResponseDto } from "../../types/newsfeed";
-import { getOrCreateSessionSeed } from "../../hooks/useNewsFeed";
 
 const Card = ({ post }: { post: IPostResponseDto }) => {
-  const queryClient = useQueryClient();
-  const sessionSeed = getOrCreateSessionSeed();
   const { user } = useAuth();
   const navigate = useNavigate();
-
-  const reactions = useMemo<EmojiReactSummaryDto[]>(() => {
-    const cacheData = queryClient.getQueryData<IGetNewsfeedResponseDto>([
-      "newsfeed",
-      sessionSeed,
-    ]);
-
-    if (!cacheData?.items) {
-      return post.reacts?.emojis ?? [];
-    }
-
-    const foundPost = cacheData.items.find((p) => p.id === post.id);
-
-    return foundPost?.reacts?.emojis ?? post.reacts?.emojis ?? [];
-  }, [queryClient, sessionSeed, post.id, post.reacts?.emojis]);
 
   // Handle hashtag click - navigate to search page
   const handleHashtagClick = (e: React.MouseEvent, hashtagName: string) => {
@@ -251,7 +230,10 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
               className="newsfeed-card__interact"
               onClick={(e) => e.stopPropagation()}
             >
-              <ReactionSection postId={post.id} reactions={reactions} />
+              <ReactionSection
+                postId={post.id}
+                reactions={post.originalPost?.reacts?.emojis ?? []}
+              />
               <InteractBar
                 postId={post.id}
                 userId={user?.id ?? 0}
@@ -377,7 +359,10 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
               className="newsfeed-card__interact bg-white"
               onClick={(e) => e.stopPropagation()}
             >
-              <ReactionSection postId={post.id} reactions={reactions} />
+              <ReactionSection
+                postId={post.id}
+                reactions={post.reacts?.emojis ?? []}
+              />
               <div className="px-20 border-t border-t-[#FFC9DC]">
                 <InteractBar
                   postId={post.id}
