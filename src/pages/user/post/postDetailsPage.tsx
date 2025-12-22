@@ -5,7 +5,7 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useLocation } from "react-router-dom"; // [CHANGE] thêm useLocation
 import GridLayout from "react-grid-layout";
 import { Search } from "lucide-react";
 
@@ -70,6 +70,11 @@ const PostDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const postId = Number(id ?? 0);
 
+  // [ADD] Review mode: mở bằng /post/:id?review=1 => ẩn bình luận
+  const location = useLocation();
+  const isReviewMode =
+    new URLSearchParams(location.search).get("review") === "1";
+
   // Fetch post data
   const { data: postData, isLoading, isError, error } = useGetPostById(postId);
 
@@ -92,8 +97,7 @@ const PostDetailsPage: React.FC = () => {
     GRID_SETTINGS.width
   );
 
-  // [SỬA] State quản lý block đang được chọn để bình luận (cả Text và Image)
-  // Field 'url' là optional vì Text block không có url ảnh
+  // State quản lý block đang được chọn để bình luận (cả Text và Image)
   const [selectedBlock, setSelectedBlock] = useState<{
     id: number;
     url?: string;
@@ -157,21 +161,18 @@ const PostDetailsPage: React.FC = () => {
         const rect = selectionRange.getBoundingClientRect();
 
         if (rect) {
-          // Tính toán vị trí hiển thị nút tìm kiếm (ngay trên đoạn text)
           setSelection({
             text: selectedText,
-            x: rect.left + rect.width / 2, // Canh giữa
-            y: rect.top + window.scrollY - 40, // Cách bên trên 40px
+            x: rect.left + rect.width / 2,
+            y: rect.top + window.scrollY - 40,
             show: true,
           });
         }
       } else {
-        // Ẩn nút nếu không bôi đen
         setSelection((prev) => ({ ...prev, show: false }));
       }
     };
 
-    // Chỉ lắng nghe sự kiện mouseup (khi nhả chuột ra)
     document.addEventListener("mouseup", handleSelection);
     return () => document.removeEventListener("mouseup", handleSelection);
   }, []);
@@ -179,26 +180,24 @@ const PostDetailsPage: React.FC = () => {
   const handleQuickSearch = () => {
     setSearchKeyword(selection.text);
     setIsSearchSidebarOpen(true);
-    setSelection((prev) => ({ ...prev, show: false })); // Ẩn nút đi sau khi bấm
-    // Xóa bôi đen (UX optional)
+    setSelection((prev) => ({ ...prev, show: false }));
     window.getSelection()?.removeAllRanges();
   };
 
   // Current logged in user (for comments)
   const { user: currentUser } = useAuthUser();
 
-  // Normalize user object for comments components
-  if (!currentUser) return null;
+  // [CHANGE] chỉ cần user khi KHÔNG review mode (vì review mode sẽ ẩn comments)
+  const normalizedUser = currentUser
+    ? {
+        id: currentUser.id,
+        username: currentUser.username,
+        avatarUrl: currentUser.avatarUrl ?? undefined,
+      }
+    : null;
 
-  const normalizedUser = {
-    id: currentUser.id,
-    username: currentUser.username,
-    avatarUrl: currentUser.avatarUrl ?? undefined,
-  };
-
-  // [SỬA] Handler click vào block (cả Text và Image)
+  // Handler click vào block (cả Text và Image)
   const handleBlockClick = (blockId: number, type: string, content: string) => {
-    // Nếu là ảnh thì lấy content làm url, nếu là text thì url = undefined
     const imageUrl = type === EBlockType.IMAGE ? content : undefined;
     setSelectedBlock({ id: blockId, url: imageUrl });
   };
@@ -269,10 +268,10 @@ const PostDetailsPage: React.FC = () => {
           style={{
             left: selection.x,
             top: selection.y,
-            transform: "translateX(-50%)", // Căn giữa theo toạ độ X
+            transform: "translateX(-50%)",
           }}
           onClick={handleQuickSearch}
-          onMouseDown={(e) => e.preventDefault()} // Prevent text deselection
+          onMouseDown={(e) => e.preventDefault()}
         >
           <Search size={14} />
           <span className="text-xs font-medium">
@@ -287,7 +286,6 @@ const PostDetailsPage: React.FC = () => {
 
       {/* Title & Short Description */}
       <div style={{ width: GRID_SETTINGS.width, padding: 12 }}>
-        {/* Title */}
         <h1
           className="w-full"
           style={{
@@ -363,9 +361,7 @@ const PostDetailsPage: React.FC = () => {
       {/* Grid Layout */}
       <div style={{ width: GRID_SETTINGS.width }}>
         {blocks.length === 0 ? (
-          <div className="text-gray-500 text-center py-8">
-            Không có nội dung.
-          </div>
+          <div className="text-gray-500 text-center py-8">Không có nội dung.</div>
         ) : (
           <div ref={containerRef} style={{ width: GRID_SETTINGS.width }}>
             <GridLayout
@@ -380,27 +376,30 @@ const PostDetailsPage: React.FC = () => {
               isDroppable={false}
             >
               {blocks.map((block) => {
-                // [SỬA] Kiểm tra block có thể tương tác (comment) được không
                 const isInteractable =
                   block.type === EBlockType.IMAGE ||
                   block.type === EBlockType.TEXT;
                 const isImage = block.type === EBlockType.IMAGE;
 
+                // [ADD] Chỉ cho comment block khi KHÔNG review mode và có user
+                const canCommentBlock =
+                  isInteractable && !isReviewMode && !!normalizedUser;
+
                 return (
                   <div
                     key={block.id}
                     className={`
-                      ${BLOCK_WRAPPER.readMode} 
+                      ${BLOCK_WRAPPER.readMode}
                       ${BLOCK_WRAPPER.default}
                       h-full
                       ${
-                        isInteractable
+                        canCommentBlock
                           ? "cursor-pointer group hover:ring-2 hover:ring-blue-300 transition-all relative"
                           : ""
                       }
                     `}
                     onClick={(e) => {
-                      if (!isInteractable) return;
+                      if (!canCommentBlock) return; // [CHANGE]
                       const selection = window.getSelection();
                       if (selection && selection.toString().length > 0) return;
                       if ((e.target as HTMLElement).closest("a")) return;
@@ -408,10 +407,7 @@ const PostDetailsPage: React.FC = () => {
                     }}
                   >
                     {block.type === EBlockType.TEXT ? (
-                      <TextBlock
-                        id={String(block.id)}
-                        content={block.content || ""}
-                      />
+                      <TextBlock id={String(block.id)} content={block.content || ""} />
                     ) : (
                       <ImageBlock
                         id={String(block.id)}
@@ -421,12 +417,10 @@ const PostDetailsPage: React.FC = () => {
                       />
                     )}
 
-                    {/* [SỬA] Overlay hint khi hover vào block (Text hoặc Image) */}
-                    {isInteractable && (
+                    {/* [CHANGE] Ẩn overlay comment khi review mode */}
+                    {canCommentBlock && (
                       <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-black/60 text-white text-xs px-2 py-1 rounded-full pointer-events-none z-10 flex items-center gap-1">
-                        <span>
-                          💬 {isImage ? "Bình luận ảnh" : "Bình luận đoạn này"}
-                        </span>
+                        <span>💬 {isImage ? "Bình luận ảnh" : "Bình luận đoạn này"}</span>
                       </div>
                     )}
                   </div>
@@ -437,23 +431,25 @@ const PostDetailsPage: React.FC = () => {
         )}
       </div>
 
-      {/* Post Comments Section */}
-      <div style={{ width: GRID_SETTINGS.width, marginTop: 32 }}>
-        <CommentsSection postId={postData.id} currentUser={normalizedUser} />
-      </div>
+      {/* [CHANGE] Ẩn Post Comments khi review mode */}
+      {!isReviewMode && normalizedUser && (
+        <div style={{ width: GRID_SETTINGS.width, marginTop: 32 }}>
+          <CommentsSection postId={postData.id} currentUser={normalizedUser} />
+        </div>
+      )}
 
-      {/* --- SIDEBARS --- */}
+      {/* [CHANGE] Ẩn Block Comments Sidebar khi review mode */}
+      {!isReviewMode && normalizedUser && (
+        <BlockCommentsSidebar
+          isOpen={!!selectedBlock}
+          onClose={() => setSelectedBlock(null)}
+          blockId={selectedBlock?.id || 0}
+          imageUrl={selectedBlock?.url}
+          currentUser={normalizedUser}
+        />
+      )}
 
-      {/* 1. Sidebar Comment Block (Text hoặc Image) */}
-      <BlockCommentsSidebar
-        isOpen={!!selectedBlock}
-        onClose={() => setSelectedBlock(null)}
-        blockId={selectedBlock?.id || 0}
-        imageUrl={selectedBlock?.url}
-        currentUser={normalizedUser}
-      />
-
-      {/* 2. Sidebar Search Text */}
+      {/* Sidebar Search Text */}
       <SearchSidebar
         isOpen={isSearchSidebarOpen}
         onClose={() => setIsSearchSidebarOpen(false)}

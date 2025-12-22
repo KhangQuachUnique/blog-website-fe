@@ -1,11 +1,10 @@
-import { Link, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { useGetCommunityPosts } from "../../../hooks/usePost";
 import { useGetCommunitySettings } from "../../../hooks/useCommunity";
+import NewsfeedList from "../../../components/newsfeedList/NewsfeedList";
 
-const formatDate = (dateInput: string | Date) => {
-  const d = dateInput instanceof Date ? dateInput : new Date(dateInput);
-  return d.toLocaleDateString("vi-VN");
-};
+// ✅ ADDED: import type để cast cho đúng props của NewsfeedList
+import type { INewsfeedItemDto } from "../../../types/newsfeed";
 
 const CommunityPosts = () => {
   const { id } = useParams();
@@ -14,8 +13,11 @@ const CommunityPosts = () => {
   // check lock (community private + chưa join)
   const { data: settings } = useGetCommunitySettings(communityId);
   const role = settings?.role;
-  const isMemberApproved = role === "ADMIN" || role === "MODERATOR" || role === "MEMBER";
-  const isPrivateLocked = settings ? (!settings.isPublic && !isMemberApproved) : false;
+  const isMemberApproved =
+    role === "ADMIN" || role === "MODERATOR" || role === "MEMBER";
+  const isPrivateLocked = settings
+    ? !settings.isPublic && !isMemberApproved
+    : false;
 
   const { data: posts, isLoading, isError } = useGetCommunityPosts(communityId);
 
@@ -44,41 +46,10 @@ const CommunityPosts = () => {
           Chưa có bài viết nào trong cộng đồng này.
         </div>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 12 }}>
-          {list.map((p: any) => (
-            <Link
-              key={p.id}
-              to={`/post/${p.id}`}
-              className="community-card"
-              style={{ textDecoration: "none", color: "inherit" }}
-            >
-              <div style={{ display: "flex", gap: 14 }}>
-                {p.thumbnailUrl ? (
-                  <img
-                    src={p.thumbnailUrl}
-                    alt={p.title}
-                    style={{
-                      width: 120,
-                      height: 80,
-                      borderRadius: 12,
-                      objectFit: "cover",
-                      border: "1px solid #ffe4f1",
-                    }}
-                  />
-                ) : null}
-
-                <div style={{ flex: 1 }}>
-                  <h4 style={{ margin: 0 }}>{p.title}</h4>
-                  <p style={{ margin: "6px 0 0", color: "#666" }}>
-                    {p.shortDescription || "—"}
-                  </p>
-                  <div style={{ marginTop: 8, fontSize: 12, color: "#888" }}>
-                    {p.author?.username ?? "Người dùng"} • {formatDate(p.createdAt)}
-                  </div>
-                </div>
-              </div>
-            </Link>
-          ))}
+        <div style={{ marginTop: 12 }}>
+          {/* ✅ CHANGED: dùng lại đúng UI Newsfeed (Card) */}
+          {/* ✅ ADDED: cast để khớp Props của NewsfeedList, KHÔNG sửa NewsfeedList */}
+          <NewsfeedList posts={list as unknown as INewsfeedItemDto[]} />
         </div>
       )}
     </div>
