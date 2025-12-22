@@ -1,21 +1,15 @@
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { type Community } from "../../../types/community";
-
 import {
-  getMyCommunities,
-  createCommunity,
-} from "../../../services/user/community/communityService";
+  useCreateCommunity,
+  useGetMyCommunities,
+} from "../../../hooks/useCommunity";
 
 const MyCommunitiesPage = () => {
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
 
-  const { data, isLoading, isError } = useQuery<Community[]>({
-    queryKey: ["myCommunities"],
-    queryFn: getMyCommunities,
-  });
+  const { data, isLoading, isError } = useGetMyCommunities();
 
   const communities = data ?? [];
 
@@ -27,14 +21,7 @@ const MyCommunitiesPage = () => {
     isPublic: true,
   });
 
-  const createMutation = useMutation({
-    mutationFn: createCommunity,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["myCommunities"] });
-      setOpenCreate(false);
-      setCreateForm({ name: "", description: "", isPublic: true });
-    },
-  });
+  const createMutation = useCreateCommunity();
 
   const handleOpenCommunity = (community: Community) => {
     // Tạm thời: tất cả đều đi tới manage của community đó
@@ -59,12 +46,20 @@ const MyCommunitiesPage = () => {
       return;
     }
 
-    createMutation.mutate({
-      name: createForm.name.trim(),
-      description: createForm.description.trim(),
-      isPublic: createForm.isPublic,
-      thumbnailUrl: "https://picsum.photos/seed/community/300/300",
-    });
+    createMutation.mutate(
+      {
+        name: createForm.name.trim(),
+        description: createForm.description.trim(),
+        isPublic: createForm.isPublic,
+        thumbnailUrl: "https://picsum.photos/seed/community/300/300",
+      },
+      {
+        onSuccess: () => {
+          setOpenCreate(false);
+          setCreateForm({ name: "", description: "", isPublic: true });
+        },
+      }
+    );
   };
 
   return (
