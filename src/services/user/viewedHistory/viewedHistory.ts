@@ -1,5 +1,4 @@
-import axios from '../../config/axiosCustomize';
-
+import axios from "../../../config/axiosCustomize";
 
 export const recordViewedPost = async (postId: number): Promise<void> => {
   try {
@@ -8,6 +7,6 @@ export const recordViewedPost = async (postId: number): Promise<void> => {
   } catch (err) {
     // swallow errors to avoid breaking UX; log for debugging
     // eslint-disable-next-line no-console
-    console.debug('recordViewedPost failed', err);
+    console.debug("recordViewedPost failed", err);
   }
 };

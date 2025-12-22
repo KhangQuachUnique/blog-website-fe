@@ -1,5 +1,9 @@
 // src/services/user/community/communityService.ts
 import axios from "../../../config/axiosCustomize";
+import type {
+  CreateCommunityPayload,
+  Community,
+} from "../../../types/community";
 import type { CommunitySettings } from "../../../types/community";
 
 export type CommunityRole = "ADMIN" | "MODERATOR" | "MEMBER";
@@ -10,6 +14,20 @@ export interface CommunityMember {
   role: ManageCommunityRole; // ✅ quản lý có PENDING
   joinedAt: string;
   user: { id: number; username: string; avatarUrl?: string | null };
+}
+
+// Lấy danh sách community của user hiện tại
+export async function getMyCommunities(): Promise<Community[]> {
+  const res = await axios.get("/communities/my");
+  return res;
+}
+
+// Tạo community mới
+export async function createCommunity(
+  payload: CreateCommunityPayload
+): Promise<Community> {
+  const res = await axios.post("/communities", payload);
+  return res;
 }
 
 // Settings giữ như bạn đang dùng
@@ -49,7 +67,10 @@ export const updateCommunityMemberRole = (
 };
 
 // ✅ Kick / Reject
-export const removeCommunityMember = (communityId: number, memberId: number) => {
+export const removeCommunityMember = (
+  communityId: number,
+  memberId: number
+) => {
   return axios.delete(`/communities/${communityId}/members/${memberId}`);
 };
 

@@ -4,7 +4,7 @@ import type {
   UpdateProfileData,
   ChangePasswordData,
   BlockedUser,
-} from "../../types/user.types";
+} from "../../types/user.ts";
 
 const unwrap = (res: any) => {
   if (res?.data) return res.data;

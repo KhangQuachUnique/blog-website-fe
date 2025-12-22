@@ -7,7 +7,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import type { IPostResponseDto } from "../../types/post";
 import { EPostType } from "../../types/post";
 import InteractBar from "../interactBar/InteractBar";
-import { recordViewedPost } from "../../services/user/viewedHistory";
+import { recordViewedPost } from "../../services/user/viewedHistory/viewedHistory";
 import { useAuth } from "../../contexts/AuthContext";
 import { useGetPostById } from "../../hooks/usePost";
 import { stringAvatar } from "../../utils/avatarHelper";
@@ -381,16 +381,18 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
             {/* InteractBar nằm dưới content */}
 
             <div
-              className="newsfeed-card__interact"
+              className="newsfeed-card__interact bg-white"
               onClick={(e) => e.stopPropagation()}
             >
               <ReactionSection postId={post.id} reactions={reactions} />
-              <InteractBar
-                postId={post.id}
-                userId={user?.id ?? 0}
-                votes={post.votes}
-                totalComments={post.totalComments}
-              />
+              <div className="px-20 border-t border-t-[#FFC9DC]">
+                <InteractBar
+                  postId={post.id}
+                  userId={user?.id ?? 0}
+                  votes={post.votes}
+                  totalComments={post.totalComments}
+                />
+              </div>
             </div>
           </div>
         </article>

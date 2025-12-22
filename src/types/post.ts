@@ -100,13 +100,3 @@ export interface IPostResponseDto {
   final_score?: number;
   isViewed?: boolean;
 }
-
-export interface BlogPost {
-  id: number;
-  title: string;
-  status: EBlogPostStatus;
-  createdAt: string;
-  thumbnailUrl?: string | null;
-  upVotes?: number | null;
-  downVotes?: number | null;
-}
