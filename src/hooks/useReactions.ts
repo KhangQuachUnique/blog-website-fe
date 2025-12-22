@@ -15,7 +15,7 @@ import { useSearchParams } from "react-router-dom";
 import type {
   ISearchResponseDto,
   SearchResultItem,
-} from "../services/search.service";
+} from "../services/search/search.service";
 
 /**
  * Hook to toggle reaction on a post.

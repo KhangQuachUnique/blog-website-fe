@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { commentService } from "../services/comment.service";
+import { commentService } from "../services/comment/comment.service";
 import type {
   Comment,
   CommentsResponse,

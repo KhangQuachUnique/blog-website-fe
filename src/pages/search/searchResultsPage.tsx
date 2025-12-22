@@ -5,7 +5,7 @@ import type {
   IUserSearchDto,
   ICommunitySearchDto,
   ISearchResponseDto,
-} from "../../services/search.service";
+} from "../../services/search/search.service";
 import { Loader2 } from "lucide-react";
 import Masonry from "react-masonry-css";
 import Card from "../../components/card/Card";

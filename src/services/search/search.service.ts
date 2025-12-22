@@ -1,5 +1,5 @@
-import axios from "../config/axiosCustomize";
-import type { IPostResponseDto } from "../types/post";
+import axios from "../../config/axiosCustomize";
+import type { IPostResponseDto } from "../../types/post";
 
 // ============================================
 // Search DTOs - tách biệt cho từng loại

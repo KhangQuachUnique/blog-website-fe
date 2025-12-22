@@ -1,6 +1,6 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { searchWithPagination } from "../services/search.service";
-import type { ISearchResponseDto } from "../services/search.service";
+import { searchWithPagination } from "../services/search/search.service";
+import type { ISearchResponseDto } from "../services/search/search.service";
 
 interface UseSearchParams {
   keyword: string;
