@@ -125,7 +125,7 @@ const ViewProfile = () => {
       <div className="profile-card profile-card-header mb-6">
         <div className="flex flex-col items-start md:items-center">
           {/* Cover Image with fixed aspect ratio */}
-          <div className="w-full h-[200px] sm:h-[250px] md:h-[300px] overflow-hidden bg-gray-200 rounded-t-lg">
+          <div className="w-full h-[200px] sm:h-[250px] md:h-[300px] overflow-hidden bg-gray-200">
             {fetchedProfile.coverImageUrl ? (
               <img
                 src={fetchedProfile.coverImageUrl}
@@ -138,7 +138,7 @@ const ViewProfile = () => {
               </div>
             )}
           </div>
-          <div className="flex flex-col max-w-[90%] w-[1000px]">
+          <div className="flex flex-col max-w-[90%] w-[900px]">
             <div className="flex gap-2 h-25">
               {/* Avatar */}
               <div className="flex-shrink-0">
@@ -254,7 +254,7 @@ const ViewProfile = () => {
             {/* Stats */}
             <div className="flex gap-6 my-6">
               <div className="flex items-center gap-2">
-                <div className="profile-stat-value">
+                <div className="profile-stat-value !text-[20px]">
                   {fetchedProfile.posts.length}
                 </div>
                 <div className="profile-stat-label">Bài viết</div>
@@ -266,7 +266,9 @@ const ViewProfile = () => {
                   setFollowModalOpen(true);
                 }}
               >
-                <div className="profile-stat-value">{followersCount}</div>
+                <div className="profile-stat-value !text-[20px]">
+                  {followersCount}
+                </div>
                 <div className="profile-stat-label">Người theo dõi</div>
               </div>
               <div
@@ -276,7 +278,7 @@ const ViewProfile = () => {
                   setFollowModalOpen(true);
                 }}
               >
-                <div className="profile-stat-value">
+                <div className="profile-stat-value !text-[20px]">
                   {fetchedProfile.followingCount}
                 </div>
                 <div className="profile-stat-label">Đang theo dõi</div>
@@ -287,13 +289,13 @@ const ViewProfile = () => {
       </div>
 
       {/* Tabs */}
-      <div className="profile-card overflow-hidden">
-        <div className="profile-tab-nav">
+      <div className="profile-card w-full overflow-hidden">
+        <div className="profile-tab-nav w-[900px] mx-auto">
           <button
             onClick={() => setActiveTab("posts")}
             className={`profile-tab-nav-item ${
               activeTab === "posts" ? "profile-tab-nav-item-active" : ""
-            }`}
+            } rounded-l-lg`}
           >
             <BsFileText className="profile-tab-nav-icon" />
             Bài viết ({fetchedProfile.posts.length})
@@ -302,7 +304,7 @@ const ViewProfile = () => {
             onClick={() => setActiveTab("communities")}
             className={`profile-tab-nav-item ${
               activeTab === "communities" ? "profile-tab-nav-item-active" : ""
-            }`}
+            } rounded-r-lg`}
           >
             <MdGroup className="profile-tab-nav-icon" />
             Cộng đồng ({fetchedProfile.communities.length})
@@ -317,7 +319,7 @@ const ViewProfile = () => {
                 <div className="profile-tab-empty">Chưa có bài viết nào</div>
               ) : (
                 fetchedProfile.posts.map((post) => (
-                  <div className="w-[70%]">
+                  <div className="w-[900px]" key={post.id}>
                     <Card key={post.id} post={post} />
                   </div>
                 ))

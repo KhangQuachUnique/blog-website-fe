@@ -4,7 +4,7 @@ import {
   useQueryClient,
   type InfiniteData,
 } from "@tanstack/react-query";
-import { votePost, getVoteStatus } from "../services/vote.service";
+import { votePost, getVoteStatus } from "../services/vote/vote.service";
 import type { VoteType } from "../types/vote.types";
 import { getOrCreateSessionSeed } from "./useNewsFeed";
 import type {

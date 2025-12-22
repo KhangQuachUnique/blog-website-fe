@@ -5,7 +5,7 @@ import type {
   IUserSearchDto,
   ICommunitySearchDto,
   ISearchResponseDto,
-} from "../../services/search.service";
+} from "../../services/search/search.service";
 import { Loader2 } from "lucide-react";
 import Masonry from "react-masonry-css";
 import Card from "../../components/card/Card";
@@ -52,7 +52,7 @@ export const SearchResultPage = () => {
           if (!allUsers.find((u) => u.id === user.id)) {
             allUsers.push(user);
           }
-        } else if ("name" in item && "memberCount" in item) {
+        } else if ("name" in item) {
           // This is a community
           const community = item as ICommunitySearchDto;
           if (!allCommunities.find((c) => c.id === community.id)) {
@@ -168,7 +168,9 @@ export const SearchResultPage = () => {
             <div className="newsfeed-card__header">
               <div className="newsfeed-card__author">
                 <img
-                  src={community.thumbnailUrl || "https://via.placeholder.com/40"}
+                  src={
+                    community.thumbnailUrl || "https://via.placeholder.com/40"
+                  }
                   alt={community.name}
                   className="newsfeed-card__avatar"
                 />

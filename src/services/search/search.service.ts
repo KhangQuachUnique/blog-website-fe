@@ -1,5 +1,5 @@
-import axios from "../config/axiosCustomize";
-import type { IPostResponseDto } from "../types/post";
+import axios from "../../config/axiosCustomize";
+import type { IPostResponseDto } from "../../types/post";
 
 // ============================================
 // Search DTOs - tách biệt cho từng loại
@@ -199,7 +199,7 @@ export interface ISearchResponseDto {
 }
 
 /**
- * @deprecated Use specific search functions (searchPosts, searchUsers, etc.) instead
+ * Use specific search functions (searchPosts, searchUsers, etc.) instead
  */
 export const searchWithPagination = async (
   keyword: string,
@@ -237,6 +237,8 @@ export const searchWithPagination = async (
     if (data.users) items = [...items, ...data.users];
     if (data.communities) items = [...items, ...data.communities];
   }
+
+  console.log("Search items:", items);
 
   return {
     items,

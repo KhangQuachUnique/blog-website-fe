@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Avatar from "@mui/material/Avatar";
 
@@ -39,12 +39,9 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
     originalId ? Number(originalId) : 0
   );
 
-  // Use the original post if it's already in the response, otherwise use the fetched data
-  const original =
-    post.originalPost ??
-    (originalId && fetchedOriginal
-      ? (fetchedOriginal as IPostResponseDto)
-      : undefined);
+  useEffect(() => {
+    console.log("Original post data:", fetchedOriginal);
+  }, [fetchedOriginal]);
 
   const formatDate = (dateInput: string | Date) => {
     const date = dateInput instanceof Date ? dateInput : new Date(dateInput);
@@ -64,20 +61,22 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
       {isRepost ? (
         <article className="newsfeed-card newsfeed-card--repost hover:shadow-lg transition-shadow !h-[430px]">
           {/* Thumbnail (links to original post) */}
-          {(original?.thumbnailUrl || post.thumbnailUrl) && (
+          {(fetchedOriginal?.thumbnailUrl || post.thumbnailUrl) && (
             <Link
-              to={`/post/${original?.id ?? post.originalPostId ?? post.id}`}
+              to={`/post/${
+                fetchedOriginal?.id ?? post.originalPostId ?? post.id
+              }`}
               className="newsfeed-card__thumbnail"
               onClick={() => {
                 if (user && user.id)
                   recordViewedPost(
-                    original?.id ?? post.originalPostId ?? post.id
+                    fetchedOriginal?.id ?? post.originalPostId ?? post.id
                   );
               }}
             >
               <img
-                src={original?.thumbnailUrl ?? post.thumbnailUrl}
-                alt={original?.title ?? post.title}
+                src={fetchedOriginal?.thumbnailUrl ?? post.thumbnailUrl}
+                alt={fetchedOriginal?.title ?? post.title}
                 className="newsfeed-card__image"
                 loading="lazy"
               />
@@ -155,29 +154,36 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
 
             {/* Original post content — links to original post */}
             <Link
-              to={`/post/${original?.id ?? post.originalPostId ?? post.id}`}
+              to={`/post/${
+                fetchedOriginal?.id ?? post.originalPostId ?? post.id
+              }`}
               className="newsfeed-card__content"
               onClick={() => {
                 if (user && user.id)
                   recordViewedPost(
-                    original?.id ?? post.originalPostId ?? post.id
+                    fetchedOriginal?.id ?? post.originalPostId ?? post.id
                   );
               }}
             >
               <h2 className="newsfeed-card__title">
-                {original?.title ?? post.title}
+                {fetchedOriginal?.title ?? post.title}
               </h2>
 
               <div className="newsfeed-card__header">
                 <div className="newsfeed-card__author">
                   <img
-                    src={original?.author?.avatarUrl ?? post.author.avatarUrl}
-                    alt={original?.author?.username ?? post.author.username}
+                    src={
+                      fetchedOriginal?.author?.avatarUrl ??
+                      post.author.avatarUrl
+                    }
+                    alt={
+                      fetchedOriginal?.author?.username ?? post.author.username
+                    }
                     className="newsfeed-card__avatar"
                     onClick={(e) =>
                       handleAvatarClick(
                         e,
-                        original?.author?.id ?? post.author.id
+                        fetchedOriginal?.author?.id ?? post.author.id
                       )
                     }
                     style={{ cursor: "pointer" }}
@@ -188,40 +194,42 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
                       onClick={(e) =>
                         handleAvatarClick(
                           e,
-                          original?.author?.id ?? post.author.id
+                          fetchedOriginal?.author?.id ?? post.author.id
                         )
                       }
                       style={{ cursor: "pointer" }}
                     >
-                      {original?.author?.username ?? post.author.username}
+                      {fetchedOriginal?.author?.username ??
+                        post.author.username}
                     </span>
-                    {original?.community && (
+                    {fetchedOriginal?.community && (
                       <span className="newsfeed-card__community">
-                        {typeof original.community === "string"
-                          ? original.community
-                          : original.community.name}
+                        {typeof fetchedOriginal.community === "string"
+                          ? fetchedOriginal.community
+                          : fetchedOriginal.community.name}
                       </span>
                     )}
                   </div>
                 </div>
                 <time className="newsfeed-card__time">
-                  {formatDate(original?.createdAt ?? post.createdAt)}
+                  {formatDate(fetchedOriginal?.createdAt ?? post.createdAt)}
                 </time>
               </div>
 
-              {original?.hashtags && original.hashtags.length > 0 && (
-                <div className="newsfeed-card__hashtags">
-                  {original.hashtags.map((h) => (
-                    <span
-                      key={h.id}
-                      className="newsfeed-card__hashtag newsfeed-card__hashtag--clickable"
-                      onClick={(e) => handleHashtagClick(e, h.name)}
-                    >
-                      #{h.name}
-                    </span>
-                  ))}
-                </div>
-              )}
+              {fetchedOriginal?.hashtags &&
+                fetchedOriginal.hashtags.length > 0 && (
+                  <div className="newsfeed-card__hashtags">
+                    {fetchedOriginal.hashtags.map((h) => (
+                      <span
+                        key={h.id}
+                        className="newsfeed-card__hashtag newsfeed-card__hashtag--clickable"
+                        onClick={(e) => handleHashtagClick(e, h.name)}
+                      >
+                        #{h.name}
+                      </span>
+                    ))}
+                  </div>
+                )}
             </Link>
 
             {/* InteractBar của người repost */}
@@ -231,11 +239,11 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
               onClick={(e) => e.stopPropagation()}
             >
               <ReactionSection
-                postId={post.id}
-                reactions={post.originalPost?.reacts?.emojis ?? []}
+                postId={fetchedOriginal?.id ?? post.originalPostId ?? post.id}
+                reactions={fetchedOriginal?.reacts?.emojis ?? []}
               />
               <InteractBar
-                postId={post.id}
+                postId={fetchedOriginal?.id ?? post.originalPostId ?? post.id}
                 userId={user?.id ?? 0}
                 votes={post.votes}
                 totalComments={post.totalComments}

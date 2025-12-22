@@ -4,19 +4,15 @@ import type {
   UpdateProfileData,
   ChangePasswordData,
   BlockedUser,
+  UserListItem,
 } from "../../types/user.ts";
-
-const unwrap = (res: any) => {
-  if (res?.data) return res.data;
-  return res;
-};
 
 /**
  * Lấy profile của người dùng hiện tại
  */
 export const getMyProfile = async (): Promise<UserProfile> => {
   const response = await axiosCustomize.get("/users/me/profile");
-  return unwrap(response);
+  return response;
 };
 
 /**
@@ -30,7 +26,7 @@ export const getUserProfile = async (
   const response = await axiosCustomize.get(`/users/${userId}/profile`, {
     params,
   });
-  return unwrap(response);
+  return response;
 };
 
 /**
@@ -40,7 +36,7 @@ export const updateMyProfile = async (
   data: UpdateProfileData
 ): Promise<UserProfile> => {
   const response = await axiosCustomize.patch("/users/me/profile", data);
-  return unwrap(response);
+  return response;
 };
 
 /**
@@ -54,7 +50,7 @@ export const changePassword = async (
     newPassword: data.newPassword,
     confirmPassword: data.confirmPassword,
   });
-  return unwrap(response);
+  return response;
 };
 
 /**
@@ -66,7 +62,7 @@ export const requestPasswordReset = async (
   const response = await axiosCustomize.post("/users/forgot-password", {
     email,
   });
-  return unwrap(response);
+  return response;
 };
 
 /**
@@ -78,7 +74,7 @@ export const resetPassword = async (data: {
   newPassword: string;
 }): Promise<{ message: string }> => {
   const response = await axiosCustomize.post("/users/reset-password", data);
-  return unwrap(response);
+  return response;
 };
 
 /**
@@ -86,7 +82,7 @@ export const resetPassword = async (data: {
  */
 export const togglePrivacy = async (): Promise<{ isPrivate: boolean }> => {
   const response = await axiosCustomize.patch("/users/me/privacy");
-  return unwrap(response);
+  return response;
 };
 
 /**
@@ -96,7 +92,7 @@ export const searchUsers = async (query: string): Promise<BlockedUser[]> => {
   const response = await axiosCustomize.get("/users/search", {
     params: { q: query },
   });
-  return unwrap(response);
+  return response;
 };
 
 /**
@@ -104,7 +100,7 @@ export const searchUsers = async (query: string): Promise<BlockedUser[]> => {
  */
 export const getBlockedUsers = async (): Promise<BlockedUser[]> => {
   const response = await axiosCustomize.get("/users/me/blocked");
-  return unwrap(response);
+  return response;
 };
 
 /**
@@ -114,7 +110,7 @@ export const blockUser = async (
   userId: number
 ): Promise<{ message: string }> => {
   const response = await axiosCustomize.post(`/users/${userId}/block`);
-  return unwrap(response);
+  return response;
 };
 
 /**
@@ -124,7 +120,7 @@ export const unblockUser = async (
   userId: number
 ): Promise<{ message: string }> => {
   const response = await axiosCustomize.delete(`/users/${userId}/block`);
-  return unwrap(response);
+  return response;
 };
 
 /**
@@ -132,7 +128,7 @@ export const unblockUser = async (
  */
 export const deleteAccount = async (): Promise<{ message: string }> => {
   const response = await axiosCustomize.delete("/users/me/account");
-  return unwrap(response);
+  return response;
 };
 
 /**
@@ -142,7 +138,7 @@ export const followUser = async (
   userId: number
 ): Promise<{ message: string }> => {
   const response = await axiosCustomize.post(`/users/${userId}/follow`);
-  return unwrap(response);
+  return response;
 };
 
 /**
@@ -152,23 +148,23 @@ export const unfollowUser = async (
   userId: number
 ): Promise<{ message: string }> => {
   const response = await axiosCustomize.delete(`/users/${userId}/follow`);
-  return unwrap(response);
+  return response;
 };
 
 /**
  * Lấy danh sách followers
  */
-export const getFollowers = async (userId: number): Promise<any[]> => {
+export const getFollowers = async (userId: number): Promise<UserListItem[]> => {
   const response = await axiosCustomize.get(`/users/${userId}/followers`);
-  return unwrap(response);
+  return response;
 };
 
 /**
  * Lấy danh sách following
  */
-export const getFollowing = async (userId: number): Promise<any[]> => {
+export const getFollowing = async (userId: number): Promise<UserListItem[]> => {
   const response = await axiosCustomize.get(`/users/${userId}/following`);
-  return unwrap(response);
+  return response;
 };
 
 /**
@@ -182,5 +178,5 @@ export const uploadAvatar = async (file: File): Promise<string> => {
       "Content-Type": "multipart/form-data",
     },
   });
-  return unwrap(response);
+  return response;
 };
