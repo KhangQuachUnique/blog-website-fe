@@ -4,11 +4,13 @@ import {
   createReport,
   checkIfReported,
   getAllReports,
+  resolveReport,
 } from '../services/user/report/reportService';
 import type {
   ICreateReportRequest,
   ICheckReportedResponse,
   EReportType,
+  IReportResponse,
 } from '../types/report';
 
 // ============================================
@@ -91,8 +93,43 @@ const getTargetId = (data: ICreateReportRequest): number => {
 
 // GET REPORTS LIST HOOK
 export const useGetAllReports = () => {
-  return useQuery({
-      queryKey: ["reports"],
-      queryFn: getAllReports,
-    });
+  return useQuery<IReportResponse[]>({
+    queryKey: reportKeys.all,
+    queryFn: getAllReports,
+  });
+};
+
+// RESOLVE REPORT HOOK
+interface ResolveReportVariables {
+  id: number;
+  type: EReportType;
+  action: 'APPROVE' | 'REJECT';
+}
+
+export const useResolveReport = () => {
+  const queryClient = useQueryClient();
+  const { showToast } = useToast();
+
+  return useMutation({
+    mutationFn: ({ id, type, action }: ResolveReportVariables) => 
+      resolveReport(id, type, action),
+
+    onSuccess: (_data, variables) => {
+      const actionText = variables.action === 'APPROVE' ? 'Chấp thuận' : 'Từ chối';
+      showToast({
+        type: 'success',
+        message: `Đã ${actionText} báo cáo thành công!`,
+      });
+
+      queryClient.invalidateQueries({ queryKey: reportKeys.all });
+    },
+
+    onError: (error: any) => {
+      const message = error?.response?.data?.message || 'Lỗi khi xử lý báo cáo';
+      showToast({
+        type: 'error',
+        message,
+      });
+    },
+  });
 };

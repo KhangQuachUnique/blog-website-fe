@@ -39,9 +39,26 @@ export const checkIfReported = async (
   return response as unknown as ICheckReportedResponse;
 };
 
-export const getAllReports = async (): Promise<IReportRespionseDTO[]> => {
-  const response = await axios.get<IReportRespionseDTO[]>("/reports/all");
-  return response;
+export const getAllReports = async (): Promise<IReportResponse[]> => {
+  const response = await axios.get("/reports/all");
+  return response as unknown as IReportResponse[];
+};
+
+/**
+ * ⚖️ Resolve a report (Approve/Reject)
+ * Endpoint: PATCH /reports/:id/resolve
+ * Body: { type, action }
+ */
+export const resolveReport = async (
+  id: number,
+  type: EReportType,
+  action: 'APPROVE' | 'REJECT'
+): Promise<IReportResponse> => {
+  const response = await axios.patch(`/reports/${id}/resolve`, {
+    type,
+    action,
+  });
+  return response as unknown as IReportResponse;
 };
 
 /**
