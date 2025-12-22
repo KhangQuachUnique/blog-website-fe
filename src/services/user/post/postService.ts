@@ -9,7 +9,6 @@ export const getPostById = async (
   postId: number
 ): Promise<IPostResponseDto> => {
   const response = await axios.get<IPostResponseDto>(`/blog-posts/${postId}`);
-  console.log("Fetched Post:", response);
   return response;
 };
 

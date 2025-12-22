@@ -7,7 +7,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import type { IPostResponseDto } from "../../types/post";
 import { EPostType } from "../../types/post";
 import InteractBar from "../interactBar/InteractBar";
-import { recordViewedPost } from "../../services/user/viewedHistory";
+import { recordViewedPost } from "../../services/user/viewedHistory/viewedHistory";
 import { useAuth } from "../../contexts/AuthContext";
 import { useGetPostById } from "../../hooks/usePost";
 import { stringAvatar } from "../../utils/avatarHelper";
