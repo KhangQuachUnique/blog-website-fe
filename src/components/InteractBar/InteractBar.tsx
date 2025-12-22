@@ -5,7 +5,6 @@ import {
   MessageCircle,
   MoreHorizontal,
   Share2,
-  Repeat2,
   Flag,
   Bookmark,
 } from "lucide-react";
@@ -15,6 +14,8 @@ import { EReportType } from "../../types/report";
 import VoteButton from "../VoteButton";
 import type { IVotesSummaryDto } from "../../types/user-vote";
 import { useToast } from "../../contexts/toast";
+import { RepostButton } from "../repost";
+import type { IPostResponseDto } from "../../types/post";
 
 // ============================================
 // 🎨 BLOOKIE DESIGN SYSTEM - PASTEL PINK EDITION
@@ -45,7 +46,6 @@ const THEME = {
 const MoreMenu: React.FC<{
   visible: boolean;
   onShare: () => void;
-  onRepost: () => void;
   onClose: () => void;
   postId: number;
   currentUserId: number;
@@ -54,7 +54,6 @@ const MoreMenu: React.FC<{
 }> = ({
   visible,
   onShare,
-  onRepost,
   onClose,
   postId,
   currentUserId,
@@ -136,11 +135,6 @@ const MoreMenu: React.FC<{
           label="Chia sẻ"
           onClick={onShare}
         />
-        <MenuItem
-          icon={<Repeat2 size={16} strokeWidth={2.5} />}
-          label="Đăng lại"
-          onClick={onRepost}
-        />
         <div
           style={{
             height: "1px",
@@ -180,6 +174,8 @@ interface InteractBarProps {
   /** Vote data từ post response */
   votes?: IVotesSummaryDto;
   totalComments?: number;
+  /** Post data để truyền vào RepostButton (chứa postType bên trong) */
+  post?: IPostResponseDto;
 }
 
 const InteractBar: React.FC<InteractBarProps> = ({
@@ -187,6 +183,8 @@ const InteractBar: React.FC<InteractBarProps> = ({
   userId,
   votes,
   totalComments = 0,
+  // postType không cần dùng trực tiếp ở đây, RepostButton tự xử lý
+  post,
 }) => {
   const navigate = useNavigate();
   const [showMoreMenu, setShowMoreMenu] = useState(false);
@@ -252,19 +250,6 @@ const InteractBar: React.FC<InteractBarProps> = ({
       message: "Link đã được sao chép vào clipboard",
       duration: 2000,
     });
-  };
-
-  const handleRepost = () => {
-    if (!isLoggedIn) {
-      showToast({
-        type: "error",
-        message: "Vui lòng đăng nhập để đăng lại bài viết",
-        duration: 3000,
-      });
-      setShowMoreMenu(false);
-      return;
-    }
-    setShowMoreMenu(false);
   };
 
   const handleCloseMoreMenu = () => {
@@ -392,10 +377,9 @@ const InteractBar: React.FC<InteractBarProps> = ({
           />
         </button>
 
-        <MoreMenu
+        <MoreMenu 
           visible={showMoreMenu}
           onShare={handleShare}
-          onRepost={handleRepost}
           onClose={handleCloseMoreMenu}
           postId={postId}
           currentUserId={userId}
@@ -409,6 +393,9 @@ const InteractBar: React.FC<InteractBarProps> = ({
           }}
         />
       </div>
+
+      {/* Repost Button - Hiển thị riêng, không trong MoreMenu */}
+      {post && <RepostButton post={post} userId={userId} size="md" />}
     </div>
   );
 };
