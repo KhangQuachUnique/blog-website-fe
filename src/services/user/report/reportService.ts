@@ -6,6 +6,7 @@ import type {
   IReportResponse,
   IReportListResponse,
   EReportType,
+  IReportRespionseDTO,
 } from '../../../types/report';
 
 /**
@@ -38,8 +39,13 @@ export const checkIfReported = async (
   return response as unknown as ICheckReportedResponse;
 };
 
+export const getAllReports = async (): Promise<IReportRespionseDTO[]> => {
+  const response = await axios.get<IReportRespionseDTO[]>("/reports/all");
+  return response;
+};
+
 /**
- * Get all reports (Admin)
+ * Get all reports (Admin) with pagination
  */
 export const getReports = async (
   page = 1,

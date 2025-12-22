@@ -3,6 +3,7 @@ import { useToast } from '../contexts/toast';
 import {
   createReport,
   checkIfReported,
+  getAllReports,
 } from '../services/user/report/reportService';
 import type {
   ICreateReportRequest,
@@ -85,4 +86,13 @@ const getTargetId = (data: ICreateReportRequest): number => {
   if (data.reportedCommentId) return data.reportedCommentId;
   if (data.reportedUserId) return data.reportedUserId;
   return 0;
+};
+
+
+// GET REPORTS LIST HOOK
+export const useGetAllReports = () => {
+  return useQuery({
+      queryKey: ["reports"],
+      queryFn: getAllReports,
+    });
 };
