@@ -6,11 +6,13 @@ import {
   GrowthChart,
   ErrorState,
   EmptyState,
+  TopKeywordsWidget,
 } from "./components";
 import dashboardApi, {
   type EPeriod,
   type DashboardStatsResponse,
   type DashboardChartsResponse,
+  type TopKeywordsResponse,
 } from "../../../services/admin/dashboard.service";
 
 const DashboardPage = () => {
@@ -18,6 +20,7 @@ const DashboardPage = () => {
   const [period, setPeriod] = useState<EPeriod>("7days");
   const [statsData, setStatsData] = useState<DashboardStatsResponse | null>(null);
   const [chartsData, setChartsData] = useState<DashboardChartsResponse | null>(null);
+  const [keywordsData, setKeywordsData] = useState<TopKeywordsResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -27,14 +30,16 @@ const DashboardPage = () => {
     setError(null);
 
     try {
-      // Fetch stats and charts in parallel
-      const [stats, charts] = await Promise.all([
+      // Fetch stats, charts, and keywords in parallel
+      const [stats, charts, keywords] = await Promise.all([
         dashboardApi.getStats({ period }),
         dashboardApi.getCharts({ period }),
+        dashboardApi.getTopKeywords({ period }, 10),
       ]);
 
       setStatsData(stats);
       setChartsData(charts);
+      setKeywordsData(keywords);
     } catch (err: any) {
       console.error("Dashboard fetch error:", err);
       // E1: API/DB Error
@@ -187,6 +192,14 @@ const DashboardPage = () => {
           title="Tăng trưởng Comments"
           data={charts.commentGrowth}
           color="#8B5CF6"
+        />
+      </div>
+
+      {/* Top Keywords Widget */}
+      <div className="mt-6">
+        <TopKeywordsWidget
+          keywords={keywordsData?.keywords || []}
+          isLoading={false}
         />
       </div>
     </div>

@@ -47,6 +47,16 @@ export interface DashboardChartsResponse {
   period: PeriodInfo;
 }
 
+export interface TopKeyword {
+  keyword: string;
+  count: number;
+}
+
+export interface TopKeywordsResponse {
+  keywords: TopKeyword[];
+  period: PeriodInfo;
+}
+
 // API Functions
 export const dashboardApi = {
   /**
@@ -81,6 +91,25 @@ export const dashboardApi = {
       `/api/admin/dashboard/charts?${params.toString()}`
     );
     return response as unknown as DashboardChartsResponse;
+  },
+
+  /**
+   * Get top search keywords
+   */
+  getTopKeywords: async (
+    filter: DashboardFilterParams = {},
+    limit: number = 10
+  ): Promise<TopKeywordsResponse> => {
+    const params = new URLSearchParams();
+    if (filter.period) params.append("period", filter.period);
+    if (filter.startDate) params.append("startDate", filter.startDate);
+    if (filter.endDate) params.append("endDate", filter.endDate);
+    params.append("limit", limit.toString());
+
+    const response = await axiosInstance.get(
+      `/api/admin/dashboard/top-keywords?${params.toString()}`
+    );
+    return response as unknown as TopKeywordsResponse;
   },
 };
 
