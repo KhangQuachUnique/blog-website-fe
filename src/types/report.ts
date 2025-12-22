@@ -11,6 +11,13 @@ export const EReportType = {
 
 export type EReportType = (typeof EReportType)[keyof typeof EReportType];
 
+export const EReportStatus = {
+  PENDING: 'PENDING',
+  RESOLVED: 'RESOLVED',
+}
+
+export type EReportStatus = (typeof EReportStatus)[keyof typeof EReportStatus];
+
 // Reporter summary
 export interface IReporterSummary {
   id: number;
@@ -93,3 +100,16 @@ export const REPORT_REASONS = [
 ] as const;
 
 export type ReportReasonValue = (typeof REPORT_REASONS)[number]['value'];
+
+
+export interface IReportRespionseDTO {
+  id: number;
+  reason: ReportReasonValue;
+  createdAt: Date | string;
+  typy: EReportType;
+  reporterId: number;
+  reportedUserId?: number | null;
+  reportedCommentId?: number | null;
+  reportedPostId?: number | null;
+  status: EReportStatus;
+}
