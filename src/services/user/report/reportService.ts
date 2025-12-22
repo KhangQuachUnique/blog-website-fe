@@ -6,7 +6,6 @@ import type {
   IReportResponse,
   IReportListResponse,
   EReportType,
-  IReportRespionseDTO,
 } from '../../../types/report';
 
 /**
