@@ -3,6 +3,8 @@
  * Match với Backend DTOs
  */
 
+import type { IPostResponseDto } from "./post";
+
 // ============================================
 // Request DTOs
 // ============================================
@@ -22,18 +24,8 @@ export interface SavedPostAuthor {
   avatarUrl?: string;
 }
 
-export interface SavedPostItem {
-  id: number;
-  savedAt: Date;
-  postId: number;
-  postTitle?: string;
-  postPreview?: string;
-  postThumbnail?: string;
-  author: SavedPostAuthor;
-}
-
 export interface SavedPostListResponse {
-  items: SavedPostItem[];
+  items: IPostResponseDto[];
   total: number;
   page: number;
   limit: number;

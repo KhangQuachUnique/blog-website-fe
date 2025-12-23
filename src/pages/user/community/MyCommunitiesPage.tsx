@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Users } from "lucide-react";
 import { type Community } from "../../../types/community";
 import {
   useCreateCommunity,
   useGetMyCommunities,
 } from "../../../hooks/useCommunity";
+import "../../../styles/savedPosts/SavedPosts.css";
 
 const MyCommunitiesPage = () => {
   const navigate = useNavigate();
@@ -66,13 +68,18 @@ const MyCommunitiesPage = () => {
     <div className="community-page">
       {/* ✅ WRAPPER để KHỚP kích cỡ với CommunityLayout.tsx (padding 150px) */}
       <div style={{ padding: "20px 150px" }}>
-        {/* Header */}
-        <header className="community-header">
-          <h2 className="community-header-title">Cộng đồng của bạn</h2>
-          <p className="community-header-sub">
-            Xem các cộng đồng bạn đang tham gia và tạo cộng đồng mới.
-          </p>
-        </header>
+        {/* Header (styled like SavedPostsPage) */}
+        <div className="saved-posts-header community-header">
+          <div className="saved-posts-header__left">
+            <Users size={28} className="saved-posts-header__icon" />
+            <div>
+              <h1 className="saved-posts-header__title">Cộng đồng của bạn</h1>
+              <p className="saved-posts-header__count">
+                {communities.length} cộng đồng
+              </p>
+            </div>
+          </div>
+        </div>
 
         {/* Thanh action: nút tạo cộng đồng */}
         <div
@@ -100,7 +107,9 @@ const MyCommunitiesPage = () => {
 
         {!isLoading && !isError && communities.length === 0 && (
           <div className="community-card">
-            <p style={{ marginBottom: 8 }}>Bạn chưa tham gia cộng đồng nào cả.</p>
+            <p style={{ marginBottom: 8 }}>
+              Bạn chưa tham gia cộng đồng nào cả.
+            </p>
             <button className="community-save-btn" onClick={handleOpenCreate}>
               Bắt đầu bằng cách tạo cộng đồng đầu tiên
             </button>
@@ -199,8 +208,14 @@ const MyCommunitiesPage = () => {
         {/* Modal tạo cộng đồng */}
         {openCreate && (
           <div className="community-modal-overlay" onClick={handleCloseCreate}>
-            <div className="community-modal" onClick={(e) => e.stopPropagation()}>
-              <button className="community-modal-close" onClick={handleCloseCreate}>
+            <div
+              className="community-modal"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                className="community-modal-close"
+                onClick={handleCloseCreate}
+              >
                 ×
               </button>
 
@@ -215,7 +230,9 @@ const MyCommunitiesPage = () => {
                   <input
                     className="community-input"
                     value={createForm.name}
-                    onChange={(e) => handleChangeCreateField("name", e.target.value)}
+                    onChange={(e) =>
+                      handleChangeCreateField("name", e.target.value)
+                    }
                     placeholder="Ví dụ: React Việt Nam"
                   />
                 </div>
@@ -233,13 +250,17 @@ const MyCommunitiesPage = () => {
                 </div>
 
                 <div style={{ marginBottom: 16 }}>
-                  <label className="community-field-label">Quyền riêng tư</label>
+                  <label className="community-field-label">
+                    Quyền riêng tư
+                  </label>
                   <div className="community-radio-group">
                     <label>
                       <input
                         type="radio"
                         checked={createForm.isPublic}
-                        onChange={() => handleChangeCreateField("isPublic", true)}
+                        onChange={() =>
+                          handleChangeCreateField("isPublic", true)
+                        }
                       />{" "}
                       Công khai (ai cũng xem được bài viết)
                     </label>
@@ -248,7 +269,9 @@ const MyCommunitiesPage = () => {
                       <input
                         type="radio"
                         checked={!createForm.isPublic}
-                        onChange={() => handleChangeCreateField("isPublic", false)}
+                        onChange={() =>
+                          handleChangeCreateField("isPublic", false)
+                        }
                       />{" "}
                       Riêng tư (chỉ thành viên xem được)
                     </label>
