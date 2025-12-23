@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { MdRefresh, MdAutorenew } from "react-icons/md";
+import { MdRefresh, MdAutorenew, MdCheckCircle, MdPendingActions } from "react-icons/md";
 import {
   BiChevronLeft,
   BiChevronRight,
@@ -7,47 +7,61 @@ import {
   BiChevronsRight,
 } from "react-icons/bi";
 import { FaExclamationTriangle } from "react-icons/fa";
-import { useGetAllReports, useResolveReport } from "../../../hooks/useReport";
+
+// Import 2 hook mới thay vì useGetAllReports
+import { 
+  useGetPendingReports, 
+  useGetResolvedReports, 
+  useResolveReport 
+} from "../../../hooks/useReport";
 import ReportTable from "../../../features/admin/reportManage/ReportTable";
 import type { IReportResponse, EReportType } from "../../../types/report";
 
-type ReportFilter = "ALL" | EReportType;
+type ReportTypeFilter = "ALL" | EReportType;
+type StatusFilter = "PENDING" | "RESOLVED"; // Định nghĩa bộ lọc trạng thái lớn
 
 const ITEMS_PER_PAGE = 10;
 
 const ReportListPage = () => {
   // --- STATE UI ---
   const [currentPage, setCurrentPage] = useState(1);
-  const [filterType, setFilterType] = useState<ReportFilter>("ALL");
+  const [typeFilter, setTypeFilter] = useState<ReportTypeFilter>("ALL");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("PENDING"); // Mặc định là PENDING
   const [actionLoading, setActionLoading] = useState<number | null>(null);
 
   // --- REACT QUERY HOOKS ---
-  const {
-    data: apiReports = [],
-    isLoading,
-    isError,
-    error,
-    refetch,
-    isFetching,
-  } = useGetAllReports();
-
+  // Gọi cả 2 hooks nhưng chỉ lấy data dựa trên statusFilter hiện tại
+  const pendingQuery = useGetPendingReports();
+  const resolvedQuery = useGetResolvedReports();
   const { mutate: resolveReport } = useResolveReport();
 
+  // Xác định query đang active dựa trên tab
+  const activeQuery = statusFilter === "PENDING" ? pendingQuery : resolvedQuery;
+  
+  const { 
+    data: apiData = [], 
+    isLoading, 
+    isError, 
+    error, 
+    refetch, 
+    isFetching 
+  } = activeQuery;
+
   // Ensure data is IReportResponse[]
-  const reports = apiReports as IReportResponse[];
+  const reports = (apiData || []) as IReportResponse[];
 
   // --- RESET PAGE KHI FILTER ---
   useEffect(() => {
     setCurrentPage(1);
-  }, [filterType]);
+  }, [typeFilter, statusFilter]);
 
-  // ================= FILTER LOGIC =================
+  // ================= FILTER LOGIC (Client-side sub-filter) =================
   const filteredReports = useMemo(() => {
-    if (filterType === "ALL") return reports;
-    return reports.filter((r) => r.type === filterType);
-  }, [reports, filterType]);
+    if (typeFilter === "ALL") return reports;
+    return reports.filter((r) => r.type === typeFilter);
+  }, [reports, typeFilter]);
 
-  // ================= STATS =================
+  // ================= STATS (Tính toán dựa trên list hiện tại) =================
   const stats = useMemo(() => {
     return {
       all: reports.length,
@@ -70,6 +84,11 @@ const ReportListPage = () => {
   );
 
   // --- HANDLERS ---
+  const getReportType = (reportId: number): EReportType => {
+    const report = reports.find((r) => r.id === reportId);
+    return report?.type || "POST";
+  };
+
   const handleApprove = (reportId: number) => {
     setActionLoading(reportId);
     resolveReport(
@@ -77,7 +96,7 @@ const ReportListPage = () => {
       {
         onSuccess: () => {
           setActionLoading(null);
-          refetch();
+          // Không cần refetch thủ công vì hook useResolveReport đã invalidate query key 'reports'
         },
         onError: () => {
           setActionLoading(null);
@@ -93,18 +112,12 @@ const ReportListPage = () => {
       {
         onSuccess: () => {
           setActionLoading(null);
-          refetch();
         },
         onError: () => {
           setActionLoading(null);
         },
       }
     );
-  };
-
-  const getReportType = (reportId: number): EReportType => {
-    const report = reports.find((r) => r.id === reportId);
-    return report?.type || "POST";
   };
 
   useEffect(() => {
@@ -176,51 +189,49 @@ const ReportListPage = () => {
           </button>
         </div>
 
-        {/* STATS CARDS */}
+        {/* --- MAIN STATUS TABS (Pending vs Resolved) --- */}
+        <div className="flex p-1 bg-gray-100 rounded-xl w-fit mb-6 border border-gray-200">
+            <button
+                onClick={() => setStatusFilter("PENDING")}
+                className={`flex items-center gap-2 px-6 py-2.5 rounded-lg font-bold transition-all ${
+                    statusFilter === "PENDING"
+                    ? "bg-white text-pink-600 shadow-md"
+                    : "text-gray-500 hover:text-gray-700"
+                }`}
+            >
+                <MdPendingActions size={20} />
+                Cần xử lý
+            </button>
+            <button
+                onClick={() => setStatusFilter("RESOLVED")}
+                className={`flex items-center gap-2 px-6 py-2.5 rounded-lg font-bold transition-all ${
+                    statusFilter === "RESOLVED"
+                    ? "bg-white text-green-600 shadow-md"
+                    : "text-gray-500 hover:text-gray-700"
+                }`}
+            >
+                <MdCheckCircle size={20} />
+                Đã giải quyết
+            </button>
+        </div>
+
+        {/* STATS CARDS (Dynamic based on Status Filter) */}
         <div className="grid grid-cols-4 gap-4 mb-6">
           {(["ALL", "USER", "POST", "COMMENT"] as const).map((type) => {
             const count = type === "ALL" ? stats.all : stats[type];
-            let colors = {
-              bg: "bg-blue-50",
-              text: "text-blue-700",
-              border: "border-blue-200",
-            };
-
-            if (type === "USER") {
-              colors = {
-                bg: "bg-red-50",
-                text: "text-red-700",
-                border: "border-red-200",
-              };
-            } else if (type === "POST") {
-              colors = {
-                bg: "bg-emerald-50",
-                text: "text-emerald-700",
-                border: "border-emerald-200",
-              };
-            } else if (type === "COMMENT") {
-              colors = {
-                bg: "bg-amber-50",
-                text: "text-amber-700",
-                border: "border-amber-200",
-              };
-            }
+            // Config màu sắc
+            let colors = { bg: "bg-blue-50", text: "text-blue-700", border: "border-blue-200" };
+            if (type === "USER") colors = { bg: "bg-red-50", text: "text-red-700", border: "border-red-200" };
+            else if (type === "POST") colors = { bg: "bg-emerald-50", text: "text-emerald-700", border: "border-emerald-200" };
+            else if (type === "COMMENT") colors = { bg: "bg-amber-50", text: "text-amber-700", border: "border-amber-200" };
 
             return (
               <div
                 key={type}
-                className={`${colors.bg} border-2 ${colors.border} rounded-xl p-4 text-center`}
+                className={`${colors.bg} border-2 ${colors.border} rounded-xl p-4 text-center transition-all hover:shadow-md`}
               >
-                <p
-                  className={`${colors.text} text-sm font-medium uppercase tracking-wide`}
-                >
-                  {type === "ALL"
-                    ? "Tất cả"
-                    : type === "USER"
-                    ? "Người dùng"
-                    : type === "POST"
-                    ? "Bài viết"
-                    : "Bình luận"}
+                <p className={`${colors.text} text-sm font-medium uppercase tracking-wide opacity-80`}>
+                  {type === "ALL" ? "Tổng số" : type}
                 </p>
                 <p className={`${colors.text} text-3xl font-bold mt-1`}>
                   {count}
@@ -230,27 +241,21 @@ const ReportListPage = () => {
           })}
         </div>
 
-        {/* FILTER TABS */}
+        {/* SUB FILTER TABS (Types) */}
         <div className="flex gap-3 overflow-x-auto pb-2">
-          {(["ALL", "USER", "POST", "COMMENT"] as ReportFilter[]).map((type) => {
-            const isActive = filterType === type;
+          {(["ALL", "USER", "POST", "COMMENT"] as ReportTypeFilter[]).map((type) => {
+            const isActive = typeFilter === type;
             return (
               <button
                 key={type}
-                onClick={() => setFilterType(type)}
+                onClick={() => setTypeFilter(type)}
                 className={`px-5 py-2.5 rounded-lg font-semibold transition whitespace-nowrap ${
                   isActive
                     ? "text-white bg-[#F295B6] border-2 border-[#F295B6]"
-                    : "bg-white border-2 text-gray-700 hover:border-[#F295B6] border-gray-200"
+                    : "bg-white border-2 text-gray-700 hover:bg-[#F295B6]/10 border-gray-200"
                 }`}
               >
-                {type === "ALL"
-                  ? "Tất cả"
-                  : type === "USER"
-                  ? "Người dùng"
-                  : type === "POST"
-                  ? "Bài viết"
-                  : "Bình luận"}
+                {type === "ALL" ? "Tất cả" : type}
               </button>
             );
           })}
@@ -258,15 +263,14 @@ const ReportListPage = () => {
       </div>
 
       {/* TABLE */}
+      {/* Truyền null vào onApprove/onReject nếu đang ở tab RESOLVED để ẩn nút */}
       <ReportTable
         reports={currentViewReports}
-        onApprove={handleApprove}
-        onReject={handleReject}
+        onApprove={statusFilter === "PENDING" ? handleApprove : undefined} 
+        onReject={statusFilter === "PENDING" ? handleReject : undefined}
         loadingId={actionLoading}
         emptyMessage={
-          filterType !== "ALL"
-            ? `Không có báo cáo nào với loại "${filterType}"`
-            : "Không có báo cáo nào"
+            `Không có báo cáo ${statusFilter === "PENDING" ? "chờ xử lý" : "trong lịch sử"} với loại "${typeFilter === 'ALL' ? 'Tất cả' : typeFilter}"`
         }
       />
 
@@ -292,7 +296,6 @@ const ReportListPage = () => {
               onClick={() => setCurrentPage(1)}
               disabled={currentPage === 1}
               className="p-2.5 rounded-lg border-2 border-[#F295B6] hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed"
-              title="Về trang đầu"
             >
               <BiChevronsLeft size={20} />
             </button>
@@ -301,7 +304,6 @@ const ReportListPage = () => {
               onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
               disabled={currentPage === 1}
               className="p-2.5 rounded-lg border-2 border-[#F295B6] hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed"
-              title="Trang trước"
             >
               <BiChevronLeft size={20} />
             </button>
@@ -315,11 +317,7 @@ const ReportListPage = () => {
               if (!isVisible && page !== 2 && page !== totalPages - 1)
                 return null;
               if (!isVisible && (page === 2 || page === totalPages - 1))
-                return (
-                  <span key={`dots-${page}`} className="px-2">
-                    ...
-                  </span>
-                );
+                return <span key={`dots-${page}`} className="px-2">...</span>;
 
               return (
                 <button
@@ -340,7 +338,6 @@ const ReportListPage = () => {
               onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
               disabled={currentPage === totalPages}
               className="p-2.5 rounded-lg border-2 border-[#F295B6] hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed"
-              title="Trang sau"
             >
               <BiChevronRight size={20} />
             </button>
@@ -349,7 +346,6 @@ const ReportListPage = () => {
               onClick={() => setCurrentPage(totalPages)}
               disabled={currentPage === totalPages}
               className="p-2.5 rounded-lg border-2 border-[#F295B6] hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed"
-              title="Đến trang cuối"
             >
               <BiChevronsRight size={20} />
             </button>

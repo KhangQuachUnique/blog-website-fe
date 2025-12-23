@@ -74,6 +74,24 @@ export const getReports = async (
 };
 
 /**
+ * ⏳ Get pending reports
+ * Endpoint: GET /reports/pending
+ */
+export const getPendingReports = async (): Promise<IReportResponse[]> => {
+  const response = await axios.get("/reports/pending");
+  return response as unknown as IReportResponse[];
+};
+
+/**
+ * ✅ Get resolved reports
+ * Endpoint: GET /reports/resolved
+ */
+export const getResolvedReports = async (): Promise<IReportResponse[]> => {
+  const response = await axios.get("/reports/resolved");
+  return response as unknown as IReportResponse[];
+};
+
+/**
  * Get reports for a specific post
  */
 export const getReportsByPost = async (

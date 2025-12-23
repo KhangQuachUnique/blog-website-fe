@@ -4,6 +4,8 @@ import {
   createReport,
   checkIfReported,
   getAllReports,
+  getPendingReports,
+  getResolvedReports,
   resolveReport,
 } from '../services/user/report/reportService';
 import type {
@@ -18,6 +20,8 @@ import type {
 // ============================================
 export const reportKeys = {
   all: ['reports'] as const,
+  pending: ['reports', 'pending'] as const,
+  resolved: ['reports', 'resolved'] as const,
   check: (type: EReportType, targetId: number) => 
     [...reportKeys.all, 'check', type, targetId] as const,
 };
@@ -91,11 +95,31 @@ const getTargetId = (data: ICreateReportRequest): number => {
 };
 
 
-// GET REPORTS LIST HOOK
+// ============================================
+// GET REPORTS LIST HOOKS
+// ============================================
+
+// 1. Get ALL reports
 export const useGetAllReports = () => {
   return useQuery<IReportResponse[]>({
     queryKey: reportKeys.all,
     queryFn: getAllReports,
+  });
+};
+
+// 2. Get PENDING reports (Mới thêm)
+export const useGetPendingReports = () => {
+  return useQuery<IReportResponse[]>({
+    queryKey: reportKeys.pending,
+    queryFn: getPendingReports,
+  });
+};
+
+// 3. Get RESOLVED reports (Mới thêm)
+export const useGetResolvedReports = () => {
+  return useQuery<IReportResponse[]>({
+    queryKey: reportKeys.resolved,
+    queryFn: getResolvedReports,
   });
 };
 

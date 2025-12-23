@@ -8,8 +8,9 @@ import type { IReportResponse, EReportType } from "../../../types/report";
 
 interface ReportTableProps {
   reports: IReportResponse[];
-  onApprove: (reportId: number) => void;
-  onReject: (reportId: number) => void;
+  // 👇 SỬA Ở ĐÂY: Thêm dấu ? để cho phép undefined
+  onApprove?: (reportId: number) => void;
+  onReject?: (reportId: number) => void;
   loadingId: number | null;
   emptyMessage?: string;
 }
@@ -76,7 +77,7 @@ const ReportTable: React.FC<ReportTableProps> = ({
     {
       id: "type",
       label: "Loại",
-      width: "120px",
+      width: "150px",
       align: "left",
       render: (report) => {
         const typeColor = getReportTypeColor(report.type);
@@ -182,8 +183,12 @@ const ReportTable: React.FC<ReportTableProps> = ({
     },
   ];
 
-  const actions: TableAction<IReportResponse>[] = [
-    {
+  // 👇 SỬA Ở ĐÂY: Tạo mảng actions rỗng ban đầu
+  const actions: TableAction<IReportResponse>[] = [];
+
+  // 👇 Chỉ thêm nút Approve nếu hàm onApprove tồn tại (tức là đang ở tab Pending)
+  if (onApprove) {
+    actions.push({
       id: "approve",
       tooltip: "Phê duyệt báo cáo",
       disabled: (report) => loadingId === report.id,
@@ -219,8 +224,12 @@ const ReportTable: React.FC<ReportTableProps> = ({
       onClick: (report) => {
         onApprove(report.id);
       },
-    },
-    {
+    });
+  }
+
+  // 👇 Chỉ thêm nút Reject nếu hàm onReject tồn tại
+  if (onReject) {
+    actions.push({
       id: "reject",
       tooltip: "Từ chối báo cáo",
       disabled: (report) => loadingId === report.id,
@@ -256,8 +265,8 @@ const ReportTable: React.FC<ReportTableProps> = ({
       onClick: (report) => {
         onReject(report.id);
       },
-    },
-  ];
+    });
+  }
 
   return (
     <GenericTable
