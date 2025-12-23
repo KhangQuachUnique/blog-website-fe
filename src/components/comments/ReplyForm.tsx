@@ -61,6 +61,11 @@ export const ReplyForm: React.FC<ReplyFormProps> = ({
             type: "success",
             duration: 3000,
           });
+          try {
+            onCancel();
+          } catch (e) {
+            // ignore if onCancel not provided or throws
+          }
         },
         onError: () => {
           showToast({
@@ -75,8 +80,8 @@ export const ReplyForm: React.FC<ReplyFormProps> = ({
 
   const textareaClass =
     size === "small"
-      ? "w-full p-2 text-sm border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-      : "w-full p-3 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500";
+      ? "w-full p-2 text-sm border border-gray-300 rounded-lg resize-none hover:border-[#F295B6] focus:border-[#F295B6] focus:ring-3 focus:ring-[#F295B6]/20 transition-all outline-none"
+      : "w-full p-3 border border-gray-300 rounded-lg resize-none hover:border-[#F295B6] focus:border-[#F295B6] focus:ring-3 focus:ring-[#F295B6]/20 transition-all outline-none";
 
   return (
     <form onSubmit={handleSubmit} className="reply-form">
@@ -102,7 +107,7 @@ export const ReplyForm: React.FC<ReplyFormProps> = ({
         <button
           type="submit"
           disabled={!content.trim() || isSubmitting}
-          className="px-4 py-1 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-4 py-1 text-sm bg-[#FEB2CD] text-white rounded-md hover:bg-[#F295B6] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-100"
         >
           {isSubmitting ? "Đang gửi..." : "Gửi"}
         </button>
