@@ -2,6 +2,7 @@ import React from "react";
 import { useGetBlockComments } from "../../hooks/useComments";
 import { CommentForm } from "./CommentForm";
 import { CommentItem } from "./CommentItem";
+import BlockCommentsSectionSkeleton from "../skeleton/BlockCommentsSectionSkeleton";
 
 interface BlockCommentsProps {
   blockId: number;
@@ -17,14 +18,7 @@ export const BlockCommentsSection: React.FC<BlockCommentsProps> = ({
   } = useGetBlockComments(blockId);
 
   if (getCommentsLoading) {
-    return (
-      <div className="comments-section">
-        <div className="flex justify-center items-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#FEB2CD]"></div>
-          <span className="ml-2 text-gray-600">Đang tải bình luận...</span>
-        </div>
-      </div>
-    );
+    return <BlockCommentsSectionSkeleton />;
   }
 
   if (getCommentsError) {
