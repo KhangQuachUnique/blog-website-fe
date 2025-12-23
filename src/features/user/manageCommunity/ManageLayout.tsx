@@ -72,14 +72,7 @@ const ManageLayout = () => {
     }
   };
 
-  // ✅ giữ nguyên "kích cỡ" theo CommunityLayout (padding 150px)
-  const headerWrapStyle: React.CSSProperties = {
-    padding: "20px 150px 0 150px",
-  };
-
-  const outletWrapStyle: React.CSSProperties = {
-    padding: "0 150px 40px 150px",
-  };
+  // Use shared community-content wrappers to match CommunityLayout sizing
 
   // MEMBER → chỉ xem
   if (role === "MEMBER") {
@@ -135,14 +128,9 @@ const ManageLayout = () => {
         <img src={coverSrc} alt="cover" />
       </div>
 
-      {/* ✅ Header + Tabs được bọc padding 150px */}
-      <div style={headerWrapStyle}>
-        <h2 className="community-header-title">{data.name}</h2>
+      <div className="community-content">
+        <h2 className="community-header-title !mb-5">{data.name}</h2>
         <p className="community-header-sub">{data.description}</p>
-
-        <p style={{ marginTop: 8 }}>
-          Vai trò của bạn: <strong>{role}</strong>
-        </p>
 
         <div
           style={{
@@ -185,7 +173,7 @@ const ManageLayout = () => {
 
           <div style={{ flex: 1 }} />
 
-          {/* ✅ chỉ ADMIN mới có nút xóa */}
+          {/* chỉ ADMIN mới có nút xóa */}
           {role === "ADMIN" && (
             <button
               className="btn-danger-community"
@@ -201,8 +189,7 @@ const ManageLayout = () => {
         </div>
       </div>
 
-      {/* ✅ Outlet cũng được bọc padding 150px => 3 tab khớp kích cỡ */}
-      <div style={outletWrapStyle}>
+      <div className="community-content community-content--outlet">
         <Outlet />
       </div>
 

@@ -16,7 +16,7 @@ const CreateCommunityPostPage = () => {
   const { id } = useParams<{ id: string }>();
   const communityId = Number(id);
 
-  // ✅ luôn gọi hooks đủ
+  // luôn gọi hooks đủ
   const safeCommunityId =
     Number.isFinite(communityId) && communityId > 0 ? communityId : 0;
 

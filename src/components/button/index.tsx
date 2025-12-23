@@ -18,7 +18,9 @@ const CustomButton = ({
   children,
   disabled = false,
 }: ButtonProps) => {
-  const classes = [className];
+  // Always include base `btn` class so consumers can rely on a shared base.
+  const classes = ["btn"];
+  if (className) classes.push(className);
   if (variant === "outline") classes.push("btn-outline");
   else classes.push("btn-default");
   if (disabled) classes.push("btn-disabled");
