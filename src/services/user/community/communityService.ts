@@ -16,6 +16,15 @@ export interface CommunityMember {
   user: { id: number; username: string; avatarUrl?: string | null };
 }
 
+export interface UpdateCommunitySettingsPayload {
+  name: string;
+  description: string;
+  thumbnailUrl?: string;
+  isPublic: boolean;
+  requirePostApproval: boolean;
+  requireMemberApproval: boolean;
+}
+
 // Lấy danh sách community của user hiện tại
 export async function getMyCommunities(): Promise<Community[]> {
   const res = await axios.get("/communities/my");
@@ -35,6 +44,14 @@ export const getCommunitySettings = async (
   communityId: number
 ): Promise<CommunitySettings> => {
   return axios.get(`/communities/${communityId}/settings`);
+};
+
+// ✅ Update settings (dùng cho trang /manage/settings)
+export const updateCommunitySettings = (
+  communityId: number,
+  payload: UpdateCommunitySettingsPayload
+) => {
+  return axios.patch(`/communities/${communityId}`, payload);
 };
 
 // Members (public tab): BE mặc định Not(PENDING) nên OK
@@ -69,9 +86,12 @@ export const updateCommunityMemberRole = (
 // ✅ Kick / Reject
 export const removeCommunityMember = (
   communityId: number,
-  memberId: number
+  memberId: number,
+  opts?: { ban?: boolean }
 ) => {
-  return axios.delete(`/communities/${communityId}/members/${memberId}`);
+  return axios.delete(`/communities/${communityId}/members/${memberId}`,
+    opts?.ban ? { params: { ban: 1 } } : undefined
+  );
 };
 
 // ✅ Leave community (rời cộng đồng)

@@ -12,8 +12,7 @@ import { Search } from "lucide-react";
 import { useGetPostById } from "../../../hooks/usePost";
 import TextBlock from "../../../components/block/textBlock";
 import ImageBlock from "../../../components/block/imageBlock";
-import { CommentsSection } from "../../../components/comments/CommentsSection";
-import { BlockCommentsSidebar } from "../../../components/comments/BlockCommentsSidebar";
+import { PostCommentsSection } from "../../../components/comments/PostCommentsSection";
 import { SearchSidebar } from "../../../components/searchBar/SearchSidebar";
 import { useAuthUser } from "../../../hooks/useAuth";
 
@@ -28,6 +27,7 @@ import ReactionSection from "../../../components/Emoji";
 import { useQueryClient } from "@tanstack/react-query";
 import type { IPostResponseDto } from "../../../types/post";
 import DetailPostSkeleton from "../../../components/skeleton/DetailPostSkeleton";
+import { BlockCommentButton } from "../../../components/comments/BlockCommentButton";
 
 // ============================================
 // Types
@@ -97,12 +97,6 @@ const PostDetailsPage: React.FC = () => {
   const [containerWidth, setContainerWidth] = useState<number>(
     GRID_SETTINGS.width
   );
-
-  // State quản lý block đang được chọn để bình luận (cả Text và Image)
-  const [selectedBlock, setSelectedBlock] = useState<{
-    id: number;
-    url?: string;
-  } | null>(null);
 
   // State cho tính năng tô đen tìm kiếm
   const [selection, setSelection] = useState<{
@@ -197,12 +191,6 @@ const PostDetailsPage: React.FC = () => {
       }
     : null;
 
-  // Handler click vào block (cả Text và Image)
-  const handleBlockClick = (blockId: number, type: string, content: string) => {
-    const imageUrl = type === EBlockType.IMAGE ? content : undefined;
-    setSelectedBlock({ id: blockId, url: imageUrl });
-  };
-
   // ============================================
   // Early returns
   // ============================================
@@ -243,10 +231,7 @@ const PostDetailsPage: React.FC = () => {
     const w = x + wClamped > COLS ? Math.max(1, COLS - x) : wClamped;
 
     const baseH = Math.max(1, Math.floor(b.height));
-    const hasCaption =
-      b.type === EBlockType.IMAGE &&
-      Boolean(b.imageCaption && String(b.imageCaption).trim().length > 0);
-    const h = baseH + (hasCaption ? 1 : 0);
+    const h = baseH;
 
     return {
       i: String(b.id),
@@ -378,62 +363,33 @@ const PostDetailsPage: React.FC = () => {
               draggableCancel=".rgl-no-drag"
               isDroppable={false}
             >
-              {blocks.map((block) => {
-                const isInteractable =
-                  block.type === EBlockType.IMAGE ||
-                  block.type === EBlockType.TEXT;
-                const isImage = block.type === EBlockType.IMAGE;
-
-                // [ADD] Chỉ cho comment block khi KHÔNG review mode và có user
-                const canCommentBlock =
-                  isInteractable && !isReviewMode && !!normalizedUser;
-
-                return (
-                  <div
-                    key={block.id}
-                    className={`
-                      ${BLOCK_WRAPPER.readMode}
-                      ${BLOCK_WRAPPER.default}
-                      h-full
-                      ${
-                        canCommentBlock
-                          ? "cursor-pointer group hover:ring-2 hover:ring-blue-300 transition-all relative"
-                          : ""
-                      }
-                    `}
-                    onClick={(e) => {
-                      if (!canCommentBlock) return; // [CHANGE]
-                      const selection = window.getSelection();
-                      if (selection && selection.toString().length > 0) return;
-                      if ((e.target as HTMLElement).closest("a")) return;
-                      handleBlockClick(block.id, block.type, block.content);
-                    }}
-                  >
-                    {block.type === EBlockType.TEXT ? (
-                      <TextBlock
-                        id={String(block.id)}
-                        content={block.content || ""}
-                      />
-                    ) : (
-                      <ImageBlock
-                        id={String(block.id)}
-                        imageUrl={block.content}
-                        imageCaption={block.imageCaption}
-                        objectFit={parseObjectFit(block.objectFit)}
-                      />
-                    )}
-
-                    {/* [CHANGE] Ẩn overlay comment khi review mode */}
-                    {canCommentBlock && (
-                      <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-black/60 text-white text-xs px-2 py-1 rounded-full pointer-events-none z-10 flex items-center gap-1">
-                        <span>
-                          💬 {isImage ? "Bình luận ảnh" : "Bình luận đoạn này"}
-                        </span>
-                      </div>
-                    )}
+              {blocks.map((block) => (
+                <div
+                  key={block.id}
+                  className={`
+                    ${BLOCK_WRAPPER.readMode}
+                    ${BLOCK_WRAPPER.default}
+                    h-full relative group hover:z-10
+                  `}
+                >
+                  {block.type === EBlockType.TEXT ? (
+                    <TextBlock
+                      id={String(block.id)}
+                      content={block.content || ""}
+                    />
+                  ) : (
+                    <ImageBlock
+                      id={String(block.id)}
+                      imageUrl={block.content}
+                      imageCaption={block.imageCaption}
+                      objectFit={parseObjectFit(block.objectFit)}
+                    />
+                  )}
+                  <div className="absolute top-[40%] right-[35px] opacity-0 p-2 z-10 group-hover:right-[-35px] group-hover:opacity-100 transition-all duration-200">
+                    <BlockCommentButton blockId={block.id} />
                   </div>
-                );
-              })}
+                </div>
+              ))}
             </GridLayout>
           </div>
         )}
@@ -442,19 +398,8 @@ const PostDetailsPage: React.FC = () => {
       {/* [CHANGE] Ẩn Post Comments khi review mode */}
       {!isReviewMode && normalizedUser && (
         <div style={{ width: GRID_SETTINGS.width, marginTop: 32 }}>
-          <CommentsSection postId={postData.id} currentUser={normalizedUser} />
+          <PostCommentsSection postId={postData.id} />
         </div>
-      )}
-
-      {/* [CHANGE] Ẩn Block Comments Sidebar khi review mode */}
-      {!isReviewMode && normalizedUser && (
-        <BlockCommentsSidebar
-          isOpen={!!selectedBlock}
-          onClose={() => setSelectedBlock(null)}
-          blockId={selectedBlock?.id || 0}
-          imageUrl={selectedBlock?.url}
-          currentUser={normalizedUser}
-        />
       )}
 
       {/* Sidebar Search Text */}
