@@ -44,8 +44,8 @@ export function useRemoveMember(communityId: number) {
   const qc = useQueryClient();
 
   return useMutation({
-    mutationFn: (memberId: number) =>
-      removeCommunityMember(communityId, memberId),
+    mutationFn: (p: { memberId: number; ban?: boolean }) =>
+      removeCommunityMember(communityId, p.memberId, { ban: p.ban }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["manage-community-members", communityId] });
       qc.invalidateQueries({ queryKey: ["community-members", communityId] });
