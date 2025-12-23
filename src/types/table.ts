@@ -34,6 +34,17 @@ export interface TableAction<T extends ITableRow> {
 }
 
 /**
+ * Action Column configuration for GenericTable - Multiple action columns support
+ */
+export interface ActionColumn<T extends ITableRow> {
+  id: string;
+  label?: string;
+  width?: string;
+  align?: "left" | "center" | "right";
+  actions: TableAction<T>[];
+}
+
+/**
  * Bloogie theme color palette for tables
  */
 export const BLOOGIE_COLORS = {

@@ -1,12 +1,13 @@
 import React from 'react';
 import { Box, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
-import type { ITableRow, TableColumn, TableAction } from '../../types/table';
+import type { ITableRow, TableColumn, TableAction, ActionColumn } from '../../types/table';
 import { BLOOGIE_COLORS } from '../../types/table';
 
 interface GenericTableProps<T extends ITableRow> {
   data: T[];
   columns: TableColumn<T>[];
   actions?: TableAction<T>[];
+  actionColumns?: ActionColumn<T>[];
   emptyMessage?: string;
   loading?: boolean;
 }
@@ -14,6 +15,10 @@ interface GenericTableProps<T extends ITableRow> {
 /**
  * GenericTable - A reusable table component supporting any data type
  * Maintains Bloogie design language and supports custom rendering and actions
+ * 
+ * Features:
+ * - Single action column (legacy): Use `actions` prop
+ * - Multiple action columns: Use `actionColumns` prop for multiple columns with different actions
  */
 const GenericTable = React.forwardRef<HTMLDivElement, GenericTableProps<any>>(
   (
@@ -21,6 +26,7 @@ const GenericTable = React.forwardRef<HTMLDivElement, GenericTableProps<any>>(
       data,
       columns,
       actions = [],
+      actionColumns = [],
       emptyMessage = 'Không có dữ liệu',
       loading = false,
     },
@@ -92,6 +98,18 @@ const GenericTable = React.forwardRef<HTMLDivElement, GenericTableProps<any>>(
                   Hành động
                 </TableCell>
               )}
+              {actionColumns.map((actionCol) => (
+                <TableCell
+                  key={actionCol.id}
+                  align={actionCol.align || 'center'}
+                  sx={{
+                    fontFamily: '"Outfit", "Montserrat", sans-serif',
+                    width: actionCol.width || '130px'
+                  }}
+                >
+                  {actionCol.label || 'Hành động'}
+                </TableCell>
+              ))}
             </TableRow>
           </TableHead>
 
@@ -175,6 +193,50 @@ const GenericTable = React.forwardRef<HTMLDivElement, GenericTableProps<any>>(
                     </Box>
                   </TableCell>
                 )}
+                {actionColumns.map((actionCol) => (
+                  <TableCell
+                    key={actionCol.id}
+                    align={actionCol.align || 'center'}
+                    sx={{
+                      px: 2,
+                      py: 2,
+                      verticalAlign: 'middle',
+                    }}
+                  >
+                    <Box sx={{ display: 'flex', gap: 1, justifyContent: actionCol.align === 'left' ? 'flex-start' : actionCol.align === 'right' ? 'flex-end' : 'center', flexWrap: 'wrap' }}>
+                      {actionCol.actions
+                        .filter((action) => !action.visible || action.visible(row))
+                        .map((action) => (
+                          <Box
+                            key={action.id}
+                            component="button"
+                            onClick={() => action.onClick(row)}
+                            disabled={action.disabled?.(row) || false}
+                            title={action.tooltip}
+                            sx={{
+                              padding: '8px 12px',
+                              border: 'none',
+                              borderRadius: '6px',
+                              cursor: action.disabled?.(row) ? 'not-allowed' : 'pointer',
+                              opacity: action.disabled?.(row) ? 0.5 : 1,
+                              transition: 'all 0.2s',
+                              background: 'transparent',
+                              fontSize: typeof action.icon === 'string' ? '16px' : 'inherit',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                              '&:hover:not(:disabled)': {
+                                opacity: 0.8,
+                              },
+                            }}
+                          >
+                            {typeof action.icon === 'string' ? action.icon : action.icon?.(row)}
+                            {action.label && <span>{action.label}</span>}
+                          </Box>
+                        ))}
+                    </Box>
+                  </TableCell>
+                ))}
               </TableRow>
             ))}
           </TableBody>

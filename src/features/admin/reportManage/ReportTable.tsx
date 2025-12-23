@@ -2,7 +2,7 @@ import React from "react";
 import { MdCheckCircle, MdClose, MdAutorenew } from "react-icons/md";
 import { Box } from "@mui/material";
 import GenericTable from "../../../components/table/GenericTable";
-import type { TableColumn, TableAction } from "../../../types/table";
+import type { TableColumn, TableAction, ActionColumn } from "../../../types/table";
 import { BLOOGIE_COLORS as colors } from "../../../types/table";
 import type { IReportResponse, EReportType } from "../../../types/report";
 
@@ -183,88 +183,104 @@ const ReportTable: React.FC<ReportTableProps> = ({
     },
   ];
 
-  // 👇 SỬA Ở ĐÂY: Tạo mảng actions rỗng ban đầu
-  const actions: TableAction<IReportResponse>[] = [];
+  // 👇 TẠO MULTIPLE ACTION COLUMNS
+  const actionColumns: ActionColumn<IReportResponse>[] = [];
 
-  // 👇 Chỉ thêm nút Approve nếu hàm onApprove tồn tại (tức là đang ở tab Pending)
+  // 👇 CỘT ACTION 1: PHÊ DUYỆT BÁNG CÁO (Phê duyệt - Approve)
   if (onApprove) {
-    actions.push({
-      id: "approve",
-      tooltip: "Phê duyệt báo cáo",
-      disabled: (report) => loadingId === report.id,
-      icon: (report) => {
-        const isLoading = loadingId === report.id;
-        return (
-          <Box
-            sx={{
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              padding: "8px",
-              color: "#059669",
-              backgroundColor: "#ecfdf5",
-              border: "2px solid #a7f3d0",
-              borderRadius: "6px",
-              cursor: isLoading ? "not-allowed" : "pointer",
-              transition: "all 0.2s",
-              "&:hover:not(:disabled)": {
-                backgroundColor: "#d1fae5",
-                borderColor: "#6ee7b7",
-              },
-            }}
-          >
-            {isLoading ? (
-              <MdAutorenew className="animate-spin" size={18} />
-            ) : (
-              <MdCheckCircle size={18} />
-            )}
-          </Box>
-        );
-      },
-      onClick: (report) => {
-        onApprove(report.id);
-      },
+    actionColumns.push({
+      id: "approve-column",
+      label: "Phê duyệt",
+      width: "130px",
+      align: "center",
+      actions: [
+        {
+          id: "approve",
+          tooltip: "Phê duyệt báo cáo",
+          disabled: (report) => loadingId === report.id,
+          icon: (report) => {
+            const isLoading = loadingId === report.id;
+            return (
+              <Box
+                sx={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: "8px",
+                  color: "#059669",
+                  backgroundColor: "#ecfdf5",
+                  border: "2px solid #a7f3d0",
+                  borderRadius: "6px",
+                  cursor: isLoading ? "not-allowed" : "pointer",
+                  transition: "all 0.2s",
+                  "&:hover:not(:disabled)": {
+                    backgroundColor: "#d1fae5",
+                    borderColor: "#6ee7b7",
+                  },
+                }}
+              >
+                {isLoading ? (
+                  <MdAutorenew className="animate-spin" size={18} />
+                ) : (
+                  <MdCheckCircle size={18} />
+                )}
+              </Box>
+            );
+          },
+          onClick: (report) => {
+            onApprove(report.id);
+          },
+        },
+      ],
     });
   }
 
-  // 👇 Chỉ thêm nút Reject nếu hàm onReject tồn tại
+  // 👇 CỘT ACTION 2: TỪ CHỐI BÁNG CÁO (Từ chối - Reject)
   if (onReject) {
-    actions.push({
-      id: "reject",
-      tooltip: "Từ chối báo cáo",
-      disabled: (report) => loadingId === report.id,
-      icon: (report) => {
-        const isLoading = loadingId === report.id;
-        return (
-          <Box
-            sx={{
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              padding: "8px",
-              color: "#dc2626",
-              backgroundColor: "#fef2f2",
-              border: "2px solid #fecaca",
-              borderRadius: "6px",
-              cursor: isLoading ? "not-allowed" : "pointer",
-              transition: "all 0.2s",
-              "&:hover:not(:disabled)": {
-                backgroundColor: "#fee2e2",
-                borderColor: "#fca5a5",
-              },
-            }}
-          >
-            {isLoading ? (
-              <MdAutorenew className="animate-spin" size={18} />
-            ) : (
-              <MdClose size={18} />
-            )}
-          </Box>
-        );
-      },
-      onClick: (report) => {
-        onReject(report.id);
-      },
+    actionColumns.push({
+      id: "reject-column",
+      label: "Từ chối",
+      width: "130px",
+      align: "center",
+      actions: [
+        {
+          id: "reject",
+          tooltip: "Từ chối báo cáo",
+          disabled: (report) => loadingId === report.id,
+          icon: (report) => {
+            const isLoading = loadingId === report.id;
+            return (
+              <Box
+                sx={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: "8px",
+                  color: "#dc2626",
+                  backgroundColor: "#fef2f2",
+                  border: "2px solid #fecaca",
+                  borderRadius: "6px",
+                  cursor: isLoading ? "not-allowed" : "pointer",
+                  transition: "all 0.2s",
+                  "&:hover:not(:disabled)": {
+                    backgroundColor: "#fee2e2",
+                    borderColor: "#fca5a5",
+                  },
+                }}
+              >
+                {isLoading ? (
+                  <MdAutorenew className="animate-spin" size={18} />
+                ) : (
+                  <MdClose size={18} />
+                )}
+              </Box>
+            );
+          },
+          onClick: (report) => {
+            onReject(report.id);
+          },
+        },
+      ],
     });
   }
 
@@ -272,7 +288,7 @@ const ReportTable: React.FC<ReportTableProps> = ({
     <GenericTable
       data={reports}
       columns={columns}
-      actions={actions}
+      actionColumns={actionColumns}
       emptyMessage={emptyMessage}
     />
   );
