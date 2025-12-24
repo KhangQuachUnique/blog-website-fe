@@ -1,24 +1,24 @@
-import React, { useState } from 'react';
-import { Repeat2 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import RepostModal from './RepostModal';
-import type { RepostFormData } from './RepostModal';
-import { useCreateRepost } from '../../hooks/useRepost';
-import { useToast } from '../../contexts/toast';
-import type { IPostResponseDto } from '../../types/post';
-import { EPostType as PostTypeEnum } from '../../types/post';
+import React, { useState } from "react";
+import { Repeat2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import RepostModal from "./RepostModal";
+import type { RepostFormData } from "./RepostModal";
+import { useCreateRepost } from "../../hooks/useRepost";
+import { useToast } from "../../contexts/toast";
+import type { IPostResponseDto } from "../../types/post";
+import { EPostType as PostTypeEnum } from "../../types/post";
 
 // ============================================
 // 🎨 THEME - Đồng bộ với design system
 // ============================================
 const THEME = {
-  primary: '#F295B6',
-  secondary: '#FFB8D1',
-  tertiary: '#FFE7F0',
-  text: '#4A3C42',
-  textMuted: '#8B7B82',
-  white: '#FFFFFF',
-  shadowSoft: '0 2px 12px rgba(242, 149, 182, 0.15)',
+  primary: "#999999",
+  secondary: "#FFB8D1",
+  tertiary: "#FFE7F0",
+  text: "#4A3C42",
+  textMuted: "#8B7B82",
+  white: "#FFFFFF",
+  shadowSoft: "0 2px 12px rgba(242, 149, 182, 0.15)",
 };
 
 // ============================================
@@ -30,7 +30,7 @@ export interface RepostButtonProps {
   /** ID của user hiện tại */
   userId: number;
   /** Kích thước nút: 'sm' | 'md' | 'lg' */
-  size?: 'sm' | 'md' | 'lg';
+  size?: "sm" | "md" | "lg";
   /** Hiển thị label text bên cạnh icon */
   showLabel?: boolean;
   /** Custom className */
@@ -40,14 +40,17 @@ export interface RepostButtonProps {
   /** Callback khi repost thất bại */
   onError?: (error: Error) => void;
   /** Custom render button (cho phép tùy chỉnh hoàn toàn) */
-  renderButton?: (props: { onClick: () => void; disabled: boolean }) => React.ReactNode;
+  renderButton?: (props: {
+    onClick: () => void;
+    disabled: boolean;
+  }) => React.ReactNode;
 }
 
 // Size configurations
 const SIZE_CONFIG = {
-  sm: { iconSize: 14, padding: '4px 8px', fontSize: '11px' },
-  md: { iconSize: 16, padding: '6px 10px', fontSize: '12px' },
-  lg: { iconSize: 20, padding: '8px 14px', fontSize: '14px' },
+  sm: { iconSize: 16, padding: "4px 8px", fontSize: "11px" },
+  md: { iconSize: 20, padding: "6px 10px", fontSize: "12px" },
+  lg: { iconSize: 24, padding: "8px 14px", fontSize: "14px" },
 };
 
 // ============================================
@@ -56,7 +59,7 @@ const SIZE_CONFIG = {
 const RepostButton: React.FC<RepostButtonProps> = ({
   post,
   userId,
-  size = 'md',
+  size = "md",
   showLabel = false,
   className,
   onSuccess,
@@ -66,13 +69,12 @@ const RepostButton: React.FC<RepostButtonProps> = ({
   const navigate = useNavigate();
   const { showToast } = useToast();
   const [showModal, setShowModal] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
 
   // Repost mutation hook
   const { mutate: createRepost, isPending: isReposting } = useCreateRepost();
 
   const isLoggedIn = userId > 0;
-  
+
   // Không cho phép repost bài repost (chỉ repost bài gốc PERSONAL hoặc COMMUNITY)
   const canRepost = post.type !== PostTypeEnum.REPOST;
 
@@ -80,8 +82,8 @@ const RepostButton: React.FC<RepostButtonProps> = ({
   const handleClick = () => {
     if (!canRepost) {
       showToast({
-        type: 'info',
-        message: 'Không thể đăng lại bài viết này',
+        type: "info",
+        message: "Không thể đăng lại bài viết này",
         duration: 2000,
       });
       return;
@@ -89,8 +91,8 @@ const RepostButton: React.FC<RepostButtonProps> = ({
 
     if (!isLoggedIn) {
       showToast({
-        type: 'error',
-        message: 'Vui lòng đăng nhập để đăng lại bài viết',
+        type: "error",
+        message: "Vui lòng đăng nhập để đăng lại bài viết",
         duration: 3000,
       });
       return;
@@ -111,11 +113,11 @@ const RepostButton: React.FC<RepostButtonProps> = ({
         onSuccess: (newPost) => {
           setShowModal(false);
           showToast({
-            type: 'success',
-            message: 'Đăng lại bài viết thành công!',
+            type: "success",
+            message: "Đăng lại bài viết thành công!",
             duration: 3000,
           });
-          
+
           if (onSuccess) {
             onSuccess(newPost);
           } else {
@@ -127,11 +129,11 @@ const RepostButton: React.FC<RepostButtonProps> = ({
         },
         onError: (error) => {
           showToast({
-            type: 'error',
+            type: "error",
             message: `Lỗi khi đăng lại: ${error.message}`,
             duration: 3000,
           });
-          
+
           if (onError) {
             onError(error);
           }
@@ -173,34 +175,22 @@ const RepostButton: React.FC<RepostButtonProps> = ({
       <button
         onClick={handleClick}
         disabled={isDisabled}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-        className={className}
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: '4px',
-          padding: sizeConfig.padding,
-          background: isHovered ? THEME.tertiary : THEME.white,
-          border: `1.5px solid ${THEME.secondary}`,
-          borderRadius: '50px',
-          cursor: isDisabled ? 'not-allowed' : 'pointer',
-          opacity: isDisabled ? 0.5 : 1,
-          boxShadow: THEME.shadowSoft,
-          transition: 'all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
-          transform: isHovered && !isDisabled ? 'scale(1.05)' : 'scale(1)',
-          fontFamily: "'Quicksand', sans-serif",
-        }}
-        title="Đăng lại"
+        className={`${
+          className || ""
+        } flex items-center gap-4 rounded-lg transition-all duration-200 group ${
+          isDisabled
+            ? "cursor-not-allowed opacity-50"
+            : "cursor-pointer bg-white"
+        }`}
       >
         <Repeat2
           size={sizeConfig.iconSize}
           strokeWidth={2.5}
           style={{
             color: THEME.primary,
-            transition: 'all 0.2s ease',
+            transition: "all 0.2s ease",
           }}
+          className="group-hover:translate-y-[-2px]"
         />
         {showLabel && (
           <span

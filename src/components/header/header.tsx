@@ -87,9 +87,7 @@ const Header = ({ layout, collapsed, setCollapsed }: HeaderProps) => {
         {collapsed && <HiMenuAlt2 fontSize={28} style={{ color: "#F295B6" }} />}
       </button>
       <div className="flex items-center gap-4">
-        {layout === "user" && (
-          <SearchBar value={search} onChange={onSearchChange} />
-        )}
+        {layout === "user" && <SearchBar />}
         {!isAuthenticated ? (
           <div className="flex items-center gap-4">
             <NavLink

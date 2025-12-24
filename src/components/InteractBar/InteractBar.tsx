@@ -1,13 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { useNavigate } from "react-router-dom";
-import {
-  MessageCircle,
-  MoreHorizontal,
-  Share2,
-  Flag,
-  Bookmark,
-} from "lucide-react";
+import { MoreHorizontal, Share2, Flag, Bookmark } from "lucide-react";
 import { useCheckSaved, useToggleSavePost } from "../../hooks/useSavedPost";
 import ReportButton from "../report/ReportButton";
 import { EReportType } from "../../types/report";
@@ -227,13 +220,10 @@ const InteractBar: React.FC<InteractBarProps> = ({
   postId,
   userId,
   votes,
-  totalComments = 0,
   // postType không cần dùng trực tiếp ở đây, RepostButton tự xử lý
   post,
 }) => {
-  const navigate = useNavigate();
   const [showMoreMenu, setShowMoreMenu] = useState(false);
-  const [commentHovered, setCommentHovered] = useState(false);
   const [moreHovered, setMoreHovered] = useState(false);
   const wrapperRef = React.useRef<HTMLDivElement | null>(null);
   const { showToast } = useToast();
@@ -254,7 +244,8 @@ const InteractBar: React.FC<InteractBarProps> = ({
 
   // Bookmark with login check
   const onBookmarkClick = () => {
-    if (!requireLogin({ message: "Vui lòng đăng nhập để lưu bài viết" })) return;
+    if (!requireLogin({ message: "Vui lòng đăng nhập để lưu bài viết" }))
+      return;
     toggleSave(
       { userId, postId },
       {
@@ -300,7 +291,6 @@ const InteractBar: React.FC<InteractBarProps> = ({
     });
   };
 
-
   const handleCloseMoreMenu = () => {
     setShowMoreMenu(false);
   };
@@ -317,10 +307,10 @@ const InteractBar: React.FC<InteractBarProps> = ({
       ref={wrapperRef}
       style={{
         display: "flex",
-        alignItems: "center",
+        width: "100%",
         justifyContent: "space-between",
-        gap: "10px",
-        padding: "8px 12px",
+        gap: "24px",
+        padding: "8px",
         paddingBottom: `${computedPaddingBottom}px`,
         borderRadius: "0 0 10px 10px",
         fontFamily: "'Quicksand', sans-serif",
@@ -329,127 +319,90 @@ const InteractBar: React.FC<InteractBarProps> = ({
     >
       {/* ===== LEFT: Vote Group ===== */}
       <VoteButton postId={postId} userId={userId} votes={votes} size="md" />
-
-      {/* ===== MIDDLE: Bookmark Button ===== */}
-      <button
-        onClick={onBookmarkClick}
-        disabled={isSaving}
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "5px",
-          cursor: isSaving ? "not-allowed" : "pointer",
-          opacity: isSaving ? 0.5 : 1,
-          boxShadow: THEME.shadowSoft,
-          transition: "all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)",
-        }}
-      >
-        <div className="hover:translate-y-[-2px] transition-transform duration-100">
-          <Bookmark
-            size={23}
-            strokeWidth={2.5}
-            fill={isSaved ? THEME.primary : "none"}
-            style={{
-              color: isSaved ? THEME.primary : THEME.textMuted,
-              transition: "all 0.2s ease",
-            }}
-          />
-        </div>
-      </button>
-
-      {/* Comment Button */}
-      <button
-        onClick={() => navigate(`/post/${postId}`)}
-        onMouseEnter={() => setCommentHovered(true)}
-        onMouseLeave={() => setCommentHovered(false)}
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "4px",
-          padding: "6px 10px",
-          background: commentHovered ? THEME.tertiary : THEME.white,
-          border: `1.5px solid ${THEME.secondary}`,
-          borderRadius: "50px",
-          cursor: "pointer",
-          boxShadow: THEME.shadowSoft,
-          transition: "all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)",
-          transform: commentHovered ? "scale(1.05)" : "scale(1)",
-        }}
-      >
-        <MessageCircle
-          size={14}
-          strokeWidth={2.5}
-          style={{ color: THEME.primary }}
-        />
-        <span
-          style={{
-            fontSize: "12px",
-            fontWeight: 600,
-            color: THEME.text,
-            fontFamily: "'Quicksand', sans-serif",
-          }}
-        >
-          {totalComments}
-        </span>
-      </button>
-
-      {/* More Menu Button */}
-      <div ref={moreMenuRef} style={{ position: "relative" }}>
+      <div className="flex items-center gap-4">
+        {/* ===== MIDDLE: Bookmark Button ===== */}
         <button
-          ref={moreButtonRef}
-          onClick={(e) => {
-            e.stopPropagation();
-            setShowMoreMenu(!showMoreMenu);
-          }}
-          onMouseEnter={() => setMoreHovered(true)}
-          onMouseLeave={() => setMoreHovered(false)}
+          onClick={onBookmarkClick}
+          disabled={isSaving}
           style={{
             display: "flex",
             alignItems: "center",
-            justifyContent: "center",
-            width: "28px",
-            height: "28px",
-            borderRadius: "50px",
-            border: `1.5px solid ${
-              showMoreMenu ? THEME.primary : THEME.secondary
-            }`,
-            background: showMoreMenu
-              ? THEME.tertiary
-              : moreHovered
-              ? THEME.tertiary
-              : THEME.white,
-            cursor: "pointer",
+            gap: "5px",
+            cursor: isSaving ? "not-allowed" : "pointer",
+            opacity: isSaving ? 0.5 : 1,
+            boxShadow: THEME.shadowSoft,
             transition: "all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)",
-            transform: moreHovered ? "scale(1.05)" : "scale(1)",
           }}
         >
-          <MoreHorizontal
-            size={14}
-            strokeWidth={2.5}
-            style={{ color: THEME.primary }}
-          />
+          <div className="hover:translate-y-[-2px] transition-transform duration-100">
+            <Bookmark
+              size={23}
+              strokeWidth={2.5}
+              fill={isSaved ? "#F295B6" : "none"}
+              color={isSaved ? "#F295B6" : "#999999"}
+              style={{
+                transition: "all 0.2s ease",
+              }}
+            />
+          </div>
         </button>
+        {/* Repost Button - Hiển thị riêng, không trong MoreMenu */}
+        {post && <RepostButton post={post} userId={userId} size="lg" />}
+        {/* More Menu Button */}
+        <div ref={moreMenuRef} style={{ position: "relative" }}>
+          <button
+            ref={moreButtonRef}
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowMoreMenu(!showMoreMenu);
+            }}
+            onMouseEnter={() => setMoreHovered(true)}
+            onMouseLeave={() => setMoreHovered(false)}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: "28px",
+              height: "28px",
+              borderRadius: "50px",
+              border: `1.5px solid ${
+                showMoreMenu ? THEME.primary : THEME.secondary
+              }`,
+              background: showMoreMenu
+                ? THEME.tertiary
+                : moreHovered
+                ? THEME.tertiary
+                : THEME.white,
+              cursor: "pointer",
+              transition: "all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)",
+              transform: moreHovered ? "scale(1.05)" : "scale(1)",
+            }}
+          >
+            <MoreHorizontal
+              size={14}
+              strokeWidth={2.5}
+              style={{ color: THEME.primary }}
+            />
+          </button>
 
-        <MoreMenu 
-          visible={showMoreMenu}
-          onShare={handleShare}
-          onClose={handleCloseMoreMenu}
-          postId={postId}
-          currentUserId={userId}
-          onLoginRequired={() => {
-            showToast({
-              type: "error",
-              message: "Vui lòng đăng nhập để tiếp tục",
-              duration: 3000,
-            });
-            setShowMoreMenu(false);
-          }}
-          anchorRef={moreButtonRef}
-        />
+          <MoreMenu
+            visible={showMoreMenu}
+            onShare={handleShare}
+            onClose={handleCloseMoreMenu}
+            postId={postId}
+            currentUserId={userId}
+            onLoginRequired={() => {
+              showToast({
+                type: "error",
+                message: "Vui lòng đăng nhập để tiếp tục",
+                duration: 3000,
+              });
+              setShowMoreMenu(false);
+            }}
+            anchorRef={moreButtonRef}
+          />
+        </div>{" "}
       </div>
-
-      {/* Repost Button - Hiển thị riêng, không trong MoreMenu */}
-      {post && <RepostButton post={post} userId={userId} size="md" />}
     </div>
   );
 };

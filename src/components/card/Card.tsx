@@ -4,7 +4,7 @@ import Avatar from "@mui/material/Avatar";
 
 import type { IPostResponseDto } from "../../types/post";
 import { EPostType } from "../../types/post";
-import InteractBar from "../InteractBar/InteractBar";
+import InteractBar from "../interactBar/InteractBar";
 import { recordViewedPost } from "../../services/user/viewedHistory/viewedHistory";
 import { useAuth } from "../../contexts/AuthContext";
 import { useGetPostById } from "../../hooks/usePost";
@@ -233,20 +233,22 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
             {/* InteractBar của người repost */}
 
             <div
-              className="newsfeed-card__interact"
+              className="newsfeed-card__interact !p-0"
               onClick={(e) => e.stopPropagation()}
             >
               <ReactionSection
                 postId={post?.id ?? post.originalPostId ?? post.id}
                 reactions={post?.reacts?.emojis ?? []}
               />
-              <InteractBar
-                postId={post?.id ?? post.originalPostId ?? post.id}
-                userId={user?.id ?? 0}
-                votes={post.votes}
-                totalComments={post.totalComments}
-                post={fetchedOriginal ?? post}
-              />
+              <div className="pl-2 border-t border-t-[#FFC9DC]">
+                <InteractBar
+                  postId={post?.id ?? post.originalPostId ?? post.id}
+                  userId={user?.id ?? 0}
+                  votes={post.votes}
+                  totalComments={post.totalComments}
+                  post={fetchedOriginal ?? post}
+                />
+              </div>
             </div>
           </div>
         </article>
@@ -370,7 +372,7 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
                 postId={post.id}
                 reactions={post.reacts?.emojis ?? []}
               />
-              <div className="px-20 border-t border-t-[#FFC9DC]">
+              <div className="pl-2 border-t border-t-[#FFC9DC]">
                 <InteractBar
                   postId={post.id}
                   userId={user?.id ?? 0}

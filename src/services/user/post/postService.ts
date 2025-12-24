@@ -22,6 +22,7 @@ export const createPost = async (
 ): Promise<IPostResponseDto> => {
   console.log("Creating post with data:", data);
   const response = await axios.post<IPostResponseDto>("/blog-posts", data);
+  console.log("Response from creating post:", response);
   return response;
 };
 
