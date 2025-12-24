@@ -9,7 +9,10 @@ export interface IUserSearchDto {
   id: number;
   username: string;
   avatarUrl?: string;
+  coverImageUrl?: string;
   bio?: string;
+  gender: "MALE" | "FEMALE";
+  joinedAt: Date;
 }
 
 export interface ICommunitySearchDto {
