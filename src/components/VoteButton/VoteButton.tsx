@@ -113,7 +113,7 @@ const VoteButton: React.FC<VoteButtonProps> = ({
       style={{
         display: "flex",
         alignItems: "center",
-        gap: "3px",
+        gap: "8px",
         background: "transparent",
       }}
     >
