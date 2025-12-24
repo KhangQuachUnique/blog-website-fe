@@ -78,6 +78,7 @@ export interface IPostResponseDto {
   type: EPostType;
   hashtags: IHashtagDto[];
   createdAt: Date | string;
+  reports?: any[];
 
   // Community & Repost fields
   community?: ICommunityDto;
