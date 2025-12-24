@@ -42,12 +42,9 @@ export const getPostsByCommunityId = async (communityId: number) => {
 };
 
 export const getManagePostsByCommunityId = async (
-  communityId: number,
-  status?: string
-) => {
-  return axios.get(`/blog-posts/community/${communityId}/manage`, {
-    params: status ? { status } : {},
-  });
+  communityId: number
+): Promise<IPostResponseDto[]> => {
+  return axios.get(`/blog-posts/community/${communityId}/manage`);
 };
 
 export const approvePost = async (postId: number) => {

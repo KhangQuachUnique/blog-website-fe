@@ -7,13 +7,13 @@ import {
 } from "../../../hooks/usePost";
 
 import Card from "../../../components/card/Card";
+import { useToast } from "../../../contexts/toast";
 
 const PostManagement = () => {
   const { id } = useParams();
   const communityId = Number(id);
   const navigate = useNavigate();
-
-  const statusParam = "DRAFT";
+  const { showToast } = useToast();
 
   const [approvingPostId, setApprovingPostId] = useState<number | null>(null);
   const [rejectingPostId, setRejectingPostId] = useState<number | null>(null);
@@ -24,7 +24,7 @@ const PostManagement = () => {
     isLoading,
     isError,
     refetch, // ✅
-  } = useGetCommunityManagePosts(communityId, statusParam);
+  } = useGetCommunityManagePosts(communityId);
 
   const approveMutation = useApprovePost(communityId);
   const deleteMutation = useDeletePost(communityId); // dùng làm "Từ chối"
@@ -38,6 +38,11 @@ const PostManagement = () => {
     approveMutation.mutate(postId, {
       onSuccess: async () => {
         await refetch(); // ✅ [ADD] duyệt xong thì load lại danh sách
+        showToast({
+          type: "error",
+          message: "Đã duyệt bài viết.",
+          duration: 2000,
+        });
       },
       onSettled: () => setApprovingPostId(null),
     });
@@ -75,13 +80,14 @@ const PostManagement = () => {
 
       {!isLoading &&
         !isError &&
-        list.map((post: any) => {
+        list.map((post) => {
           const isApprovingThis =
             approveMutation.isPending && approvingPostId === post.id;
           const isRejectingThis =
             deleteMutation.isPending && rejectingPostId === post.id;
 
-          const disabled = approveMutation.isPending || deleteMutation.isPending;
+          const disabled =
+            approveMutation.isPending || deleteMutation.isPending;
 
           return (
             <div key={post.id} className="manage-post-card">
