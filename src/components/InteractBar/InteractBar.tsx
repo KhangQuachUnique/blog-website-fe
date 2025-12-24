@@ -300,19 +300,6 @@ const InteractBar: React.FC<InteractBarProps> = ({
     });
   };
 
-  const handleRepost = () => {
-    if (!requireLogin({ message: "Vui lòng đăng nhập để đăng lại bài viết" })) {
-      setShowMoreMenu(false);
-      return;
-    }
-    // TODO: Implement repost functionality
-    showToast({
-      type: "info",
-      message: "Tính năng đăng lại đang được phát triển",
-      duration: 2000,
-    });
-    setShowMoreMenu(false);
-  };
 
   const handleCloseMoreMenu = () => {
     setShowMoreMenu(false);

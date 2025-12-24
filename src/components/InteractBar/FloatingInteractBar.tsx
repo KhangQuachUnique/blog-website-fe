@@ -4,7 +4,6 @@ import {
   MessageCircle,
   MoreHorizontal,
   Share2,
-  Repeat2,
   Flag,
   Bookmark,
 } from "lucide-react";
@@ -13,11 +12,10 @@ import ReportButton from "../report/ReportButton";
 import { EReportType } from "../../types/report";
 import { useToast } from "../../contexts/toast";
 import { useLoginRequired } from "../../hooks/useLoginRequired";
-import { useVote } from "../../hooks/useVote";
 import type { IVotesSummaryDto } from "../../types/user-vote";
-import type { VoteType } from "../../types/vote.types";
-import UpvoteIcon from "../VoteButton/UpvoteIcon";
-import DownvoteIcon from "../VoteButton/DownvoteIcon";
+import type { IPostResponseDto } from "../../types/post";
+import VoteButton from "../VoteButton";
+import { RepostButton } from "../repost";
 
 // ============================================
 // 🎨 BLOOKIE DESIGN SYSTEM - PASTEL PINK EDITION
@@ -77,21 +75,23 @@ const MoreMenu: React.FC<{
     if (!visible) return;
 
     const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+      if (
+        menuRef.current &&
+        !menuRef.current.contains(event.target as Node) &&
+        anchorRef?.current &&
+        !anchorRef.current.contains(event.target as Node)
+      ) {
         onClose();
       }
     };
 
-    // Delay adding listener to prevent immediate close
-    const timeoutId = setTimeout(() => {
-      document.addEventListener("mousedown", handleClickOutside);
-    }, 0);
+    // Use click instead of mousedown to allow menu item onClick to fire first
+    document.addEventListener("click", handleClickOutside);
 
     return () => {
-      clearTimeout(timeoutId);
-      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("click", handleClickOutside);
     };
-  }, [visible, onClose]);
+  }, [visible, onClose, anchorRef]);
 
   if (!visible) return null;
 
@@ -158,7 +158,6 @@ const MoreMenu: React.FC<{
         zIndex: 10001,
         animation: "menuSlideIn 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)",
       }}
-      onClick={(e) => e.stopPropagation()}
     >
       <style>{`
         @keyframes menuSlideIn {
@@ -282,12 +281,15 @@ interface FloatingInteractBarProps {
   postId: number;
   votes?: IVotesSummaryDto;
   totalComments?: number;
+  /** Post data để truyền vào RepostButton */
+  post?: IPostResponseDto;
 }
 
 const FloatingInteractBar: React.FC<FloatingInteractBarProps> = ({
   postId,
   votes,
   totalComments = 0,
+  post,
 }) => {
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const { showToast } = useToast();
@@ -301,22 +303,12 @@ const FloatingInteractBar: React.FC<FloatingInteractBarProps> = ({
   );
   const { mutate: toggleSave, isPending: isSaving } = useToggleSavePost();
 
-  // Vote mutation
-  const voteMutation = useVote(userId, postId);
-
   // Scroll to comments section
   const scrollToComments = () => {
     const commentsSection = document.querySelector('[data-comments-section]');
     if (commentsSection) {
       commentsSection.scrollIntoView({ behavior: "smooth", block: "start" });
     }
-  };
-
-  // Handle vote with login check
-  const handleVote = (voteType: VoteType) => {
-    if (!requireLogin({ message: "Vui lòng đăng nhập để vote bài viết" })) return;
-    if (voteMutation.isPending) return;
-    voteMutation.mutate(voteType, {});
   };
 
   // Bookmark with login check
@@ -347,18 +339,6 @@ const FloatingInteractBar: React.FC<FloatingInteractBarProps> = ({
     });
   };
 
-  const handleRepost = () => {
-    if (!requireLogin({ message: "Vui lòng đăng nhập để đăng lại bài viết" })) {
-      return;
-    }
-    // TODO: Implement repost functionality
-    showToast({
-      type: "info",
-      message: "Tính năng đăng lại đang được phát triển",
-      duration: 2000,
-    });
-  };
-
   const handleCloseMoreMenu = () => {
     setShowMoreMenu(false);
   };
@@ -383,37 +363,17 @@ const FloatingInteractBar: React.FC<FloatingInteractBarProps> = ({
         zIndex: 10000,
       }}
     >
-      {/* Upvote Button */}
-      <ActionButton
-        onClick={() => handleVote("upvote")}
-        active={votes?.userVote === "upvote"}
-        disabled={voteMutation.isPending}
-        tooltip="Upvote"
-      >
-        <UpvoteIcon active={votes?.userVote === "upvote"} size={24} />
-      </ActionButton>
-
-      {/* Vote Count */}
-      <div
-        style={{
-          fontSize: "16px",
-          fontWeight: 700,
-          color: THEME.text,
-          fontFamily: "'Quicksand', sans-serif",
-        }}
-      >
-        {(votes?.upvotes || 0) - (votes?.downvotes || 0)}
+      {/* Vote Button - Sử dụng component VoteButton có sẵn */}
+      <div style={{ 
+        display: "flex", 
+        flexDirection: "column", 
+        alignItems: "center",
+        gap: "4px",
+        pointerEvents: "auto",
+        zIndex: 10001,
+      }}>
+        <VoteButton postId={postId} userId={userId} votes={votes} size="lg" />
       </div>
-
-      {/* Downvote Button */}
-      <ActionButton
-        onClick={() => handleVote("downvote")}
-        active={votes?.userVote === "downvote"}
-        disabled={voteMutation.isPending}
-        tooltip="Downvote"
-      >
-        <DownvoteIcon active={votes?.userVote === "downvote"} size={24} />
-      </ActionButton>
 
       {/* Divider */}
       <div
@@ -470,13 +430,8 @@ const FloatingInteractBar: React.FC<FloatingInteractBarProps> = ({
         />
       </ActionButton>
 
-      {/* Repost Button */}
-      <ActionButton
-        onClick={handleRepost}
-        tooltip="Đăng lại"
-      >
-        <Repeat2 size={22} strokeWidth={2.5} style={{ color: THEME.primary }} />
-      </ActionButton>
+      {/* Repost Button - Sử dụng component RepostButton có sẵn */}
+      {post && <RepostButton post={post} userId={userId} size="lg" />}
 
       {/* More Menu Button */}
       <button

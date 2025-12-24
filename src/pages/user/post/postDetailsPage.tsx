@@ -241,6 +241,7 @@ const PostDetailsPage: React.FC = () => {
           postId={postId}
           votes={postData.votes}
           totalComments={postData.totalComments || 0}
+          post={postData}
         />
       )}
       {/* Tooltip Button Tìm Kiếm */}

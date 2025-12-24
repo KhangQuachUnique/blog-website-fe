@@ -186,7 +186,6 @@ const RepostModal: React.FC<RepostModalProps> = ({
           background: THEME.white,
           borderRadius: '20px',
           border: `2px solid ${THEME.secondary}`,
-          boxShadow: THEME.shadowStrong,
           zIndex: 1001,
           animation: 'repostModalSlideIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)',
           fontFamily: "'Quicksand', sans-serif",
