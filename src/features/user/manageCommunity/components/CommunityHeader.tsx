@@ -40,13 +40,9 @@ const CommunityHeader = ({ community }: Props) => {
 
       {/* MAIN INFO */}
       <div style={{ marginTop: 18 }}>
-        <h2 style={{ fontSize: 26, fontWeight: 700 }}>
-          {community.name}
-        </h2>
+        <h2 style={{ fontSize: 26, fontWeight: 700 }}>{community.name}</h2>
 
-        <p style={{ color: "#555", maxWidth: 720 }}>
-          {community.description}
-        </p>
+        <p style={{ color: "#555", maxWidth: 720 }}>{community.description}</p>
 
         <div style={{ marginTop: 6, fontSize: 14, color: "#777" }}>
           <b>Vai trò của bạn:</b> {community.role}
@@ -60,7 +56,7 @@ const CommunityHeader = ({ community }: Props) => {
             marginTop: 16,
             padding: "14px 18px",
             borderRadius: 14,
-            background: "linear-gradient(135deg, #ffe6ef, #fff)",
+            backgroundColor: "#fff6f9",
             border: "1px solid #ffd1e2",
             display: "flex",
             justifyContent: "space-between",
@@ -86,9 +82,7 @@ const CommunityHeader = ({ community }: Props) => {
           </div>
 
           <button
-            onClick={() =>
-              navigate(`/community/${community.id}/manage`)
-            }
+            onClick={() => navigate(`/community/${community.id}/manage`)}
             style={{
               background: "#ff5fa2",
               color: "#fff",

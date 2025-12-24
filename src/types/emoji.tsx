@@ -12,7 +12,7 @@ export type EEmojiType = (typeof EEmojiType)[keyof typeof EEmojiType];
 interface ICommunityDTO {
   id: number;
   name: string;
-  thumnailUrl?: string;
+  thumbnailUrl?: string;
 }
 
 export interface IEmojiResponseDto {

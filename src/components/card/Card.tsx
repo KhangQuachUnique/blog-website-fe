@@ -63,9 +63,7 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
           {/* Thumbnail (links to original post) */}
           {(fetchedOriginal?.thumbnailUrl || post.thumbnailUrl) && (
             <Link
-              to={`/post/${
-                fetchedOriginal?.id ?? post.originalPostId ?? post.id
-              }`}
+              to={`/post/${fetchedOriginal?.id}`}
               className="newsfeed-card__thumbnail"
               onClick={() => {
                 if (user && user.id)
@@ -239,11 +237,11 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
               onClick={(e) => e.stopPropagation()}
             >
               <ReactionSection
-                postId={fetchedOriginal?.id ?? post.originalPostId ?? post.id}
-                reactions={fetchedOriginal?.reacts?.emojis ?? []}
+                postId={post?.id ?? post.originalPostId ?? post.id}
+                reactions={post?.reacts?.emojis ?? []}
               />
               <InteractBar
-                postId={fetchedOriginal?.id ?? post.originalPostId ?? post.id}
+                postId={post?.id ?? post.originalPostId ?? post.id}
                 userId={user?.id ?? 0}
                 votes={post.votes}
                 totalComments={post.totalComments}

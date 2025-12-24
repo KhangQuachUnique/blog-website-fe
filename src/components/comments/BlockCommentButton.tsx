@@ -18,8 +18,12 @@ export const BlockCommentButton: React.FC<BlockCommentButtonProps> = ({
   return (
     <>
       <Tooltip title="Bình luận cho khối này">
-        <button onClick={() => setIsSidebarOpen(true)}>
-          <BiSolidCommentDetail size={30} color="#FEB2CD" />
+        <button
+          onClick={() => setIsSidebarOpen(true)}
+          className="flex items-center justify-center p-1 rounded-lg hover:bg-[#FFF0F4] transition-colors"
+          aria-label="Open block comments"
+        >
+          <BiSolidCommentDetail size={24} color="#FEB2CD" />
         </button>
       </Tooltip>
       <BlockCommentsSidebar

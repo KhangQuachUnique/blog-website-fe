@@ -16,6 +16,7 @@ import type {
   ISearchResponseDto,
   SearchResultItem,
 } from "../services/search/search.service";
+import type { SavedPostListResponse } from "../types/savedPost";
 
 /**
  * Hook to toggle reaction on a post.
@@ -44,6 +45,10 @@ export const useTogglePostReact = () => {
         queryKey: ["search", q, "post"],
       });
 
+      await queryClient.cancelQueries({
+        queryKey: ["savedPost", "list"],
+      });
+
       const previousFeed = queryClient.getQueryData<
         InfiniteData<IGetNewsfeedResponseDto>
       >(["newsfeed", sessionSeed]);
@@ -57,10 +62,17 @@ export const useTogglePostReact = () => {
         InfiniteData<ISearchResponseDto>
       >(["search", q, "post"]);
 
+      const previousSavedPosts =
+        queryClient.getQueryData<SavedPostListResponse>(["savedPost", "list"]);
+
       const newFeed = await updateNewsfeedReacts(previousFeed, toggleData);
       const newPost = await updateSinglePostReacts(previousPost, toggleData);
       const newSearchResults = await updateSearchPostReacts(
         previousSearchResults,
+        toggleData
+      );
+      const newSavedPosts = await updateSavedPostReacts(
+        previousSavedPosts,
         toggleData
       );
 
@@ -68,12 +80,15 @@ export const useTogglePostReact = () => {
       queryClient.setQueryData(["newsfeed", sessionSeed], newFeed);
       queryClient.setQueryData(["post", toggleData.postId], newPost);
       queryClient.setQueryData(["search", q, "post"], newSearchResults);
-
-      console.log("Previous Post ??????????????:", previousPost);
-      console.log("After Toggle - New Post????????????????:", newPost);
+      queryClient.setQueryData(["savedPost", "list"], newSavedPosts);
 
       // Trả về context để rollback nếu lỗi
-      return { previousFeed, previousPost, previousSearchResults };
+      return {
+        previousFeed,
+        previousPost,
+        previousSearchResults,
+        previousSavedPosts,
+      };
     },
 
     onError: (_err, _vars, context) => {
@@ -85,6 +100,18 @@ export const useTogglePostReact = () => {
       }
       if (context?.previousPost) {
         queryClient.setQueryData(["post", _vars.postId], context.previousPost);
+      }
+      if (context?.previousSearchResults) {
+        queryClient.setQueryData(
+          ["search", q, "post"],
+          context.previousSearchResults
+        );
+      }
+      if (context?.previousSavedPosts) {
+        queryClient.setQueryData(
+          ["savedPost", "list"],
+          context.previousSavedPosts
+        );
       }
     },
   });
@@ -120,7 +147,7 @@ export function updatePostReacts(
   }
 
   const newEmojis = [...post.reacts.emojis];
-  const { emojiId, codepoint } = toggleData;
+  const { emojiId, codepoint, emojiUrl } = toggleData;
 
   const index = newEmojis.findIndex((r) =>
     emojiId ? r.emojiId === emojiId : r.codepoint === codepoint
@@ -135,6 +162,7 @@ export function updatePostReacts(
       } else {
         newEmojis[index] = {
           ...current,
+          emojiUrl: current.emojiUrl,
           totalCount: current.totalCount - 1,
           reactedByCurrentUser: false,
         };
@@ -142,14 +170,17 @@ export function updatePostReacts(
     } else {
       newEmojis[index] = {
         ...current,
+        emojiUrl: current.emojiUrl,
         totalCount: current.totalCount + 1,
         reactedByCurrentUser: true,
       };
     }
   } else {
+    console.log("Toggling a new reaction", toggleData);
     newEmojis.push({
       emojiId,
       codepoint,
+      emojiUrl,
       totalCount: 1,
       reactedByCurrentUser: true,
       type: emojiId ? "CUSTOM" : "UNICODE",
@@ -220,5 +251,23 @@ const updateSearchPostReacts = (
           )
         : page.items,
     })),
+  };
+};
+
+const updateSavedPostReacts = (
+  savedPosts: SavedPostListResponse | undefined,
+  toggleData: IToggleReactDto
+): SavedPostListResponse | undefined => {
+  if (!savedPosts) {
+    return undefined;
+  }
+
+  return {
+    ...savedPosts,
+    items: Array.isArray(savedPosts.items)
+      ? savedPosts.items.map((post: IPostResponseDto) =>
+          updatePostReacts(post, toggleData)
+        )
+      : savedPosts.items,
   };
 };

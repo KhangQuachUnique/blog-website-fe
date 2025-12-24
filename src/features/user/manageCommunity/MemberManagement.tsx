@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 import {
   useManageCommunityMembers,
@@ -40,6 +40,7 @@ const mapApiToUI = (m: CommunityMember): MemberUI => ({
 export default function MemberManagement() {
   const { id } = useParams();
   const communityId = Number(id);
+  const navigate = useNavigate();
 
   const { showToast } = useToast();
 
@@ -195,7 +196,8 @@ export default function MemberManagement() {
     }
 
     try {
-      await removeMember.mutateAsync(memberToKick.id);
+      const shouldBan = memberToKick.role !== "PENDING";
+      await removeMember.mutateAsync({ memberId: memberToKick.id, ban: shouldBan });
       const kicked = memberToKick;
       setMemberToKick(null);
       await refetch();
@@ -352,45 +354,58 @@ export default function MemberManagement() {
               className="community-card"
               style={{ display: "flex", alignItems: "center", gap: 16 }}
             >
-              <img
-                src={member.avatar}
-                alt=""
+              {/* ✅ Click avatar/name => chuyển sang trang cá nhân */}
+              <div
                 style={{
-                  width: 50,
-                  height: 50,
-                  borderRadius: "50%",
-                  objectFit: "cover",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 16,
+                  flex: 1,
+                  cursor: "pointer",
                 }}
-              />
+                title="Xem trang cá nhân"
+                onClick={() => navigate(`/profile/${member.userId}`)}
+              >
+                <img
+                  src={member.avatar}
+                  alt=""
+                  style={{
+                    width: 50,
+                    height: 50,
+                    borderRadius: "50%",
+                    objectFit: "cover",
+                  }}
+                />
 
-              <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: 600 }}>
-                  {member.name}
-                  {isSelf && (
-                    <span
-                      style={{
-                        marginLeft: 8,
-                        fontSize: 12,
-                        color: "#c06292",
-                      }}
-                    >
-                      (Bạn)
-                    </span>
-                  )}
-                </div>
+                <div>
+                  <div style={{ fontWeight: 600 }}>
+                    {member.name}
+                    {isSelf && (
+                      <span
+                        style={{
+                          marginLeft: 8,
+                          fontSize: 12,
+                          color: "#c06292",
+                        }}
+                      >
+                        (Bạn)
+                      </span>
+                    )}
+                  </div>
 
-                <div style={{ fontSize: 13, color: "#666" }}>
-                  {member.joinDate}
-                  {member.role === "PENDING" && " · Chờ duyệt"}
-                  {isDirty && (
-                    <span style={{ color: "#d81b60" }}> · Chưa áp dụng</span>
-                  )}
-                  {modCannotEditAdmin && (
-                    <span style={{ color: "#c06292" }}>
-                      {" "}
-                      · Admin (không thể chỉnh)
-                    </span>
-                  )}
+                  <div style={{ fontSize: 13, color: "#666" }}>
+                    {member.joinDate}
+                    {member.role === "PENDING" && " · Chờ duyệt"}
+                    {isDirty && (
+                      <span style={{ color: "#d81b60" }}> · Chưa áp dụng</span>
+                    )}
+                    {modCannotEditAdmin && (
+                      <span style={{ color: "#c06292" }}>
+                        {" "}
+                        · Admin (không thể chỉnh)
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
 

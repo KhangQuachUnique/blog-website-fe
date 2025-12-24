@@ -20,6 +20,7 @@ export interface IToggleReactDto {
   userId: number;
   emojiId?: number;
   codepoint?: string;
+  emojiUrl?: string;
   postId?: number;
   commentId?: number;
 }

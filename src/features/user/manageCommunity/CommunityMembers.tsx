@@ -1,5 +1,5 @@
 // src/pages/community/CommunityMembers.tsx
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useCommunityMembers } from "../../../hooks/useCommunityMembers";
 
 function formatDate(iso: string) {
@@ -49,78 +49,95 @@ export default function CommunityMembers() {
   const { id } = useParams();
   const communityId = Number(id);
 
+  const navigate = useNavigate();
+
   const { isLoading, isError, error, total, grouped, refetch } =
     useCommunityMembers(Number.isFinite(communityId) ? communityId : undefined);
 
   if (!Number.isFinite(communityId) || communityId <= 0) {
     return (
-      <div style={{ marginTop: 20 }}>
+      <div className="community-members" data-empty>
         <h3>Danh sách thành viên</h3>
-        <p style={{ color: "crimson" }}>Community id không hợp lệ.</p>
+        <p className="community-members__error">Community id không hợp lệ.</p>
       </div>
     );
   }
 
   if (isLoading) {
     return (
-      <div style={{ marginTop: 20 }}>
+      <div className="community-members" aria-busy>
         <h3>Danh sách thành viên</h3>
-        <p>Đang tải...</p>
+        <p className="community-members__muted">Đang tải...</p>
       </div>
     );
   }
 
   if (isError) {
     return (
-      <div style={{ marginTop: 20 }}>
+      <div className="community-members">
         <h3>Danh sách thành viên</h3>
-        <p style={{ color: "crimson" }}>
+        <p className="community-members__error">
           Lỗi tải members: {(error as any)?.message ?? "Unknown error"}
         </p>
-        <button onClick={() => refetch()}>Thử lại</button>
+        <button
+          className="btn btn-outline community-members__retry"
+          onClick={() => refetch()}
+        >
+          Thử lại
+        </button>
       </div>
     );
   }
 
   return (
-    <div style={{ marginTop: 20 }}>
-      <div style={{ display: "flex", justifyContent: "space-between" }}>
+    <div className="community-members">
+      <div className="community-members__header">
         <h3>Danh sách thành viên</h3>
-        <div style={{ opacity: 0.7 }}>{total} thành viên</div>
+        <div className="community-members__count">{total} thành viên</div>
       </div>
 
       {(["ADMIN", "MODERATOR", "MEMBER"] as const).map((role) => {
         const list = grouped[role];
 
         return (
-          <div key={role} style={{ marginTop: 14 }}>
-            <div style={{ fontWeight: 700, marginBottom: 8 }}>
+          <section
+            key={role}
+            className={`community-members__group community-members__group--${role.toLowerCase()}`}
+          >
+            <div className="community-members__group-title">
               {roleLabel(role)} • {list.length}
             </div>
 
             {list.length === 0 ? (
-              <div style={{ opacity: 0.7 }}>Chưa có thành viên.</div>
+              <div className="community-members__empty">
+                Chưa có thành viên.
+              </div>
             ) : (
-              <div style={{ display: "grid", gap: 10 }}>
+              <div className="community-members__list">
                 {list.map((m) => (
                   <div
                     key={m.id}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 10,
-                      padding: 10,
-                      border: "1px solid #eee",
-                      borderRadius: 12,
+                    onClick={() => navigate(`/profile/${m.user.id}`)}
+                    className="community-member-item"
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ")
+                        navigate(`/profile/${m.user.id}`);
                     }}
                   >
-                    <Avatar
-                      username={m.user.username}
-                      avatarUrl={m.user.avatarUrl}
-                    />
-                    <div>
-                      <div style={{ fontWeight: 600 }}>{m.user.username}</div>
-                      <div style={{ fontSize: 12, opacity: 0.7 }}>
+                    <div className="community-member-avatar">
+                      <Avatar
+                        username={m.user.username}
+                        avatarUrl={m.user.avatarUrl}
+                      />
+                    </div>
+
+                    <div className="community-member-info">
+                      <div className="community-member-username">
+                        {m.user.username}
+                      </div>
+                      <div className="community-member-joined">
                         Tham gia: {formatDate(m.joinedAt)}
                       </div>
                     </div>
@@ -128,7 +145,7 @@ export default function CommunityMembers() {
                 ))}
               </div>
             )}
-          </div>
+          </section>
         );
       })}
     </div>

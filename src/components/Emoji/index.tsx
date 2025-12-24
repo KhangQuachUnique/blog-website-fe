@@ -15,6 +15,7 @@ const ReactionSection = ({ postId, reactions }: ReactionSectionProps) => {
   const { user, isAuthenticated } = useAuthUser();
   const { recent, add } = useRecentEmojis();
   const emojisData = useEmojiData();
+  console.log("Emoji data:", emojisData);
   const mutation = useTogglePostReact();
 
   if (!isAuthenticated || !user) {
@@ -24,12 +25,14 @@ const ReactionSection = ({ postId, reactions }: ReactionSectionProps) => {
   const handleToggleReact = ({
     emojiId,
     codepoint,
+    emojiUrl,
   }: {
     emojiId?: number;
     codepoint?: string;
+    emojiUrl?: string;
   }) => {
     mutation.mutate(
-      { emojiId, codepoint, postId, userId: user.id },
+      { emojiId, codepoint, emojiUrl, postId, userId: user.id },
       {
         onSuccess: () => {
           // Cập nhật recent nếu là unicode

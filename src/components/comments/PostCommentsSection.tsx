@@ -2,6 +2,7 @@ import React from "react";
 import { useGetPostComments } from "../../hooks/useComments";
 import { CommentForm } from "./CommentForm";
 import { CommentItem } from "./CommentItem";
+import PostCommentsSectionSkeleton from "../skeleton/PostCommentsSectionSkeleton";
 import type { SortType } from "../../types/comment";
 
 interface PostCommentsProps {
@@ -12,10 +13,22 @@ export const PostCommentsSection: React.FC<PostCommentsProps> = ({
   postId,
 }) => {
   const [sortBy, setSortBy] = React.useState<SortType>("newest");
+  const [openSort, setOpenSort] = React.useState(false);
+  const sortRef = React.useRef<HTMLDivElement | null>(null);
 
   const changeSortBy = (newSortBy: SortType) => {
     setSortBy(newSortBy);
   };
+
+  React.useEffect(() => {
+    const handleOutside = (e: MouseEvent) => {
+      if (sortRef.current && !sortRef.current.contains(e.target as Node)) {
+        setOpenSort(false);
+      }
+    };
+    document.addEventListener("mousedown", handleOutside);
+    return () => document.removeEventListener("mousedown", handleOutside);
+  }, []);
 
   const {
     data: commentsData,
@@ -23,14 +36,7 @@ export const PostCommentsSection: React.FC<PostCommentsProps> = ({
     isError: getCommentsError,
   } = useGetPostComments(postId, sortBy);
   if (getCommentsLoading) {
-    return (
-      <div className="comments-section">
-        <div className="flex justify-center items-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          <span className="ml-2 text-gray-600">Đang tải bình luận...</span>
-        </div>
-      </div>
-    );
+    return <PostCommentsSectionSkeleton />;
   }
 
   if (getCommentsError) {
@@ -56,14 +62,82 @@ export const PostCommentsSection: React.FC<PostCommentsProps> = ({
           {postId && commentsData?.totalCount > 0 && (
             <div className="flex items-center space-x-2">
               <span className="text-sm text-gray-600">Sắp xếp theo:</span>
-              <select
-                value={commentsData.sortBy}
-                onChange={(e) => changeSortBy(e.target.value as SortType)}
-                className="text-sm border border-gray-300 rounded-md px-2 py-1 focus:ring-2 focus:ring-blue-500"
+
+              <div
+                ref={sortRef}
+                className="relative inline-block text-left"
+                id="post-comments-sort"
               >
-                <option value="newest">Mới nhất</option>
-                <option value="interactions">Tương tác nhiều</option>
-              </select>
+                {/* Custom dropdown: button + list */}
+                <button
+                  type="button"
+                  aria-haspopup="listbox"
+                  aria-expanded={openSort}
+                  onClick={() => setOpenSort((s) => !s)}
+                  className="flex items-center justify-between gap-3 w-[170px] text-sm border border-[#F7D6DC] rounded-lg px-4 py-1.5 bg-white focus:outline-none focus:border-[#F295B6] focus:ring-4 focus:ring-[#F295B6]/20"
+                >
+                  <span className="truncate">
+                    {sortBy === "newest" ? "Mới nhất" : "Tương tác nhiều"}
+                  </span>
+                  <svg
+                    className={`transform transition-transform ${
+                      openSort ? "-rotate-180" : "rotate-0"
+                    } text-[#BA2243]`}
+                    width="18"
+                    height="18"
+                    viewBox="0 0 20 20"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M6 8l4 4 4-4"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </button>
+
+                {openSort && (
+                  <ul
+                    role="listbox"
+                    tabIndex={-1}
+                    className="absolute right-0 mt-2 w-[170px] bg-white border border-[#F7D6DC] rounded-md z-20"
+                  >
+                    <li
+                      role="option"
+                      aria-selected={sortBy === "newest"}
+                      onClick={() => {
+                        changeSortBy("newest");
+                        setOpenSort(false);
+                      }}
+                      className={`px-4 py-2 text-sm cursor-pointer hover:bg-[#FFF0F4] ${
+                        sortBy === "newest"
+                          ? "text-[#BA2243] font-semibold"
+                          : "text-gray-700"
+                      }`}
+                    >
+                      Mới nhất
+                    </li>
+                    <li
+                      role="option"
+                      aria-selected={sortBy === "interactions"}
+                      onClick={() => {
+                        changeSortBy("interactions");
+                        setOpenSort(false);
+                      }}
+                      className={`px-4 py-2 text-sm cursor-pointer hover:bg-[#FFF0F4] ${
+                        sortBy === "interactions"
+                          ? "text-[#BA2243] font-semibold"
+                          : "text-gray-700"
+                      }`}
+                    >
+                      Tương tác nhiều
+                    </li>
+                  </ul>
+                )}
+              </div>
             </div>
           )}
         </div>
@@ -93,7 +167,7 @@ export const PostCommentsSection: React.FC<PostCommentsProps> = ({
       {/* Loading indicator when loading more */}
       {getCommentsLoading && commentsData?.comments.length > 0 && (
         <div className="text-center py-4">
-          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div>
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#FEB2CD] mx-auto"></div>
         </div>
       )}
     </div>

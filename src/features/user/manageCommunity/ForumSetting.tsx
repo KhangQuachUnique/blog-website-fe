@@ -6,19 +6,19 @@ import ApprovePostToggle from "./components/ApprovePostToggle";
 import ApproveMemberToggle from "./components/ApproveMemberToggle";
 import ForumInfoForm from "./components/ForumInfoForm";
 
-import { updateCommunitySettings } from "./community.api";
-import { useGetCommunitySettings } from "../../../hooks/useCommunity";
+import {
+  useGetCommunitySettings,
+  useUpdateCommunitySettings,
+} from "../../../hooks/useCommunity";
 import { useToast } from "../../../contexts/toast";
-import { useQueryClient } from "@tanstack/react-query";
 
 const ForumSetting = () => {
   const { id } = useParams();
   const communityId = Number(id);
 
   const { showToast } = useToast();
-  const queryClient = useQueryClient();
 
-  const [saving, setSaving] = useState(false);
+  const updateSettings = useUpdateCommunitySettings(communityId);
   const [form, setForm] = useState({
     name: "",
     description: "",
@@ -50,13 +50,7 @@ const ForumSetting = () => {
 
   const handleSave = async () => {
     try {
-      setSaving(true);
-      await updateCommunitySettings(communityId, form);
-
-      // ✅ IMPORTANT: refetch settings để ảnh bìa cập nhật ngay (khỏi F5)
-      await queryClient.invalidateQueries({
-        queryKey: ["communitySettings", communityId],
-      });
+      await updateSettings.mutateAsync(form);
 
       showToast({
         type: "success",
@@ -68,8 +62,6 @@ const ForumSetting = () => {
         type: "error",
         message: "Lỗi khi lưu thay đổi!",
       });
-    } finally {
-      setSaving(false);
     }
   };
 
@@ -112,7 +104,7 @@ const ForumSetting = () => {
           thumbnailUrl={form.thumbnailUrl}
           onChange={updateField}
           onSave={handleSave}
-          saving={saving}
+          saving={updateSettings.isPending}
         />
       </div>
     </div>
