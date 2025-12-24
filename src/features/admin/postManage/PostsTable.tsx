@@ -2,21 +2,21 @@ import React from "react";
 import { MdVisibilityOff, MdVisibility, MdAutorenew } from "react-icons/md";
 import { Box } from "@mui/material";
 import GenericTable from "../../../components/table/GenericTable";
-import type { TableColumn, TableAction } from "../../../types/table";
+import type { TableColumn, ActionColumn } from "../../../types/table";
 import { BLOOGIE_COLORS as colors } from "../../../types/table";
 import { type IPostResponseDto, EBlogPostStatus } from "../../../types/post";
 
 interface PostsTableProps {
   posts: IPostResponseDto[];
-  onHide: (postId: number) => void;
-  onRestore: (postId: number) => void;
+  onHide?: (postId: number) => void;
+  onRestore?: (postId: number) => void;
   loadingId: number | null;
   emptyMessage?: string;
 }
 
 /**
- * PostsTable - A wrapper around GenericTable customized for blog posts
- * Provides backward compatibility while leveraging GenericTable's flexibility
+ * PostsTable - Wrapper customized for blog posts
+ * Uses actionColumns pattern for flexibility
  */
 const PostsTable: React.FC<PostsTableProps> = ({
   posts,
@@ -143,82 +143,97 @@ const PostsTable: React.FC<PostsTableProps> = ({
     },
   ];
 
-  const actions: TableAction<IPostResponseDto>[] = [
-    {
-      id: "hide-restore",
-      visible: (post) => post.status === "ACTIVE" || post.status === "HIDDEN",
-      disabled: (post) => loadingId === post.id,
-      icon: (post) => {
-        const isLoading = loadingId === post.id;
-        if (post.status === "ACTIVE") {
-          return (
-            <Box
-              sx={{
-                display: "inline-flex",
-                alignItems: "center",
-                justifyContent: "center",
-                padding: "8px",
-                color: "#b45309",
-                backgroundColor: "#fffbeb",
-                border: "2px solid #fde68a",
-                borderRadius: "6px",
-                cursor: isLoading ? "not-allowed" : "pointer",
-                "&:hover": {
-                  backgroundColor: "#fef3c7",
-                  borderColor: "#fcd34d",
-                },
-              }}
-            >
-              {isLoading ? (
-                <MdAutorenew className="animate-spin" size={18} />
-              ) : (
-                <MdVisibilityOff size={18} />
-              )}
-            </Box>
-          );
-        } else {
-          return (
-            <Box
-              sx={{
-                display: "inline-flex",
-                alignItems: "center",
-                justifyContent: "center",
-                padding: "8px",
-                color: "#059669",
-                backgroundColor: "#ecfdf5",
-                border: "2px solid #a7f3d0",
-                borderRadius: "6px",
-                cursor: isLoading ? "not-allowed" : "pointer",
-                "&:hover": {
-                  backgroundColor: "#d1fae5",
-                  borderColor: "#6ee7b7",
-                },
-              }}
-            >
-              {isLoading ? (
-                <MdAutorenew className="animate-spin" size={18} />
-              ) : (
-                <MdVisibility size={18} />
-              )}
-            </Box>
-          );
-        }
-      },
-      onClick: (post) => {
-        if (post.status === "ACTIVE") {
-          onHide(post.id);
-        } else if (post.status === "HIDDEN") {
-          onRestore(post.id);
-        }
-      },
-    },
-  ];
+  const actionColumns: ActionColumn<IPostResponseDto>[] = [];
+
+  if (onHide && onRestore) {
+    actionColumns.push({
+      id: "management-column",
+      label: "Thao tác", 
+      width: "120px",
+      align: "center",
+      actions: [
+        {
+          id: "hide-restore",
+          visible: (post) => post.status === "ACTIVE" || post.status === "HIDDEN",
+          disabled: (post) => loadingId === post.id,
+          icon: (post) => {
+            const isLoading = loadingId === post.id;
+
+            if (post.status === "ACTIVE") {
+              return (
+                <Box
+                  sx={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    padding: "8px",
+                    color: "#b45309",
+                    backgroundColor: "#fffbeb",
+                    border: "2px solid #fde68a",
+                    borderRadius: "6px",
+                    cursor: isLoading ? "not-allowed" : "pointer",
+                    transition: "all 0.2s",
+                    "&:hover:not(:disabled)": {
+                      backgroundColor: "#fef3c7",
+                      borderColor: "#fcd34d",
+                    },
+                  }}
+                >
+                  {isLoading ? (
+                    <MdAutorenew className="animate-spin" size={18} />
+                  ) : (
+                    <MdVisibilityOff size={18} />
+                  )}
+                </Box>
+              );
+            } 
+
+            else {
+              return (
+                <Box
+                  sx={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    padding: "8px",
+                    color: "#059669",
+                    backgroundColor: "#ecfdf5",
+                    border: "2px solid #a7f3d0",
+                    borderRadius: "6px",
+                    cursor: isLoading ? "not-allowed" : "pointer",
+                    transition: "all 0.2s",
+                    "&:hover:not(:disabled)": {
+                      backgroundColor: "#d1fae5",
+                      borderColor: "#6ee7b7",
+                    },
+                  }}
+                >
+                  {isLoading ? (
+                    <MdAutorenew className="animate-spin" size={18} />
+                  ) : (
+                    <MdVisibility size={18} />
+                  )}
+                </Box>
+              );
+            }
+          },
+          onClick: (post) => {
+            if (post.status === "ACTIVE") {
+              onHide(post.id);
+            } else if (post.status === "HIDDEN") {
+              onRestore(post.id);
+            }
+          },
+        },
+      ],
+    });
+  }
 
   return (
     <GenericTable
       data={posts}
       columns={columns}
-      actions={actions}
+      actionColumns={actionColumns}
       emptyMessage={emptyMessage}
     />
   );

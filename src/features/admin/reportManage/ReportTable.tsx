@@ -2,13 +2,12 @@ import React from "react";
 import { MdCheckCircle, MdClose, MdAutorenew } from "react-icons/md";
 import { Box } from "@mui/material";
 import GenericTable from "../../../components/table/GenericTable";
-import type { TableColumn, TableAction, ActionColumn } from "../../../types/table";
+import type { TableColumn, ActionColumn } from "../../../types/table";
 import { BLOOGIE_COLORS as colors } from "../../../types/table";
 import type { IReportResponse, EReportType } from "../../../types/report";
 
 interface ReportTableProps {
   reports: IReportResponse[];
-  // 👇 SỬA Ở ĐÂY: Thêm dấu ? để cho phép undefined
   onApprove?: (reportId: number) => void;
   onReject?: (reportId: number) => void;
   loadingId: number | null;
@@ -183,10 +182,8 @@ const ReportTable: React.FC<ReportTableProps> = ({
     },
   ];
 
-  // 👇 TẠO MULTIPLE ACTION COLUMNS
   const actionColumns: ActionColumn<IReportResponse>[] = [];
 
-  // 👇 CỘT ACTION 1: PHÊ DUYỆT BÁNG CÁO (Phê duyệt - Approve)
   if (onApprove) {
     actionColumns.push({
       id: "approve-column",
@@ -235,7 +232,6 @@ const ReportTable: React.FC<ReportTableProps> = ({
     });
   }
 
-  // 👇 CỘT ACTION 2: TỪ CHỐI BÁNG CÁO (Từ chối - Reject)
   if (onReject) {
     actionColumns.push({
       id: "reject-column",

@@ -1,12 +1,11 @@
 import React from 'react';
 import { Box, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
-import type { ITableRow, TableColumn, TableAction, ActionColumn } from '../../types/table';
+import type { ITableRow, TableColumn, ActionColumn } from '../../types/table';
 import { BLOOGIE_COLORS } from '../../types/table';
 
 interface GenericTableProps<T extends ITableRow> {
   data: T[];
   columns: TableColumn<T>[];
-  actions?: TableAction<T>[];
   actionColumns?: ActionColumn<T>[];
   emptyMessage?: string;
   loading?: boolean;
@@ -25,7 +24,6 @@ const GenericTable = React.forwardRef<HTMLDivElement, GenericTableProps<any>>(
     {
       data,
       columns,
-      actions = [],
       actionColumns = [],
       emptyMessage = 'Không có dữ liệu',
       loading = false,
@@ -93,11 +91,6 @@ const GenericTable = React.forwardRef<HTMLDivElement, GenericTableProps<any>>(
                   {col.label}
                 </TableCell>
               ))}
-              {actions.length > 0 && (
-                <TableCell align="center" sx={{ width: '130px' }}>
-                  Hành động
-                </TableCell>
-              )}
               {actionColumns.map((actionCol) => (
                 <TableCell
                   key={actionCol.id}
@@ -150,49 +143,6 @@ const GenericTable = React.forwardRef<HTMLDivElement, GenericTableProps<any>>(
                     </TableCell>
                   );
                 })}
-                {actions.length > 0 && (
-                  <TableCell
-                    align="center"
-                    sx={{
-                      px: 2,
-                      py: 2,
-                      verticalAlign: 'middle',
-                    }}
-                  >
-                    <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center', flexWrap: 'wrap' }}>
-                      {actions
-                        .filter((action) => !action.visible || action.visible(row))
-                        .map((action) => (
-                          <Box
-                            key={action.id}
-                            component="button"
-                            onClick={() => action.onClick(row)}
-                            disabled={action.disabled?.(row) || false}
-                            title={action.tooltip}
-                            sx={{
-                              padding: '8px 12px',
-                              border: 'none',
-                              borderRadius: '6px',
-                              cursor: action.disabled?.(row) ? 'not-allowed' : 'pointer',
-                              opacity: action.disabled?.(row) ? 0.5 : 1,
-                              transition: 'all 0.2s',
-                              background: 'transparent',
-                              fontSize: typeof action.icon === 'string' ? '16px' : 'inherit',
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '4px',
-                              '&:hover:not(:disabled)': {
-                                opacity: 0.8,
-                              },
-                            }}
-                          >
-                            {typeof action.icon === 'string' ? action.icon : action.icon?.(row)}
-                            {action.label && <span>{action.label}</span>}
-                          </Box>
-                        ))}
-                    </Box>
-                  </TableCell>
-                )}
                 {actionColumns.map((actionCol) => (
                   <TableCell
                     key={actionCol.id}
