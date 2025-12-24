@@ -8,7 +8,6 @@ import {
 } from "react-icons/bi";
 import { FaExclamationTriangle } from "react-icons/fa";
 
-// Import 2 hook mới thay vì useGetAllReports
 import { 
   useGetPendingReports, 
   useGetResolvedReports, 
@@ -18,7 +17,7 @@ import ReportTable from "../../../features/admin/reportManage/ReportTable";
 import type { IReportResponse, EReportType } from "../../../types/report";
 
 type ReportTypeFilter = "ALL" | EReportType;
-type StatusFilter = "PENDING" | "RESOLVED"; // Định nghĩa bộ lọc trạng thái lớn
+type StatusFilter = "PENDING" | "RESOLVED";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -26,16 +25,14 @@ const ReportListPage = () => {
   // --- STATE UI ---
   const [currentPage, setCurrentPage] = useState(1);
   const [typeFilter, setTypeFilter] = useState<ReportTypeFilter>("ALL");
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("PENDING"); // Mặc định là PENDING
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("PENDING");
   const [actionLoading, setActionLoading] = useState<number | null>(null);
 
   // --- REACT QUERY HOOKS ---
-  // Gọi cả 2 hooks nhưng chỉ lấy data dựa trên statusFilter hiện tại
   const pendingQuery = useGetPendingReports();
   const resolvedQuery = useGetResolvedReports();
   const { mutate: resolveReport } = useResolveReport();
 
-  // Xác định query đang active dựa trên tab
   const activeQuery = statusFilter === "PENDING" ? pendingQuery : resolvedQuery;
   
   const { 
@@ -96,7 +93,6 @@ const ReportListPage = () => {
       {
         onSuccess: () => {
           setActionLoading(null);
-          // Không cần refetch thủ công vì hook useResolveReport đã invalidate query key 'reports'
         },
         onError: () => {
           setActionLoading(null);
@@ -263,7 +259,6 @@ const ReportListPage = () => {
       </div>
 
       {/* TABLE */}
-      {/* Truyền null vào onApprove/onReject nếu đang ở tab RESOLVED để ẩn nút */}
       <ReportTable
         reports={currentViewReports}
         onApprove={statusFilter === "PENDING" ? handleApprove : undefined} 

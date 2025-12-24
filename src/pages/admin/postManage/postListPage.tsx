@@ -3,9 +3,11 @@ import { MdRefresh, MdAutorenew } from "react-icons/md";
 import { BiChevronLeft, BiChevronRight, BiChevronsLeft, BiChevronsRight } from "react-icons/bi";
 import { FaBookmark } from "react-icons/fa";
 import { useGetAllPosts, useHidePost, useRestorePost } from "../../../hooks/usePost"; 
+import { useResolveReport } from "../../../hooks/useReport";
 import { useToast } from "../../../contexts/toast";
 import PostsTable from "../../../features/admin/postManage/PostsTable";
 import { type IPostResponseDto, EBlogPostStatus } from "../../../types/post";
+import type { EReportType } from "../../../types/report";
 
 type StatusFilter = "ALL" | EBlogPostStatus;
 
@@ -28,6 +30,7 @@ const PostListPage = () => {
   // 2. Mutation hooks
   const { mutate: hidePost } = useHidePost();
   const { mutate: restorePost } = useRestorePost();
+  const { mutate: resolveReport } = useResolveReport();
 
   const { showToast } = useToast();
 
@@ -91,6 +94,38 @@ const PostListPage = () => {
         setActionLoading(null);
       }
     });
+  };
+
+  const handleApproveReport = (reportId: number) => {
+    resolveReport(
+      { id: reportId, type: "POST" as EReportType, action: "APPROVE" },
+      {
+        onSuccess: () => {
+          showToast({ type: "success", message: "Báo cáo đã được phê duyệt!" });
+          refetch();
+        },
+        onError: (err: any) => {
+          const msg = err?.response?.data?.message || err.message || "Lỗi khi xử lý báo cáo";
+          showToast({ type: "error", message: msg });
+        },
+      }
+    );
+  };
+
+  const handleRejectReport = (reportId: number) => {
+    resolveReport(
+      { id: reportId, type: "POST" as EReportType, action: "REJECT" },
+      {
+        onSuccess: () => {
+          showToast({ type: "success", message: "Báo cáo đã được từ chối!" });
+          refetch();
+        },
+        onError: (err: any) => {
+          const msg = err?.response?.data?.message || err.message || "Lỗi khi xử lý báo cáo";
+          showToast({ type: "error", message: msg });
+        },
+      }
+    );
   };
 
   useEffect(() => {
@@ -230,7 +265,9 @@ const PostListPage = () => {
         posts={normalizedPosts}
         onHide={handleHide}
         onRestore={handleRestore}
-        loadingId={actionLoading} 
+        onApproveReport={handleApproveReport}
+        onRejectReport={handleRejectReport}
+        loadingId={actionLoading}
         emptyMessage={
           filterStatus !== "ALL"
             ? `Không có bài viết nào với trạng thái "${filterStatus}"`

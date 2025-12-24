@@ -7,6 +7,7 @@ import {
   getPendingReports,
   getResolvedReports,
   resolveReport,
+  getReportsByPost,
 } from '../services/user/report/reportService';
 import type {
   ICreateReportRequest,
@@ -99,7 +100,7 @@ const getTargetId = (data: ICreateReportRequest): number => {
 // GET REPORTS LIST HOOKS
 // ============================================
 
-// 1. Get ALL reports
+// Get ALL reports
 export const useGetAllReports = () => {
   return useQuery<IReportResponse[]>({
     queryKey: reportKeys.all,
@@ -107,7 +108,7 @@ export const useGetAllReports = () => {
   });
 };
 
-// 2. Get PENDING reports (Mới thêm)
+// Get PENDING reports
 export const useGetPendingReports = () => {
   return useQuery<IReportResponse[]>({
     queryKey: reportKeys.pending,
@@ -115,11 +116,27 @@ export const useGetPendingReports = () => {
   });
 };
 
-// 3. Get RESOLVED reports (Mới thêm)
+// Get RESOLVED reports
 export const useGetResolvedReports = () => {
   return useQuery<IReportResponse[]>({
     queryKey: reportKeys.resolved,
     queryFn: getResolvedReports,
+  });
+};
+
+/**
+ * Hook to get reports for a specific post
+ * @param postId 
+ */
+export const useGetReportsByPost = (postId: number) => {
+  return useQuery({
+    queryKey: ["reports", "post", postId], 
+    
+    queryFn: () => getReportsByPost(postId),
+
+    enabled: Number.isFinite(postId) && postId > 0,
+
+    placeholderData: (previousData) => previousData,
   });
 };
 
