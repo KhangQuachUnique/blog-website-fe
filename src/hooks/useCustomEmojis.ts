@@ -15,7 +15,7 @@ export const useCustomEmojis = (userId?: number) => {
     initialData: () => (userId ? loadEmojiCache(userId) : undefined),
 
     queryFn: async () => {
-      const emojis = await getUserCommunityEmojis(12);
+      const emojis = await getUserCommunityEmojis(userId!);
       saveEmojiCache(userId!, emojis);
       return emojis;
     },

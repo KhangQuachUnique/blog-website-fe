@@ -18,9 +18,11 @@ interface EmojiSelectorProps {
   onToggleReact: ({
     emojiId,
     codepoint,
+    emojiUrl,
   }: {
     emojiId?: number;
     codepoint?: string;
+    emojiUrl?: string;
   }) => void;
   onRecentUpdate?: (codepoint: string) => void;
 }
@@ -71,11 +73,13 @@ export const EmojiSelector: React.FC<EmojiSelectorProps> = ({
   const handleSelect = ({
     emojiId,
     codepoint,
+    emojiUrl,
   }: {
     emojiId?: number;
     codepoint?: string;
+    emojiUrl?: string;
   }) => {
-    onToggleReact({ emojiId, codepoint });
+    onToggleReact({ emojiId, codepoint, emojiUrl });
 
     if (codepoint) {
       onRecentUpdate?.(codepoint);
