@@ -8,7 +8,10 @@ import {
   getManagePostsByCommunityId,
   approvePost,
   deletePost,
+  hidePost,
+  restorePost,
 } from "../services/user/post/postService";
+import { type IPostResponseDto, EBlogPostStatus } from "../types/post";
 
 /**
  * Hook to get a blog post by ID
@@ -50,6 +53,65 @@ export const useCreatePost = () => {
 export const useUpdatePost = () => {
   return useMutation({
     mutationFn: updatePost,
+  });
+};
+
+/**
+ * Hook to hide a blog post
+ * Used for Admin or Community Manager
+ */
+export const useHidePost = () => {
+  const qc = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (postId: number) => hidePost(postId),
+    
+    onSuccess: (_, postId) => {
+      qc.setQueryData<IPostResponseDto[]>(["posts"], (oldPosts) => {
+        if (!oldPosts) return [];
+        return oldPosts.map((post) =>
+          post.id === postId 
+            ? { ...post, status: EBlogPostStatus.HIDDEN }
+            : post
+        );
+      });
+
+      qc.setQueryData<IPostResponseDto>(["post", postId], (oldPost) => {
+          if (!oldPost) return oldPost;
+          return { ...oldPost, status: EBlogPostStatus.HIDDEN };
+      });
+
+      qc.invalidateQueries({ queryKey: ["posts"] });
+    },
+  });
+};
+
+/**
+ * Hook to restore a hidden blog post
+ */
+export const useRestorePost = () => {
+  const qc = useQueryClient();
+
+  return useMutation({
+    mutationFn: (postId: number) => restorePost(postId),
+    
+    onSuccess: (_, postId) => {
+      qc.setQueryData<IPostResponseDto[]>(["posts"], (oldPosts) => {
+        if (!oldPosts) return [];
+        return oldPosts.map((post) =>
+          post.id === postId 
+            ? { ...post, status: EBlogPostStatus.ACTIVE }
+            : post
+        );
+      });
+
+      qc.setQueryData<IPostResponseDto>(["post", postId], (oldPost) => {
+          if (!oldPost) return oldPost;
+          return { ...oldPost, status: EBlogPostStatus.ACTIVE };
+      });
+
+      qc.invalidateQueries({ queryKey: ["posts"] });
+    },
   });
 };
 

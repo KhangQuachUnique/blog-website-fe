@@ -2,8 +2,7 @@ import { useEffect, useState, useMemo } from "react";
 import { MdRefresh, MdAutorenew } from "react-icons/md";
 import { BiChevronLeft, BiChevronRight, BiChevronsLeft, BiChevronsRight } from "react-icons/bi";
 import { FaBookmark } from "react-icons/fa";
-import { useGetAllPosts } from "../../../hooks/usePost"; 
-import { useQueryClient } from "@tanstack/react-query";
+import { useGetAllPosts, useHidePost, useRestorePost } from "../../../hooks/usePost"; 
 import { useToast } from "../../../contexts/toast";
 import PostsTable from "../../../features/admin/postManage/PostsTable";
 import { type IPostResponseDto, EBlogPostStatus } from "../../../types/post";
@@ -17,6 +16,7 @@ const PostListPage = () => {
   const [actionLoading, setActionLoading] = useState<number | null>(null);
   const [currentPage, setCurrentPage] = useState<number>(1);
 
+  // 1. Data fetching hook
   const {
     data: allPosts = [] as IPostResponseDto[],
     isLoading,
@@ -25,7 +25,10 @@ const PostListPage = () => {
     refetch,
   } = useGetAllPosts();
 
-  const queryClient = useQueryClient();
+  // 2. Mutation hooks
+  const { mutate: hidePost } = useHidePost();
+  const { mutate: restorePost } = useRestorePost();
+
   const { showToast } = useToast();
 
   // --- CLIENT-SIDE LOGIC ---
@@ -54,55 +57,40 @@ const PostListPage = () => {
     currentPage * ITEMS_PER_PAGE
   );
 
-  // --- CACHE UPDATE ---
-  const updateLocalCache = (postId: number, newStatus: EBlogPostStatus) => {
-    queryClient.setQueryData<IPostResponseDto[]>(["posts"], (old) => {
-        if (!Array.isArray(old)) return old;
-        return old.map((p) => 
-            p.id === postId ? { ...p, status: newStatus } : p
-        );
+  // --- HANDLERS ---
+
+  const handleHide = (postId: number) => {
+    setActionLoading(postId);
+    
+    hidePost(postId, {
+      onSuccess: () => {
+        showToast({ type: "success", message: "Ẩn bài viết thành công!" });
+      },
+      onError: (err: any) => {
+        const msg = err?.response?.data?.message || err.message || "Lỗi khi ẩn bài viết";
+        showToast({ type: "error", message: msg });
+      },
+      onSettled: () => {
+        setActionLoading(null);
+      }
     });
   };
 
-  // --- HANDLERS ---
-  const handleHide = async (postId: number) => {
+  const handleRestore = (postId: number) => {
     setActionLoading(postId);
-    try {
-      const response = await fetch(
-        `${import.meta.env.VITE_BACKEND_URL || 'http://localhost:8080'}/blog-posts/${postId}/hide`,
-        { method: "PATCH" }
-      );
 
-      if (!response.ok) throw new Error("Lỗi khi ẩn bài viết");
-      
-      updateLocalCache(postId, EBlogPostStatus.HIDDEN);
-      showToast({ type: "success", message: "Ẩn bài viết thành công!" });
-      
-    } catch (err: any) {
-      showToast({ type: "error", message: err.message });
-    } finally {
-      setActionLoading(null);
-    }
-  };
-
-  const handleRestore = async (postId: number) => {
-    setActionLoading(postId);
-    try {
-      const response = await fetch(
-        `${import.meta.env.VITE_BACKEND_URL || 'http://localhost:8080'}/blog-posts/${postId}/restore`,
-        { method: "PATCH" }
-      );
-
-      if (!response.ok) throw new Error("Lỗi khi phục hồi bài viết");
-      
-      updateLocalCache(postId, EBlogPostStatus.ACTIVE);
-      showToast({ type: "success", message: "Phục hồi bài viết thành công!" });
-
-    } catch (err: any) {
-      showToast({ type: "error", message: err.message });
-    } finally {
-      setActionLoading(null);
-    }
+    restorePost(postId, {
+      onSuccess: () => {
+        showToast({ type: "success", message: "Phục hồi bài viết thành công!" });
+      },
+      onError: (err: any) => {
+        const msg = err?.response?.data?.message || err.message || "Lỗi khi phục hồi bài viết";
+        showToast({ type: "error", message: msg });
+      },
+      onSettled: () => {
+        setActionLoading(null);
+      }
+    });
   };
 
   useEffect(() => {
