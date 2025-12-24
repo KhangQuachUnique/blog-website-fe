@@ -76,7 +76,7 @@ const ReportTable: React.FC<ReportTableProps> = ({
     {
       id: "type",
       label: "Loại",
-      width: "150px",
+      width: "160px",
       align: "left",
       render: (report) => {
         const typeColor = getReportTypeColor(report.type);

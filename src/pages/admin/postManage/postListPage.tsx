@@ -144,7 +144,7 @@ const PostListPage = () => {
   }
 
   return (
-    <div className="py-8 px-6 bg-white min-h-screen px-[80px]">
+    <div className="py-8 px-6 bg-white min-h-screen">
       <div className="mb-8">
         <div className="flex justify-between items-start mb-6">
           <div>
