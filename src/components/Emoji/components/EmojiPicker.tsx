@@ -13,9 +13,11 @@ interface EmojiPickerProps {
   onSelect: ({
     emojiId,
     codepoint,
+    emojiUrl,
   }: {
     emojiId?: number;
     codepoint?: string;
+    emojiUrl?: string;
   }) => void;
   onClose: () => void;
 }
@@ -108,6 +110,7 @@ export const EmojiPicker: React.FC<EmojiPickerProps> = ({
     onSelect({
       emojiId: emoji.id,
       codepoint: emoji.codepoint,
+      emojiUrl: emoji.emojiUrl,
     });
     onClose(); // Close picker immediately after selection
   };

@@ -147,7 +147,7 @@ export function updatePostReacts(
   }
 
   const newEmojis = [...post.reacts.emojis];
-  const { emojiId, codepoint } = toggleData;
+  const { emojiId, codepoint, emojiUrl } = toggleData;
 
   const index = newEmojis.findIndex((r) =>
     emojiId ? r.emojiId === emojiId : r.codepoint === codepoint
@@ -162,6 +162,7 @@ export function updatePostReacts(
       } else {
         newEmojis[index] = {
           ...current,
+          emojiUrl: current.emojiUrl,
           totalCount: current.totalCount - 1,
           reactedByCurrentUser: false,
         };
@@ -169,14 +170,17 @@ export function updatePostReacts(
     } else {
       newEmojis[index] = {
         ...current,
+        emojiUrl: current.emojiUrl,
         totalCount: current.totalCount + 1,
         reactedByCurrentUser: true,
       };
     }
   } else {
+    console.log("Toggling a new reaction", toggleData);
     newEmojis.push({
       emojiId,
       codepoint,
+      emojiUrl,
       totalCount: 1,
       reactedByCurrentUser: true,
       type: emojiId ? "CUSTOM" : "UNICODE",
