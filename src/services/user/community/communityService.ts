@@ -1,10 +1,13 @@
 // src/services/user/community/communityService.ts
 import axios from "../../../config/axiosCustomize";
 import type {
-  CreateCommunityPayload,
-  Community,
+  ECommunityRoleString,
+  ICommunityDetailResponse,
+  ICommunityResponse,
+  ICreateCommunityDto,
+  IMemberResponse,
+  IUpdateCommunityDto,
 } from "../../../types/community";
-import type { CommunitySettings } from "../../../types/community";
 
 export type CommunityRole = "ADMIN" | "MODERATOR" | "MEMBER";
 export type ManageCommunityRole = CommunityRole | "PENDING";
@@ -26,15 +29,15 @@ export interface UpdateCommunitySettingsPayload {
 }
 
 // Lấy danh sách community của user hiện tại
-export async function getMyCommunities(): Promise<Community[]> {
+export async function getMyCommunities(): Promise<ICommunityResponse[]> {
   const res = await axios.get("/communities/my");
   return res;
 }
 
 // Tạo community mới
 export async function createCommunity(
-  payload: CreateCommunityPayload
-): Promise<Community> {
+  payload: ICreateCommunityDto
+): Promise<ICommunityResponse> {
   const res = await axios.post("/communities", payload);
   return res;
 }
@@ -42,21 +45,21 @@ export async function createCommunity(
 // Settings giữ như bạn đang dùng
 export const getCommunitySettings = async (
   communityId: number
-): Promise<CommunitySettings> => {
+): Promise<ICommunityDetailResponse> => {
   return axios.get(`/communities/${communityId}/settings`);
 };
 
 // ✅ Update settings (dùng cho trang /manage/settings)
 export const updateCommunitySettings = (
   communityId: number,
-  payload: UpdateCommunitySettingsPayload
+  payload: IUpdateCommunityDto
 ) => {
   return axios.patch(`/communities/${communityId}`, payload);
 };
 
 // Members (public tab): BE mặc định Not(PENDING) nên OK
 export const getCommunityMembers = (communityId: number) => {
-  return axios.get<CommunityMember[], CommunityMember[]>(
+  return axios.get<IMemberResponse[], IMemberResponse[]>(
     `/communities/${communityId}/members`
   );
 };
@@ -66,7 +69,7 @@ export const getManageCommunityMembers = (
   communityId: number,
   role?: ManageCommunityRole
 ) => {
-  return axios.get<CommunityMember[], CommunityMember[]>(
+  return axios.get<IMemberResponse[], IMemberResponse[]>(
     `/communities/${communityId}/members`,
     { params: role ? { role } : undefined }
   );
@@ -76,7 +79,7 @@ export const getManageCommunityMembers = (
 export const updateCommunityMemberRole = (
   communityId: number,
   memberId: number,
-  role: CommunityRole // chỉ cho set 3 role chính
+  role: ECommunityRoleString // chỉ cho set 3 role chính
 ) => {
   return axios.patch(`/communities/${communityId}/members/${memberId}/role`, {
     role,
@@ -89,7 +92,8 @@ export const removeCommunityMember = (
   memberId: number,
   opts?: { ban?: boolean }
 ) => {
-  return axios.delete(`/communities/${communityId}/members/${memberId}`,
+  return axios.delete(
+    `/communities/${communityId}/members/${memberId}`,
     opts?.ban ? { params: { ban: 1 } } : undefined
   );
 };
