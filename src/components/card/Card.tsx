@@ -4,7 +4,7 @@ import Avatar from "@mui/material/Avatar";
 
 import type { IPostResponseDto } from "../../types/post";
 import { EPostType } from "../../types/post";
-import InteractBar from "../interactBar/InteractBar";
+import InteractBar from "../InteractBar/InteractBar";
 import { recordViewedPost } from "../../services/user/viewedHistory/viewedHistory";
 import { useAuth } from "../../contexts/AuthContext";
 import { useGetPostById } from "../../hooks/usePost";
@@ -245,6 +245,7 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
                 userId={user?.id ?? 0}
                 votes={post.votes}
                 totalComments={post.totalComments}
+                post={fetchedOriginal ?? post}
               />
             </div>
           </div>
@@ -375,6 +376,7 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
                   userId={user?.id ?? 0}
                   votes={post.votes}
                   totalComments={post.totalComments}
+                  post={post}
                 />
               </div>
             </div>
