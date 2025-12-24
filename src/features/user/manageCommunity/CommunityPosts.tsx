@@ -4,6 +4,7 @@ import { useGetCommunitySettings } from "../../../hooks/useCommunity";
 import Card from "../../../components/card/Card";
 import CustomButton from "../../../components/button";
 import { useNavigate } from "react-router-dom";
+import { FaLock } from "react-icons/fa";
 
 const CommunityPosts = () => {
   const { id } = useParams();
@@ -24,8 +25,12 @@ const CommunityPosts = () => {
   if (isPrivateLocked) {
     return (
       <div className="community-card" style={{ marginTop: 20 }}>
-        <div style={{ fontWeight: 700, marginBottom: 6 }}>
-          🔒 Cộng đồng riêng tư
+        <div
+          style={{ fontWeight: 700, marginBottom: 6 }}
+          className="flex items-center"
+        >
+          <FaLock style={{ marginRight: 6 }} color="#a0a0a0ff" />
+          Cộng đồng riêng tư
         </div>
         <div style={{ color: "#666", fontSize: 14 }}>
           Bạn cần tham gia để xem bài viết.

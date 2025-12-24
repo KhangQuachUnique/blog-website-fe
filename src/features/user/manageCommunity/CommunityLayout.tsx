@@ -14,6 +14,7 @@ import {
 import { useToast } from "../../../contexts/toast";
 import "../../../styles/community.css";
 import CustomButton from "../../../components/button";
+import { FaLock } from "react-icons/fa";
 
 const CommunityLayout = () => {
   const { id } = useParams();
@@ -226,8 +227,12 @@ const CommunityLayout = () => {
 
         {isPrivateLocked && (
           <div className="community-card mt-14">
-            <div style={{ fontWeight: 700, marginBottom: 6 }}>
-              🔒 Cộng đồng riêng tư
+            <div
+              style={{ fontWeight: 700, marginBottom: 6 }}
+              className="flex items-center"
+            >
+              <FaLock style={{ marginRight: 6 }} color="#a0a0a0ff" />
+              Cộng đồng riêng tư
             </div>
             <div style={{ color: "#666", fontSize: 14 }}>
               Bạn cần tham gia (và được duyệt nếu có) để xem bài viết và danh
