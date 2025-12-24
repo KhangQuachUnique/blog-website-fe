@@ -20,6 +20,7 @@ export const getAllPosts = async (): Promise<IPostResponseDto[]> => {
 export const createPost = async (
   data: ICreateBlogPostDto
 ): Promise<IPostResponseDto> => {
+  console.log("Creating post with data:", data);
   const response = await axios.post<IPostResponseDto>("/blog-posts", data);
   return response;
 };
@@ -28,6 +29,7 @@ export const updatePost = async (
   data: IUpdateBlogPostDto
 ): Promise<IPostResponseDto> => {
   const { id, ...updateData } = data;
+  console.log("Updating post with data:", updateData);
   const response = await axios.patch<IPostResponseDto>(
     `/blog-posts/${id}`,
     updateData
