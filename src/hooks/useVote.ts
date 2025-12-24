@@ -12,6 +12,12 @@ import type {
   INewsfeedItemDto,
 } from "../types/newsfeed";
 import type { IPostResponseDto } from "../types/post";
+import type { SavedPostListResponse } from "../types/savedPost";
+import { useSearchParams } from "react-router-dom";
+import type {
+  ISearchResponseDto,
+  SearchResultItem,
+} from "../services/search/search.service";
 
 // ============================================
 // QUERY KEYS
@@ -50,6 +56,9 @@ export const useVoteStatus = (userId: number | null, postId: number) => {
 export const useVote = (userId: number, postId: number) => {
   const queryClient = useQueryClient();
   const sessionSeed = getOrCreateSessionSeed();
+  const [searchParams] = useSearchParams();
+
+  const q = searchParams.get("q") || "";
 
   return useMutation({
     mutationFn: (voteType: VoteType) => votePost(userId, postId, voteType),
@@ -60,19 +69,59 @@ export const useVote = (userId: number, postId: number) => {
         queryKey: ["newsfeed", sessionSeed],
       });
 
+      await queryClient.cancelQueries({
+        queryKey: ["post", postId],
+      });
+
+      await queryClient.cancelQueries({
+        queryKey: ["search", q, "post"],
+      });
+
+      await queryClient.cancelQueries({
+        queryKey: ["savedPost", "list"],
+      });
+
       const previousFeed = queryClient.getQueryData<
         InfiniteData<IGetNewsfeedResponseDto>
       >(["newsfeed", sessionSeed]);
 
+      const previousPost = queryClient.getQueryData<IPostResponseDto>([
+        "post",
+        postId,
+      ]);
+
+      const previousSearchResults = queryClient.getQueryData<
+        InfiniteData<ISearchResponseDto>
+      >(["search", q, "post"]);
+
+      const previousSavedPosts =
+        queryClient.getQueryData<SavedPostListResponse>(["savedPost", "list"]);
+
       const newFeed = updateNewsfeedVotes(previousFeed, voteType, postId);
+      const newPost = updateSinglePostVotes(previousPost, voteType);
+      const newSearchResults = updateSearchPostVotes(
+        previousSearchResults,
+        voteType,
+        postId
+      );
+      const newSavedPosts = updateSavedPostReacts(
+        previousSavedPosts,
+        voteType,
+        postId
+      );
 
       queryClient.setQueryData(["newsfeed", sessionSeed], newFeed);
-
-      console.log("Previous Feed:", previousFeed);
-      console.log("After Vote - New Feed:", newFeed);
+      queryClient.setQueryData(["post", postId], newPost);
+      queryClient.setQueryData(["search", q, "post"], newSearchResults);
+      queryClient.setQueryData(["savedPost", "list"], newSavedPosts);
 
       // Return context with previous value
-      return { previousFeed };
+      return {
+        previousFeed,
+        previousSearchResults,
+        previousSavedPosts,
+        previousPost,
+      };
     },
 
     // On error, rollback
@@ -81,6 +130,24 @@ export const useVote = (userId: number, postId: number) => {
         queryClient.setQueryData(
           ["newsfeed", sessionSeed],
           context.previousFeed
+        );
+      }
+
+      if (context?.previousPost) {
+        queryClient.setQueryData(["post", postId], context.previousPost);
+      }
+
+      if (context?.previousSearchResults) {
+        queryClient.setQueryData(
+          ["search", q, "post"],
+          context.previousSearchResults
+        );
+      }
+
+      if (context?.previousSavedPosts) {
+        queryClient.setQueryData(
+          ["savedPost", "list"],
+          context.previousSavedPosts
         );
       }
     },
@@ -163,3 +230,60 @@ export function updateNewsfeedVotes(
     })),
   };
 }
+
+const updateSinglePostVotes = (
+  post: IPostResponseDto | undefined,
+  voteType: VoteType
+): IPostResponseDto | undefined => {
+  return post ? updatePostVotes(post, voteType) : post;
+};
+
+const updateSearchPostVotes = (
+  searchResults: InfiniteData<ISearchResponseDto> | undefined,
+  voteType: VoteType,
+  postId: number
+): InfiniteData<ISearchResponseDto> | undefined => {
+  if (!searchResults) {
+    return undefined;
+  }
+
+  return {
+    ...searchResults,
+    pages: searchResults.pages.map((page) => ({
+      ...page,
+      items: Array.isArray(page.items)
+        ? page.items.map((post: SearchResultItem) =>
+            post.id === postId
+              ? updatePostVotes(post as IPostResponseDto, voteType)
+              : post
+          )
+        : page.items,
+    })),
+  };
+};
+
+/**
+ *
+ * @param savedPosts
+ * @param voteType
+ * @param postId
+ * @returns
+ */
+const updateSavedPostReacts = (
+  savedPosts: SavedPostListResponse | undefined,
+  voteType: VoteType,
+  postId: number
+): SavedPostListResponse | undefined => {
+  if (!savedPosts) {
+    return undefined;
+  }
+
+  return {
+    ...savedPosts,
+    items: Array.isArray(savedPosts.items)
+      ? savedPosts.items.map((post: IPostResponseDto) =>
+          post.id === postId ? updatePostVotes(post, voteType) : post
+        )
+      : savedPosts.items,
+  };
+};
