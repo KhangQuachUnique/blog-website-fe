@@ -6,7 +6,7 @@ import {
   updateCommunitySettings,
 } from "../services/user/community/communityService";
 
-import type { UpdateCommunitySettingsPayload } from "../services/user/community/communityService";
+import type { IUpdateCommunityDto } from "../types/community";
 
 export const useGetCommunitySettings = (communityId: number) => {
   return useQuery({
@@ -38,7 +38,7 @@ export const useUpdateCommunitySettings = (communityId: number) => {
   const qc = useQueryClient();
 
   return useMutation({
-    mutationFn: (payload: UpdateCommunitySettingsPayload) =>
+    mutationFn: (payload: IUpdateCommunityDto) =>
       updateCommunitySettings(communityId, payload),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["communitySettings", communityId] });

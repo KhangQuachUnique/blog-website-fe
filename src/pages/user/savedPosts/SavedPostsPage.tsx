@@ -1,11 +1,12 @@
 import { useRef } from "react";
 import { Link } from "react-router-dom";
-import { Loader2, Bookmark } from "lucide-react";
+import { Bookmark } from "lucide-react";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useGetSavedPosts } from "../../../hooks/useSavedPost";
 import Card from "../../../components/card/Card";
 import "../../../styles/savedPosts/SavedPosts.css";
 import "../../../styles/newsfeed/Card.css";
+import { CardSkeleton } from "../../../components/skeleton/CardSkeleton";
 
 /**
  * 🔖 SavedPostsPage
@@ -55,10 +56,9 @@ export default function SavedPostsPage() {
   if (isLoading) {
     return (
       <div className="saved-posts-page">
-        <div className="saved-posts-loading">
-          <Loader2 className="saved-posts-loading__spinner" />
-          <span>Đang tải...</span>
-        </div>
+        <CardSkeleton />
+        <CardSkeleton />
+        <CardSkeleton />
       </div>
     );
   }

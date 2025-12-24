@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Users } from "lucide-react";
-import { type Community } from "../../../types/community";
+import type { ICommunityResponse } from "../../../types/community";
 import {
   useCreateCommunity,
   useGetMyCommunities,
@@ -13,7 +13,7 @@ const MyCommunitiesPage = () => {
 
   const { data, isLoading, isError } = useGetMyCommunities();
 
-  const communities = data ?? [];
+  const communities = (data ?? []) as ICommunityResponse[];
 
   // state cho modal tạo cộng đồng
   const [openCreate, setOpenCreate] = useState(false);
@@ -25,7 +25,7 @@ const MyCommunitiesPage = () => {
 
   const createMutation = useCreateCommunity();
 
-  const handleOpenCommunity = (community: Community) => {
+  const handleOpenCommunity = (community: ICommunityResponse) => {
     // Tạm thời: tất cả đều đi tới manage của community đó
     // sau này nếu có trang view riêng cho member thì bạn tách ra
     navigate(`/community/${community.id}`);
@@ -117,89 +117,85 @@ const MyCommunitiesPage = () => {
         )}
 
         {!isLoading && !isError && communities.length > 0 && (
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
-              gap: 16,
-            }}
-          >
+          <div className="space-y-6">
             {communities.map((c) => (
               <button
                 key={c.id}
-                className="community-card"
-                style={{
-                  textAlign: "left",
-                  cursor: "pointer",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 10,
-                }}
                 onClick={() => handleOpenCommunity(c)}
+                className="bg-white text-gray-900 rounded-lg flex transform transition duration-150 border border-pink-100 overflow-hidden h-45 w-full hover:-translate-y-1  hover:ring-pink-100"
               >
-                <div style={{ display: "flex", gap: 12 }}>
-                  <img
-                    src={c.thumbnailUrl}
-                    alt=""
-                    style={{
-                      width: 56,
-                      height: 56,
-                      borderRadius: 16,
-                      objectFit: "cover",
-                    }}
-                  />
-                  <div style={{ flex: 1 }}>
-                    <div
-                      style={{
-                        fontWeight: 600,
-                        marginBottom: 4,
-                        fontSize: 15,
-                      }}
-                    >
+                {/* Left: thumbnail fills full card height */}
+                <div className="w-50 h-full flex-shrink-0">
+                  {c.thumbnailUrl ? (
+                    <img
+                      src={c.thumbnailUrl}
+                      alt={c.name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-700 font-semibold">
+                      {c.name?.[0] || "C"}
+                    </div>
+                  )}
+                </div>
+
+                {/* Right: content */}
+                <div className="flex-1 p-4 flex flex-col justify-between min-w-0">
+                  <div className="min-w-0 pr-4">
+                    <div className="text-2xl font-bold mb-4 truncate text-left">
                       {c.name}
                     </div>
-                    <div
-                      style={{
-                        fontSize: 12,
-                        color: "#777",
-                        marginBottom: 4,
-                      }}
-                    >
-                      {c.memberCount} thành viên ·{" "}
-                      {c.isPublic ? "Công khai" : "Riêng tư"}
+                    {c.description && (
+                      <div className="text-sm text-gray-600 line-clamp-2 overflow-hidden text-left">
+                        {c.description}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex items-center justify-between mt-3">
+                    {/* Role badge on the left (larger, softer color) */}
+                    <div className="flex-shrink-0">
+                      {c.role && c.role !== "NONE" && (
+                        <span
+                          className={`text-sm font-semibold px-3 py-1 rounded-full ${
+                            c.role === "ADMIN"
+                              ? "bg-pink-100 text-pink-700"
+                              : c.role === "MODERATOR"
+                              ? "bg-amber-100 text-amber-700"
+                              : c.role === "MEMBER"
+                              ? "bg-sky-100 text-sky-700"
+                              : c.role === "PENDING"
+                              ? "bg-gray-100 text-gray-700"
+                              : "bg-rose-100 text-rose-700"
+                          }`}
+                        >
+                          {c.role === "ADMIN"
+                            ? "Admin"
+                            : c.role === "MODERATOR"
+                            ? "Moderator"
+                            : c.role === "MEMBER"
+                            ? "Thành viên"
+                            : c.role === "PENDING"
+                            ? "Chờ duyệt"
+                            : "Bị khóa"}
+                        </span>
+                      )}
                     </div>
-                    <div
-                      style={{
-                        display: "inline-block",
-                        padding: "2px 10px",
-                        borderRadius: 999,
-                        fontSize: 11,
-                        background:
-                          c.role === "ADMIN" || c.role === "MODERATOR"
-                            ? "#ffe4f1"
-                            : "#e3f2fd",
-                        color:
-                          c.role === "ADMIN" || c.role === "MODERATOR"
-                            ? "#d81b60"
-                            : "#1976d2",
-                      }}
-                    >
-                      {c.role === "ADMIN"
-                        ? "Admin"
-                        : c.role === "MODERATOR"
-                        ? "Moderator"
-                        : "Thành viên"}
+
+                    {/* Meta on the right */}
+                    <div className="text-right">
+                      <div className="flex items-center gap-2 justify-end text-gray-600">
+                        <Users size={18} />
+                        <div className="text-sm font-medium">
+                          {c.memberCount}
+                        </div>
+                      </div>
+                      <div className="mt-1 text-xs text-gray-400">
+                        {c.isPublic ? "Public" : "Private"}
+                      </div>
                     </div>
                   </div>
                 </div>
-
-                {c.description && (
-                  <p style={{ fontSize: 13, color: "#555", marginTop: 4 }}>
-                    {c.description.length > 90
-                      ? c.description.slice(0, 90) + "..."
-                      : c.description}
-                  </p>
-                )}
               </button>
             ))}
           </div>
