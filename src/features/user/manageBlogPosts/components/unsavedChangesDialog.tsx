@@ -1,4 +1,10 @@
-import { Dialog, DialogActions, DialogTitle, DialogContent, IconButton } from "@mui/material";
+import {
+  Dialog,
+  DialogActions,
+  DialogTitle,
+  DialogContent,
+  IconButton,
+} from "@mui/material";
 import { Close, WarningAmber, ExitToApp, Edit } from "@mui/icons-material";
 import CustomButton from "../../../../components/button";
 
@@ -52,7 +58,7 @@ const UnsavedChangesDialog = ({
       <div
         className="relative px-6 pt-5 pb-4"
         style={{
-          background: `linear-gradient(135deg, ${THEME.warningLight} 0%, white 100%)`,
+          backgroundColor: THEME.warningLight,
           borderBottom: `1px solid ${THEME.warning}20`,
         }}
       >

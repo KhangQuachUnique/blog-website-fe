@@ -1,10 +1,10 @@
 import { useParams } from "react-router-dom";
 import { useGetCommunityPosts } from "../../../hooks/usePost";
 import { useGetCommunitySettings } from "../../../hooks/useCommunity";
-import NewsfeedList from "../../../components/newsfeedList/NewsfeedList";
-
-// ✅ ADDED: import type để cast cho đúng props của NewsfeedList
-import type { INewsfeedItemDto } from "../../../types/newsfeed";
+import Card from "../../../components/card/Card";
+import CustomButton from "../../../components/button";
+import { useNavigate } from "react-router-dom";
+import { FaLock } from "react-icons/fa";
 
 const CommunityPosts = () => {
   const { id } = useParams();
@@ -20,11 +20,18 @@ const CommunityPosts = () => {
     : false;
 
   const { data: posts, isLoading, isError } = useGetCommunityPosts(communityId);
+  const navigate = useNavigate();
 
   if (isPrivateLocked) {
     return (
       <div className="community-card" style={{ marginTop: 20 }}>
-        <div style={{ fontWeight: 700, marginBottom: 6 }}>🔒 Cộng đồng riêng tư</div>
+        <div
+          style={{ fontWeight: 700, marginBottom: 6 }}
+          className="flex items-center"
+        >
+          <FaLock style={{ marginRight: 6 }} color="#a0a0a0ff" />
+          Cộng đồng riêng tư
+        </div>
         <div style={{ color: "#666", fontSize: 14 }}>
           Bạn cần tham gia để xem bài viết.
         </div>
@@ -39,21 +46,41 @@ const CommunityPosts = () => {
 
   return (
     <div style={{ marginTop: 20 }}>
-      <h3>Bài viết gần đây</h3>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        <h3>Bài viết gần đây</h3>
+        {isMemberApproved && (
+          <CustomButton
+            variant="outline"
+            onClick={() => navigate(`/community/${communityId}/create-post`)}
+            style={{
+              border: "2px solid #F295B6",
+              color: "#F295B6",
+              width: "auto",
+            }}
+          >
+            Tạo bài viết
+          </CustomButton>
+        )}
+      </div>
 
       {list.length === 0 ? (
         <div className="community-card" style={{ marginTop: 12 }}>
           Chưa có bài viết nào trong cộng đồng này.
         </div>
       ) : (
-        <div style={{ marginTop: 12 }}>
-          {/* ✅ CHANGED: dùng lại đúng UI Newsfeed (Card) */}
-          {/* ✅ ADDED: cast để khớp Props của NewsfeedList, KHÔNG sửa NewsfeedList */}
-          <NewsfeedList posts={list as unknown as INewsfeedItemDto[]} />
+        <div style={{ marginTop: 12, display: "grid", gap: 22 }}>
+          {list.map((p) => (
+            <Card key={p.id} post={p} />
+          ))}
         </div>
       )}
     </div>
   );
 };
-
 export default CommunityPosts;

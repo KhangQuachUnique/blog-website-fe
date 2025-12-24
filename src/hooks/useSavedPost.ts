@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   toggleSavePost,
   checkIfSaved,
@@ -6,8 +6,11 @@ import {
   getUserSavedPosts,
   getSavedPostsCount,
   removeSavedPost,
-} from '../services/user/savedPost/savedPostService';
-import type { ToggleSavedPostDto, SavedPostListResponse } from '../types/savedPost';
+} from "../services/user/savedPost/savedPostService";
+import type {
+  ToggleSavedPostDto,
+  SavedPostListResponse,
+} from "../types/savedPost";
 
 // ============================================
 // 🔖 Saved Post React Query Hooks
@@ -18,7 +21,7 @@ import type { ToggleSavedPostDto, SavedPostListResponse } from '../types/savedPo
  */
 export const useCheckSaved = (userId: number | null, postId: number) => {
   return useQuery({
-    queryKey: ['savedPost', 'check', userId, postId],
+    queryKey: ["savedPost", "check", userId, postId],
     queryFn: () => checkIfSaved(userId!, postId),
     enabled: !!userId && postId > 0,
     staleTime: 1000 * 60 * 5, // 5 minutes
@@ -33,7 +36,7 @@ export const useBatchCheckSaved = (
   postIds: number[]
 ) => {
   return useQuery({
-    queryKey: ['savedPost', 'batchCheck', userId, postIds.sort().join(',')],
+    queryKey: ["savedPost", "batchCheck", userId, postIds.sort().join(",")],
     queryFn: () => batchCheckSaved(userId!, postIds),
     enabled: !!userId && postIds.length > 0,
     staleTime: 1000 * 60 * 5, // 5 minutes
@@ -54,20 +57,20 @@ export const useToggleSavePost = () => {
     onMutate: async (dto) => {
       // Cancel outgoing refetches
       await queryClient.cancelQueries({
-        queryKey: ['savedPost', 'check', dto.userId, dto.postId],
+        queryKey: ["savedPost", "check", dto.userId, dto.postId],
       });
 
       // Snapshot previous value
       const previousValue = queryClient.getQueryData<boolean>([
-        'savedPost',
-        'check',
+        "savedPost",
+        "check",
         dto.userId,
         dto.postId,
       ]);
 
       // Optimistically update
       queryClient.setQueryData(
-        ['savedPost', 'check', dto.userId, dto.postId],
+        ["savedPost", "check", dto.userId, dto.postId],
         !previousValue
       );
 
@@ -78,7 +81,7 @@ export const useToggleSavePost = () => {
     onError: (_err, dto, context) => {
       if (context?.previousValue !== undefined) {
         queryClient.setQueryData(
-          ['savedPost', 'check', dto.userId, dto.postId],
+          ["savedPost", "check", dto.userId, dto.postId],
           context.previousValue
         );
       }
@@ -88,19 +91,19 @@ export const useToggleSavePost = () => {
     onSuccess: (result, dto) => {
       // Update the check query with actual result
       queryClient.setQueryData(
-        ['savedPost', 'check', dto.userId, dto.postId],
+        ["savedPost", "check", dto.userId, dto.postId],
         result.isSaved
       );
 
       // Invalidate related queries
       queryClient.invalidateQueries({
-        queryKey: ['savedPost', 'list', dto.userId],
+        queryKey: ["savedPost", "list", dto.userId],
       });
       queryClient.invalidateQueries({
-        queryKey: ['savedPost', 'count', dto.userId],
+        queryKey: ["savedPost", "count", dto.userId],
       });
       queryClient.invalidateQueries({
-        queryKey: ['savedPost', 'batchCheck', dto.userId],
+        queryKey: ["savedPost", "batchCheck", dto.userId],
       });
     },
   });
@@ -115,7 +118,7 @@ export const useGetSavedPosts = (
   limit = 20
 ) => {
   return useQuery<SavedPostListResponse>({
-    queryKey: ['savedPost', 'list', userId, page, limit],
+    queryKey: ["savedPost", "list"],
     queryFn: () => getUserSavedPosts(userId!, page, limit),
     enabled: !!userId,
   });
@@ -126,7 +129,7 @@ export const useGetSavedPosts = (
  */
 export const useGetSavedPostsCount = (userId: number | null) => {
   return useQuery({
-    queryKey: ['savedPost', 'count', userId],
+    queryKey: ["savedPost", "count", userId],
     queryFn: () => getSavedPostsCount(userId!),
     enabled: !!userId,
     staleTime: 1000 * 60 * 5, // 5 minutes
@@ -146,10 +149,10 @@ export const useRemoveSavedPost = () => {
     onSuccess: (_, variables) => {
       // Invalidate list and count queries
       queryClient.invalidateQueries({
-        queryKey: ['savedPost', 'list', variables.userId],
+        queryKey: ["savedPost", "list", variables.userId],
       });
       queryClient.invalidateQueries({
-        queryKey: ['savedPost', 'count', variables.userId],
+        queryKey: ["savedPost", "count", variables.userId],
       });
     },
   });
