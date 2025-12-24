@@ -5,6 +5,7 @@ import { EmojiReactionBar } from "../Emoji/components/EmojiReactionBar";
 import { EmojiSelector } from "./components/EmojiSelector";
 import { useEmojiData } from "../Emoji/hooks/useEmojiData";
 import { useRecentEmojis } from "../Emoji/hooks/useRecentEmoji";
+import { useToast } from "../../contexts/toast";
 
 export interface ReactionSectionProps {
   postId: number;
@@ -15,12 +16,8 @@ const ReactionSection = ({ postId, reactions }: ReactionSectionProps) => {
   const { user, isAuthenticated } = useAuthUser();
   const { recent, add } = useRecentEmojis();
   const emojisData = useEmojiData();
-  console.log("Emoji data:", emojisData);
   const mutation = useTogglePostReact();
-
-  if (!isAuthenticated || !user) {
-    return null;
-  }
+  const { showToast } = useToast();
 
   const handleToggleReact = ({
     emojiId,
@@ -31,6 +28,13 @@ const ReactionSection = ({ postId, reactions }: ReactionSectionProps) => {
     codepoint?: string;
     emojiUrl?: string;
   }) => {
+    if (!isAuthenticated || !user) {
+      showToast({
+        message: "Bạn cần đăng nhập để thả cảm xúc!",
+        type: "info",
+      });
+      return;
+    }
     mutation.mutate(
       { emojiId, codepoint, emojiUrl, postId, userId: user.id },
       {

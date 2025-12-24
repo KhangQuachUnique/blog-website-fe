@@ -123,10 +123,10 @@ export const useGetCommunityPosts = (communityId: number) => {
   });
 };
 
-export const useGetCommunityManagePosts = (communityId: number, status?: string) => {
+export const useGetCommunityManagePosts = (communityId: number) => {
   return useQuery({
-    queryKey: ["community-manage-posts", communityId, status ?? "ALL"],
-    queryFn: async () => (await getManagePostsByCommunityId(communityId, status)),
+    queryKey: ["community-manage-posts", communityId],
+    queryFn: async () => await getManagePostsByCommunityId(communityId),
     enabled: Number.isFinite(communityId) && communityId > 0,
   });
 };
@@ -135,8 +135,11 @@ export const useApprovePost = (communityId: number) => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (postId: number) => approvePost(postId),
+
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["community-manage-posts", communityId] });
+      qc.invalidateQueries({
+        queryKey: ["community-manage-posts", communityId],
+      });
       qc.invalidateQueries({ queryKey: ["community-posts", communityId] });
     },
   });
@@ -147,7 +150,9 @@ export const useDeletePost = (communityId: number) => {
   return useMutation({
     mutationFn: (postId: number) => deletePost(postId),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["community-manage-posts", communityId] });
+      qc.invalidateQueries({
+        queryKey: ["community-manage-posts", communityId],
+      });
       qc.invalidateQueries({ queryKey: ["community-posts", communityId] });
     },
   });

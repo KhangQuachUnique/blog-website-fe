@@ -6,12 +6,14 @@ import type {
   ICommunitySearchDto,
   ISearchResponseDto,
 } from "../../services/search/search.service";
-import { Loader2 } from "lucide-react";
-import Masonry from "react-masonry-css";
+import { Loader2, Mars, Venus } from "lucide-react";
 import Card from "../../components/card/Card";
+import SearchUserPageSkeleton from "../../components/skeleton/SearchUserPageSkeleton";
+import { CardSkeleton } from "../../components/skeleton/CardSkeleton";
 import type { IPostResponseDto } from "../../types/post";
-import "../../styles/newsfeed/NewsfeedList.css";
-import "../../styles/newsfeed/Card.css";
+// Removed legacy newsfeed CSS in favor of Tailwind classes
+import { Avatar } from "@mui/material";
+import { stringAvatar } from "../../utils/avatarHelper";
 
 export const SearchResultPage = () => {
   const [searchParams] = useSearchParams();
@@ -99,50 +101,59 @@ export const SearchResultPage = () => {
     return date.toLocaleDateString("vi-VN");
   };
 
-  const breakpointCols = {
-    default: 1,
-  };
+  // grid handled via Tailwind in render
 
-  // Render User Card
+  // Render User Card (Tailwind, 3-column grid)
   const renderUserCard = (user: IUserSearchDto) => (
-    <Link to={`/profile/${user.id}`} className="block">
-      <article className="newsfeed-card hover:shadow-lg transition-shadow cursor-pointer">
-        {user.avatarUrl && (
-          <div className="newsfeed-card__thumbnail">
+    <Link to={`/profile/${user.id}`} className="block h-full">
+      <article className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition p-0 h-full flex flex-col">
+        <div className="h-40 bg-gray-100 flex-shrink-0">
+          {user.coverImageUrl ? (
             <img
-              src={user.avatarUrl}
+              src={user.coverImageUrl}
               alt={user.username}
-              className="newsfeed-card__image"
+              className="w-full h-full object-cover"
               loading="lazy"
             />
-          </div>
-        )}
-        <div className="newsfeed-card__right">
-          <div className="newsfeed-card__content">
-            <h2 className="newsfeed-card__title">{user.username}</h2>
-            <div className="newsfeed-card__header">
-              <div className="newsfeed-card__author">
-                <img
-                  src={user.avatarUrl || "https://via.placeholder.com/40"}
-                  alt={user.username}
-                  className="newsfeed-card__avatar"
+          ) : (
+            <div className="w-full h-full bg-gray-200" />
+          )}
+        </div>
+
+        <div className="px-4 pb-4 -mt-12 bg-white relative rounded-b-lg flex-1 flex flex-col">
+          <div className="flex items-start">
+            <div className="flex-shrink-0 transform -translate-y-1/3">
+              {user?.avatarUrl ? (
+                <Avatar
+                  alt="User Avatar"
+                  src={user.avatarUrl}
+                  sx={{ width: 88, height: 88, border: "4px solid white" }}
                 />
-                <div className="newsfeed-card__author-info">
-                  <span className="newsfeed-card__username">
-                    @{user.username}
-                  </span>
-                </div>
+              ) : (
+                <Avatar
+                  {...stringAvatar(user?.username || "User", 88, "2rem")}
+                />
+              )}
+            </div>
+
+            <div className="ml-4 flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg font-semibold text-gray-900 truncate">
+                  {user.username}
+                </h2>
+                {user.gender === "MALE" && (
+                  <Mars className="text-blue-500" size={16} />
+                )}
+                {user.gender === "FEMALE" && (
+                  <Venus className="text-pink-500" size={16} />
+                )}
               </div>
             </div>
-            {user.bio && (
-              <p className="text-gray-600 text-sm mt-2 line-clamp-2">
-                {user.bio}
-              </p>
-            )}
-            <span className="text-blue-500 text-sm hover:underline mt-2">
-              Xem trang cá nhân
-            </span>
           </div>
+
+          {user.bio && (
+            <p className="text-gray-600 text-sm line-clamp-2">{user.bio}</p>
+          )}
         </div>
       </article>
     </Link>
@@ -238,50 +249,74 @@ export const SearchResultPage = () => {
   const renderResults = () => {
     switch (type) {
       case "user":
-        return users.map((user, idx) => {
-          const isLast = idx === users.length - 1;
-          return (
-            <div
-              key={user.id}
-              className="newsfeed-masonry-item"
-              ref={isLast ? lastItemRef : undefined}
-            >
-              {renderUserCard(user)}
-            </div>
-          );
-        });
+        return (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 items-stretch">
+            {users.map((user, idx) => {
+              const isLast = idx === users.length - 1;
+              return (
+                <div
+                  key={user.id}
+                  ref={isLast ? lastItemRef : undefined}
+                  className="h-full"
+                >
+                  {renderUserCard(user)}
+                </div>
+              );
+            })}
+          </div>
+        );
+
       case "community":
-        return communities.map((community, idx) => {
-          const isLast = idx === communities.length - 1;
-          return (
-            <div
-              key={community.id}
-              className="newsfeed-masonry-item"
-              ref={isLast ? lastItemRef : undefined}
-            >
-              {renderCommunityCard(community)}
-            </div>
-          );
-        });
+        return (
+          <div className="space-y-4">
+            {communities.map((community, idx) => {
+              const isLast = idx === communities.length - 1;
+              return (
+                <div key={community.id} ref={isLast ? lastItemRef : undefined}>
+                  {renderCommunityCard(community)}
+                </div>
+              );
+            })}
+          </div>
+        );
+
       case "post":
       case "hashtag":
       default:
-        return posts.map((post, idx) => {
-          const isLast = idx === posts.length - 1;
-          return (
-            <div
-              key={post.id}
-              className="newsfeed-masonry-item"
-              ref={isLast ? lastItemRef : undefined}
-            >
-              {renderPostCard(post)}
-            </div>
-          );
-        });
+        return (
+          <div className="space-y-4">
+            {posts.map((post, idx) => {
+              const isLast = idx === posts.length - 1;
+              return (
+                <div key={post.id} ref={isLast ? lastItemRef : undefined}>
+                  {renderPostCard(post)}
+                </div>
+              );
+            })}
+          </div>
+        );
     }
   };
 
   if (isLoading) {
+    if (type === "user") {
+      return (
+        <div className="mx-auto px-[90px] py-8">
+          <SearchUserPageSkeleton />
+        </div>
+      );
+    }
+
+    if (type === "post" || type === "hashtag") {
+      return (
+        <div className="mx-auto px-[90px] py-8 space-y-6">
+          <CardSkeleton />
+          <CardSkeleton />
+          <CardSkeleton />
+        </div>
+      );
+    }
+
     return (
       <div className="flex justify-center py-20">
         <Loader2 className="h-12 w-12 animate-spin" />
@@ -308,14 +343,8 @@ export const SearchResultPage = () => {
       </h1>
 
       {totalResults > 0 ? (
-        <div className="newsfeed-list-wrapper">
-          <Masonry
-            breakpointCols={breakpointCols}
-            className="newsfeed-masonry-grid"
-            columnClassName="newsfeed-masonry-grid_column"
-          >
-            {renderResults()}
-          </Masonry>
+        <div>
+          {renderResults()}
 
           {isFetchingNextPage && (
             <div className="flex justify-center py-8">

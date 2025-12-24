@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { useVote } from "../../hooks/useVote";
 import type { VoteButtonProps, VoteType } from "../../types/vote.types";
 import UpvoteIcon from "./UpvoteIcon";
@@ -61,17 +61,11 @@ const VoteButtonInternal: React.FC<VoteButtonInternalProps> = ({
   active,
   disabled,
   onClick,
-  size,
 }) => {
-  const [isHovered, setIsHovered] = useState(false);
-  const config = SIZE_CONFIG[size];
-
   return (
     <button
       onClick={onClick}
       disabled={disabled}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
       className="group"
       style={{
         display: "flex",
