@@ -14,6 +14,7 @@ import type {
   ICheckReportedResponse,
   EReportType,
   IReportResponse,
+  EReportStatus,
 } from '../types/report';
 
 // ============================================
@@ -127,12 +128,16 @@ export const useGetResolvedReports = () => {
 /**
  * Hook to get reports for a specific post
  * @param postId 
+ * @param status (Optional)
  */
-export const useGetReportsByPost = (postId: number) => {
+export const useGetReportsByPost = (
+  postId: number, 
+  status?: EReportStatus | string
+) => {
   return useQuery({
-    queryKey: ["reports", "post", postId], 
+    queryKey: ["reports", "post", postId, status || "ALL"], 
     
-    queryFn: () => getReportsByPost(postId),
+    queryFn: () => getReportsByPost(postId, status),
 
     enabled: Number.isFinite(postId) && postId > 0,
 

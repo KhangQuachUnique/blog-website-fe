@@ -4,7 +4,8 @@ import { MdCheckCircle, MdClose, MdAutorenew } from "react-icons/md";
 import GenericTable from "../../../components/table/GenericTable";
 import type { TableColumn } from "../../../types/table";
 import { BLOOGIE_COLORS as colors } from "../../../types/table";
-import type { IReportResponse, EReportType } from "../../../types/report";
+// 👇 Import thêm EReportStatus
+import { type IReportResponse, EReportType, EReportStatus } from "../../../types/report";
 import { useGetReportsByPost } from "../../../hooks/useReport";
 
 interface PostReportModalProps {
@@ -15,11 +16,6 @@ interface PostReportModalProps {
   onRejectReport?: (reportId: number) => void;
 }
 
-/**
- * PostReportModal - Display all reports for a post in a modal
- * Shows reports in a table without action columns
- * Action buttons (Approve/Reject) are displayed in header
- */
 const PostReportModal: React.FC<PostReportModalProps> = ({
   isOpen,
   postId,
@@ -27,8 +23,13 @@ const PostReportModal: React.FC<PostReportModalProps> = ({
   onApproveReport,
   onRejectReport,
 }) => {
+  // 👇 1. Thêm State cho filter (Mặc định là PENDING để Admin tập trung xử lý việc cần làm)
+  const [filterStatus, setFilterStatus] = useState<EReportStatus | undefined>(EReportStatus.PENDING);
+  
   const [isProcessing, setIsProcessing] = useState(false);
-  const { data: reports = [], isLoading: reportsLoading } = useGetReportsByPost(postId);
+
+  // 👇 2. Truyền filterStatus vào hook (Hook này phải hỗ trợ param thứ 2 như bài trước đã sửa)
+  const { data: reports = [], isLoading: reportsLoading } = useGetReportsByPost(postId, filterStatus);
 
   const getReportTypeLabel = (type: EReportType): string => {
     const typeMap: Record<EReportType, string> = {
@@ -41,21 +42,9 @@ const PostReportModal: React.FC<PostReportModalProps> = ({
 
   const getReportTypeColor = (type: EReportType) => {
     const colorMap: Record<EReportType, { bg: string; border: string; text: string }> = {
-      USER: {
-        bg: "#fef2f2",
-        border: "#fecaca",
-        text: "#dc2626",
-      },
-      POST: {
-        bg: "#f0fdf4",
-        border: "#bbf7d0",
-        text: "#16a34a",
-      },
-      COMMENT: {
-        bg: "#fffbeb",
-        border: "#fde68a",
-        text: "#b45309",
-      },
+      USER: { bg: "#fef2f2", border: "#fecaca", text: "#dc2626" },
+      POST: { bg: "#f0fdf4", border: "#bbf7d0", text: "#16a34a" },
+      COMMENT: { bg: "#fffbeb", border: "#fde68a", text: "#b45309" },
     };
     return colorMap[type] || colorMap.POST;
   };
@@ -67,13 +56,7 @@ const PostReportModal: React.FC<PostReportModalProps> = ({
       width: "70px",
       align: "left",
       render: (report) => (
-        <Box
-          sx={{
-            fontWeight: "600",
-            color: colors.text,
-            fontFamily: '"Quicksand", "Open Sans", sans-serif',
-          }}
-        >
+        <Box sx={{ fontWeight: "600", color: colors.text, fontFamily: '"Quicksand", "Open Sans", sans-serif' }}>
           #{report.id}
         </Box>
       ),
@@ -81,31 +64,28 @@ const PostReportModal: React.FC<PostReportModalProps> = ({
     {
       id: "type",
       label: "Loại",
-      width: "140px",
+      width: "100px",
       align: "left",
       render: (report) => {
         const typeColor = getReportTypeColor(report.type);
-        const typeLabel = getReportTypeLabel(report.type);
         return (
           <Box
             sx={{
               display: "inline-flex",
               alignItems: "center",
-              gap: "6px",
-              px: 2,
-              py: 0.75,
+              px: 1.5,
+              py: 0.5,
               borderRadius: "9999px",
-              fontSize: "12px",
+              fontSize: "11px",
               fontWeight: "600",
               textTransform: "uppercase",
-              letterSpacing: "0.5px",
               backgroundColor: typeColor.bg,
               color: typeColor.text,
-              border: `1.5px solid ${typeColor.border}`,
+              border: `1px solid ${typeColor.border}`,
               fontFamily: '"Outfit", "Montserrat", sans-serif',
             }}
           >
-            {typeLabel}
+            {getReportTypeLabel(report.type)}
           </Box>
         );
       },
@@ -120,7 +100,7 @@ const PostReportModal: React.FC<PostReportModalProps> = ({
             fontSize: "13px",
             color: colors.text,
             fontFamily: '"Quicksand", "Open Sans", sans-serif',
-            maxWidth: "300px",
+            maxWidth: "250px",
             overflow: "hidden",
             textOverflow: "ellipsis",
             whiteSpace: "nowrap",
@@ -133,32 +113,17 @@ const PostReportModal: React.FC<PostReportModalProps> = ({
     },
     {
       id: "reporter",
-      label: "Người report",
+      label: "Người báo cáo",
       width: "140px",
       align: "left",
       render: (report) => (
-        <Box
-          sx={{
-            fontSize: "13px",
-            color: colors.text,
-            fontFamily: '"Quicksand", "Open Sans", sans-serif',
-            display: "flex",
-            alignItems: "center",
-            gap: 1,
-          }}
-        >
-          <Box
+        <Box sx={{ fontSize: "13px", display: "flex", alignItems: "center", gap: 1 }}>
+           <Box
             sx={{
-              width: "24px",
-              height: "24px",
-              borderRadius: "50%",
+              width: "24px", height: "24px", borderRadius: "50%",
               backgroundColor: colors.backgroundHover,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: "11px",
-              fontWeight: "600",
-              color: colors.text,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: "11px", fontWeight: "600", color: colors.text,
             }}
           >
             {(report.reporter?.username || "?")[0].toUpperCase()}
@@ -168,18 +133,31 @@ const PostReportModal: React.FC<PostReportModalProps> = ({
       ),
     },
     {
-      id: "createdAt",
-      label: "Ngày report",
-      width: "130px",
+      id: "status", // Thêm cột status để dễ nhìn khi xem tab "Tất cả"
+      label: "Trạng thái",
+      width: "120px",
       align: "center",
       render: (report) => (
         <Box
           sx={{
-            fontSize: "13px",
-            color: colors.textSecondary,
-            fontFamily: '"Quicksand", "Open Sans", sans-serif',
+            display: "inline-block",
+            px: 1.5, py: 0.5, borderRadius: "6px", fontSize: "11px", fontWeight: "600",
+            backgroundColor: report.status === EReportStatus.PENDING ? "#fff7ed" : "#f0fdf4",
+            color: report.status === EReportStatus.PENDING ? "#c2410c" : "#15803d",
+            border: `1px solid ${report.status === EReportStatus.PENDING ? "#ffedd5" : "#bbf7d0"}`,
           }}
         >
+          {report.status === EReportStatus.PENDING ? "Chờ xử lý" : "Đã giải quyết"}
+        </Box>
+      ),
+    },
+    {
+      id: "createdAt",
+      label: "Ngày tạo",
+      width: "100px",
+      align: "center",
+      render: (report) => (
+        <Box sx={{ fontSize: "12px", color: colors.textSecondary }}>
           {new Date(report.createdAt).toLocaleDateString("vi-VN")}
         </Box>
       ),
@@ -188,17 +166,9 @@ const PostReportModal: React.FC<PostReportModalProps> = ({
 
   const handleApprove = async () => {
     if (reports.length === 0 || !onApproveReport) return;
-    
     setIsProcessing(true);
     try {
-      // Process all reports sequentially
-      for (const report of reports) {
-        onApproveReport(report.id);
-      }
-      // Close modal after all reports are processed
-      setTimeout(() => {
-        onClose();
-      }, 1000);
+      for (const report of reports) await onApproveReport(report.id);
     } finally {
       setIsProcessing(false);
     }
@@ -206,20 +176,37 @@ const PostReportModal: React.FC<PostReportModalProps> = ({
 
   const handleReject = async () => {
     if (reports.length === 0 || !onRejectReport) return;
-    
     setIsProcessing(true);
     try {
-      // Process all reports sequentially
-      for (const report of reports) {
-        onRejectReport(report.id);
-      }
-      // Close modal after all reports are processed
-      setTimeout(() => {
-        onClose();
-      }, 1000);
+      for (const report of reports) await onRejectReport(report.id);
     } finally {
       setIsProcessing(false);
     }
+  };
+
+  // Helper render nút Filter
+  const FilterButton = ({ label, value, color }: { label: string, value: EReportStatus | undefined, color: string }) => {
+    const isActive = filterStatus === value;
+    return (
+      <Button
+        onClick={() => setFilterStatus(value)}
+        sx={{
+          textTransform: "none",
+          fontWeight: isActive ? "700" : "500",
+          fontSize: "13px",
+          color: isActive ? "#fff" : "#4b5563",
+          backgroundColor: isActive ? color : "transparent",
+          border: isActive ? `1px solid ${color}` : "1px solid #e5e7eb",
+          borderRadius: "8px",
+          px: 2,
+          "&:hover": {
+            backgroundColor: isActive ? color : "#f3f4f6",
+          }
+        }}
+      >
+        {label}
+      </Button>
+    );
   };
 
   return (
@@ -229,181 +216,78 @@ const PostReportModal: React.FC<PostReportModalProps> = ({
       maxWidth="md"
       fullWidth
       PaperProps={{
-        sx: {
-          borderRadius: "12px",
-          boxShadow: "0 20px 60px rgba(0, 0, 0, 0.15)",
-          backgroundColor: "#ffffff",
-        },
+        sx: { borderRadius: "16px", boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)" },
       }}
     >
-      <Box
-        sx={{
-          p: 3,
-          borderBottom: "2px solid #f3f4f6",
-        }}
-      >
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            mb: 2,
-          }}
-        >
-          <h2
-            style={{
-              margin: 0,
-              fontSize: "20px",
-              fontWeight: "600",
-              color: "#1f2937",
-              fontFamily: '"Quicksand", "Open Sans", sans-serif',
-            }}
-          >
-            Báo cáo về bài viết
+      <Box sx={{ p: 3, borderBottom: "1px solid #f3f4f6" }}>
+        {/* Header Title */}
+        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
+          <h2 style={{ margin: 0, fontSize: "20px", fontWeight: "700", color: "#111827", fontFamily: '"Outfit", sans-serif' }}>
+            Chi tiết báo cáo
           </h2>
-          <button
-            onClick={onClose}
-            style={{
-              background: "none",
-              border: "none",
-              fontSize: "24px",
-              cursor: "pointer",
-              padding: "4px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            ✕
-          </button>
+          <button onClick={onClose} style={{ background: "none", border: "none", fontSize: "24px", cursor: "pointer", color: "#6b7280" }}>✕</button>
         </Box>
 
-        {/* Action Buttons */}
-        <Box
-          sx={{
-            display: "flex",
-            gap: 2,
-            mt: 2,
-          }}
-        >
-          <Button
-            onClick={handleApprove}
-            disabled={reports.length === 0 || isProcessing}
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              px: 2.5,
-              py: 1,
-              borderRadius: "6px",
-              fontSize: "13px",
-              fontWeight: "600",
-              textTransform: "none",
-              backgroundColor: "#ecfdf5",
-              color: "#059669",
-              border: "2px solid #a7f3d0",
-              cursor: reports.length === 0 || isProcessing ? "not-allowed" : "pointer",
-              transition: "all 0.2s",
-              "&:hover:not(:disabled)": {
-                backgroundColor: "#d1fae5",
-                borderColor: "#6ee7b7",
-              },
-              "&:disabled": {
-                opacity: 0.5,
-              },
-            }}
-          >
-            {isProcessing ? (
-              <MdAutorenew className="animate-spin" size={18} />
-            ) : (
-              <MdCheckCircle size={18} />
-            )}
-            Chấp thuận tất cả báo cáo
-          </Button>
-
-          <Button
-            onClick={handleReject}
-            disabled={reports.length === 0 || isProcessing}
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              px: 2.5,
-              py: 1,
-              borderRadius: "6px",
-              fontSize: "13px",
-              fontWeight: "600",
-              textTransform: "none",
-              backgroundColor: "#fef2f2",
-              color: "#dc2626",
-              border: "2px solid #fecaca",
-              cursor: reports.length === 0 || isProcessing ? "not-allowed" : "pointer",
-              transition: "all 0.2s",
-              "&:hover:not(:disabled)": {
-                backgroundColor: "#fee2e2",
-                borderColor: "#fca5a5",
-              },
-              "&:disabled": {
-                opacity: 0.5,
-              },
-            }}
-          >
-            {isProcessing ? (
-              <MdAutorenew className="animate-spin" size={18} />
-            ) : (
-              <MdClose size={18} />
-            )}
-            Từ chối tất cả báo cáo
-          </Button>
+        {/* 👇 3. UI Bộ Lọc (Filter Tabs) */}
+        <Box sx={{ display: "flex", gap: 1, mb: 2 }}>
+          <FilterButton label="Chờ xử lý" value={EReportStatus.PENDING} color="#f59e0b" />
+          <FilterButton label="Đã giải quyết" value={EReportStatus.RESOLVED} color="#10b981" />
+          <FilterButton label="Tất cả" value={undefined} color="#6366f1" />
         </Box>
 
-        {reports.length > 0 && (
-          <Box
-            sx={{
-              mt: 2,
-              p: 2,
-              backgroundColor: "#e0f2fe",
-              border: "2px solid #a5f3fc",
-              borderRadius: "6px",
-              fontSize: "13px",
-              color: "#0c4a6e",
-              fontFamily: '"Quicksand", "Open Sans", sans-serif',
-            }}
-          >
-            Có {reports.length} báo cáo cần xử lý
+        {/* 👇 4. Action Buttons (Chỉ hiện khi ở tab PENDING và có dữ liệu) */}
+        {filterStatus === EReportStatus.PENDING && reports.length > 0 && (
+          <Box sx={{ display: "flex", gap: 2, p: 2, backgroundColor: "#fff7ed", borderRadius: "8px", border: "1px solid #ffedd5" }}>
+            <Box sx={{ flex: 1, display: "flex", alignItems: "center", gap: 1, color: "#9a3412", fontSize: "13px", fontWeight: "600" }}>
+              <MdAutorenew /> Có {reports.length} báo cáo cần xử lý
+            </Box>
+            
+            <Button
+              onClick={handleApprove}
+              disabled={isProcessing}
+              sx={{
+                textTransform: "none", fontWeight: "600", fontSize: "13px",
+                bgcolor: "#10b981", color: "white", px: 2, borderRadius: "6px",
+                "&:hover": { bgcolor: "#059669" },
+                "&:disabled": { opacity: 0.7 }
+              }}
+            >
+              {isProcessing ? <CircularProgress size={16} color="inherit" /> : <MdCheckCircle size={16} style={{ marginRight: 4 }} />}
+              Chấp thuận tất cả
+            </Button>
+
+            <Button
+              onClick={handleReject}
+              disabled={isProcessing}
+              sx={{
+                textTransform: "none", fontWeight: "600", fontSize: "13px",
+                bgcolor: "white", color: "#ef4444", border: "1px solid #ef4444", px: 2, borderRadius: "6px",
+                "&:hover": { bgcolor: "#fef2f2" },
+                "&:disabled": { opacity: 0.7 }
+              }}
+            >
+              {isProcessing ? <CircularProgress size={16} color="inherit" /> : <MdClose size={16} style={{ marginRight: 4 }} />}
+              Từ chối tất cả
+            </Button>
           </Box>
         )}
       </Box>
 
       {/* Table Content */}
-      <Box sx={{ p: 3, maxHeight: "500px", overflowY: "auto" }}>
+      <Box sx={{ p: 3, minHeight: "300px", maxHeight: "500px", overflowY: "auto" }}>
         {reportsLoading ? (
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              minHeight: "300px",
-            }}
-          >
-            <CircularProgress />
-          </Box>
-        ) : reports.length === 0 ? (
-          <Box
-            sx={{
-              textAlign: "center",
-              py: 6,
-              color: colors.textSecondary,
-              fontFamily: '"Quicksand", "Open Sans", sans-serif',
-            }}
-          >
-            <p style={{ fontSize: "16px", margin: 0 }}>Không có báo cáo nào</p>
+          <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "200px" }}>
+            <CircularProgress size={30} />
           </Box>
         ) : (
           <GenericTable
             data={reports}
             columns={columns}
-            emptyMessage="Không có báo cáo nào"
+            emptyMessage={
+                filterStatus === EReportStatus.PENDING ? "Không có báo cáo nào đang chờ xử lý" :
+                filterStatus === EReportStatus.RESOLVED ? "Chưa có báo cáo nào được giải quyết" :
+                "Không có dữ liệu báo cáo"
+            }
           />
         )}
       </Box>

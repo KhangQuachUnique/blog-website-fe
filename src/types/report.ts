@@ -55,6 +55,7 @@ export interface IReportResponse {
   reportedUser?: IReportedUserSummary;
   reportedPost?: IReportedPostSummary;
   reportedComment?: IReportedCommentSummary;
+  status: EReportStatus;
 }
 
 // Report list with pagination
