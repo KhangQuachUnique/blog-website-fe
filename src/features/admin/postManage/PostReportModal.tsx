@@ -4,7 +4,6 @@ import { MdCheckCircle, MdClose, MdAutorenew } from "react-icons/md";
 import GenericTable from "../../../components/table/GenericTable";
 import type { TableColumn } from "../../../types/table";
 import { BLOOGIE_COLORS as colors } from "../../../types/table";
-// 👇 Import thêm EReportStatus
 import { type IReportResponse, EReportType, EReportStatus } from "../../../types/report";
 import { useGetReportsByPost } from "../../../hooks/useReport";
 
