@@ -64,10 +64,20 @@ const CreateCommunityPostPage = () => {
   const handlePublish = (dto: ICreateBlogPostDto) => {
     mutate(dto, {
       onSuccess: (createdPost: any) => {
-        // BE sẽ trả status: "ACTIVE" hoặc "DRAFT"
-        const status = createdPost?.status;
+        const isApprovedRaw = createdPost?.isApproved;
 
-        if (status === "DRAFT") {
+        // normalize nếu BE trả "false"/0/1
+        const isApproved =
+          isApprovedRaw === true || isApprovedRaw === "true" || isApprovedRaw === 1 || isApprovedRaw === "1"
+            ? true
+            : isApprovedRaw === false || isApprovedRaw === "false" || isApprovedRaw === 0 || isApprovedRaw === "0"
+            ? false
+            : undefined;
+
+        const needsApprovalFallback =
+          !!community?.requirePostApproval && role === "MEMBER";
+
+        if (isApproved === false || needsApprovalFallback) {
           showToast({
             type: "info",
             message: "Bài viết đã được gửi và đang chờ duyệt.",
@@ -81,8 +91,6 @@ const CreateCommunityPostPage = () => {
           });
         }
 
-        // ✅ điều hướng về trang cộng đồng sau khi submit
-        // setTimeout nhỏ để toast kịp render ổn định
         setTimeout(() => {
           navigate(`/community/${communityId}`, { replace: true });
         }, 50);

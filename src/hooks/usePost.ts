@@ -61,10 +61,17 @@ export const useGetCommunityPosts = (communityId: number) => {
   });
 };
 
-export const useGetCommunityManagePosts = (communityId: number, status?: string) => {
+export const useGetCommunityManagePosts = (
+  communityId: number,
+  params?: { status?: string; isApproved?: boolean }
+) => {
+  const statusKey = params?.status ?? "ALL";
+  const approvedKey =
+    typeof params?.isApproved === "boolean" ? String(params.isApproved) : "ALL";
+
   return useQuery({
-    queryKey: ["community-manage-posts", communityId, status ?? "ALL"],
-    queryFn: async () => (await getManagePostsByCommunityId(communityId, status)),
+    queryKey: ["community-manage-posts", communityId, statusKey, approvedKey],
+    queryFn: async () => await getManagePostsByCommunityId(communityId, params),
     enabled: Number.isFinite(communityId) && communityId > 0,
   });
 };

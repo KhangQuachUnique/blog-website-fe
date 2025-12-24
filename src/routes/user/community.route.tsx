@@ -1,6 +1,6 @@
 import CommunityLayout from "../../features/user/manageCommunity/CommunityLayout";
 import CommunityPosts from "../../features/user/manageCommunity/CommunityPosts";
-import CommunityAbout from "../../features/user/manageCommunity/CommunityAbout";
+// import CommunityAbout from "../../features/user/manageCommunity/CommunityAbout";
 import CommunityMembers from "../../features/user/manageCommunity/CommunityMembers";
 
 import ManageLayout from "../../features/user/manageCommunity/ManageLayout";
@@ -21,7 +21,7 @@ const communityRoutes = [
     ),
     children: [
       { index: true, element: <CommunityPosts /> },
-      { path: "about", element: <CommunityAbout /> },
+      // { path: "about", element: <CommunityAbout /> },
       { path: "members", element: <CommunityMembers /> },
     ],
   },

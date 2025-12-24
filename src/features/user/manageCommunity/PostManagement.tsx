@@ -13,7 +13,7 @@ const PostManagement = () => {
   const communityId = Number(id);
   const navigate = useNavigate();
 
-  const statusParam = "DRAFT";
+  const queryParams = { status: "ACTIVE", isApproved: false };
 
   const [approvingPostId, setApprovingPostId] = useState<number | null>(null);
   const [rejectingPostId, setRejectingPostId] = useState<number | null>(null);
@@ -24,7 +24,7 @@ const PostManagement = () => {
     isLoading,
     isError,
     refetch, // ✅
-  } = useGetCommunityManagePosts(communityId, statusParam);
+  } = useGetCommunityManagePosts(communityId, queryParams);
 
   const approveMutation = useApprovePost(communityId);
   const deleteMutation = useDeletePost(communityId); // dùng làm "Từ chối"
