@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useVote } from "../../hooks/useVote";
+import { useLoginRequired } from "../../hooks/useLoginRequired";
 import type { VoteButtonProps, VoteType } from "../../types/vote.types";
 import UpvoteIcon from "./UpvoteIcon";
 import DownvoteIcon from "./DownvoteIcon";
@@ -129,11 +130,13 @@ const VoteButton: React.FC<VoteButtonProps> = ({
   showCount = true,
 }) => {
   const config = SIZE_CONFIG[size];
+  const { requireLogin } = useLoginRequired();
 
   // React Query mutation hook
   const voteMutation = useVote(userId, postId);
 
   const handleVote = (voteType: VoteType) => {
+    if (!requireLogin({ message: "Vui lòng đăng nhập để vote bài viết" })) return;
     if (voteMutation.isPending) return;
     voteMutation.mutate(voteType, {});
   };

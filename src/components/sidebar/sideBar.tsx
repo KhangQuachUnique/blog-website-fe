@@ -1,7 +1,9 @@
 import { HiOutlineX } from "react-icons/hi";
+import { FiPlusCircle } from "react-icons/fi";
 
 import logo from "../../assets/logo.png";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useLoginRequired } from "../../hooks/useLoginRequired";
 
 interface NavLink {
   name: string;
@@ -16,6 +18,14 @@ interface SideBarProps {
 }
 
 const SideBar = ({ navLinks, collapsed, setCollapsed }: SideBarProps) => {
+  const navigate = useNavigate();
+  const { requireLogin } = useLoginRequired();
+
+  const handleCreatePost = () => {
+    if (!requireLogin({ message: "Vui lòng đăng nhập để tạo bài viết" })) return;
+    navigate("/post/create");
+  };
+
   return (
     <div
       className={`sticky top-0 w-[240px] h-screen bg-[#FAF5F7] px-4 primary-text transition-transform duration-300 ${
@@ -33,7 +43,22 @@ const SideBar = ({ navLinks, collapsed, setCollapsed }: SideBarProps) => {
           <HiOutlineX fontSize={28} style={{ color: "#F295B6" }} />
         </button>
       </div>
-      <nav className="mt-8">
+
+      {/* Create Post Button */}
+      <div className="mt-6 mb-4">
+        <button
+          onClick={handleCreatePost}
+          className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-gradient-to-r from-[#F295B6] to-[#FFB8D1] text-white font-semibold shadow-md hover:shadow-lg hover:scale-[1.02] transition-all duration-200 group"
+        >
+          <FiPlusCircle 
+            fontSize={20} 
+            className="group-hover:rotate-90 transition-transform duration-300" 
+          />
+          <span>Tạo bài viết</span>
+        </button>
+      </div>
+
+      <nav className="mt-4">
         <ul className="space-y-1">
           {navLinks.map((link) => (
             <li key={link.name}>

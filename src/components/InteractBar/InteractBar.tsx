@@ -15,6 +15,7 @@ import { EReportType } from "../../types/report";
 import VoteButton from "../VoteButton";
 import type { IVotesSummaryDto } from "../../types/user-vote";
 import { useToast } from "../../contexts/toast";
+import { useLoginRequired } from "../../hooks/useLoginRequired";
 
 // ============================================
 // 🎨 BLOOKIE DESIGN SYSTEM - PASTEL PINK EDITION
@@ -50,7 +51,7 @@ const MoreMenu: React.FC<{
   postId: number;
   currentUserId: number;
   onLoginRequired: () => void;
-  anchorRect?: DOMRect | null;
+  anchorRef?: React.RefObject<HTMLButtonElement | null>;
 }> = ({
   visible,
   onShare,
@@ -59,8 +60,47 @@ const MoreMenu: React.FC<{
   postId,
   currentUserId,
   onLoginRequired,
-  anchorRect,
+  anchorRef,
 }) => {
+  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (visible && anchorRef?.current) {
+      const rect = anchorRef.current.getBoundingClientRect();
+      setMenuPosition({
+        top: rect.bottom + 8,
+        left: rect.right,
+      });
+    }
+  }, [visible, anchorRef]);
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    if (!visible) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        menuRef.current &&
+        !menuRef.current.contains(event.target as Node) &&
+        anchorRef?.current &&
+        !anchorRef.current.contains(event.target as Node)
+      ) {
+        onClose();
+      }
+    };
+
+    // Delay adding listener to prevent immediate close
+    const timeoutId = setTimeout(() => {
+      document.addEventListener("mousedown", handleClickOutside);
+    }, 0);
+
+    return () => {
+      clearTimeout(timeoutId);
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [visible, onClose, anchorRef]);
+
   if (!visible) return null;
 
   const MenuItem: React.FC<{
@@ -73,7 +113,10 @@ const MoreMenu: React.FC<{
 
     return (
       <button
-        onClick={onClick}
+        onClick={(e) => {
+          e.stopPropagation();
+          onClick();
+        }}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         style={{
@@ -116,16 +159,18 @@ const MoreMenu: React.FC<{
         }
       `}</style>
       <div
+        ref={menuRef}
         style={{
           position: "fixed",
-          top: anchorRect ? `${anchorRect.bottom + 8}px` : undefined,
-          left: anchorRect ? `${anchorRect.right}px` : undefined,
-          transform: anchorRect ? "translateX(-100%)" : undefined,
+          top: `${menuPosition.top}px`,
+          left: `${menuPosition.left}px`,
+          transform: "translateX(-100%)",
           minWidth: "160px",
           background: THEME.white,
           borderRadius: "16px",
           border: `1.5px solid ${THEME.secondary}`,
           overflow: "hidden",
+          boxShadow: THEME.shadowMedium,
           // animation: 'menuSlideIn 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
           zIndex: 1000,
         }}
@@ -194,8 +239,10 @@ const InteractBar: React.FC<InteractBarProps> = ({
   const [moreHovered, setMoreHovered] = useState(false);
   const wrapperRef = React.useRef<HTMLDivElement | null>(null);
   const { showToast } = useToast();
+  const { requireLogin } = useLoginRequired();
 
   const moreMenuRef = useRef<HTMLDivElement>(null);
+  const moreButtonRef = useRef<HTMLButtonElement>(null);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
 
   const isLoggedIn = userId > 0;
@@ -209,6 +256,7 @@ const InteractBar: React.FC<InteractBarProps> = ({
 
   // Bookmark with login check
   const onBookmarkClick = () => {
+    if (!requireLogin({ message: "Vui lòng đăng nhập để lưu bài viết" })) return;
     toggleSave(
       { userId, postId },
       {
@@ -255,15 +303,16 @@ const InteractBar: React.FC<InteractBarProps> = ({
   };
 
   const handleRepost = () => {
-    if (!isLoggedIn) {
-      showToast({
-        type: "error",
-        message: "Vui lòng đăng nhập để đăng lại bài viết",
-        duration: 3000,
-      });
+    if (!requireLogin({ message: "Vui lòng đăng nhập để đăng lại bài viết" })) {
       setShowMoreMenu(false);
       return;
     }
+    // TODO: Implement repost functionality
+    showToast({
+      type: "info",
+      message: "Tính năng đăng lại đang được phát triển",
+      duration: 2000,
+    });
     setShowMoreMenu(false);
   };
 
@@ -362,7 +411,11 @@ const InteractBar: React.FC<InteractBarProps> = ({
       {/* More Menu Button */}
       <div ref={moreMenuRef} style={{ position: "relative" }}>
         <button
-          onClick={() => setShowMoreMenu(!showMoreMenu)}
+          ref={moreButtonRef}
+          onClick={(e) => {
+            e.stopPropagation();
+            setShowMoreMenu(!showMoreMenu);
+          }}
           onMouseEnter={() => setMoreHovered(true)}
           onMouseLeave={() => setMoreHovered(false)}
           style={{
@@ -407,6 +460,7 @@ const InteractBar: React.FC<InteractBarProps> = ({
             });
             setShowMoreMenu(false);
           }}
+          anchorRef={moreButtonRef}
         />
       </div>
     </div>
