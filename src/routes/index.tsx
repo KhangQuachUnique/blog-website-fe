@@ -19,6 +19,7 @@ import { SearchResultPage } from "../pages/search/searchResultsPage";
 import MyCommunitiesPage from "../pages/user/community/MyCommunitiesPage";
 import PostDetailsPage from "../pages/user/post/postDetailsPage";
 import { savedPostsRoutes } from "./user/savedPosts.route";
+import NotFoundPage from "../pages/NotFoundPage";
 
 export const router = createBrowserRouter([
   {
@@ -57,4 +58,9 @@ export const router = createBrowserRouter([
     ],
   },
   ...authRoutes,
+  // 404 Not Found - Catch all unmatched routes
+  {
+    path: "*",
+    element: <NotFoundPage />,
+  },
 ]);
