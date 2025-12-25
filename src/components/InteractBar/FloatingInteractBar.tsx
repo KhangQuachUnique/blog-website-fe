@@ -6,6 +6,7 @@ import {
   Share2,
   Flag,
   Bookmark,
+  Repeat2,
 } from "lucide-react";
 import { useCheckSaved, useToggleSavePost } from "../../hooks/useSavedPost";
 import ReportButton from "../report/ReportButton";
@@ -28,6 +29,7 @@ const THEME = {
   text: "#4A3C42",
   textMuted: "#8B7B82",
   white: "#FFFFFF",
+  icon: "#999999",
   upvote: "#F295B6",
   upvoteActive: "#E8779F",
   downvote: "#B8A5AB",
@@ -131,7 +133,7 @@ const MoreMenu: React.FC<{
         <span
           style={{
             display: "flex",
-            color: danger ? "#E57373" : THEME.primary,
+            color: danger ? "#E57373" : THEME.icon,
             opacity: 0.9,
           }}
         >
@@ -166,7 +168,9 @@ const MoreMenu: React.FC<{
         }
       `}</style>
       <MenuItem
-        icon={<Share2 size={16} strokeWidth={2.5} />}
+        icon={
+          <Share2 size={16} strokeWidth={2.5} style={{ color: THEME.icon }} />
+        }
         label="Chia sẻ"
         onClick={onShare}
       />
@@ -186,7 +190,9 @@ const MoreMenu: React.FC<{
         onLoginRequired={onLoginRequired}
         renderButton={({ onClick }) => (
           <MenuItem
-            icon={<Flag size={16} strokeWidth={2.5} />}
+            icon={
+              <Flag size={16} strokeWidth={2.5} style={{ color: THEME.text }} />
+            }
             label="Báo cáo"
             onClick={onClick}
             danger
@@ -210,69 +216,68 @@ interface ActionButtonProps {
   tooltip?: string;
 }
 
-const ActionButton: React.FC<ActionButtonProps> = ({ 
-  onClick, 
-  children, 
-  active, 
-  disabled, 
-  tooltip 
-}) => {
-  const [isHovered, setIsHovered] = useState(false);
+const ActionButton = React.forwardRef<HTMLButtonElement, ActionButtonProps>(
+  ({ onClick, children, disabled, tooltip }, ref) => {
+    const [isHovered, setIsHovered] = useState(false);
 
-  return (
-    <div style={{ position: "relative" }}>
-      <button
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          if (!disabled) {
-            onClick();
-          }
-        }}
-        disabled={disabled}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          width: "48px",
-          height: "48px",
-          borderRadius: "50%",
-          border: `2px solid ${active ? THEME.primary : THEME.secondary}`,
-          background: active ? THEME.tertiary : isHovered ? THEME.cream : THEME.white,
-          cursor: disabled ? "not-allowed" : "pointer",
-          opacity: disabled ? 0.5 : 1,
-          transition: "all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)",
-          transform: isHovered && !disabled ? "scale(1.1)" : "scale(1)",
-        }}
-      >
-        {children}
-      </button>
-      {tooltip && isHovered && (
-        <div
+    return (
+      <div style={{ position: "relative" }}>
+        <button
+          ref={ref}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (!disabled) {
+              onClick();
+            }
+          }}
+          disabled={disabled}
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
           style={{
-            position: "absolute",
-            left: "60px",
-            top: "50%",
-            transform: "translateY(-50%)",
-            padding: "6px 12px",
-            background: THEME.text,
-            color: THEME.white,
-            borderRadius: "8px",
-            fontSize: "12px",
-            fontWeight: 600,
-            whiteSpace: "nowrap",
-            zIndex: 10002,
-            pointerEvents: "none",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: "40px",
+            height: "40px",
+            color: THEME.text,
+            cursor: disabled ? "not-allowed" : "pointer",
+            opacity: disabled ? 0.5 : 1,
+            transition: "transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1)",
+            transform:
+              isHovered && !disabled ? "translateY(-2px)" : "translateY(0)",
+            // removed border and border-radius to match new design
           }}
         >
-          {tooltip}
-        </div>
-      )}
-    </div>
-  );
-};
+          {children}
+        </button>
+        {tooltip && isHovered && (
+          <div
+            style={{
+              position: "absolute",
+              left: "60px",
+              top: "50%",
+              transform: "translateY(-50%)",
+              padding: "6px 12px",
+              background: THEME.text,
+              color: THEME.white,
+              borderRadius: "8px",
+              fontSize: "12px",
+              fontWeight: 600,
+              whiteSpace: "nowrap",
+              zIndex: 10002,
+              pointerEvents: "none",
+            }}
+          >
+            {tooltip}
+          </div>
+        )}
+      </div>
+    );
+  }
+);
+
+ActionButton.displayName = "ActionButton";
 
 // ============================================
 // 🎪 FLOATING INTERACT BAR COMPONENT
@@ -305,15 +310,27 @@ const FloatingInteractBar: React.FC<FloatingInteractBarProps> = ({
 
   // Scroll to comments section
   const scrollToComments = () => {
-    const commentsSection = document.querySelector('[data-comments-section]');
+    const commentsSection = document.querySelector("[data-comments-section]");
     if (commentsSection) {
-      commentsSection.scrollIntoView({ behavior: "smooth", block: "start" });
+      // Try to account for a fixed header so the comments aren't hidden behind it.
+      const header = document.querySelector("header");
+      const headerHeight = header ? header.getBoundingClientRect().height : 80; // fallback header height
+      const extraMargin = 12; // small spacing from header
+
+      const targetTop =
+        commentsSection.getBoundingClientRect().top +
+        window.scrollY -
+        headerHeight -
+        extraMargin;
+
+      window.scrollTo({ top: Math.max(0, targetTop), behavior: "smooth" });
     }
   };
 
   // Bookmark with login check
   const onBookmarkClick = () => {
-    if (!requireLogin({ message: "Vui lòng đăng nhập để lưu bài viết" })) return;
+    if (!requireLogin({ message: "Vui lòng đăng nhập để lưu bài viết" }))
+      return;
     toggleSave(
       { userId, postId },
       {
@@ -349,47 +366,42 @@ const FloatingInteractBar: React.FC<FloatingInteractBarProps> = ({
         position: "fixed",
         // Position in the empty space between sidebar (240px) and content (800px centered)
         // Calculate: sidebar + (available space - content width) / 4
-        left: "calc(240px + (100vw - 240px - 800px) / 4)",
+        left: "calc(180px + (100vw - 240px - 800px) / 4)",
         top: "50%",
         transform: "translateY(-50%)",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        gap: "12px",
-        padding: "16px",
+        gap: "8px",
+        padding: "8px",
         background: THEME.white,
-        borderRadius: "32px",
-        border: `2px solid ${THEME.secondary}`,
+        borderRadius: "18px",
         zIndex: 10000,
       }}
     >
       {/* Vote Button - Sử dụng component VoteButton có sẵn */}
-      <div style={{ 
-        display: "flex", 
-        flexDirection: "column", 
-        alignItems: "center",
-        gap: "4px",
-        pointerEvents: "auto",
-        zIndex: 10001,
-      }}>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: "4px",
+          pointerEvents: "auto",
+          zIndex: 10001,
+        }}
+      >
         <VoteButton postId={postId} userId={userId} votes={votes} size="lg" />
       </div>
 
-      {/* Divider */}
-      <div
-        style={{
-          width: "32px",
-          height: "2px",
-          background: THEME.tertiary,
-          borderRadius: "1px",
-          margin: "4px 0",
-        }}
-      />
+      {/* Divider removed - compact layout */}
 
       {/* Comment Button */}
-      <ActionButton onClick={scrollToComments} tooltip={`${totalComments} bình luận`}>
+      <ActionButton
+        onClick={scrollToComments}
+        tooltip={`${totalComments} bình luận`}
+      >
         <div style={{ position: "relative" }}>
-          <MessageCircle size={22} strokeWidth={2.5} style={{ color: THEME.primary }} />
+          <MessageCircle size={20} style={{ color: THEME.icon }} />
           {totalComments > 0 && (
             <div
               style={{
@@ -424,37 +436,45 @@ const FloatingInteractBar: React.FC<FloatingInteractBarProps> = ({
       >
         <Bookmark
           size={22}
-          strokeWidth={2.5}
-          fill={isSaved ? THEME.primary : "none"}
-          style={{ color: isSaved ? THEME.primary : THEME.textMuted }}
+          strokeWidth={2}
+          fill={isSaved ? "#F295B6" : "none"}
+          style={isSaved ? { color: "#F295B6" } : { color: THEME.icon }}
         />
       </ActionButton>
 
-      {/* Repost Button - Sử dụng component RepostButton có sẵn */}
-      {post && <RepostButton post={post} userId={userId} size="lg" />}
+      {/* Repost Button - use standard ActionButton via renderButton */}
+      {post && (
+        <RepostButton
+          post={post}
+          userId={userId}
+          size="lg"
+          renderButton={({ onClick, disabled }) => (
+            <ActionButton
+              onClick={onClick}
+              disabled={disabled}
+              tooltip="Đăng lại"
+            >
+              <Repeat2 size={22} style={{ color: THEME.icon }} />
+            </ActionButton>
+          )}
+        />
+      )}
 
-      {/* More Menu Button */}
-      <button
+      {/* More Menu Button (use ActionButton, forwarded ref for anchor) */}
+      <ActionButton
         ref={moreButtonRef}
-        onClick={(e) => {
-          e.stopPropagation();
-          setShowMoreMenu(!showMoreMenu);
-        }}
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          width: "48px",
-          height: "48px",
-          borderRadius: "50%",
-          border: `2px solid ${showMoreMenu ? THEME.primary : THEME.secondary}`,
-          background: showMoreMenu ? THEME.tertiary : THEME.white,
-          cursor: "pointer",
-          transition: "all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)",
-        }}
+        onClick={() => setShowMoreMenu(!showMoreMenu)}
+        active={showMoreMenu}
+        tooltip="Thêm"
       >
-        <MoreHorizontal size={22} strokeWidth={2.5} style={{ color: THEME.primary }} />
-      </button>
+        <MoreHorizontal
+          size={22}
+          strokeWidth={2.5}
+          style={
+            showMoreMenu ? { color: THEME.primary } : { color: THEME.icon }
+          }
+        />
+      </ActionButton>
 
       {/* More Menu Dropdown */}
       <MoreMenu
