@@ -11,6 +11,13 @@ export const EReportType = {
 
 export type EReportType = (typeof EReportType)[keyof typeof EReportType];
 
+export const EReportStatus = {
+  PENDING: 'PENDING',
+  RESOLVED: 'RESOLVED',
+}
+
+export type EReportStatus = (typeof EReportStatus)[keyof typeof EReportStatus];
+
 // Reporter summary
 export interface IReporterSummary {
   id: number;
@@ -48,6 +55,7 @@ export interface IReportResponse {
   reportedUser?: IReportedUserSummary;
   reportedPost?: IReportedPostSummary;
   reportedComment?: IReportedCommentSummary;
+  status: EReportStatus;
 }
 
 // Report list with pagination

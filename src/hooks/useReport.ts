@@ -3,11 +3,18 @@ import { useToast } from '../contexts/toast';
 import {
   createReport,
   checkIfReported,
+  getAllReports,
+  getPendingReports,
+  getResolvedReports,
+  resolveReport,
+  getReportsByPost,
 } from '../services/user/report/reportService';
 import type {
   ICreateReportRequest,
   ICheckReportedResponse,
   EReportType,
+  IReportResponse,
+  EReportStatus,
 } from '../types/report';
 
 // ============================================
@@ -15,6 +22,8 @@ import type {
 // ============================================
 export const reportKeys = {
   all: ['reports'] as const,
+  pending: ['reports', 'pending'] as const,
+  resolved: ['reports', 'resolved'] as const,
   check: (type: EReportType, targetId: number) => 
     [...reportKeys.all, 'check', type, targetId] as const,
 };
@@ -85,4 +94,88 @@ const getTargetId = (data: ICreateReportRequest): number => {
   if (data.reportedCommentId) return data.reportedCommentId;
   if (data.reportedUserId) return data.reportedUserId;
   return 0;
+};
+
+
+// ============================================
+// GET REPORTS LIST HOOKS
+// ============================================
+
+// Get ALL reports
+export const useGetAllReports = () => {
+  return useQuery<IReportResponse[]>({
+    queryKey: reportKeys.all,
+    queryFn: getAllReports,
+  });
+};
+
+// Get PENDING reports
+export const useGetPendingReports = () => {
+  return useQuery<IReportResponse[]>({
+    queryKey: reportKeys.pending,
+    queryFn: getPendingReports,
+  });
+};
+
+// Get RESOLVED reports
+export const useGetResolvedReports = () => {
+  return useQuery<IReportResponse[]>({
+    queryKey: reportKeys.resolved,
+    queryFn: getResolvedReports,
+  });
+};
+
+/**
+ * Hook to get reports for a specific post
+ * @param postId 
+ * @param status (Optional)
+ */
+export const useGetReportsByPost = (
+  postId: number, 
+  status?: EReportStatus | string
+) => {
+  return useQuery({
+    queryKey: ["reports", "post", postId, status || "ALL"], 
+    
+    queryFn: () => getReportsByPost(postId, status),
+
+    enabled: Number.isFinite(postId) && postId > 0,
+
+    placeholderData: (previousData) => previousData,
+  });
+};
+
+// RESOLVE REPORT HOOK
+interface ResolveReportVariables {
+  id: number;
+  type: EReportType;
+  action: 'APPROVE' | 'REJECT';
+}
+
+export const useResolveReport = () => {
+  const queryClient = useQueryClient();
+  const { showToast } = useToast();
+
+  return useMutation({
+    mutationFn: ({ id, type, action }: ResolveReportVariables) => 
+      resolveReport(id, type, action),
+
+    onSuccess: (_data, variables) => {
+      const actionText = variables.action === 'APPROVE' ? 'Chấp thuận' : 'Từ chối';
+      showToast({
+        type: 'success',
+        message: `Đã ${actionText} báo cáo thành công!`,
+      });
+
+      queryClient.invalidateQueries({ queryKey: reportKeys.all });
+    },
+
+    onError: (error: any) => {
+      const message = error?.response?.data?.message || 'Lỗi khi xử lý báo cáo';
+      showToast({
+        type: 'error',
+        message,
+      });
+    },
+  });
 };

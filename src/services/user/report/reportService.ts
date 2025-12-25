@@ -6,6 +6,7 @@ import type {
   IReportResponse,
   IReportListResponse,
   EReportType,
+  EReportStatus,
 } from '../../../types/report';
 
 /**
@@ -38,8 +39,30 @@ export const checkIfReported = async (
   return response as unknown as ICheckReportedResponse;
 };
 
+export const getAllReports = async (): Promise<IReportResponse[]> => {
+  const response = await axios.get("/reports/all");
+  return response as unknown as IReportResponse[];
+};
+
 /**
- * Get all reports (Admin)
+ * ⚖️ Resolve a report (Approve/Reject)
+ * Endpoint: PATCH /reports/:id/resolve
+ * Body: { type, action }
+ */
+export const resolveReport = async (
+  id: number,
+  type: EReportType,
+  action: 'APPROVE' | 'REJECT'
+): Promise<IReportResponse> => {
+  const response = await axios.patch(`/reports/${id}/resolve`, {
+    type,
+    action,
+  });
+  return response as unknown as IReportResponse;
+};
+
+/**
+ * Get all reports (Admin) with pagination
  */
 export const getReports = async (
   page = 1,
@@ -52,12 +75,38 @@ export const getReports = async (
 };
 
 /**
- * Get reports for a specific post
+ * ⏳ Get pending reports
+ * Endpoint: GET /reports/pending
+ */
+export const getPendingReports = async (): Promise<IReportResponse[]> => {
+  const response = await axios.get("/reports/pending");
+  return response as unknown as IReportResponse[];
+};
+
+/**
+ * ✅ Get resolved reports
+ * Endpoint: GET /reports/resolved
+ */
+export const getResolvedReports = async (): Promise<IReportResponse[]> => {
+  const response = await axios.get("/reports/resolved");
+  return response as unknown as IReportResponse[];
+};
+
+/**
+ * Get reports for a specific post with optional status filter
+ * @param postId ID bài viết
+ * @param status (Optional) Trạng thái report (PENDING | RESOLVED)
  */
 export const getReportsByPost = async (
-  postId: number
+  postId: number,
+  status?: EReportStatus | string // Cho phép truyền Enum hoặc string
 ): Promise<IReportResponse[]> => {
-  const response = await axios.get(`/reports/posts/${postId}`);
+  const response = await axios.get<IReportResponse[]>(`/reports/posts/${postId}`, {
+    // Axios sẽ tự động ghép thành: /reports/posts/1?status=PENDING
+    params: status ? { status } : {}, 
+  });
+  
+  // Ép kiểu về mảng kết quả
   return response as unknown as IReportResponse[];
 };
 

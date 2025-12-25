@@ -1,12 +1,12 @@
 import React from 'react';
 import { Box, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
-import type { ITableRow, TableColumn, TableAction } from '../../types/table';
+import type { ITableRow, TableColumn, ActionColumn } from '../../types/table';
 import { BLOOGIE_COLORS } from '../../types/table';
 
 interface GenericTableProps<T extends ITableRow> {
   data: T[];
   columns: TableColumn<T>[];
-  actions?: TableAction<T>[];
+  actionColumns?: ActionColumn<T>[];
   emptyMessage?: string;
   loading?: boolean;
 }
@@ -14,13 +14,17 @@ interface GenericTableProps<T extends ITableRow> {
 /**
  * GenericTable - A reusable table component supporting any data type
  * Maintains Bloogie design language and supports custom rendering and actions
+ * 
+ * Features:
+ * - Single action column (legacy): Use `actions` prop
+ * - Multiple action columns: Use `actionColumns` prop for multiple columns with different actions
  */
 const GenericTable = React.forwardRef<HTMLDivElement, GenericTableProps<any>>(
   (
     {
       data,
       columns,
-      actions = [],
+      actionColumns = [],
       emptyMessage = 'Không có dữ liệu',
       loading = false,
     },
@@ -87,11 +91,18 @@ const GenericTable = React.forwardRef<HTMLDivElement, GenericTableProps<any>>(
                   {col.label}
                 </TableCell>
               ))}
-              {actions.length > 0 && (
-                <TableCell align="center" sx={{ width: '130px' }}>
-                  Hành động
+              {actionColumns.map((actionCol) => (
+                <TableCell
+                  key={actionCol.id}
+                  align={actionCol.align || 'center'}
+                  sx={{
+                    fontFamily: '"Outfit", "Montserrat", sans-serif',
+                    width: actionCol.width || '130px'
+                  }}
+                >
+                  {actionCol.label || 'Hành động'}
                 </TableCell>
-              )}
+              ))}
             </TableRow>
           </TableHead>
 
@@ -132,17 +143,18 @@ const GenericTable = React.forwardRef<HTMLDivElement, GenericTableProps<any>>(
                     </TableCell>
                   );
                 })}
-                {actions.length > 0 && (
+                {actionColumns.map((actionCol) => (
                   <TableCell
-                    align="center"
+                    key={actionCol.id}
+                    align={actionCol.align || 'center'}
                     sx={{
                       px: 2,
                       py: 2,
                       verticalAlign: 'middle',
                     }}
                   >
-                    <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center', flexWrap: 'wrap' }}>
-                      {actions
+                    <Box sx={{ display: 'flex', gap: 1, justifyContent: actionCol.align === 'left' ? 'flex-start' : actionCol.align === 'right' ? 'flex-end' : 'center', flexWrap: 'wrap' }}>
+                      {actionCol.actions
                         .filter((action) => !action.visible || action.visible(row))
                         .map((action) => (
                           <Box
@@ -174,7 +186,7 @@ const GenericTable = React.forwardRef<HTMLDivElement, GenericTableProps<any>>(
                         ))}
                     </Box>
                   </TableCell>
-                )}
+                ))}
               </TableRow>
             ))}
           </TableBody>

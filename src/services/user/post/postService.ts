@@ -38,9 +38,15 @@ export const updatePost = async (
   return response;
 };
 
-export const getPostsByCommunityId = async (
-  communityId: number
-): Promise<IPostResponseDto[]> => {
+export const hidePost = async (postId: number) => {
+  return axios.patch(`/blog-posts/${postId}/hide`);
+};
+
+export const restorePost = async (postId: number) => {
+  return axios.patch(`/blog-posts/${postId}/restore`);
+};
+
+export const getPostsByCommunityId = async (communityId: number) => {
   return axios.get(`/blog-posts/community/${communityId}`);
 };
 

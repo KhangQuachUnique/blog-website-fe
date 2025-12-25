@@ -1,125 +1,153 @@
-import { useEffect, useState } from "react";
-import { MdRefresh } from "react-icons/md";
-import { BiChevronLeft, BiChevronRight } from "react-icons/bi";
-import { MdAutorenew } from "react-icons/md";
-import { useGetAllPosts } from "../../../hooks/usePost";
-import { useQueryClient } from "@tanstack/react-query";
+import { useEffect, useState, useMemo } from "react";
+import { MdRefresh, MdAutorenew } from "react-icons/md";
+import { BiChevronLeft, BiChevronRight, BiChevronsLeft, BiChevronsRight } from "react-icons/bi";
+import { FaBookmark } from "react-icons/fa";
+import { useGetAllPosts, useHidePost, useRestorePost } from "../../../hooks/usePost"; 
+import { useResolveReport } from "../../../hooks/useReport";
 import { useToast } from "../../../contexts/toast";
 import PostsTable from "../../../features/admin/postManage/PostsTable";
-import type { BlogPost, EBlogPostStatus } from "../../../types/post";
-import { FaBookmark } from "react-icons/fa";
+import { type IPostResponseDto, EBlogPostStatus } from "../../../types/post";
+import type { EReportType } from "../../../types/report";
 
 type StatusFilter = "ALL" | EBlogPostStatus;
 
 const ITEMS_PER_PAGE = 10;
 
 const PostListPage = () => {
+  const [filterStatus, setFilterStatus] = useState<StatusFilter>("ALL");
+  const [actionLoading, setActionLoading] = useState<number | null>(null);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+
+  // 1. Data fetching hook
   const {
-    data: posts = [],
+    data: allPosts = [] as IPostResponseDto[],
     isLoading,
     isFetching,
     isError,
     refetch,
   } = useGetAllPosts();
 
-  const queryClient = useQueryClient();
+  // 2. Mutation hooks
+  const { mutate: hidePost } = useHidePost();
+  const { mutate: restorePost } = useRestorePost();
+  const { mutate: resolveReport } = useResolveReport();
 
   const { showToast } = useToast();
-  const [filterStatus, setFilterStatus] = useState<StatusFilter>("ALL");
-  const [actionLoading, setActionLoading] = useState<number | null>(null);
-  const [currentPage, setCurrentPage] = useState<number>(1);
 
-  const handleHide = async (postId: number) => {
-    try {
-      setActionLoading(postId);
+  // --- CLIENT-SIDE LOGIC ---
 
-      const response = await fetch(
-        `http://localhost:8080/blog-posts/${postId}/hide`,
-        {
-          method: "PATCH",
-        }
-      );
+  const stats = useMemo(() => {
+    return {
+      all: allPosts.length,
+      active: allPosts.filter((p) => p.status === EBlogPostStatus.ACTIVE).length,
+      hidden: allPosts.filter((p) => p.status === EBlogPostStatus.HIDDEN).length,
+    };
+  }, [allPosts]);
 
-      if (!response.ok) throw new Error("Lỗi khi ẩn bài viết");
+  const filteredPosts = useMemo(() => {
+    if (filterStatus === "ALL") return allPosts;
+    return allPosts.filter((p) => p.status === filterStatus);
+  }, [allPosts, filterStatus]);
 
-      // Update react-query cache locally to avoid a full refetch/refresh UI
-      queryClient.setQueryData(["posts"], (old: any) => {
-        if (!Array.isArray(old)) return old;
-        return old.map((p: any) =>
-          p.id === postId ? { ...p, status: "HIDDEN" } : p
-        );
-      });
+  const totalRecords = filteredPosts.length;
+  const totalPages = Math.ceil(totalRecords / ITEMS_PER_PAGE) || 1;
+  
+  const displayStart = totalRecords === 0 ? 0 : (currentPage - 1) * ITEMS_PER_PAGE + 1;
+  const displayEnd = Math.min(displayStart + ITEMS_PER_PAGE - 1, totalRecords);
 
-      showToast({ type: "success", message: "Ẩn bài viết thành công!" });
-    } catch (err: any) {
-      showToast({ type: "error", message: err.message });
-    } finally {
-      setActionLoading(null);
-    }
+  const currentViewPosts = filteredPosts.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
+  // --- HANDLERS ---
+
+  const handleHide = (postId: number) => {
+    setActionLoading(postId);
+    
+    hidePost(postId, {
+      onSuccess: () => {
+        showToast({ type: "success", message: "Ẩn bài viết thành công!" });
+      },
+      onError: (err: any) => {
+        const msg = err?.response?.data?.message || err.message || "Lỗi khi ẩn bài viết";
+        showToast({ type: "error", message: msg });
+      },
+      onSettled: () => {
+        setActionLoading(null);
+      }
+    });
   };
 
-  const handleRestore = async (postId: number) => {
-    try {
-      setActionLoading(postId);
+  const handleRestore = (postId: number) => {
+    setActionLoading(postId);
 
-      const response = await fetch(
-        `http://localhost:8080/blog-posts/${postId}/restore`,
-        {
-          method: "PATCH",
-        }
-      );
+    restorePost(postId, {
+      onSuccess: () => {
+        showToast({ type: "success", message: "Phục hồi bài viết thành công!" });
+      },
+      onError: (err: any) => {
+        const msg = err?.response?.data?.message || err.message || "Lỗi khi phục hồi bài viết";
+        showToast({ type: "error", message: msg });
+      },
+      onSettled: () => {
+        setActionLoading(null);
+      }
+    });
+  };
 
-      if (!response.ok) throw new Error("Lỗi khi phục hồi bài viết");
+  const handleApproveReport = (reportId: number) => {
+    resolveReport(
+      { id: reportId, type: "POST" as EReportType, action: "APPROVE" },
+      {
+        onSuccess: () => {
+          showToast({ type: "success", message: "Báo cáo đã được phê duyệt!" });
+          refetch();
+        },
+        onError: (err: any) => {
+          const msg = err?.response?.data?.message || err.message || "Lỗi khi xử lý báo cáo";
+          showToast({ type: "error", message: msg });
+        },
+      }
+    );
+  };
 
-      // Update react-query cache locally to avoid a full refetch/refresh UI
-      queryClient.setQueryData(["posts"], (old: any) => {
-        if (!Array.isArray(old)) return old;
-        return old.map((p: any) =>
-          p.id === postId ? { ...p, status: "ACTIVE" } : p
-        );
-      });
-
-      showToast({ type: "success", message: "Phục hồi bài viết thành công!" });
-    } catch (err: any) {
-      showToast({ type: "error", message: err.message });
-    } finally {
-      setActionLoading(null);
-    }
+  const handleRejectReport = (reportId: number) => {
+    resolveReport(
+      { id: reportId, type: "POST" as EReportType, action: "REJECT" },
+      {
+        onSuccess: () => {
+          showToast({ type: "success", message: "Báo cáo đã được từ chối!" });
+          refetch();
+        },
+        onError: (err: any) => {
+          const msg = err?.response?.data?.message || err.message || "Lỗi khi xử lý báo cáo";
+          showToast({ type: "error", message: msg });
+        },
+      }
+    );
   };
 
   useEffect(() => {
     setCurrentPage(1);
   }, [filterStatus]);
 
-  // Lọc bài viết
-  const filteredPosts = Array.isArray(posts)
-    ? posts.filter((post) => {
-        if (filterStatus === "ALL") return true;
-        return post.status === filterStatus;
-      })
-    : [];
+  useEffect(() => {
+    if (currentPage > totalPages && totalPages > 0) {
+        setCurrentPage(totalPages);
+    }
+  }, [filteredPosts.length, totalPages, currentPage]);
 
-  // Phân trang
-  const totalPages = Math.ceil(filteredPosts.length / ITEMS_PER_PAGE);
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const endIndex = startIndex + ITEMS_PER_PAGE;
-  const paginatedPosts = filteredPosts.slice(startIndex, endIndex);
 
-  // Chuẩn hoá dữ liệu trả về cho PostsTable (convert createdAt -> string)
-  const normalizedPosts: BlogPost[] = paginatedPosts.map((p: any) => ({
-    id: p.id,
-    title: p.title,
-    status: p.status,
-    createdAt:
-      typeof p.createdAt === "string"
-        ? p.createdAt
-        : new Date(p.createdAt).toISOString(),
-    thumbnailUrl: p.thumbnailUrl ?? null,
-    upVotes: p.upVotes ?? null,
-    downVotes: p.downVotes ?? null,
+  const normalizedPosts: IPostResponseDto[] = currentViewPosts.map((p) => ({
+    ...p,
+    createdAt: typeof p.createdAt === "string" 
+      ? p.createdAt 
+      : new Date(p.createdAt).toISOString(),
   }));
+  
+  // --- RENDER ---
 
-  // Loading
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen bg-white">
@@ -131,15 +159,13 @@ const PostListPage = () => {
     );
   }
 
-  // Error
   if (isError) {
     return (
       <div className="flex items-center justify-center h-screen bg-white">
         <div className="text-center bg-white p-8 rounded-2xl shadow-lg border-2 border-pink-100">
           <p className="text-2xl mb-2">⚠️</p>
           <p className="text-red-600 font-semibold mb-4">
-            {" "}
-            Có lỗi xảy ra khi tải dữ liệu{" "}
+            Có lỗi xảy ra khi tải dữ liệu
           </p>
           <button
             onClick={() => refetch()}
@@ -153,8 +179,7 @@ const PostListPage = () => {
   }
 
   return (
-    <div className="py-8 px-6 bg-white min-h-screen px-[80px]">
-      {/* Header */}
+    <div className="py-8 px-6 bg-white min-h-screen">
       <div className="mb-8">
         <div className="flex justify-between items-start mb-6">
           <div>
@@ -170,51 +195,43 @@ const PostListPage = () => {
             type="button"
             onClick={() => refetch()}
             disabled={isFetching}
-            className={`flex items-center gap-2 px-4 py-3 text-white rounded-lg font-semibold transition
-                         hover:scale-102
-                      bg-[#F295B6] hover:bg-[#F295B6]/80
-            `}
+            className={`flex items-center gap-2 px-4 py-3 text-white rounded-lg font-semibold transition hover:scale-102 bg-[#F295B6] hover:bg-[#F295B6]/80`}
           >
             <MdRefresh size={20} className={isFetching ? "animate-spin" : ""} />
             {isFetching ? "Đang tải..." : "Làm mới"}
           </button>
         </div>
 
-        {/* Stats */}
         <div className="grid grid-cols-3 gap-4 mb-6">
-          {["ALL", "ACTIVE", "HIDDEN"].map((status) => {
-            const count =
-              status === "ALL"
-                ? posts.length
-                : posts.filter((p) => p.status === status).length;
+          {["ALL", EBlogPostStatus.ACTIVE, EBlogPostStatus.HIDDEN].map((status) => {
+            let count = 0;
+            let label = "";
+
+            if (status === "ALL") {
+                count = stats.all;
+                label = "Tất cả";
+            } else if (status === EBlogPostStatus.ACTIVE) {
+                count = stats.active;
+                label = "Công khai";
+            } else if (status === EBlogPostStatus.HIDDEN) {
+                count = stats.hidden;
+                label = "Đã ẩn";
+            }
+                
             const colors =
               status === "ALL"
-                ? {
-                    bg: "bg-blue-50",
-                    text: "text-blue-700",
-                    border: "border-blue-200",
-                  }
-                : status === "ACTIVE"
-                ? {
-                    bg: "bg-emerald-50",
-                    text: "text-emerald-700",
-                    border: "border-emerald-200",
-                  }
-                : {
-                    bg: "bg-slate-50",
-                    text: "text-slate-700",
-                    border: "border-slate-200",
-                  };
+                ? { bg: "bg-blue-50", text: "text-blue-700", border: "border-blue-200" }
+                : status === EBlogPostStatus.ACTIVE
+                ? { bg: "bg-emerald-50", text: "text-emerald-700", border: "border-emerald-200" }
+                : { bg: "bg-slate-50", text: "text-slate-700", border: "border-slate-200" };
 
             return (
               <div
                 key={status}
                 className={`${colors.bg} border-2 ${colors.border} rounded-xl p-4 text-center`}
               >
-                <p
-                  className={`${colors.text} text-sm font-medium uppercase tracking-wide`}
-                >
-                  {status === "ALL" ? "Tất cả" : status}
+                <p className={`${colors.text} text-sm font-medium uppercase tracking-wide`}>
+                  {label}
                 </p>
                 <p className={`${colors.text} text-3xl font-bold mt-1`}>
                   {count}
@@ -224,9 +241,8 @@ const PostListPage = () => {
           })}
         </div>
 
-        {/* Filter Buttons */}
         <div className="flex gap-3 overflow-x-auto pb-2">
-          {(["ALL", "ACTIVE", "HIDDEN"] as StatusFilter[]).map((status) => {
+          {(["ALL", EBlogPostStatus.ACTIVE, EBlogPostStatus.HIDDEN] as StatusFilter[]).map((status) => {
             const isActive = filterStatus === status;
             return (
               <button
@@ -238,56 +254,59 @@ const PostListPage = () => {
                     : "bg-white border-2 text-gray-700 hover:border-[#F295B6] border-gray-200"
                 }`}
               >
-                {status === "ALL"
-                  ? "Tất cả"
-                  : status === "ACTIVE"
-                  ? "Công khai"
-                  : status === "HIDDEN"
-                  ? "Ẩn"
-                  : ""}
+                {status === "ALL" ? "Tất cả" : status === EBlogPostStatus.ACTIVE ? "Công khai" : "Ẩn"}
               </button>
             );
           })}
         </div>
       </div>
 
-      {/* Table Component */}
       <PostsTable
         posts={normalizedPosts}
         onHide={handleHide}
         onRestore={handleRestore}
+        onApproveReport={handleApproveReport}
+        onRejectReport={handleRejectReport}
         loadingId={actionLoading}
         emptyMessage={
           filterStatus !== "ALL"
             ? `Không có bài viết nào với trạng thái "${filterStatus}"`
-            : "Không có bài viết nào - Hãy tạo bài viết đầu tiên của bạn"
+            : "Không có bài viết nào"
         }
       />
 
-      {/* Footer Info & Pagination */}
       <div className="mt-8">
         <div className="flex justify-between items-center mb-6">
           <p className="text-gray-600">
             Hiển thị{" "}
             <span className="font-bold text-[#F295B6]">
-              {paginatedPosts.length > 0 ? startIndex + 1 : 0}-
-              {Math.min(endIndex, filteredPosts.length)}
+              {displayStart}-{displayEnd}
             </span>{" "}
             trên{" "}
             <span className="font-bold text-[#F295B6]">
-              {filteredPosts.length}
+              {totalRecords}
             </span>{" "}
             bài viết
           </p>
         </div>
 
-        {/* Pagination */}
         {totalPages > 1 && (
           <div className="flex justify-center items-center gap-2 flex-wrap">
+            
+            <button
+              onClick={() => setCurrentPage(1)}
+              disabled={currentPage === 1}
+              className="p-2.5 rounded-lg border-2 border-[#F295B6] hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Về trang đầu"
+            >
+              <BiChevronsLeft size={20} />
+            </button>
+
             <button
               onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
               disabled={currentPage === 1}
               className="p-2.5 rounded-lg border-2 border-[#F295B6] hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Trang trước"
             >
               <BiChevronLeft size={20} />
             </button>
@@ -297,14 +316,10 @@ const PostListPage = () => {
                 page === 1 ||
                 page === totalPages ||
                 Math.abs(page - currentPage) <= 1;
-              if (!isVisible && page !== 2 && page !== totalPages - 1)
-                return null;
+              
+              if (!isVisible && page !== 2 && page !== totalPages - 1) return null;
               if (!isVisible && (page === 2 || page === totalPages - 1))
-                return (
-                  <span key={`dots-${page}`} className="px-2">
-                    ...
-                  </span>
-                );
+                return <span key={`dots-${page}`} className="px-2">...</span>;
 
               return (
                 <button
@@ -322,14 +337,23 @@ const PostListPage = () => {
             })}
 
             <button
-              onClick={() =>
-                setCurrentPage(Math.min(totalPages, currentPage + 1))
-              }
+              onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
               disabled={currentPage === totalPages}
               className="p-2.5 rounded-lg border-2 border-[#F295B6] hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Trang sau"
             >
               <BiChevronRight size={20} />
             </button>
+
+            <button
+              onClick={() => setCurrentPage(totalPages)}
+              disabled={currentPage === totalPages}
+              className="p-2.5 rounded-lg border-2 border-[#F295B6] hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Đến trang cuối"
+            >
+              <BiChevronsRight size={20} />
+            </button>
+
           </div>
         )}
       </div>
