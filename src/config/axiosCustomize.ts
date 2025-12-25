@@ -38,6 +38,18 @@ instance.interceptors.response.use(
       return Promise.reject(error);
     }
 
+    // Check if account is banned
+    const errorMessage = error.response?.data?.message || '';
+    const isBanned = errorMessage.includes('bị khóa') || errorMessage.includes('ban');
+    
+    if (error.response?.status === 401 && isBanned) {
+      // Account is banned - logout immediately
+      localStorage.removeItem(ACCESS_TOKEN_KEY);
+      sessionStorage.setItem('banMessage', 'Tài khoản của bạn đã bị ban. Vui lòng liên hệ admin.');
+      window.location.href = "/login";
+      return Promise.reject(error);
+    }
+
     // If 401 and not already retrying, try to refresh token
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
