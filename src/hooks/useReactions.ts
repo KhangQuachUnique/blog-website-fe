@@ -33,7 +33,6 @@ export const useTogglePostReact = () => {
   const { userId } = useParams();
 
   const isMe = !userId || (userId && currentUser?.id === Number(userId));
-  console.log("Is me?", isMe, currentUser, userId);
   const q = searchParams.get("q") || "";
 
   return useMutation({

@@ -48,7 +48,7 @@ export interface RepostButtonProps {
 
 // Size configurations
 const SIZE_CONFIG = {
-  sm: { iconSize: 16, padding: "4px 8px", fontSize: "11px" },
+  sm: { iconSize: 18, padding: "4px 8px", fontSize: "11px" },
   md: { iconSize: 20, padding: "6px 10px", fontSize: "12px" },
   lg: { iconSize: 24, padding: "8px 14px", fontSize: "14px" },
 };

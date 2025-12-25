@@ -9,7 +9,7 @@ import type { IVotesSummaryDto } from "../../types/user-vote";
 import { useToast } from "../../contexts/toast";
 import { useLoginRequired } from "../../hooks/useLoginRequired";
 import { RepostButton } from "../repost";
-import type { IPostResponseDto } from "../../types/post";
+import { EPostType, type IPostResponseDto } from "../../types/post";
 
 // ============================================
 // 🎨 BLOOKIE DESIGN SYSTEM - PASTEL PINK EDITION
@@ -336,7 +336,7 @@ const InteractBar: React.FC<InteractBarProps> = ({
         >
           <div className="hover:translate-y-[-2px] transition-transform duration-100">
             <Bookmark
-              size={23}
+              size={18}
               strokeWidth={2.5}
               fill={isSaved ? "#F295B6" : "none"}
               color={isSaved ? "#F295B6" : "#999999"}
@@ -347,7 +347,9 @@ const InteractBar: React.FC<InteractBarProps> = ({
           </div>
         </button>
         {/* Repost Button - Hiển thị riêng, không trong MoreMenu */}
-        {post && <RepostButton post={post} userId={userId} size="lg" />}
+        {post && post.type === EPostType.PERSONAL && (
+          <RepostButton post={post} userId={userId} size="sm" />
+        )}
         {/* More Menu Button */}
         <div ref={moreMenuRef} style={{ position: "relative" }}>
           <button

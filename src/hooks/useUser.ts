@@ -6,7 +6,6 @@ import { useAuthUser } from "./useAuth.ts";
 export const useGetUserProfile = (userId?: number) => {
   const { user } = useAuthUser();
   const isMe = !userId || (userId && user?.id === userId);
-  console.log("Fetching profile for userId:", userId, "isMe:", isMe);
 
   return useQuery<UserProfile>({
     queryKey: !isMe ? ["userProfile", userId] : ["userProfile", "me"],

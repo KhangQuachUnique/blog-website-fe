@@ -1,6 +1,6 @@
-import React, { useState, useRef } from "react";
+import React, { useState } from "react";
 import { createPortal } from "react-dom";
-import { X, Repeat2, Loader2, Hash, Upload } from "lucide-react";
+import { X, Repeat2, Loader2, Hash } from "lucide-react";
 import { Chip, TextField, InputAdornment } from "@mui/material";
 import type { IPostResponseDto } from "../../types/post";
 
@@ -25,8 +25,6 @@ const THEME = {
 export interface RepostFormData {
   title: string;
   hashtags: string[];
-  thumbnailUrl: string | null;
-  thumbnailFile: File | null;
 }
 
 export interface RepostModalProps {
@@ -50,11 +48,7 @@ const RepostModal: React.FC<RepostModalProps> = ({
   const [title, setTitle] = useState("");
   const [hashtags, setHashtags] = useState<string[]>([]);
   const [hashtagInput, setHashtagInput] = useState("");
-  const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
-  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [titleError, setTitleError] = useState<string | null>(null);
-
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!isOpen) return null;
 
@@ -86,27 +80,6 @@ const RepostModal: React.FC<RepostModalProps> = ({
     setHashtags(hashtags.filter((tag) => tag !== tagToRemove));
   };
 
-  // Handle thumbnail upload
-  const handleThumbnailUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const url = URL.createObjectURL(file);
-      setThumbnailUrl(url);
-      setThumbnailFile(file);
-    }
-  };
-
-  const handleRemoveThumbnail = () => {
-    if (thumbnailUrl) {
-      URL.revokeObjectURL(thumbnailUrl);
-    }
-    setThumbnailUrl(null);
-    setThumbnailFile(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
-  };
-
   // Handle submit
   const handleSubmit = () => {
     if (!title.trim()) {
@@ -117,8 +90,6 @@ const RepostModal: React.FC<RepostModalProps> = ({
     onSubmit({
       title: title.trim(),
       hashtags,
-      thumbnailUrl,
-      thumbnailFile,
     });
   };
 
@@ -133,14 +104,9 @@ const RepostModal: React.FC<RepostModalProps> = ({
   const handleClose = () => {
     if (!isLoading) {
       // Cleanup
-      if (thumbnailUrl) {
-        URL.revokeObjectURL(thumbnailUrl);
-      }
       setTitle("");
       setHashtags([]);
       setHashtagInput("");
-      setThumbnailUrl(null);
-      setThumbnailFile(null);
       setTitleError(null);
       onClose();
     }
@@ -414,120 +380,7 @@ const RepostModal: React.FC<RepostModalProps> = ({
             )}
           </div>
 
-          {/* Thumbnail Upload (Optional) */}
-          <div style={{ marginBottom: "20px" }}>
-            <label
-              style={{
-                display: "block",
-                fontSize: "14px",
-                fontWeight: 600,
-                color: THEME.text,
-                marginBottom: "8px",
-              }}
-            >
-              Ảnh thumbnail
-            </label>
-
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleThumbnailUpload}
-              style={{ display: "none" }}
-              disabled={isLoading}
-            />
-
-            {thumbnailUrl ? (
-              <div
-                style={{
-                  position: "relative",
-                  borderRadius: "12px",
-                  overflow: "hidden",
-                }}
-              >
-                <img
-                  src={thumbnailUrl}
-                  alt="Thumbnail preview"
-                  style={{
-                    width: "100%",
-                    height: "150px",
-                    objectFit: "cover",
-                    borderRadius: "12px",
-                    border: `1px solid ${THEME.tertiary}`,
-                  }}
-                />
-                <button
-                  onClick={handleRemoveThumbnail}
-                  disabled={isLoading}
-                  style={{
-                    position: "absolute",
-                    top: "8px",
-                    right: "8px",
-                    width: "28px",
-                    height: "28px",
-                    borderRadius: "50%",
-                    border: "none",
-                    background: "rgba(255,255,255,0.9)",
-                    cursor: isLoading ? "not-allowed" : "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-                  }}
-                >
-                  <X size={16} style={{ color: THEME.danger }} />
-                </button>
-              </div>
-            ) : (
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isLoading}
-                style={{
-                  width: "100%",
-                  padding: "24px",
-                  border: `2px dashed ${THEME.secondary}`,
-                  borderRadius: "12px",
-                  background: THEME.cream,
-                  cursor: isLoading ? "not-allowed" : "pointer",
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  gap: "8px",
-                  transition: "all 0.2s ease",
-                }}
-                onMouseEnter={(e) => {
-                  if (!isLoading) {
-                    e.currentTarget.style.borderColor = THEME.primary;
-                    e.currentTarget.style.background = THEME.tertiary;
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = THEME.secondary;
-                  e.currentTarget.style.background = THEME.cream;
-                }}
-              >
-                <Upload size={24} style={{ color: THEME.primary }} />
-                <span
-                  style={{
-                    fontSize: "13px",
-                    color: THEME.textMuted,
-                    fontWeight: 500,
-                  }}
-                >
-                  Nhấn để tải lên ảnh thumbnail (tùy chọn)
-                </span>
-              </button>
-            )}
-            <p
-              style={{
-                fontSize: "12px",
-                color: THEME.textMuted,
-                marginTop: "6px",
-              }}
-            >
-              Nếu không chọn, sẽ sử dụng thumbnail của bài viết gốc
-            </p>
-          </div>
+          {/* (Thumbnail/cover removed — only title & hashtags remain) */}
         </div>
 
         {/* Footer */}
