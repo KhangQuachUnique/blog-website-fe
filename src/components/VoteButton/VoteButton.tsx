@@ -1,5 +1,6 @@
 import React from "react";
 import { useVote } from "../../hooks/useVote";
+import { useLoginRequired } from "../../hooks/useLoginRequired";
 import type { VoteButtonProps, VoteType } from "../../types/vote.types";
 import UpvoteIcon from "./UpvoteIcon";
 import DownvoteIcon from "./DownvoteIcon";
@@ -8,7 +9,7 @@ import DownvoteIcon from "./DownvoteIcon";
 // THEME
 // ============================================
 const THEME = {
-  primary: "#F295B6",
+  primary: "#999999",
   secondary: "#E8BCC8",
   tertiary: "#FFF0F5",
   white: "#FFFFFF",
@@ -16,33 +17,6 @@ const THEME = {
   upvoteActive: "#E8779F",
   downvoteActive: "#9B8A90",
   shadowSoft: "0 2px 12px rgba(242, 149, 182, 0.15)",
-};
-
-// ============================================
-// SIZE CONFIGURATIONS
-// ============================================
-const SIZE_CONFIG = {
-  sm: {
-    iconSize: 16,
-    fontSize: "11px",
-    padding: "2px 4px",
-    buttonSize: "24px",
-    minWidth: "24px",
-  },
-  md: {
-    iconSize: 18,
-    fontSize: "13px",
-    padding: "3px 5px",
-    buttonSize: "28px",
-    minWidth: "28px",
-  },
-  lg: {
-    iconSize: 20,
-    fontSize: "14px",
-    padding: "4px 6px",
-    buttonSize: "32px",
-    minWidth: "32px",
-  },
 };
 
 // ============================================
@@ -122,12 +96,14 @@ const VoteButton: React.FC<VoteButtonProps> = ({
   size = "md",
   showCount = true,
 }) => {
-  const config = SIZE_CONFIG[size];
+  const { requireLogin } = useLoginRequired();
 
   // React Query mutation hook
   const voteMutation = useVote(userId, postId);
 
   const handleVote = (voteType: VoteType) => {
+    if (!requireLogin({ message: "Vui lòng đăng nhập để vote bài viết" }))
+      return;
     if (voteMutation.isPending) return;
     voteMutation.mutate(voteType, {});
   };
@@ -137,7 +113,7 @@ const VoteButton: React.FC<VoteButtonProps> = ({
       style={{
         display: "flex",
         alignItems: "center",
-        gap: "1px",
+        gap: "8px",
         background: "transparent",
       }}
     >
@@ -152,7 +128,6 @@ const VoteButton: React.FC<VoteButtonProps> = ({
       {showCount && (
         <span
           style={{
-            minWidth: config.minWidth,
             textAlign: "center",
             fontSize: 16,
             fontWeight: 600,

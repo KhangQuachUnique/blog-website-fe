@@ -22,6 +22,7 @@ export const createPost = async (
 ): Promise<IPostResponseDto> => {
   console.log("Creating post with data:", data);
   const response = await axios.post<IPostResponseDto>("/blog-posts", data);
+  console.log("Response from creating post:", response);
   return response;
 };
 
@@ -43,7 +44,7 @@ export const hidePost = async (postId: number) => {
 
 export const restorePost = async (postId: number) => {
   return axios.patch(`/blog-posts/${postId}/restore`);
-}
+};
 
 export const getPostsByCommunityId = async (communityId: number) => {
   return axios.get(`/blog-posts/community/${communityId}`);

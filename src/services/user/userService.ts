@@ -26,6 +26,7 @@ export const getUserProfile = async (
   const response = await axiosCustomize.get(`/users/${userId}/profile`, {
     params,
   });
+  console.log("User profile response:", response);
   return response;
 };
 

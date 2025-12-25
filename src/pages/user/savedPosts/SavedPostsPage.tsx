@@ -56,9 +56,22 @@ export default function SavedPostsPage() {
   if (isLoading) {
     return (
       <div className="saved-posts-page">
-        <CardSkeleton />
-        <CardSkeleton />
-        <CardSkeleton />
+        <div style={{ padding: "20px 150px", background: "#fff" }}>
+          {/* Header */}
+          <div className="saved-posts-header">
+            <div className="saved-posts-header__left">
+              <Bookmark size={28} className="saved-posts-header__icon" />
+              <div>
+                <h1 className="saved-posts-header__title">Bài viết đã lưu</h1>
+              </div>
+            </div>
+          </div>
+          <div className="flex flex-col gap-10">
+            <CardSkeleton />
+            <CardSkeleton />
+            <CardSkeleton />
+          </div>
+        </div>
       </div>
     );
   }

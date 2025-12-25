@@ -14,7 +14,6 @@ import TextBlock from "../../../components/block/textBlock";
 import ImageBlock from "../../../components/block/imageBlock";
 import { PostCommentsSection } from "../../../components/comments/PostCommentsSection";
 import { SearchSidebar } from "../../../components/searchBar/SearchSidebar";
-import { useAuthUser } from "../../../hooks/useAuth";
 
 import { EBlockType, ObjectFitType } from "../../../types/block";
 import type { IBlockResponseDto } from "../../../types/block";
@@ -28,6 +27,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import type { IPostResponseDto } from "../../../types/post";
 import DetailPostSkeleton from "../../../components/skeleton/DetailPostSkeleton";
 import { BlockCommentButton } from "../../../components/comments/BlockCommentButton";
+import FloatingInteractBar from "../../../components/InteractBar/FloatingInteractBar";
 
 // ============================================
 // Types
@@ -179,18 +179,6 @@ const PostDetailsPage: React.FC = () => {
     window.getSelection()?.removeAllRanges();
   };
 
-  // Current logged in user (for comments)
-  const { user: currentUser } = useAuthUser();
-
-  // [CHANGE] chỉ cần user khi KHÔNG review mode (vì review mode sẽ ẩn comments)
-  const normalizedUser = currentUser
-    ? {
-        id: currentUser.id,
-        username: currentUser.username,
-        avatarUrl: currentUser.avatarUrl ?? undefined,
-      }
-    : null;
-
   // ============================================
   // Early returns
   // ============================================
@@ -247,6 +235,15 @@ const PostDetailsPage: React.FC = () => {
   // ============================================
   return (
     <div className="w-full relative p-9 flex flex-col gap-4 items-center justify-center">
+      {/* Floating Interact Bar - Fixed on left side */}
+      {!isReviewMode && (
+        <FloatingInteractBar
+          postId={postId}
+          votes={postData.votes}
+          totalComments={postData.totalComments || 0}
+          post={postData}
+        />
+      )}
       {/* Tooltip Button Tìm Kiếm */}
       {selection.show && (
         <button
@@ -395,8 +392,8 @@ const PostDetailsPage: React.FC = () => {
         )}
       </div>
 
-      {/* [CHANGE] Ẩn Post Comments khi review mode */}
-      {!isReviewMode && normalizedUser && (
+      {/* [CHANGE] Hiển thị comments section cho tất cả user, form sẽ tự xử lý kiểm tra login */}
+      {!isReviewMode && (
         <div style={{ width: GRID_SETTINGS.width, marginTop: 32 }}>
           <PostCommentsSection postId={postData.id} />
         </div>

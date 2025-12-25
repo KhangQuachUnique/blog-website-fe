@@ -108,13 +108,32 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
               >
                 <div className="newsfeed-card__header w-full">
                   <div className="newsfeed-card__author">
-                    <img
-                      src={post.author.avatarUrl}
-                      alt={post.author.username}
-                      className="newsfeed-card__avatar !w-6 !h-6"
-                      onClick={(e) => handleAvatarClick(e, post.author.id)}
-                      style={{ cursor: "pointer" }}
-                    />
+                    <div>
+                      {post.author.avatarUrl ? (
+                        <img
+                          src={post.author.avatarUrl}
+                          alt={post.author.username}
+                          className="newsfeed-card__avatar !w-[30px] !h-[30px]"
+                          onClick={(e) => handleAvatarClick(e, post.author.id)}
+                          style={{ cursor: "pointer" }}
+                        />
+                      ) : (
+                        <div
+                          onClick={(e) => handleAvatarClick(e, post.author.id)}
+                          style={{ cursor: "pointer" }}
+                        >
+                          <Avatar
+                            {...stringAvatar(
+                              post.author.username,
+                              30,
+                              "1rem",
+                              "",
+                              "none"
+                            )}
+                          />
+                        </div>
+                      )}
+                    </div>
                     <div className="newsfeed-card__author-info">
                       <span
                         className="newsfeed-card__username"
@@ -169,23 +188,30 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
 
               <div className="newsfeed-card__header">
                 <div className="newsfeed-card__author">
-                  <img
-                    src={
-                      fetchedOriginal?.author?.avatarUrl ??
-                      post.author.avatarUrl
-                    }
-                    alt={
-                      fetchedOriginal?.author?.username ?? post.author.username
-                    }
-                    className="newsfeed-card__avatar"
-                    onClick={(e) =>
-                      handleAvatarClick(
-                        e,
-                        fetchedOriginal?.author?.id ?? post.author.id
-                      )
-                    }
-                    style={{ cursor: "pointer" }}
-                  />
+                  {fetchedOriginal?.author?.avatarUrl ? (
+                    <img
+                      src={fetchedOriginal.author.avatarUrl}
+                      alt={fetchedOriginal.author.username}
+                      className="newsfeed-card__avatar"
+                      onClick={(e) => handleAvatarClick(e, post.author.id)}
+                      style={{ cursor: "pointer" }}
+                    />
+                  ) : (
+                    <div
+                      onClick={(e) => handleAvatarClick(e, post.author.id)}
+                      style={{ cursor: "pointer" }}
+                    >
+                      <Avatar
+                        {...stringAvatar(
+                          post.author.username,
+                          50,
+                          "1rem",
+                          "",
+                          "none"
+                        )}
+                      />
+                    </div>
+                  )}
                   <div className="newsfeed-card__author-info">
                     <span
                       className="newsfeed-card__username"
@@ -233,19 +259,22 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
             {/* InteractBar của người repost */}
 
             <div
-              className="newsfeed-card__interact"
+              className="newsfeed-card__interact !p-0"
               onClick={(e) => e.stopPropagation()}
             >
               <ReactionSection
                 postId={post?.id ?? post.originalPostId ?? post.id}
                 reactions={post?.reacts?.emojis ?? []}
               />
-              <InteractBar
-                postId={post?.id ?? post.originalPostId ?? post.id}
-                userId={user?.id ?? 0}
-                votes={post.votes}
-                totalComments={post.totalComments}
-              />
+              <div className="pl-2 border-t border-t-[#FFC9DC]">
+                <InteractBar
+                  postId={post?.id ?? post.originalPostId ?? post.id}
+                  userId={user?.id ?? 0}
+                  votes={post.votes}
+                  totalComments={post.totalComments}
+                  post={fetchedOriginal ?? post}
+                />
+              </div>
             </div>
           </div>
         </article>
@@ -299,7 +328,13 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
                       style={{ cursor: "pointer" }}
                     >
                       <Avatar
-                        {...stringAvatar(post.author.username, 40, "1rem")}
+                        {...stringAvatar(
+                          post.author.username,
+                          50,
+                          "1rem",
+                          "",
+                          "none"
+                        )}
                       />
                     </div>
                   )}
@@ -369,12 +404,13 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
                 postId={post.id}
                 reactions={post.reacts?.emojis ?? []}
               />
-              <div className="px-20 border-t border-t-[#FFC9DC]">
+              <div className="pl-2 border-t border-t-[#FFC9DC]">
                 <InteractBar
                   postId={post.id}
                   userId={user?.id ?? 0}
                   votes={post.votes}
                   totalComments={post.totalComments}
+                  post={post}
                 />
               </div>
             </div>

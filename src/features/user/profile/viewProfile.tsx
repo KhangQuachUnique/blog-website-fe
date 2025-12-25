@@ -53,7 +53,7 @@ const ViewProfile = () => {
     data: fetchedProfile,
     isLoading: queryLoading,
     error: queryError,
-  } = useGetUserProfile(userId ? Number(userId) : undefined, currentUser?.id);
+  } = useGetUserProfile(Number(userId));
 
   useEffect(() => {
     setLoading(queryLoading);

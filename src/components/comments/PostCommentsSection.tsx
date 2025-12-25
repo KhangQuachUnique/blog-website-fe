@@ -50,7 +50,7 @@ export const PostCommentsSection: React.FC<PostCommentsProps> = ({
   }
 
   return (
-    <div className="comments-section space-y-6">
+    <div className="comments-section space-y-6" data-comments-section>
       {/* Comments Header */}
       <div className="comments-header">
         <div className="flex items-center justify-between">

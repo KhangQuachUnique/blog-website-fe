@@ -22,4 +22,16 @@ declare global {
     timestamp: string;
     message: string;
   }
+  interface IUser {
+    id: number | string;
+    fullName: string;
+    email: string;
+    phoneNumber?: string;
+    role: "ADMIN" | "USER";
+    status: "ACTIVE" | "BANNED";
+    avatar?: string;
+    // Các trường phục vụ logic Ban
+    bannedUntil?: string | null; // Ngày mở khóa
+    banReason?: string | null;
+  }
 }

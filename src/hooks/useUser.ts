@@ -1,16 +1,17 @@
 import { useQuery } from "@tanstack/react-query";
 import { getMyProfile, getUserProfile } from "../services/user/userService";
 import type { UserProfile } from "../types/user.ts";
+import { useAuthUser } from "./useAuth.ts";
 
-export const useGetUserProfile = (
-  userId?: number,
-  viewerId?: number | null
-) => {
+export const useGetUserProfile = (userId?: number) => {
+  const { user } = useAuthUser();
+  const isMe = !userId || (userId && user?.id === userId);
+
   return useQuery<UserProfile>({
-    queryKey: ["userProfile", userId ?? "me", viewerId ?? "self"],
+    queryKey: !isMe ? ["userProfile", userId] : ["userProfile", "me"],
     queryFn: () => {
-      if (userId && Number.isFinite(userId) && userId > 0) {
-        return getUserProfile(userId, viewerId ?? undefined);
+      if (!isMe && userId) {
+        return getUserProfile(userId, user?.id);
       }
       return getMyProfile();
     },
