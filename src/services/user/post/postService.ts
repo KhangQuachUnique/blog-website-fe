@@ -38,7 +38,9 @@ export const updatePost = async (
   return response;
 };
 
-export const getPostsByCommunityId = async (communityId: number) => {
+export const getPostsByCommunityId = async (
+  communityId: number
+): Promise<IPostResponseDto[]> => {
   return axios.get(`/blog-posts/community/${communityId}`);
 };
 

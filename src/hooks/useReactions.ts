@@ -11,12 +11,14 @@ import {
   type INewsfeedItemDto,
 } from "../types/newsfeed";
 import type { IPostResponseDto } from "../types/post";
-import { useSearchParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import type {
   ISearchResponseDto,
   SearchResultItem,
 } from "../services/search/search.service";
 import type { SavedPostListResponse } from "../types/savedPost";
+import { useAuthUser } from "./useAuth";
+import type { UserProfile } from "../types/user";
 
 /**
  * Hook to toggle reaction on a post.
@@ -25,8 +27,13 @@ import type { SavedPostListResponse } from "../types/savedPost";
 export const useTogglePostReact = () => {
   const queryClient = useQueryClient();
   const sessionSeed = getOrCreateSessionSeed();
+  const { user: currentUser } = useAuthUser();
   const [searchParams] = useSearchParams();
+  const { id: communityId } = useParams();
+  const { userId } = useParams();
 
+  const isMe = !userId || (userId && currentUser?.id === Number(userId));
+  console.log("Is me?", isMe, currentUser, userId);
   const q = searchParams.get("q") || "";
 
   return useMutation({
@@ -49,6 +56,16 @@ export const useTogglePostReact = () => {
         queryKey: ["savedPost", "list"],
       });
 
+      await queryClient.cancelQueries({
+        queryKey: ["community-posts", Number(communityId)],
+      });
+
+      await queryClient.cancelQueries({
+        queryKey: isMe
+          ? ["userProfile", "me"]
+          : ["userProfile", Number(userId)],
+      });
+
       const previousFeed = queryClient.getQueryData<
         InfiniteData<IGetNewsfeedResponseDto>
       >(["newsfeed", sessionSeed]);
@@ -65,6 +82,16 @@ export const useTogglePostReact = () => {
       const previousSavedPosts =
         queryClient.getQueryData<SavedPostListResponse>(["savedPost", "list"]);
 
+      const previousCommunityPosts = queryClient.getQueryData<
+        IPostResponseDto[]
+      >(["community-posts", Number(communityId)]);
+
+      const previousUserProfile = queryClient.getQueryData<UserProfile>(
+        isMe ? ["userProfile", "me"] : ["userProfile", Number(userId)]
+      );
+
+      console.log("Previous user profile reacts...", previousUserProfile);
+
       const newFeed = await updateNewsfeedReacts(previousFeed, toggleData);
       const newPost = await updateSinglePostReacts(previousPost, toggleData);
       const newSearchResults = await updateSearchPostReacts(
@@ -75,12 +102,28 @@ export const useTogglePostReact = () => {
         previousSavedPosts,
         toggleData
       );
+      const newCommunityPosts = await updateCommunityPostsReacts(
+        previousCommunityPosts,
+        toggleData
+      );
+      const newUserProfile = await updateUserProfilePostsReacts(
+        previousUserProfile,
+        toggleData
+      );
 
       // Cập nhật cache ngay lập tức (phải dùng cùng queryKey với các thao tác khác)
       queryClient.setQueryData(["newsfeed", sessionSeed], newFeed);
       queryClient.setQueryData(["post", toggleData.postId], newPost);
       queryClient.setQueryData(["search", q, "post"], newSearchResults);
       queryClient.setQueryData(["savedPost", "list"], newSavedPosts);
+      queryClient.setQueryData(
+        ["community-posts", Number(communityId)],
+        newCommunityPosts
+      );
+      queryClient.setQueryData(
+        isMe ? ["userProfile", "me"] : ["userProfile", Number(userId)],
+        newUserProfile
+      );
 
       // Trả về context để rollback nếu lỗi
       return {
@@ -88,6 +131,8 @@ export const useTogglePostReact = () => {
         previousPost,
         previousSearchResults,
         previousSavedPosts,
+        previousCommunityPosts,
+        previousUserProfile,
       };
     },
 
@@ -111,6 +156,18 @@ export const useTogglePostReact = () => {
         queryClient.setQueryData(
           ["savedPost", "list"],
           context.previousSavedPosts
+        );
+      }
+      if (context?.previousCommunityPosts) {
+        queryClient.setQueryData(
+          ["community-posts", Number(communityId)],
+          context.previousCommunityPosts
+        );
+      }
+      if (context?.previousUserProfile) {
+        queryClient.setQueryData(
+          isMe ? ["userProfile", "me"] : ["userProfile", Number(userId)],
+          context.previousUserProfile
         );
       }
     },
@@ -142,7 +199,6 @@ export function updatePostReacts(
   toggleData: IToggleReactDto
 ): IPostResponseDto {
   if (post.id !== toggleData.postId || !post.reacts?.emojis) {
-    console.warn("This post does not have reactions data.");
     return post;
   }
 
@@ -176,7 +232,6 @@ export function updatePostReacts(
       };
     }
   } else {
-    console.log("Toggling a new reaction", toggleData);
     newEmojis.push({
       emojiId,
       codepoint,
@@ -269,5 +324,35 @@ const updateSavedPostReacts = (
           updatePostReacts(post, toggleData)
         )
       : savedPosts.items,
+  };
+};
+
+const updateCommunityPostsReacts = (
+  communityPosts: IPostResponseDto[] | undefined,
+  toggleData: IToggleReactDto
+): IPostResponseDto[] | undefined => {
+  if (!communityPosts) {
+    return undefined;
+  }
+
+  return communityPosts.map((post: IPostResponseDto) =>
+    updatePostReacts(post, toggleData)
+  );
+};
+
+const updateUserProfilePostsReacts = (
+  userProfile: UserProfile | undefined,
+  toggleData: IToggleReactDto
+): UserProfile | undefined => {
+  console.log("Updating user profile reacts...", userProfile, toggleData);
+  if (!userProfile) {
+    return undefined;
+  }
+
+  return {
+    ...userProfile,
+    posts: userProfile.posts.map((post: IPostResponseDto) =>
+      updatePostReacts(post, toggleData)
+    ),
   };
 };

@@ -13,11 +13,13 @@ import type {
 } from "../types/newsfeed";
 import type { IPostResponseDto } from "../types/post";
 import type { SavedPostListResponse } from "../types/savedPost";
-import { useSearchParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import type {
   ISearchResponseDto,
   SearchResultItem,
 } from "../services/search/search.service";
+import { useAuthUser } from "./useAuth";
+import type { UserProfile } from "../types/user";
 
 // ============================================
 // QUERY KEYS
@@ -56,8 +58,13 @@ export const useVoteStatus = (userId: number | null, postId: number) => {
 export const useVote = (userId: number, postId: number) => {
   const queryClient = useQueryClient();
   const sessionSeed = getOrCreateSessionSeed();
+  const { user: currentUser } = useAuthUser();
   const [searchParams] = useSearchParams();
+  const { id: communityId } = useParams();
+  const { userId: profileUserId } = useParams();
 
+  const isMe =
+    !profileUserId || (userId && currentUser?.id === Number(profileUserId));
   const q = searchParams.get("q") || "";
 
   return useMutation({
@@ -81,6 +88,16 @@ export const useVote = (userId: number, postId: number) => {
         queryKey: ["savedPost", "list"],
       });
 
+      await queryClient.cancelQueries({
+        queryKey: ["community-posts", Number(communityId)],
+      });
+
+      await queryClient.cancelQueries({
+        queryKey: isMe
+          ? ["userProfile", "me"]
+          : ["userProfile", Number(profileUserId)],
+      });
+
       const previousFeed = queryClient.getQueryData<
         InfiniteData<IGetNewsfeedResponseDto>
       >(["newsfeed", sessionSeed]);
@@ -97,6 +114,14 @@ export const useVote = (userId: number, postId: number) => {
       const previousSavedPosts =
         queryClient.getQueryData<SavedPostListResponse>(["savedPost", "list"]);
 
+      const previousCommunityPosts = queryClient.getQueryData<
+        IPostResponseDto[]
+      >(["community-posts", Number(communityId)]);
+
+      const previousUserProfile = queryClient.getQueryData<UserProfile>(
+        isMe ? ["userProfile", "me"] : ["userProfile", Number(profileUserId)]
+      );
+
       const newFeed = updateNewsfeedVotes(previousFeed, voteType, postId);
       const newPost = updateSinglePostVotes(previousPost, voteType);
       const newSearchResults = updateSearchPostVotes(
@@ -109,11 +134,29 @@ export const useVote = (userId: number, postId: number) => {
         voteType,
         postId
       );
+      const newCommunityPosts = updateCommunityPostsReacts(
+        previousCommunityPosts,
+        voteType,
+        postId
+      );
+      const newUserProfile = updateUserProfileReacts(
+        previousUserProfile,
+        voteType,
+        postId
+      );
 
       queryClient.setQueryData(["newsfeed", sessionSeed], newFeed);
       queryClient.setQueryData(["post", postId], newPost);
       queryClient.setQueryData(["search", q, "post"], newSearchResults);
       queryClient.setQueryData(["savedPost", "list"], newSavedPosts);
+      queryClient.setQueryData(
+        ["community-posts", Number(communityId)],
+        newCommunityPosts
+      );
+      queryClient.setQueryData(
+        isMe ? ["userProfile", "me"] : ["userProfile", Number(profileUserId)],
+        newUserProfile
+      );
 
       // Return context with previous value
       return {
@@ -121,6 +164,8 @@ export const useVote = (userId: number, postId: number) => {
         previousSearchResults,
         previousSavedPosts,
         previousPost,
+        previousCommunityPosts,
+        previousUserProfile,
       };
     },
 
@@ -148,6 +193,20 @@ export const useVote = (userId: number, postId: number) => {
         queryClient.setQueryData(
           ["savedPost", "list"],
           context.previousSavedPosts
+        );
+      }
+
+      if (context?.previousCommunityPosts) {
+        queryClient.setQueryData(
+          ["community-posts", Number(communityId)],
+          context.previousCommunityPosts
+        );
+      }
+
+      if (context?.previousUserProfile) {
+        queryClient.setQueryData(
+          isMe ? ["userProfile", "me"] : ["userProfile", Number(profileUserId)],
+          context.previousUserProfile
         );
       }
     },
@@ -285,5 +344,36 @@ const updateSavedPostReacts = (
           post.id === postId ? updatePostVotes(post, voteType) : post
         )
       : savedPosts.items,
+  };
+};
+
+const updateCommunityPostsReacts = (
+  communityPosts: IPostResponseDto[] | undefined,
+  voteType: VoteType,
+  postId: number
+): IPostResponseDto[] | undefined => {
+  if (!communityPosts) {
+    return undefined;
+  }
+
+  return communityPosts.map((post: IPostResponseDto) =>
+    post.id === postId ? updatePostVotes(post, voteType) : post
+  );
+};
+
+const updateUserProfileReacts = (
+  userProfile: UserProfile | undefined,
+  voteType: VoteType,
+  postId: number
+): UserProfile | undefined => {
+  if (!userProfile) {
+    return undefined;
+  }
+
+  return {
+    ...userProfile,
+    posts: userProfile.posts.map((post: IPostResponseDto) =>
+      post.id === postId ? updatePostVotes(post, voteType) : post
+    ),
   };
 };
