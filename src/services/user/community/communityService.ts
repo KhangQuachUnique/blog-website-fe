@@ -92,10 +92,10 @@ export const removeCommunityMember = (
   memberId: number,
   opts?: { ban?: boolean }
 ) => {
-  return axios.delete(
-    `/communities/${communityId}/members/${memberId}`,
-    opts?.ban ? { params: { ban: 1 } } : undefined
-  );
+  const ban = opts?.ban ?? true; // mặc định kick = ban
+  return axios.delete(`/communities/${communityId}/members/${memberId}`, {
+    params: { ban: ban ? 1 : 0 }, // ✅ luôn gửi 1/0
+  });
 };
 
 // ✅ Leave community (rời cộng đồng)
