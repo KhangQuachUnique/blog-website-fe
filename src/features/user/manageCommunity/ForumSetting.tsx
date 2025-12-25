@@ -38,8 +38,8 @@ const ForumSetting = () => {
         description: data.description,
         thumbnailUrl: data.thumbnailUrl ?? "",
         isPublic: data.isPublic,
-        requirePostApproval: data.requirePostApproval,
-        requireMemberApproval: data.requireMemberApproval,
+        requirePostApproval: !!data.requirePostApproval,
+        requireMemberApproval: !!data.requireMemberApproval,
       });
     }
   }, [isSuccess, data, communityId]);
