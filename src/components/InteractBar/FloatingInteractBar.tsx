@@ -15,6 +15,7 @@ import { useToast } from "../../contexts/toast";
 import { useLoginRequired } from "../../hooks/useLoginRequired";
 import type { IVotesSummaryDto } from "../../types/user-vote";
 import type { IPostResponseDto } from "../../types/post";
+import { EPostType } from "../../types/post";
 import VoteButton from "../VoteButton";
 import { RepostButton } from "../repost";
 
@@ -443,7 +444,7 @@ const FloatingInteractBar: React.FC<FloatingInteractBarProps> = ({
       </ActionButton>
 
       {/* Repost Button - use standard ActionButton via renderButton */}
-      {post && (
+      {post && post.type === EPostType.PERSONAL && (
         <RepostButton
           post={post}
           userId={userId}

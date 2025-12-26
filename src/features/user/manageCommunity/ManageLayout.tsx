@@ -74,63 +74,83 @@ const ManageLayout = () => {
 
   // Use shared community-content wrappers to match CommunityLayout sizing
 
-  // MEMBER → chỉ xem
+  // MEMBER → chỉ xem (two-column header like CommunityLayout)
   if (role === "MEMBER") {
     return (
       <div className="community-page">
-        <div className="community-header-img">
-          <img src={coverSrc} alt="cover" />
-        </div>
+        <div className="community-content">
+          <div className="flex gap-8 items-start">
+            <div className="community-header-img !w-[400px] !h-[300px] !rounded-md">
+              <img src={coverSrc} alt="cover" />
+            </div>
 
-        <div style={headerWrapStyle}>
-          <h2 className="community-header-title">{data.name}</h2>
-          <p className="community-header-sub">{data.description}</p>
+            <div className="community-header-main h-[300px] flex flex-col justify-start">
+              <div>
+                <h2 className="community-header-title">{data.name}</h2>
+                <p className="community-header-sub mt-2">{data.description}</p>
+              </div>
 
-          <div style={{ marginTop: 12 }}>
-            <BackButton />
+              <div>
+                <div style={{ marginTop: 12 }}>
+                  <BackButton />
+                </div>
+
+                <p style={{ marginTop: 12 }}>
+                  Bạn là <strong>Thành viên</strong>. Bạn không có quyền quản lý
+                  cộng đồng.
+                </p>
+              </div>
+            </div>
           </div>
-
-          <p style={{ marginTop: 16 }}>
-            Bạn là <strong>Thành viên</strong>. Bạn không có quyền quản lý cộng
-            đồng.
-          </p>
         </div>
       </div>
     );
   }
 
-  // PENDING → chờ duyệt
+  // PENDING → chờ duyệt (two-column header like CommunityLayout)
   if (role === "PENDING") {
     return (
       <div className="community-page">
-        <div className="community-header-img">
-          <img src={coverSrc} alt="cover" />
-        </div>
+        <div className="community-content">
+          <div className="flex gap-8 items-start">
+            <div className="community-header-img !w-[400px] !h-[300px] !rounded-md">
+              <img src={coverSrc} alt="cover" />
+            </div>
 
-        <div style={headerWrapStyle}>
-          <h2 className="community-header-title">{data.name}</h2>
-          <p className="community-header-sub">
-            Yêu cầu tham gia cộng đồng của bạn đang chờ duyệt.
-          </p>
+            <div className="community-header-main h-[300px] flex flex-col justify-start">
+              <div>
+                <h2 className="community-header-title">{data.name}</h2>
+                <p className="community-header-sub">
+                  Yêu cầu tham gia cộng đồng của bạn đang chờ duyệt.
+                </p>
+              </div>
 
-          <div style={{ marginTop: 12 }}>
-            <BackButton />
+              <div style={{ marginTop: 12 }}>
+                <BackButton />
+              </div>
+            </div>
           </div>
         </div>
       </div>
     );
   }
 
-  // ADMIN + MODERATOR
+  // ADMIN + MODERATOR — keep tabs/actions below header, only thumbnail/title/desc two-column
   return (
     <div className="community-page">
-      <div className="community-header-img">
-        <img src={coverSrc} alt="cover" />
-      </div>
-
       <div className="community-content">
-        <h2 className="community-header-title !mb-5">{data.name}</h2>
-        <p className="community-header-sub">{data.description}</p>
+        <div className="flex gap-8 items-start">
+          <div className="community-header-img !w-[400px] !h-[300px] !rounded-md">
+            <img src={coverSrc} alt="cover" />
+          </div>
+
+          <div className="community-header-main h-[300px] flex flex-col justify-start">
+            <div>
+              <h2 className="community-header-title !mb-0">{data.name}</h2>
+              <p className="community-header-sub mt-2">{data.description}</p>
+            </div>
+          </div>
+        </div>
 
         <div
           style={{

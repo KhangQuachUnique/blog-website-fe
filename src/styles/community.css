@@ -395,6 +395,9 @@
   box-shadow: none;
 }
 
+/* Compact member / privacy stat box used in community header */
+/* (Replaced by Tailwind utilities in the component) */
+
 /* Back button (Manage -> Community) */
 .btn-back-community {
   border: 1px solid #ffd1e2;
