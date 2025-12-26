@@ -14,7 +14,7 @@ import {
 import { useToast } from "../../../contexts/toast";
 import "../../../styles/community.css";
 import CustomButton from "../../../components/button";
-import { FaLock } from "react-icons/fa";
+import { FaLock, FaUsers } from "react-icons/fa";
 
 const CommunityLayout = () => {
   const { id } = useParams();
@@ -126,25 +126,34 @@ const CommunityLayout = () => {
 
   return (
     <div className="community-page">
-      <div className="community-header-img">
-        <img src={coverSrc} alt="cover" />
-      </div>
-
       <div className="community-content">
-        <div className="community-header-row">
-          <div className="community-header-main">
-            <h1 className="community-title">{data.name}</h1>
-            <div className="community-meta">
-              <span>{data.isPublic ? "Công khai" : "Riêng tư"}</span>
-              <span>•</span>
-              <span>{data.memberCount} thành viên</span>
-            </div>
-            <p className="community-sub mt-10 !text-lg">{data.description}</p>
+        <div className="flex gap-8 items-start">
+          <div className="community-header-img !w-[400px] !h-[300px] !rounded-md">
+            <img src={coverSrc} alt="cover" />
           </div>
-
-          <div className="community-header-actions">
-            <div className="community-actions">
-              <div className="community-actions__left">
+          <div className="community-header-main h-[300px] flex flex-col justify-between">
+            <h1 className="community-title text-5xl leading-tight">
+              {data.name}
+            </h1>
+            <div>
+              <div className="flex justify-end">
+                <div
+                  title={`${data.memberCount} thành viên`}
+                  className="min-w-[88px] px-3 py-2 rounded-lg bg-white flex flex-col items-center"
+                >
+                  <div className="inline-flex items-center gap-2">
+                    <FaUsers className="text-gray-600 text-xl" />
+                    <div className="font-extrabold text-xl text-gray-600 leading-none">
+                      {data.memberCount}
+                    </div>
+                  </div>
+                  <div className="text-sm text-gray-600 font-semibold ">
+                    {data.isPublic ? "Công khai" : "Riêng tư"}
+                  </div>
+                </div>
+              </div>
+              {/* Action buttons grouped under title/stats */}
+              <div className="mt-1   flex flex-wrap gap-3 justify-end">
                 {isAdminOrMod && (
                   <button
                     onClick={() => navigate(`/community/${communityId}/manage`)}
@@ -219,11 +228,14 @@ const CommunityLayout = () => {
                   </CustomButton>
                 )}
               </div>
-
-              {/* header right actions removed — create button moved into tabs */}
             </div>
           </div>
         </div>
+      </div>
+
+      <div className="community-content">
+        <span className="font-bold text-gray-600 text-lg">Mô tả: </span>
+        <p className="community-sub text-lg">{data.description}</p>
 
         {isPrivateLocked && (
           <div className="community-card mt-14">
