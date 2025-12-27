@@ -125,3 +125,74 @@ export const deleteReport = async (id: number): Promise<{ message: string }> => 
   const response = await axios.delete(`/reports/${id}`);
   return response as unknown as { message: string };
 };
+
+/**
+ * Get detailed information about a report
+ * @param reportId - The ID of the report
+ * @returns Promise with report detail data
+ */
+export const getReportDetail = async (reportId: number): Promise<IReportResponse> => {
+  try {
+    const response = await axios.get<IReportResponse>(
+      `/admin/reports/${reportId}`
+    );
+    return response;
+  } catch (error) {
+    console.error(`Error fetching report detail for ID ${reportId}:`, error);
+    throw error;
+  }
+};
+
+/**
+ * Get full content of a reported user
+ * @param reportId - The ID of the report
+ * @returns Promise with user content data
+ */
+export const getReportedUserContent = async (reportId: number) => {
+  try {
+    const response = await axios.get(
+      `/admin/reports/${reportId}/content/user`
+    );
+    return response.data;
+  } catch (error) {
+    console.error(`Error fetching user content for report ${reportId}:`, error);
+    throw error;
+  }
+};
+
+/**
+ * Get full content of a reported post
+ * @param reportId - The ID of the report
+ * @returns Promise with post content data
+ */
+export const getReportedPostContent = async (reportId: number) => {
+  try {
+    const response = await axios.get(
+      `/admin/reports/${reportId}/content/post`
+    );
+    return response.data;
+  } catch (error) {
+    console.error(`Error fetching post content for report ${reportId}:`, error);
+    throw error;
+  }
+};
+
+/**
+ * Get full content of a reported comment
+ * @param reportId - The ID of the report
+ * @returns Promise with comment content data
+ */
+export const getReportedCommentContent = async (reportId: number) => {
+  try {
+    const response = await axios.get(
+      `/admin/reports/${reportId}/content/comment`
+    );
+    return response.data;
+  } catch (error) {
+    console.error(
+      `Error fetching comment content for report ${reportId}:`,
+      error
+    );
+    throw error;
+  }
+};
