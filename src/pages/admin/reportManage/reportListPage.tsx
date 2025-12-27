@@ -221,7 +221,7 @@ const ReportListPage = () => {
                 className={`${colors.bg} border-2 ${colors.border} rounded-xl p-4 text-center transition-all hover:shadow-md`}
               >
                 <p className={`${colors.text} text-sm font-medium uppercase tracking-wide opacity-80`}>
-                  {type === "ALL" ? "Tổng số" : type}
+                  {type === "ALL" ? "Tất cả" : type}
                 </p>
                 <p className={`${colors.text} text-3xl font-bold mt-1`}>
                   {isLoading ? "-" : count}

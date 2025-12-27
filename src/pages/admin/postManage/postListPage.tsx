@@ -195,7 +195,7 @@ const PostListPage = () => {
             return (
               <div
                 key={status}
-                className={`${colors.bg} border-2 ${colors.border} rounded-xl p-4 text-center`}
+                className={`${colors.bg} border-2 ${colors.border} rounded-xl p-4 text-center transition-all hover:shadow-md`}
               >
                 <p className={`${colors.text} text-sm font-medium uppercase tracking-wide`}>
                   {label}
