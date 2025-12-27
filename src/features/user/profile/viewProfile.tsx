@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import * as userService from "../../../services/user/userService";
 import { MdGroup } from "react-icons/md";
 import { BsFileText } from "react-icons/bs";
@@ -20,6 +20,7 @@ import ProfileSkeleton from "../../../components/skeleton/ProfileSkeleton";
 
 const ViewProfile = () => {
   const { userId } = useParams<{ userId: string }>();
+  const navigate = useNavigate();
   const { showToast } = useToast();
   const { user: currentUser } = useAuth();
   const [loading, setLoading] = useState(true);
@@ -33,6 +34,8 @@ const ViewProfile = () => {
   const [followModalType, setFollowModalType] = useState<
     "followers" | "following"
   >("followers");
+  const [isBlocked, setIsBlocked] = useState(false);
+  const [blockLoading, setBlockLoading] = useState(false);
 
   // Đóng dropdown khi click bên ngoài
   useEffect(() => {
@@ -63,13 +66,9 @@ const ViewProfile = () => {
       setFollowersCount(fetchedProfile.followersCount);
       setIsOwnProfile(userId ? currentUser?.id === Number(userId) : true);
     } else if (!queryLoading && queryError) {
-      const err = queryError as any;
       showToast({
         type: "error",
-        message:
-          err?.response?.data?.message ||
-          err?.message ||
-          "Không thể tải thông tin hồ sơ",
+        message: queryError.message || "Không thể tải thông tin hồ sơ",
       });
     }
   }, [fetchedProfile, queryLoading, queryError, userId, currentUser?.id]);
@@ -102,6 +101,36 @@ const ViewProfile = () => {
       });
     } finally {
       setFollowLoading(false);
+    }
+  };
+
+  const handleBlockToggle = async () => {
+    if (!fetchedProfile || isOwnProfile) return;
+
+    setBlockLoading(true);
+    try {
+      if (isBlocked) {
+        await userService.unblockUser(fetchedProfile.id);
+        setIsBlocked(false);
+        showToast({ type: "success", message: "Đã bỏ chặn người dùng" });
+      } else {
+        await userService.blockUser(fetchedProfile.id);
+        setIsBlocked(true);
+        setIsFollowing(false);
+        showToast({ type: "success", message: "Đã chặn người dùng" });
+      }
+    } catch (err: unknown) {
+      const error = err as {
+        response?: { data?: { message?: string } };
+        message?: string;
+      };
+      showToast({
+        type: "error",
+        message:
+          error.response?.data?.message || error.message || "Có lỗi xảy ra",
+      });
+    } finally {
+      setBlockLoading(false);
     }
   };
 
@@ -178,9 +207,7 @@ const ViewProfile = () => {
                           <BsGenderMale className="text-base text-blue-500" />
                         ) : fetchedProfile.gender === "FEMALE" ? (
                           <BsGenderFemale className="text-base text-pink-500" />
-                        ) : (
-                          <span className="text-base">⚧️</span>
-                        )}
+                        ) : null}
                       </div>
                     )}
                   </div>
@@ -199,24 +226,42 @@ const ViewProfile = () => {
                   </div>
                 </div>
               </div>
-              <div className="flex items-start mt-2">
+              <div className="flex items-start mt-2 gap-2">
                 {!isOwnProfile && (
-                  <CustomButton
-                    variant={isFollowing ? "default" : "outline"}
-                    style={{
-                      color: isFollowing ? "#fff" : "#f295b6",
-                      borderColor: "#f295b6",
-                      backgroundColor: isFollowing ? "#f295b6" : "transparent",
-                    }}
-                    onClick={handleFollowToggle}
-                    disabled={followLoading}
-                  >
-                    {followLoading
-                      ? "Đang xử lý..."
-                      : isFollowing
-                      ? "Đã Follow"
-                      : "Follow"}
-                  </CustomButton>
+                  <>
+                    <CustomButton
+                      variant={isFollowing ? "default" : "outline"}
+                      style={{
+                        color: isFollowing ? "#fff" : "#f295b6",
+                        borderColor: "#f295b6",
+                        backgroundColor: isFollowing ? "#f295b6" : "transparent",
+                      }}
+                      onClick={handleFollowToggle}
+                      disabled={followLoading || isBlocked}
+                    >
+                      {followLoading
+                        ? "Đang xử lý..."
+                        : isFollowing
+                        ? "Đã theo dõi"
+                        : "Theo dõi"}
+                    </CustomButton>
+                    <CustomButton
+                      variant={isBlocked ? "default" : "outline"}
+                      style={{
+                        color: isBlocked ? "#fff" : "#ef4444",
+                        borderColor: "#ef4444",
+                        backgroundColor: isBlocked ? "#ef4444" : "transparent",
+                      }}
+                      onClick={handleBlockToggle}
+                      disabled={blockLoading}
+                    >
+                      {blockLoading
+                        ? "Đang xử lý..."
+                        : isBlocked
+                        ? "Đã chặn"
+                        : "Chặn"}
+                    </CustomButton>
+                  </>
                 )}
               </div>
             </div>
@@ -335,7 +380,11 @@ const ViewProfile = () => {
                 </div>
               ) : (
                 fetchedProfile.communities.map((community) => (
-                  <div key={community.id} className="profile-community-card">
+                  <div
+                    key={community.id}
+                    className="profile-community-card cursor-pointer hover:shadow-md transition-shadow"
+                    onClick={() => navigate(`/community/${community.id}`)}
+                  >
                     <div className="flex items-center gap-4">
                       <img
                         src={community.thumbnailUrl}
@@ -346,6 +395,11 @@ const ViewProfile = () => {
                         <h4 className="font-bold text-lg hover:text-[#F295B6] transition-colors">
                           {community.name}
                         </h4>
+                        {community.memberCount !== undefined && (
+                          <p className="text-sm text-gray-500">
+                            {community.memberCount} thành viên
+                          </p>
+                        )}
                       </div>
                     </div>
                   </div>

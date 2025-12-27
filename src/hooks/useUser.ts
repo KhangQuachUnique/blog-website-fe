@@ -7,7 +7,7 @@ export const useGetUserProfile = (userId?: number) => {
   const { user } = useAuthUser();
   const isMe = !userId || (userId && user?.id === userId);
 
-  return useQuery<UserProfile>({
+  return useQuery<UserProfile, BackendResError>({
     queryKey: !isMe ? ["userProfile", userId] : ["userProfile", "me"],
     queryFn: () => {
       if (!isMe && userId) {
