@@ -5,6 +5,7 @@ import { MdGroup } from "react-icons/md";
 import { BsFileText } from "react-icons/bs";
 import { BsGenderMale } from "react-icons/bs";
 import { BsGenderFemale } from "react-icons/bs";
+import { Users } from "lucide-react";
 import Card from "../../../components/card/Card";
 import "../../../styles/profile/profile.css";
 import "../../../styles/profile/tabs.css";
@@ -299,10 +300,6 @@ const ViewProfile = () => {
             {/* Stats */}
             <div className="flex gap-6 my-6">
               <div className="flex items-center gap-2">
-                <div className="profile-stat-value !text-[20px]">
-                  {fetchedProfile.posts.length}
-                </div>
-                <div className="profile-stat-label">Bài viết</div>
               </div>
               <div
                 className="flex items-center gap-2 cursor-pointer hover:opacity-70 transition-opacity"
@@ -373,36 +370,91 @@ const ViewProfile = () => {
           )}
 
           {activeTab === "communities" && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="space-y-4 w-[900px] mx-auto">
               {fetchedProfile.communities.length === 0 ? (
-                <div className="col-span-full profile-tab-empty">
+                <div className="profile-tab-empty">
                   Chưa tham gia cộng đồng nào
                 </div>
               ) : (
                 fetchedProfile.communities.map((community) => (
-                  <div
+                  <button
                     key={community.id}
-                    className="profile-community-card cursor-pointer hover:shadow-md transition-shadow"
                     onClick={() => navigate(`/community/${community.id}`)}
+                    className="bg-white text-gray-900 rounded-lg flex transform transition duration-150 border border-pink-100 overflow-hidden h-45 w-full hover:-translate-y-1 hover:ring-pink-100"
                   >
-                    <div className="flex items-center gap-4">
-                      <img
-                        src={community.thumbnailUrl}
-                        alt={community.name}
-                        className="profile-community-avatar"
-                      />
-                      <div className="flex-1">
-                        <h4 className="font-bold text-lg hover:text-[#F295B6] transition-colors">
+                    {/* Left: thumbnail */}
+                    <div className="w-50 h-full flex-shrink-0">
+                      {community.thumbnailUrl ? (
+                        <img
+                          src={community.thumbnailUrl}
+                          alt={community.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-700 font-semibold">
+                          {community.name?.[0] || "C"}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Right: content */}
+                    <div className="flex-1 p-4 flex flex-col justify-between min-w-0">
+                      <div className="min-w-0 pr-4">
+                        <div className="text-2xl font-bold mb-4 truncate text-left">
                           {community.name}
-                        </h4>
-                        {community.memberCount !== undefined && (
-                          <p className="text-sm text-gray-500">
-                            {community.memberCount} thành viên
-                          </p>
+                        </div>
+                        {community.description && (
+                          <div className="text-sm text-gray-600 line-clamp-2 overflow-hidden text-left">
+                            {community.description}
+                          </div>
                         )}
                       </div>
+
+                      <div className="flex items-center justify-between mt-3">
+                        {/* Role badge */}
+                        <div className="flex-shrink-0">
+                          {community.role && community.role !== "NONE" && (
+                            <span
+                              className={`text-sm font-semibold px-3 py-1 rounded-full ${
+                                community.role === "ADMIN"
+                                  ? "bg-pink-100 text-pink-700"
+                                  : community.role === "MODERATOR"
+                                  ? "bg-amber-100 text-amber-700"
+                                  : community.role === "MEMBER"
+                                  ? "bg-sky-100 text-sky-700"
+                                  : community.role === "PENDING"
+                                  ? "bg-gray-100 text-gray-700"
+                                  : "bg-rose-100 text-rose-700"
+                              }`}
+                            >
+                              {community.role === "ADMIN"
+                                ? "Admin"
+                                : community.role === "MODERATOR"
+                                ? "Moderator"
+                                : community.role === "MEMBER"
+                                ? "Thành viên"
+                                : community.role === "PENDING"
+                                ? "Chờ duyệt"
+                                : "Bị khóa"}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Meta */}
+                        <div className="text-right">
+                          <div className="flex items-center gap-2 justify-end text-gray-600">
+                            <Users size={18} />
+                            <div className="text-sm font-medium">
+                              {community.memberCount}
+                            </div>
+                          </div>
+                          <div className="mt-1 text-xs text-gray-400">
+                            {community.isPublic ? "Public" : "Private"}
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                  </div>
+                  </button>
                 ))
               )}
             </div>
