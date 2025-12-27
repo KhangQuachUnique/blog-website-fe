@@ -1,12 +1,13 @@
-import { Badge, Popover } from "@mui/material";
+import { Avatar, Badge, Popover } from "@mui/material";
 import { useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { RiNotification4Line } from "react-icons/ri";
 import { FaInbox } from "react-icons/fa6";
 
 import { useAuth } from "../../hooks/useAuth";
 import type { NotificationResponseDto } from "../../types/notification";
 import { Link } from "react-router-dom";
+import { stringAvatar } from "../../utils/avatarHelper";
 
 const NotificationBell = () => {
   const { user } = useAuth();
@@ -18,9 +19,6 @@ const NotificationBell = () => {
     userId,
   ]);
 
-  useEffect(() => {
-    console.log("Notifications updated:", notifications);
-  }, [notifications]);
   /**
    * State to manage the open/close status of the notification dropdown
    */
@@ -95,11 +93,25 @@ const NotificationBell = () => {
                 >
                   <div className={`flex items-start gap-3`}>
                     <Link to={`/user/profile/${notification.sender.id}`}>
-                      <img
-                        className="w-[80px] rounded-full"
-                        src={notification.sender.avatarUrl ?? ""}
-                        alt={notification.sender.username}
-                      />
+                      {notification.sender.avatarUrl ? (
+                        <Avatar
+                          src={notification.sender.avatarUrl}
+                          alt={notification.sender.username}
+                          sx={{
+                            width: 50,
+                            height: 50,
+                            border: "4px solid white",
+                          }}
+                        />
+                      ) : (
+                        <Avatar
+                          {...stringAvatar(
+                            notification.sender.username,
+                            50,
+                            "1.2rem"
+                          )}
+                        />
+                      )}
                     </Link>
                     <div className="flex flex-col text-md gap-1">
                       <span

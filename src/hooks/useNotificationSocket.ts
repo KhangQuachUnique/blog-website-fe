@@ -3,10 +3,11 @@ import { useEffect } from "react";
 
 import { useAuth } from "./useAuth";
 import { getSocket } from "../lib/socket";
-import type { NotificationResponseDto } from "../types/notification";
+import { useToast } from "../contexts/toast";
 
 export const useNotificationSocket = () => {
   const { user, isAuthenticated } = useAuth();
+  const { showToast } = useToast();
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -17,18 +18,20 @@ export const useNotificationSocket = () => {
     socket.auth = { userId: user.id };
     socket.connect();
 
-    const onNewNotification = (notification: NotificationResponseDto) => {
-      queryClient.setQueryData<NotificationResponseDto[]>(
-        ["notifications", user.id],
-        (oldNotifications = []) => [notification, ...oldNotifications]
-      );
+    const onNewNotification = () => {
+      queryClient.invalidateQueries({
+        queryKey: ["notifications", user.id],
+      });
+      showToast({
+        type: "info",
+        message: "You have a new notification",
+      });
     };
 
     socket.on("notification:new", onNewNotification);
 
     return () => {
       socket.off("notification:new", onNewNotification);
-      socket.disconnect();
     };
-  }, [isAuthenticated, user, queryClient]);
+  }, [isAuthenticated, user, queryClient, showToast]);
 };
