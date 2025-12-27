@@ -107,12 +107,14 @@ const ReportDetailModal: React.FC<ReportDetailModalProps> = ({
                 Bình luận vi phạm
             </p>
             <div className="bg-gray-50 p-6 rounded-xl border border-gray-200 relative">
-               {/* Icon quote trang trí */}
+
                <div className="absolute top-4 left-4 text-gray-200 text-6xl font-serif pointer-events-none">“</div>
                
                <p className="text-gray-800 text-lg relative z-10 font-medium leading-relaxed pl-4">
                 {report.reportedComment.contentPreview || report.reportedComment.contentPreview}
               </p>
+
+              <div className="absolute bottom-14 right-4 text-gray-200 text-6xl font-serif pointer-events-none leading-none">”</div>
               
                <div className="mt-4 pt-4 border-t border-gray-200 flex justify-end">
                   <span className="text-xs font-mono text-gray-400 bg-white px-2 py-1 rounded border border-gray-200">
