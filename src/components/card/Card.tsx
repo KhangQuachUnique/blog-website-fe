@@ -4,7 +4,7 @@ import Avatar from "@mui/material/Avatar";
 
 import type { IPostResponseDto } from "../../types/post";
 import { EPostType } from "../../types/post";
-import InteractBar from "../interactBar/InteractBar";
+import InteractBar from "../InteractBar/InteractBar";
 import { recordViewedPost } from "../../services/user/viewedHistory/viewedHistory";
 import { useAuth } from "../../contexts/AuthContext";
 import { useGetPostById } from "../../hooks/usePost";

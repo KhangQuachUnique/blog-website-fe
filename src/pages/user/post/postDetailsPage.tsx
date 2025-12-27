@@ -27,7 +27,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import type { IPostResponseDto } from "../../../types/post";
 import DetailPostSkeleton from "../../../components/skeleton/DetailPostSkeleton";
 import { BlockCommentButton } from "../../../components/comments/BlockCommentButton";
-import FloatingInteractBar from "../../../components/interactBar/FloatingInteractBar";
+import FloatingInteractBar from "../../../components/InteractBar/FloatingInteractBar";
 
 // ============================================
 // Types
