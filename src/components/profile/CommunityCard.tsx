@@ -1,8 +1,8 @@
-import type { Community } from "../../types/user.types";
+import type { ICommunityResponse } from "../../types/community";
 import { FiUsers } from "react-icons/fi";
 
 interface CommunityCardProps {
-  community: Community;
+  community: ICommunityResponse;
   onClick?: () => void;
 }
 
@@ -14,7 +14,7 @@ const CommunityCard = ({ community, onClick }: CommunityCardProps) => {
     >
       <div className="flex items-center gap-4 mb-3">
         <img
-          src={community.avatar || "https://via.placeholder.com/100"}
+          src={community.thumbnailUrl || "https://via.placeholder.com/100"}
           alt={community.name}
           className="w-16 h-16 rounded-full object-cover"
         />

@@ -1,6 +1,6 @@
-import type { User } from "../../types/user.types";
-import Avatar from '@mui/material/Avatar';
-import { stringAvatar } from '../../utils/avatarHelper';
+import type { User } from "../../types/user";
+import Avatar from "@mui/material/Avatar";
+import { stringAvatar } from "../../utils/avatarHelper";
 
 interface ProfileHeaderProps {
   user: User;
@@ -32,7 +32,7 @@ const ProfileHeader = ({
             />
           ) : (
             <div className="border-4 border-[#FFE4EC] rounded-full">
-              <Avatar {...stringAvatar(user.username, 128, '3rem')} />
+              <Avatar {...stringAvatar(user.username, 128, "3rem")} />
             </div>
           )}
         </div>

@@ -28,13 +28,6 @@ const Header = ({ layout, collapsed, setCollapsed }: HeaderProps) => {
   const navigate = useNavigate();
   const { user, isAuthenticated, logout } = useAuth();
 
-  // Search state
-  const [search, setSearch] = useState("");
-
-  const onSearchChange = (value: string) => {
-    setSearch(value);
-  };
-
   // Scroll state for background
   const [isScrolled, setIsScrolled] = useState(false);
 

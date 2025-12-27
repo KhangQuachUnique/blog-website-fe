@@ -10,30 +10,29 @@ import {
 import { useAuthUser } from "../../../hooks/useAuth";
 import { useGetCommunitySettings } from "../../../hooks/useCommunity";
 import { useToast } from "../../../contexts/toast";
-
 import type {
-  CommunityMember,
-  CommunityRole,
-  ManageCommunityRole,
-} from "../../../services/user/community/communityService";
+  ECommunityRole,
+  EManageCommunityRole,
+  IMemberResponse,
+} from "../../../types/community";
 
-type Filter = "all" | CommunityRole | "PENDING";
+type Filter = "all" | EManageCommunityRole;
 
 interface MemberUI {
   id: number; // community_members.id
   userId: number;
   name: string;
   avatar: string;
-  role: ManageCommunityRole;
+  role: EManageCommunityRole;
   joinDate: string;
 }
 
-const mapApiToUI = (m: CommunityMember): MemberUI => ({
+const mapApiToUI = (m: IMemberResponse): MemberUI => ({
   id: m.id,
   userId: m.user.id,
   name: m.user.username,
   avatar: m.user.avatarUrl || "https://i.pravatar.cc/60?img=1",
-  role: m.role as ManageCommunityRole,
+  role: m.role as EManageCommunityRole,
   joinDate: m.joinedAt?.slice(0, 10) || "",
 });
 
@@ -48,9 +47,9 @@ export default function MemberManagement() {
   const [memberToKick, setMemberToKick] = useState<MemberUI | null>(null);
 
   // ✅ draft role (chưa áp dụng)
-  const [draftRoles, setDraftRoles] = useState<Record<number, CommunityRole>>(
-    {}
-  );
+  const [draftRoles, setDraftRoles] = useState<
+    Record<number, EManageCommunityRole>
+  >({});
 
   // current user
   const { user } = useAuthUser();
@@ -62,8 +61,8 @@ export default function MemberManagement() {
   const isMod = viewerRole === "MODERATOR";
 
   // role param cho API
-  const roleParam: ManageCommunityRole | undefined =
-    filter === "all" ? undefined : (filter as ManageCommunityRole);
+  const roleParam: EManageCommunityRole | undefined =
+    filter === "all" ? undefined : (filter as EManageCommunityRole);
 
   const { data, isLoading, isError, refetch } = useManageCommunityMembers(
     communityId,
@@ -83,7 +82,7 @@ export default function MemberManagement() {
     setDraftRoles({});
   }, [filter, communityId]);
 
-  const setDraftRole = (memberId: number, role: CommunityRole) => {
+  const setDraftRole = (memberId: number, role: EManageCommunityRole) => {
     setDraftRoles((prev) => ({ ...prev, [memberId]: role }));
   };
 
@@ -128,14 +127,14 @@ export default function MemberManagement() {
           if (current.role === newRole) return null;
           return {
             memberId,
-            role: newRole as CommunityRole,
+            role: newRole as ECommunityRole,
             currentRole: current.role,
           };
         })
         .filter(Boolean) as {
         memberId: number;
-        role: CommunityRole;
-        currentRole: ManageCommunityRole;
+        role: ECommunityRole;
+        currentRole: EManageCommunityRole;
       }[];
 
       if (updates.length === 0) {
@@ -197,7 +196,10 @@ export default function MemberManagement() {
 
     try {
       const shouldBan = memberToKick.role !== "PENDING";
-      await removeMember.mutateAsync({ memberId: memberToKick.id, ban: shouldBan });
+      await removeMember.mutateAsync({
+        memberId: memberToKick.id,
+        ban: shouldBan,
+      });
       const kicked = memberToKick;
       setMemberToKick(null);
       await refetch();
@@ -335,7 +337,7 @@ export default function MemberManagement() {
       {!isLoading &&
         members.map((member) => {
           const draft = draftRoles[member.id];
-          const roleValue = draft ?? (member.role as CommunityRole);
+          const roleValue = draft ?? (member.role as EManageCommunityRole);
           const isDirty = draft && draft !== member.role;
 
           const isSelf =
@@ -415,7 +417,7 @@ export default function MemberManagement() {
                   value={roleValue}
                   disabled={updateRole.isPending || modCannotEditAdmin}
                   onChange={(e) => {
-                    const nextRole = e.target.value as CommunityRole;
+                    const nextRole = e.target.value as EManageCommunityRole;
 
                     // ✅ MOD: chặn promote lên ADMIN
                     if (isMod && nextRole === "ADMIN") {

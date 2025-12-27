@@ -1,7 +1,7 @@
-import type { BlogPost } from "../../types/user.types";
+import type { IPostResponseDto } from "../../types/post";
 
 interface PostCardProps {
-  post: BlogPost;
+  post: IPostResponseDto;
   onClick?: () => void;
 }
 
@@ -33,7 +33,9 @@ const PostCard = ({ post, onClick }: PostCardProps) => {
           <div className="flex items-center gap-4 text-sm text-gray-500 mt-3">
             <span>👍 {post.upVotes} upvotes</span>
             <span>👎 {post.downVotes} downvotes</span>
-            <span>📅 {new Date(post.createdAt).toLocaleDateString('vi-VN')}</span>
+            <span>
+              📅 {new Date(post.createdAt).toLocaleDateString("vi-VN")}
+            </span>
           </div>
         </div>
       </div>

@@ -1,4 +1,4 @@
-import type { Community } from "./community";
+import type { ICommunityResponse } from "./community";
 import type { IPostResponseDto } from "./post";
 
 // User roles - match với backend enum
@@ -41,7 +41,7 @@ export interface UserProfile {
   showEmail: boolean;
   showPhoneNumber: boolean;
   joinAt: string;
-  communities: Community[];
+  communities: ICommunityResponse[];
   followersCount: number;
   followingCount: number;
   isFollowing?: boolean;

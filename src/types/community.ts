@@ -1,12 +1,7 @@
 // Interfaces for Community API responses and requests
 // Generated for frontend/backend type sharing
-
-export type ECommunityRoleString =
-  | "ADMIN"
-  | "MODERATOR"
-  | "MEMBER"
-  | "PENDING"
-  | "BANNED";
+export type ECommunityRole = "ADMIN" | "MODERATOR" | "MEMBER";
+export type EManageCommunityRole = ECommunityRole | "PENDING";
 
 export interface ICreateCommunityDto {
   name: string;
@@ -20,7 +15,7 @@ export interface ICreateCommunityDto {
 export type IUpdateCommunityDto = Partial<ICreateCommunityDto>;
 
 export interface IUpdateMemberRoleDto {
-  role: ECommunityRoleString;
+  role: ECommunityRole;
 }
 
 export interface IUserSummary {
@@ -34,7 +29,7 @@ export interface IUserSummary {
 
 export interface IMemberResponse {
   id: number; // membership id
-  role: ECommunityRoleString;
+  role: EManageCommunityRole;
   joinedAt?: string; // ISO date
   user: IUserSummary;
 }
@@ -46,7 +41,7 @@ export interface ICommunityResponse {
   thumbnailUrl?: string | null;
   isPublic: boolean;
   memberCount: number;
-  role: ECommunityRoleString | "NONE";
+  role: EManageCommunityRole | "NONE";
 }
 
 export interface ICommunityDetailResponse extends ICommunityResponse {
@@ -54,6 +49,7 @@ export interface ICommunityDetailResponse extends ICommunityResponse {
   requireMemberApproval?: boolean;
   createdAt?: string;
   updatedAt?: string;
+  isBanned?: boolean;
 }
 
 export type ICommunitySettingsResponse = ICommunityResponse;
@@ -61,7 +57,7 @@ export type ICommunitySettingsResponse = ICommunityResponse;
 export type IJoinStatus = "PENDING" | "JOINED";
 export interface IJoinResponse {
   ok: boolean;
-  role: ECommunityRoleString | "NONE";
+  role: EManageCommunityRole | "NONE";
   status: IJoinStatus;
 }
 

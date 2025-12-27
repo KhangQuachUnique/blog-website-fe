@@ -338,7 +338,7 @@ const ViewProfile = () => {
                   <div key={community.id} className="profile-community-card">
                     <div className="flex items-center gap-4">
                       <img
-                        src={community.thumbnailUrl}
+                        src={community.thumbnailUrl || ""}
                         alt={community.name}
                         className="profile-community-avatar"
                       />

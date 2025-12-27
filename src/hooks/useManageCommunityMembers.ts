@@ -7,15 +7,11 @@ import {
   deleteCommunity,
   joinCommunity, // ✅ thêm
 } from "../services/user/community/communityService";
-
-import type {
-  CommunityRole,
-  ManageCommunityRole,
-} from "../services/user/community/communityService";
+import type { ECommunityRole, EManageCommunityRole } from "../types/community";
 
 export function useManageCommunityMembers(
   communityId?: number,
-  role?: ManageCommunityRole
+  role?: EManageCommunityRole
 ) {
   return useQuery({
     queryKey: ["manage-community-members", communityId, role ?? "ALL"],
@@ -29,10 +25,12 @@ export function useUpdateMemberRole(communityId: number) {
   const qc = useQueryClient();
 
   return useMutation({
-    mutationFn: (p: { memberId: number; role: CommunityRole }) =>
+    mutationFn: (p: { memberId: number; role: ECommunityRole }) =>
       updateCommunityMemberRole(communityId, p.memberId, p.role),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["manage-community-members", communityId] });
+      qc.invalidateQueries({
+        queryKey: ["manage-community-members", communityId],
+      });
       qc.invalidateQueries({ queryKey: ["community-members", communityId] });
       qc.invalidateQueries({ queryKey: ["communitySettings", communityId] });
       qc.invalidateQueries({ queryKey: ["myCommunities"] });
@@ -47,7 +45,9 @@ export function useRemoveMember(communityId: number) {
     mutationFn: (p: { memberId: number; ban?: boolean }) =>
       removeCommunityMember(communityId, p.memberId, { ban: p.ban }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["manage-community-members", communityId] });
+      qc.invalidateQueries({
+        queryKey: ["manage-community-members", communityId],
+      });
       qc.invalidateQueries({ queryKey: ["community-members", communityId] });
       qc.invalidateQueries({ queryKey: ["communitySettings", communityId] });
       qc.invalidateQueries({ queryKey: ["myCommunities"] });
@@ -68,7 +68,9 @@ export function useJoinCommunity(communityId: number) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["communitySettings", communityId] });
       qc.invalidateQueries({ queryKey: ["community-members", communityId] });
-      qc.invalidateQueries({ queryKey: ["manage-community-members", communityId] });
+      qc.invalidateQueries({
+        queryKey: ["manage-community-members", communityId],
+      });
       qc.invalidateQueries({ queryKey: ["myCommunities"] });
     },
   });
@@ -83,7 +85,9 @@ export function useLeaveCommunity(communityId: number) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["communitySettings", communityId] });
       qc.invalidateQueries({ queryKey: ["community-members", communityId] });
-      qc.invalidateQueries({ queryKey: ["manage-community-members", communityId] });
+      qc.invalidateQueries({
+        queryKey: ["manage-community-members", communityId],
+      });
       qc.invalidateQueries({ queryKey: ["myCommunities"] });
     },
   });
@@ -99,7 +103,9 @@ export function useDeleteCommunity(communityId: number) {
       // invalidate danh sách & các query liên quan
       qc.invalidateQueries({ queryKey: ["communitySettings", communityId] });
       qc.invalidateQueries({ queryKey: ["community-members", communityId] });
-      qc.invalidateQueries({ queryKey: ["manage-community-members", communityId] });
+      qc.invalidateQueries({
+        queryKey: ["manage-community-members", communityId],
+      });
       qc.invalidateQueries({ queryKey: ["myCommunities"] });
     },
   });

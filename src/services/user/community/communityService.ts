@@ -1,32 +1,14 @@
 // src/services/user/community/communityService.ts
 import axios from "../../../config/axiosCustomize";
 import type {
-  ECommunityRoleString,
+  ECommunityRole,
+  EManageCommunityRole,
   ICommunityDetailResponse,
   ICommunityResponse,
   ICreateCommunityDto,
   IMemberResponse,
   IUpdateCommunityDto,
 } from "../../../types/community";
-
-export type CommunityRole = "ADMIN" | "MODERATOR" | "MEMBER";
-export type ManageCommunityRole = CommunityRole | "PENDING";
-
-export interface CommunityMember {
-  id: number;
-  role: ManageCommunityRole; // ✅ quản lý có PENDING
-  joinedAt: string;
-  user: { id: number; username: string; avatarUrl?: string | null };
-}
-
-export interface UpdateCommunitySettingsPayload {
-  name: string;
-  description: string;
-  thumbnailUrl?: string;
-  isPublic: boolean;
-  requirePostApproval: boolean;
-  requireMemberApproval: boolean;
-}
 
 // Lấy danh sách community của user hiện tại
 export async function getMyCommunities(): Promise<ICommunityResponse[]> {
@@ -67,7 +49,7 @@ export const getCommunityMembers = (communityId: number) => {
 // ✅ Manage: có filter role (bao gồm PENDING)
 export const getManageCommunityMembers = (
   communityId: number,
-  role?: ManageCommunityRole
+  role?: EManageCommunityRole
 ) => {
   return axios.get<IMemberResponse[], IMemberResponse[]>(
     `/communities/${communityId}/members`,
@@ -79,7 +61,7 @@ export const getManageCommunityMembers = (
 export const updateCommunityMemberRole = (
   communityId: number,
   memberId: number,
-  role: ECommunityRoleString // chỉ cho set 3 role chính
+  role: ECommunityRole // chỉ cho set 3 role chính
 ) => {
   return axios.patch(`/communities/${communityId}/members/${memberId}/role`, {
     role,

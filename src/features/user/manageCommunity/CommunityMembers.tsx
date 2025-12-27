@@ -52,7 +52,7 @@ export default function CommunityMembers() {
   const navigate = useNavigate();
 
   const { isLoading, isError, error, total, grouped, refetch } =
-    useCommunityMembers(Number.isFinite(communityId) ? communityId : undefined);
+    useCommunityMembers(communityId);
 
   if (!Number.isFinite(communityId) || communityId <= 0) {
     return (
@@ -138,7 +138,7 @@ export default function CommunityMembers() {
                         {m.user.username}
                       </div>
                       <div className="community-member-joined">
-                        Tham gia: {formatDate(m.joinedAt)}
+                        Tham gia: {formatDate(String(m.joinedAt))}
                       </div>
                     </div>
                   </div>
