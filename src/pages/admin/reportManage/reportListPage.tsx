@@ -14,6 +14,7 @@ import {
   useResolveReport 
 } from "../../../hooks/useReport";
 import ReportTable from "../../../features/admin/reportManage/ReportTable";
+import ReportDetailModal from "../../../features/admin/reportManage/ReportDetailModal";
 import type { IReportResponse, EReportType } from "../../../types/report";
 import { ReportTableSkeleton } from "../../../components/skeleton/ReportTableSkeleton";
 
@@ -28,6 +29,8 @@ const ReportListPage = () => {
   const [typeFilter, setTypeFilter] = useState<ReportTypeFilter>("ALL");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("PENDING");
   const [actionLoading, setActionLoading] = useState<number | null>(null);
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
+  const [selectedReport, setSelectedReport] = useState<IReportResponse | null>(null);
 
   // --- REACT QUERY HOOKS ---
   const pendingQuery = useGetPendingReports();
@@ -107,6 +110,14 @@ const ReportListPage = () => {
         onError: () => setActionLoading(null),
       }
     );
+  };
+
+  const handleViewDetail = (reportId: number) => {
+    const report = reports.find((r) => r.id === reportId);
+    if (report) {
+      setSelectedReport(report);
+      setDetailModalOpen(true);
+    }
   };
 
   useEffect(() => {
@@ -246,15 +257,31 @@ const ReportListPage = () => {
       {isLoading ? (
         <ReportTableSkeleton />
       ) : (
-        <ReportTable
-            reports={currentViewReports}
-            onApprove={statusFilter === "PENDING" ? handleApprove : undefined} 
-            onReject={statusFilter === "PENDING" ? handleReject : undefined}
-            loadingId={actionLoading}
-            emptyMessage={
-                `Không có báo cáo ${statusFilter === "PENDING" ? "chờ xử lý" : "trong lịch sử"} với loại "${typeFilter === 'ALL' ? 'Tất cả' : typeFilter}"`
-            }
-        />
+        <>
+          <ReportTable
+              reports={currentViewReports}
+              onViewDetail={handleViewDetail}
+              onApprove={statusFilter === "PENDING" ? handleApprove : undefined} 
+              onReject={statusFilter === "PENDING" ? handleReject : undefined}
+              loadingId={actionLoading}
+              emptyMessage={
+                  `Không có báo cáo ${statusFilter === "PENDING" ? "chờ xử lý" : "trong lịch sử"} với loại "${typeFilter === 'ALL' ? 'Tất cả' : typeFilter}"`
+              }
+          />
+
+          {/* DETAIL MODAL */}
+          {selectedReport && (
+            <ReportDetailModal
+              open={detailModalOpen}
+              reportId={selectedReport.id}
+              report={selectedReport}
+              onClose={() => {
+                setDetailModalOpen(false);
+                setSelectedReport(null);
+              }}
+            />
+          )}
+        </>
       )}
 
       {/* PAGINATION - Chỉ hiện khi không loading và có data */}

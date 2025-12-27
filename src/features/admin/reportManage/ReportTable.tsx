@@ -1,5 +1,5 @@
 import React from "react";
-import { MdCheckCircle, MdClose, MdAutorenew } from "react-icons/md";
+import { MdCheckCircle, MdClose, MdAutorenew, MdRemoveRedEye } from "react-icons/md";
 import { Box } from "@mui/material";
 import GenericTable from "../../../components/table/GenericTable";
 import type { TableColumn, ActionColumn } from "../../../types/table";
@@ -8,6 +8,7 @@ import type { IReportResponse, EReportType } from "../../../types/report";
 
 interface ReportTableProps {
   reports: IReportResponse[];
+  onViewDetail?: (reportId: number) => void;
   onApprove?: (reportId: number) => void;
   onReject?: (reportId: number) => void;
   loadingId: number | null;
@@ -16,10 +17,11 @@ interface ReportTableProps {
 
 /**
  * ReportTable - A wrapper around GenericTable customized for reports
- * Displays report information with action buttons (APPROVE/REJECT)
+ * Displays report information with action buttons (VIEW DETAIL, APPROVE/REJECT)
  */
 const ReportTable: React.FC<ReportTableProps> = ({
   reports,
+  onViewDetail,
   onApprove,
   onReject,
   loadingId,
@@ -183,6 +185,48 @@ const ReportTable: React.FC<ReportTableProps> = ({
   ];
 
   const actionColumns: ActionColumn<IReportResponse>[] = [];
+
+  if (onViewDetail) {
+    actionColumns.push({
+      id: "view-detail-column",
+      label: "Xem chi tiết",
+      width: "130px",
+      align: "center",
+      actions: [
+        {
+          id: "view-detail",
+          tooltip: "Xem chi tiết nội dung bị báo cáo",
+          icon: () => {
+            return (
+              <Box
+                sx={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: "8px",
+                  color: "#2563eb",
+                  backgroundColor: "#eff6ff",
+                  border: "2px solid #93c5fd",
+                  borderRadius: "6px",
+                  cursor: "pointer",
+                  transition: "all 0.2s",
+                  "&:hover": {
+                    backgroundColor: "#dbeafe",
+                    borderColor: "#60a5fa",
+                  },
+                }}
+              >
+                <MdRemoveRedEye size={18} />
+              </Box>
+            );
+          },
+          onClick: (report) => {
+            onViewDetail(report.id);
+          },
+        },
+      ],
+    });
+  }
 
   if (onApprove) {
     actionColumns.push({

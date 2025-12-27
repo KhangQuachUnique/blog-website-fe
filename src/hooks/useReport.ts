@@ -8,6 +8,7 @@ import {
   getResolvedReports,
   resolveReport,
   getReportsByPost,
+  getReportDetail,
 } from '../services/user/report/reportService';
 import type {
   ICreateReportRequest,
@@ -24,6 +25,7 @@ export const reportKeys = {
   all: ['reports'] as const,
   pending: ['reports', 'pending'] as const,
   resolved: ['reports', 'resolved'] as const,
+  detail: (reportId: number) => ['reports', 'detail', reportId] as const,
   check: (type: EReportType, targetId: number) => 
     [...reportKeys.all, 'check', type, targetId] as const,
 };
@@ -177,5 +179,17 @@ export const useResolveReport = () => {
         message,
       });
     },
+  });
+};
+
+// ============================================
+// GET REPORT DETAIL HOOK
+// ============================================
+export const useReportDetail = (reportId: number, enabled: boolean = false) => {
+  return useQuery<IReportResponse>({
+    queryKey: reportKeys.detail(reportId),
+    queryFn: () => getReportDetail(reportId),
+    enabled: enabled && reportId > 0,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 };
