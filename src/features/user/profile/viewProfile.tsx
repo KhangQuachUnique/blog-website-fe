@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import * as userService from "../../../services/user/userService";
 import { MdGroup } from "react-icons/md";
 import { BsFileText } from "react-icons/bs";
 import { BsGenderMale } from "react-icons/bs";
 import { BsGenderFemale } from "react-icons/bs";
+import { Users } from "lucide-react";
 import Card from "../../../components/card/Card";
 import "../../../styles/profile/profile.css";
 import "../../../styles/profile/tabs.css";
@@ -20,6 +21,7 @@ import ProfileSkeleton from "../../../components/skeleton/ProfileSkeleton";
 
 const ViewProfile = () => {
   const { userId } = useParams<{ userId: string }>();
+  const navigate = useNavigate();
   const { showToast } = useToast();
   const { user: currentUser } = useAuth();
   const [loading, setLoading] = useState(true);
@@ -33,6 +35,8 @@ const ViewProfile = () => {
   const [followModalType, setFollowModalType] = useState<
     "followers" | "following"
   >("followers");
+  const [isBlocked, setIsBlocked] = useState(false);
+  const [blockLoading, setBlockLoading] = useState(false);
 
   // Đóng dropdown khi click bên ngoài
   useEffect(() => {
@@ -63,13 +67,9 @@ const ViewProfile = () => {
       setFollowersCount(fetchedProfile.followersCount);
       setIsOwnProfile(userId ? currentUser?.id === Number(userId) : true);
     } else if (!queryLoading && queryError) {
-      const err = queryError as any;
       showToast({
         type: "error",
-        message:
-          err?.response?.data?.message ||
-          err?.message ||
-          "Không thể tải thông tin hồ sơ",
+        message: queryError.message || "Không thể tải thông tin hồ sơ",
       });
     }
   }, [fetchedProfile, queryLoading, queryError, userId, currentUser?.id]);
@@ -102,6 +102,36 @@ const ViewProfile = () => {
       });
     } finally {
       setFollowLoading(false);
+    }
+  };
+
+  const handleBlockToggle = async () => {
+    if (!fetchedProfile || isOwnProfile) return;
+
+    setBlockLoading(true);
+    try {
+      if (isBlocked) {
+        await userService.unblockUser(fetchedProfile.id);
+        setIsBlocked(false);
+        showToast({ type: "success", message: "Đã bỏ chặn người dùng" });
+      } else {
+        await userService.blockUser(fetchedProfile.id);
+        setIsBlocked(true);
+        setIsFollowing(false);
+        showToast({ type: "success", message: "Đã chặn người dùng" });
+      }
+    } catch (err: unknown) {
+      const error = err as {
+        response?: { data?: { message?: string } };
+        message?: string;
+      };
+      showToast({
+        type: "error",
+        message:
+          error.response?.data?.message || error.message || "Có lỗi xảy ra",
+      });
+    } finally {
+      setBlockLoading(false);
     }
   };
 
@@ -178,9 +208,7 @@ const ViewProfile = () => {
                           <BsGenderMale className="text-base text-blue-500" />
                         ) : fetchedProfile.gender === "FEMALE" ? (
                           <BsGenderFemale className="text-base text-pink-500" />
-                        ) : (
-                          <span className="text-base">⚧️</span>
-                        )}
+                        ) : null}
                       </div>
                     )}
                   </div>
@@ -199,24 +227,44 @@ const ViewProfile = () => {
                   </div>
                 </div>
               </div>
-              <div className="flex items-start mt-2">
+              <div className="flex items-start mt-2 gap-2">
                 {!isOwnProfile && (
-                  <CustomButton
-                    variant={isFollowing ? "default" : "outline"}
-                    style={{
-                      color: isFollowing ? "#fff" : "#f295b6",
-                      borderColor: "#f295b6",
-                      backgroundColor: isFollowing ? "#f295b6" : "transparent",
-                    }}
-                    onClick={handleFollowToggle}
-                    disabled={followLoading}
-                  >
-                    {followLoading
-                      ? "Đang xử lý..."
-                      : isFollowing
-                      ? "Đã Follow"
-                      : "Follow"}
-                  </CustomButton>
+                  <>
+                    <CustomButton
+                      variant={isFollowing ? "default" : "outline"}
+                      style={{
+                        color: isFollowing ? "#fff" : "#f295b6",
+                        borderColor: "#f295b6",
+                        backgroundColor: isFollowing
+                          ? "#f295b6"
+                          : "transparent",
+                      }}
+                      onClick={handleFollowToggle}
+                      disabled={followLoading || isBlocked}
+                    >
+                      {followLoading
+                        ? "Đang xử lý..."
+                        : isFollowing
+                        ? "Đã theo dõi"
+                        : "Theo dõi"}
+                    </CustomButton>
+                    <CustomButton
+                      variant={isBlocked ? "default" : "outline"}
+                      style={{
+                        color: isBlocked ? "#fff" : "#ef4444",
+                        borderColor: "#ef4444",
+                        backgroundColor: isBlocked ? "#ef4444" : "transparent",
+                      }}
+                      onClick={handleBlockToggle}
+                      disabled={blockLoading}
+                    >
+                      {blockLoading
+                        ? "Đang xử lý..."
+                        : isBlocked
+                        ? "Đã chặn"
+                        : "Chặn"}
+                    </CustomButton>
+                  </>
                 )}
               </div>
             </div>
@@ -253,12 +301,7 @@ const ViewProfile = () => {
             )}
             {/* Stats */}
             <div className="flex gap-6 my-6">
-              <div className="flex items-center gap-2">
-                <div className="profile-stat-value !text-[20px]">
-                  {fetchedProfile.posts.length}
-                </div>
-                <div className="profile-stat-label">Bài viết</div>
-              </div>
+              <div className="flex items-center gap-2"></div>
               <div
                 className="flex items-center gap-2 cursor-pointer hover:opacity-70 transition-opacity"
                 onClick={() => {
@@ -328,27 +371,91 @@ const ViewProfile = () => {
           )}
 
           {activeTab === "communities" && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="space-y-4 w-[900px] mx-auto">
               {fetchedProfile.communities.length === 0 ? (
-                <div className="col-span-full profile-tab-empty">
+                <div className="profile-tab-empty">
                   Chưa tham gia cộng đồng nào
                 </div>
               ) : (
                 fetchedProfile.communities.map((community) => (
-                  <div key={community.id} className="profile-community-card">
-                    <div className="flex items-center gap-4">
-                      <img
-                        src={community.thumbnailUrl || ""}
-                        alt={community.name}
-                        className="profile-community-avatar"
-                      />
-                      <div className="flex-1">
-                        <h4 className="font-bold text-lg hover:text-[#F295B6] transition-colors">
+                  <button
+                    key={community.id}
+                    onClick={() => navigate(`/community/${community.id}`)}
+                    className="bg-white text-gray-900 rounded-lg flex transform transition duration-150 border border-pink-100 overflow-hidden h-45 w-full hover:-translate-y-1 hover:ring-pink-100"
+                  >
+                    {/* Left: thumbnail */}
+                    <div className="w-50 h-full flex-shrink-0">
+                      {community.thumbnailUrl ? (
+                        <img
+                          src={community.thumbnailUrl}
+                          alt={community.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-700 font-semibold">
+                          {community.name?.[0] || "C"}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Right: content */}
+                    <div className="flex-1 p-4 flex flex-col justify-between min-w-0">
+                      <div className="min-w-0 pr-4">
+                        <div className="text-2xl font-bold mb-4 truncate text-left">
                           {community.name}
-                        </h4>
+                        </div>
+                        {community.description && (
+                          <div className="text-sm text-gray-600 line-clamp-2 overflow-hidden text-left">
+                            {community.description}
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex items-center justify-between mt-3">
+                        {/* Role badge */}
+                        <div className="flex-shrink-0">
+                          {community.role && community.role !== "NONE" && (
+                            <span
+                              className={`text-sm font-semibold px-3 py-1 rounded-full ${
+                                community.role === "ADMIN"
+                                  ? "bg-pink-100 text-pink-700"
+                                  : community.role === "MODERATOR"
+                                  ? "bg-amber-100 text-amber-700"
+                                  : community.role === "MEMBER"
+                                  ? "bg-sky-100 text-sky-700"
+                                  : community.role === "PENDING"
+                                  ? "bg-gray-100 text-gray-700"
+                                  : "bg-rose-100 text-rose-700"
+                              }`}
+                            >
+                              {community.role === "ADMIN"
+                                ? "Admin"
+                                : community.role === "MODERATOR"
+                                ? "Moderator"
+                                : community.role === "MEMBER"
+                                ? "Thành viên"
+                                : community.role === "PENDING"
+                                ? "Chờ duyệt"
+                                : "Bị khóa"}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Meta */}
+                        <div className="text-right">
+                          <div className="flex items-center gap-2 justify-end text-gray-600">
+                            <Users size={18} />
+                            <div className="text-sm font-medium">
+                              {community.memberCount}
+                            </div>
+                          </div>
+                          <div className="mt-1 text-xs text-gray-400">
+                            {community.isPublic ? "Public" : "Private"}
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  </button>
                 ))
               )}
             </div>
