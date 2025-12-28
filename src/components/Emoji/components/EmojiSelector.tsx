@@ -179,6 +179,7 @@ export const EmojiSelector: React.FC<EmojiSelectorProps> = ({
         display: "inline-flex",
         flexDirection: "column",
         gap: "8px",
+        padding: "8px 0",
       }}
     >
       {/* Open Picker Button */}
