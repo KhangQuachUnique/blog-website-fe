@@ -8,7 +8,7 @@ import type {
 
 export const useGetPostComments = (postId: number, sortBy: SortType) => {
   return useQuery<ICommentsResponse>({
-    queryKey: ["postComments", postId, sortBy],
+    queryKey: ["postComments", postId],
     queryFn: () => commentService.getCommentsByPost(postId, sortBy),
     enabled: Number.isFinite(postId) && postId > 0,
     initialData: {

@@ -190,11 +190,10 @@ export const EmojiSelector: React.FC<EmojiSelectorProps> = ({
           px-2 py-1 
           ${
             isPickerOpen
-              ? "bg-[#FFE7F0] border-[#FEB2CD] scale-105"
+              ? "bg-[#FFE7F0] border-[#FEB2CD]"
               : "bg-transparent border-gray-300"
           }
           hover:bg-[#FFE7F0] hover:border-[#FEB2CD] hover:filter-none hover:opacity-100
-          hover:scale-105
         `}
       >
         <BsEmojiWinkFill
@@ -203,10 +202,10 @@ export const EmojiSelector: React.FC<EmojiSelectorProps> = ({
             transition-all duration-150
             ${
               isPickerOpen
-                ? "text-[#D24463] scale-150 translate-y-[-5px]"
+                ? "text-[#D24463] translate-y-[-2px]"
                 : "text-gray-400"
             }
-            group-hover:text-[#D24463] group-hover:scale-150 group-hover:translate-y-[-5px]
+            group-hover:text-[#D24463] group-hover:translate-y-[-2px]
           `}
         />
       </button>

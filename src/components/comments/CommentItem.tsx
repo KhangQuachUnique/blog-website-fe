@@ -10,6 +10,7 @@ import { Avatar } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 
 import { FaArrowRightLong } from "react-icons/fa6";
+import ReactionSection from "../Emoji";
 
 interface CommentItemProps {
   comment: ICommentResponse;
@@ -136,6 +137,14 @@ export const CommentItem: React.FC<CommentItemProps> = ({
 
           {/* Comment Content */}
           <p className="mt-2 text-sm text-gray-800">{comment.content}</p>
+
+          <ReactionSection
+            type="comment"
+            commentId={comment.id}
+            postId={postId}
+            blockId={blockId}
+            reactions={comment.reacts?.emojis || []}
+          />
 
           {/* Comment Actions */}
           <div className="mt-3 flex items-center space-x-4">

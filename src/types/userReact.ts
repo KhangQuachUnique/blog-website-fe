@@ -22,5 +22,6 @@ export interface IToggleReactDto {
   codepoint?: string;
   emojiUrl?: string;
   postId?: number;
+  blockId?: number;
   commentId?: number;
 }

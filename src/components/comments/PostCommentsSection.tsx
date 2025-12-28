@@ -35,6 +35,7 @@ export const PostCommentsSection: React.FC<PostCommentsProps> = ({
     isLoading: getCommentsLoading,
     isError: getCommentsError,
   } = useGetPostComments(postId, sortBy);
+
   if (getCommentsLoading) {
     return <PostCommentsSectionSkeleton />;
   }

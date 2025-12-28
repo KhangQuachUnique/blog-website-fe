@@ -262,10 +262,12 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
               className="newsfeed-card__interact !p-0"
               onClick={(e) => e.stopPropagation()}
             >
-              <ReactionSection
-                postId={post?.id ?? post.originalPostId ?? post.id}
-                reactions={post?.reacts?.emojis ?? []}
-              />
+              <div className="px-5">
+                <ReactionSection
+                  postId={post?.id ?? post.originalPostId ?? post.id}
+                  reactions={post?.reacts?.emojis ?? []}
+                />
+              </div>
               <div className="pl-2 border-t border-t-[#FFC9DC]">
                 <InteractBar
                   postId={post?.id ?? post.originalPostId ?? post.id}
@@ -400,10 +402,12 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
               className="newsfeed-card__interact bg-white"
               onClick={(e) => e.stopPropagation()}
             >
-              <ReactionSection
-                postId={post.id}
-                reactions={post.reacts?.emojis ?? []}
-              />
+              <div className="px-5">
+                <ReactionSection
+                  postId={post.id}
+                  reactions={post.reacts?.emojis ?? []}
+                />
+              </div>
               <div className="pl-2 border-t border-t-[#FFC9DC]">
                 <InteractBar
                   postId={post.id}
