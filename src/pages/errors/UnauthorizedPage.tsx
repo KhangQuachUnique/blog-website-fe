@@ -102,7 +102,8 @@ const UnauthorizedPage: React.FC = () => {
           lineHeight: 1.6,
         }}
       >
-        Bạn cần đăng nhập để truy cập trang này. Nếu đã đăng nhập mà vẫn gặp lỗi, hãy thử đăng nhập lại.
+        Bạn cần đăng nhập để truy cập trang này. Nếu đã đăng nhập mà vẫn gặp
+        lỗi, hãy thử đăng nhập lại.
       </p>
       <div
         style={{
@@ -129,11 +130,11 @@ const UnauthorizedPage: React.FC = () => {
             fontFamily: "'Quicksand', sans-serif",
             transition: "all 0.2s ease",
           }}
-          onMouseEnter={e => {
+          onMouseEnter={(e) => {
             e.currentTarget.style.background = THEME.tertiary;
             e.currentTarget.style.borderColor = THEME.primary;
           }}
-          onMouseLeave={e => {
+          onMouseLeave={(e) => {
             e.currentTarget.style.background = THEME.white;
             e.currentTarget.style.borderColor = THEME.secondary;
           }}
@@ -158,10 +159,10 @@ const UnauthorizedPage: React.FC = () => {
             fontFamily: "'Quicksand', sans-serif",
             transition: "all 0.2s ease",
           }}
-          onMouseEnter={e => {
+          onMouseEnter={(e) => {
             e.currentTarget.style.background = "#E8779F";
           }}
-          onMouseLeave={e => {
+          onMouseLeave={(e) => {
             e.currentTarget.style.background = THEME.primary;
           }}
         >
