@@ -39,13 +39,17 @@ instance.interceptors.response.use(
     }
 
     // Check if account is banned
-    const errorMessage = error.response?.data?.message || '';
-    const isBanned = errorMessage.includes('bị khóa') || errorMessage.includes('ban');
-    
+    const errorMessage = error.response?.data?.message || "";
+    const isBanned =
+      errorMessage.includes("bị khóa") || errorMessage.includes("ban");
+
     if (error.response?.status === 401 && isBanned) {
       // Account is banned - logout immediately
       localStorage.removeItem(ACCESS_TOKEN_KEY);
-      sessionStorage.setItem('banMessage', 'Tài khoản của bạn đã bị ban. Vui lòng liên hệ admin.');
+      sessionStorage.setItem(
+        "banMessage",
+        "Tài khoản của bạn đã bị ban. Vui lòng liên hệ admin."
+      );
       window.location.href = "/login";
       return Promise.reject(error);
     }

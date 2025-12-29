@@ -8,6 +8,8 @@ import "../../../styles/savedPosts/SavedPosts.css";
 import "../../../styles/newsfeed/Card.css";
 import { CardSkeleton } from "../../../components/skeleton/CardSkeleton";
 
+import LoginRequiredPage from "../../errors/LoginRequiredPage";
+
 /**
  * 🔖 SavedPostsPage
  * Hiển thị danh sách bài viết đã lưu của user
@@ -30,26 +32,7 @@ export default function SavedPostsPage() {
 
   // Not logged in
   if (!userId) {
-    return (
-      <div className="saved-posts-page">
-        <div className="saved-posts-empty">
-          <Bookmark
-            size={64}
-            strokeWidth={1.5}
-            className="saved-posts-empty__icon"
-          />
-          <h2 className="saved-posts-empty__title">
-            Đăng nhập để xem bài viết đã lưu
-          </h2>
-          <p className="saved-posts-empty__desc">
-            Bạn cần đăng nhập để lưu và xem lại các bài viết yêu thích
-          </p>
-          <Link to="/auth/login" className="saved-posts-empty__btn">
-            Đăng nhập
-          </Link>
-        </div>
-      </div>
-    );
+    return <LoginRequiredPage />;
   }
 
   // Loading

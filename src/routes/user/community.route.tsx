@@ -8,16 +8,21 @@ import PostManagement from "../../features/user/manageCommunity/PostManagement";
 import MemberManagement from "../../features/user/manageCommunity/MemberManagement";
 import CreateCommunityPostPage from "../../pages/user/community/CreateCommunityPostPage";
 import { RoleGuard } from "../../components/guards";
+import MyCommunitiesPage from "../../pages/user/community/MyCommunitiesPage";
 
 const communityRoutes = [
+  {
+    path: "me/my-communities",
+    element: (
+      <RoleGuard>
+        <MyCommunitiesPage />
+      </RoleGuard>
+    ),
+  },
   // 🌍 FACEBOOK-STYLE COMMUNITY PAGE (ALL ROLES)
   {
     path: "community/:id",
-    element: (
-      <RoleGuard>
-        <CommunityLayout />,
-      </RoleGuard>
-    ),
+    element: <CommunityLayout />,
     children: [
       { index: true, element: <CommunityPosts /> },
       { path: "members", element: <CommunityMembers /> },

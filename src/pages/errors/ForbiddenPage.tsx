@@ -1,10 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { Home, ArrowLeft, Search, AlertCircle } from "lucide-react";
+import { Lock, Home, ArrowLeft } from "lucide-react";
 
-// ============================================
-// 🎨 BLOOKIE DESIGN SYSTEM - PASTEL PINK EDITION
-// ============================================
 const THEME = {
   primary: "#F295B6",
   secondary: "#FFB8D1",
@@ -15,10 +12,7 @@ const THEME = {
   white: "#FFFFFF",
 };
 
-// ============================================
-// 404 NOT FOUND PAGE
-// ============================================
-const NotFoundPage: React.FC = () => {
+const ForbiddenPage: React.FC = () => {
   const navigate = useNavigate();
 
   return (
@@ -34,7 +28,7 @@ const NotFoundPage: React.FC = () => {
         fontFamily: "'Quicksand', sans-serif",
       }}
     >
-      {/* 404 Illustration */}
+      {/* 403 Illustration */}
       <div
         style={{
           display: "flex",
@@ -72,7 +66,7 @@ const NotFoundPage: React.FC = () => {
               background: THEME.white,
             }}
           >
-            <AlertCircle size={48} style={{ color: THEME.primary }} />
+            <Lock size={48} style={{ color: THEME.primary }} />
           </div>
           <span
             style={{
@@ -82,12 +76,11 @@ const NotFoundPage: React.FC = () => {
               lineHeight: 1,
             }}
           >
-            4
+            3
           </span>
         </div>
       </div>
 
-      {/* Title */}
       <h1
         style={{
           fontSize: "28px",
@@ -97,10 +90,8 @@ const NotFoundPage: React.FC = () => {
           textAlign: "center",
         }}
       >
-        Oops! Trang không tồn tại
+        Không có quyền truy cập
       </h1>
-
-      {/* Description */}
       <p
         style={{
           fontSize: "16px",
@@ -111,10 +102,9 @@ const NotFoundPage: React.FC = () => {
           lineHeight: 1.6,
         }}
       >
-        Trang bạn đang tìm kiếm có thể đã bị xóa, đổi tên hoặc tạm thời không khả dụng.
+        Bạn không có quyền truy cập vào trang này. Vui lòng liên hệ quản trị
+        viên nếu bạn nghĩ đây là nhầm lẫn.
       </p>
-
-      {/* Action Buttons */}
       <div
         style={{
           display: "flex",
@@ -123,7 +113,6 @@ const NotFoundPage: React.FC = () => {
           justifyContent: "center",
         }}
       >
-        {/* Go Back Button */}
         <button
           onClick={() => navigate(-1)}
           style={{
@@ -153,8 +142,6 @@ const NotFoundPage: React.FC = () => {
           <ArrowLeft size={18} />
           Quay lại
         </button>
-
-        {/* Home Button */}
         <button
           onClick={() => navigate("/")}
           style={{
@@ -182,40 +169,7 @@ const NotFoundPage: React.FC = () => {
           <Home size={18} />
           Về trang chủ
         </button>
-
-        {/* Search Button */}
-        <button
-          onClick={() => navigate("/search")}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-            padding: "12px 24px",
-            border: `2px solid ${THEME.secondary}`,
-            borderRadius: "12px",
-            background: THEME.white,
-            color: THEME.text,
-            fontSize: "14px",
-            fontWeight: 600,
-            cursor: "pointer",
-            fontFamily: "'Quicksand', sans-serif",
-            transition: "all 0.2s ease",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = THEME.tertiary;
-            e.currentTarget.style.borderColor = THEME.primary;
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = THEME.white;
-            e.currentTarget.style.borderColor = THEME.secondary;
-          }}
-        >
-          <Search size={18} />
-          Tìm kiếm
-        </button>
       </div>
-
-      {/* Decorative Elements */}
       <div
         style={{
           marginTop: "48px",
@@ -235,8 +189,6 @@ const NotFoundPage: React.FC = () => {
           />
         ))}
       </div>
-
-      {/* Footer Text */}
       <p
         style={{
           marginTop: "24px",
@@ -244,10 +196,10 @@ const NotFoundPage: React.FC = () => {
           color: THEME.textMuted,
         }}
       >
-        Mã lỗi: 404 - Not Found
+        Mã lỗi: 403 - Forbidden
       </p>
     </div>
   );
 };
 
-export default NotFoundPage;
+export default ForbiddenPage;
