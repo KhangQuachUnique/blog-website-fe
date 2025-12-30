@@ -7,8 +7,11 @@ import {
   useGetMyCommunities,
 } from "../../../hooks/useCommunity";
 import "../../../styles/savedPosts/SavedPosts.css";
+import { useAuthUser } from "../../../hooks/useAuth";
+import LoginRequiredPage from "../../errors/LoginRequiredPage";
 
 const MyCommunitiesPage = () => {
+  const { isAuthenticated } = useAuthUser();
   const navigate = useNavigate();
 
   const { data, isLoading, isError } = useGetMyCommunities();
@@ -63,6 +66,10 @@ const MyCommunitiesPage = () => {
       }
     );
   };
+
+  if (!isAuthenticated) {
+    return <LoginRequiredPage />;
+  }
 
   return (
     <div className="community-page">

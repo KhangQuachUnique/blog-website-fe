@@ -16,10 +16,9 @@ import profileRoutes from "./user/profile.route";
 
 import newsfeedRoutes from "./user/newsfeed.route";
 import { SearchResultPage } from "../pages/search/searchResultsPage";
-import MyCommunitiesPage from "../pages/user/community/MyCommunitiesPage";
 import PostDetailsPage from "../pages/user/post/postDetailsPage";
 import { savedPostsRoutes } from "./user/savedPosts.route";
-import NotFoundPage from "../pages/NotFoundPage";
+import NotFoundPage from "../pages/errors/NotFoundPage";
 
 export const router = createBrowserRouter([
   {
@@ -35,7 +34,6 @@ export const router = createBrowserRouter([
         path: "/post/:id",
         element: <PostDetailsPage />,
       },
-      { path: "groups", element: <MyCommunitiesPage /> },
 
       ...communityRoutes,
       ...manageBlogPostsRoutes,

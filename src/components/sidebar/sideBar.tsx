@@ -22,7 +22,8 @@ const SideBar = ({ navLinks, collapsed, setCollapsed }: SideBarProps) => {
   const { requireLogin } = useLoginRequired();
 
   const handleCreatePost = () => {
-    if (!requireLogin({ message: "Vui lòng đăng nhập để tạo bài viết" })) return;
+    if (!requireLogin({ message: "Vui lòng đăng nhập để tạo bài viết" }))
+      return;
     navigate("/post/create");
   };
 
@@ -50,9 +51,9 @@ const SideBar = ({ navLinks, collapsed, setCollapsed }: SideBarProps) => {
           onClick={handleCreatePost}
           className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-gradient-to-r from-[#F295B6] to-[#FFB8D1] text-white font-semibold shadow-md hover:shadow-lg hover:scale-[1.02] transition-all duration-200 group"
         >
-          <FiPlusCircle 
-            fontSize={20} 
-            className="group-hover:rotate-90 transition-transform duration-300" 
+          <FiPlusCircle
+            fontSize={20}
+            className="group-hover:rotate-90 transition-transform duration-300"
           />
           <span>Tạo bài viết</span>
         </button>
@@ -64,7 +65,7 @@ const SideBar = ({ navLinks, collapsed, setCollapsed }: SideBarProps) => {
             <li key={link.name}>
               <Link
                 to={link.href}
-                className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 hover:bg-[#FFE4EC] hover:text-[#8C1D35] hover:translate-x-1 group font-label"
+                className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 hover:bg-[#FFE4EC] hover:text-[#8C1D35] hover:translate-x-1 group font-semibold"
               >
                 <div className="text-[#F295B6] group-hover:scale-110 transition-transform duration-200">
                   {link.icon}

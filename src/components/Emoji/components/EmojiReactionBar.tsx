@@ -32,8 +32,7 @@ export const EmojiReactionBar: React.FC<EmojiReactionBarProps> = React.memo(
     return (
       <div
         className="
-          inline-flex flex-wrap items-center gap-1.5
-          p-2
+          inline-flex flex-wrap items-center gap-1.5 py-2
           max-h-[82px] overflow-y-auto
         "
       >

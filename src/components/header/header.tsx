@@ -59,7 +59,6 @@ const Header = ({ layout, collapsed, setCollapsed }: HeaderProps) => {
   const handleLogout = async () => {
     try {
       await logout();
-      navigate("/login", { replace: true });
     } catch (error) {
       console.error("Logout error:", error);
     }
@@ -125,7 +124,7 @@ const Header = ({ layout, collapsed, setCollapsed }: HeaderProps) => {
                     overflow: "visible",
                     minWidth: 200,
                     mt: 1.5,
-                    fontFamily: "Mona Sans, Open Sans, Outfit, sans-serif",
+                    fontFamily: "Quicksand, Outfit, Open Sans, sans-serif",
                     "& .MuiAvatar-root": {
                       width: 32,
                       height: 32,
@@ -133,9 +132,9 @@ const Header = ({ layout, collapsed, setCollapsed }: HeaderProps) => {
                       mr: 1,
                     },
                     "& .MuiMenuItem-root": {
-                      fontFamily: "Mona Sans, Open Sans, Outfit, sans-serif",
+                      fontFamily: "Quicksand, Outfit, Open Sans, sans-serif",
                       fontSize: 15,
-                      fontWeight: 400,
+                      fontWeight: 500,
                       px: 2,
                       py: 1.5,
                       borderRadius: 1.5,

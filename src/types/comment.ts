@@ -1,3 +1,5 @@
+import type { UserReactSummaryDto } from "./userReact";
+
 export type SortType = "newest" | "interactions";
 
 export const ECommentType = {
@@ -21,6 +23,7 @@ export interface ICommentResponse {
   commenter: CommentUser;
   replyToUser?: CommentUser;
   childComments?: Omit<ICommentResponse, "childComments">[];
+  reacts?: UserReactSummaryDto;
 }
 
 export interface ICommentsResponse {

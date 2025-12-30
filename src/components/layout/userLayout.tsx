@@ -10,7 +10,11 @@ import { FaArchive } from "react-icons/fa";
 const navLinks = [
   { name: "Trang chủ", href: "/", icon: <FiHome fontSize={18} /> },
   { name: "Đã lưu", href: "/saved", icon: <FaArchive fontSize={18} /> },
-  { name: "Nhóm", href: "/groups", icon: <FaUserGroup fontSize={18} /> },
+  {
+    name: "Nhóm",
+    href: "/me/my-communities",
+    icon: <FaUserGroup fontSize={18} />,
+  },
 ];
 
 const UserLayout = () => {

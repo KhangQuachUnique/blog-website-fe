@@ -3,7 +3,10 @@ import {
   useQueryClient,
   type InfiniteData,
 } from "@tanstack/react-query";
-import { togglePostReact } from "../services/user/reactions/reactionService";
+import {
+  toggleCommentReact,
+  togglePostReact,
+} from "../services/user/reactions/reactionService";
 import { getOrCreateSessionSeed } from "./useNewsFeed";
 import type { EmojiReactSummaryDto, IToggleReactDto } from "../types/userReact";
 import {
@@ -19,6 +22,7 @@ import type {
 import type { SavedPostListResponse } from "../types/savedPost";
 import { useAuthUser } from "./useAuth";
 import type { UserProfile } from "../types/user";
+import type { ICommentResponse, ICommentsResponse } from "../types/comment";
 
 /**
  * Hook to toggle reaction on a post.
@@ -178,8 +182,78 @@ export const useTogglePostReact = () => {
  * @returns
  */
 export const useToggleCommentReact = () => {
+  const queryClient = useQueryClient();
+
   return useMutation({
-    mutationFn: togglePostReact,
+    mutationFn: toggleCommentReact,
+
+    onMutate: async (toggleData: IToggleReactDto) => {
+      console.log("Toggling comment react...", toggleData);
+      console.log("Step 1: Canceling comment queries...");
+      await queryClient.cancelQueries({
+        queryKey: ["postComments", toggleData.postId],
+      });
+
+      await queryClient.cancelQueries({
+        queryKey: ["blockComments", toggleData.blockId],
+      });
+
+      console.log(
+        "Step 2: Getting previous comment data...",
+        toggleData.postId
+      );
+      const previousComments = queryClient.getQueryData<ICommentsResponse>([
+        "postComments",
+        toggleData.postId,
+      ]);
+      console.log("Previous comments:", previousComments);
+
+      const previousBlockComments = queryClient.getQueryData<ICommentsResponse>(
+        ["blockComments", toggleData.blockId]
+      );
+      console.log("Previous block comments:", previousBlockComments);
+
+      console.log("Step 3: Updating comment reacts in cache...");
+      const newComments = updatePostCommentReacts(previousComments, toggleData);
+      console.log("Updated comments:", newComments);
+      const newBlockComments = updateBlockCommentReacts(
+        previousBlockComments,
+        toggleData
+      );
+      console.log("Updated block comments:", newBlockComments);
+
+      console.log("Step 4: Setting new comment data in cache...");
+      // Cập nhật cache ngay lập tức (phải dùng cùng queryKey với các thao tác khác)
+      queryClient.setQueryData(
+        ["postComments", toggleData.postId],
+        newComments
+      );
+      queryClient.setQueryData(
+        ["blockComments", toggleData.blockId],
+        newBlockComments
+      );
+
+      // Trả về context để rollback nếu lỗi
+      return {
+        previousComments,
+        previousBlockComments,
+      };
+    },
+
+    onError: (_err, _vars, context) => {
+      if (context?.previousComments) {
+        queryClient.setQueryData(
+          ["postComments", _vars.postId],
+          context.previousComments
+        );
+      }
+      if (context?.previousBlockComments) {
+        queryClient.setQueryData(
+          ["blockComments", _vars.blockId],
+          context.previousBlockComments
+        );
+      }
+    },
   });
 };
 
@@ -352,6 +426,95 @@ const updateUserProfilePostsReacts = (
     ...userProfile,
     posts: userProfile.posts.map((post: IPostResponseDto) =>
       updatePostReacts(post, toggleData)
+    ),
+  };
+};
+
+/**
+ * Update the reactions of a comment based on the toggle data.
+ * @param comment
+ * @param toggleData
+ * @returns
+ */
+const updateCommentReacts = (
+  comment: ICommentResponse,
+  toggleData: IToggleReactDto
+): ICommentResponse | undefined => {
+  if (comment.id !== toggleData.commentId || !comment.reacts?.emojis) {
+    return comment;
+  }
+
+  const newEmojis = [...comment.reacts.emojis];
+  const { emojiId, codepoint } = toggleData;
+  const index = newEmojis.findIndex((r) =>
+    emojiId ? r.emojiId === emojiId : r.codepoint === codepoint
+  );
+  if (index !== -1) {
+    const current = newEmojis[index];
+    if (current.reactedByCurrentUser) {
+      if (current.totalCount <= 1) {
+        newEmojis.splice(index, 1);
+      } else {
+        newEmojis[index] = {
+          ...current,
+          totalCount: current.totalCount - 1,
+          reactedByCurrentUser: false,
+        };
+      }
+    } else {
+      newEmojis[index] = {
+        ...current,
+        totalCount: current.totalCount + 1,
+        reactedByCurrentUser: true,
+      };
+    }
+  } else {
+    newEmojis.push({
+      emojiId,
+      codepoint,
+      totalCount: 1,
+      reactedByCurrentUser: true,
+      type: emojiId ? "CUSTOM" : "UNICODE",
+    } as EmojiReactSummaryDto);
+  }
+  const totalReactions = newEmojis.reduce((sum, r) => sum + r.totalCount, 0);
+
+  return {
+    ...comment,
+    reacts: {
+      ...comment.reacts,
+      emojis: newEmojis,
+      totalReactions,
+    },
+  };
+};
+
+const updatePostCommentReacts = (
+  commentsData: ICommentsResponse | undefined,
+  toggleData: IToggleReactDto
+): ICommentsResponse | undefined => {
+  if (!commentsData) {
+    return undefined;
+  }
+  return {
+    ...commentsData,
+    comments: commentsData.comments.map(
+      (comment) => updateCommentReacts(comment, toggleData) as ICommentResponse
+    ),
+  };
+};
+
+const updateBlockCommentReacts = (
+  blockCommentsData: ICommentsResponse | undefined,
+  toggleData: IToggleReactDto
+): ICommentsResponse | undefined => {
+  if (!blockCommentsData) {
+    return undefined;
+  }
+  return {
+    ...blockCommentsData,
+    comments: blockCommentsData.comments.map(
+      (comment) => updateCommentReacts(comment, toggleData) as ICommentResponse
     ),
   };
 };

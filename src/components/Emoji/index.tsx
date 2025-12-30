@@ -1,5 +1,8 @@
 import { useAuthUser } from "../../hooks/useAuth";
-import { useTogglePostReact } from "../../hooks/useReactions";
+import {
+  useToggleCommentReact,
+  useTogglePostReact,
+} from "../../hooks/useReactions";
 import type { EmojiReactSummaryDto } from "../../types/userReact";
 import { EmojiReactionBar } from "../Emoji/components/EmojiReactionBar";
 import { EmojiSelector } from "./components/EmojiSelector";
@@ -8,15 +11,25 @@ import { useRecentEmojis } from "../Emoji/hooks/useRecentEmoji";
 import { useToast } from "../../contexts/toast";
 
 export interface ReactionSectionProps {
-  postId: number;
+  type?: "post" | "comment";
+  postId?: number;
+  blockId?: number;
+  commentId?: number;
   reactions: EmojiReactSummaryDto[];
 }
 
-const ReactionSection = ({ postId, reactions }: ReactionSectionProps) => {
+const ReactionSection = ({
+  type = "post",
+  postId,
+  blockId,
+  commentId,
+  reactions,
+}: ReactionSectionProps) => {
   const { user, isAuthenticated } = useAuthUser();
   const { recent, add } = useRecentEmojis();
   const emojisData = useEmojiData();
-  const mutation = useTogglePostReact();
+  const postMutation = useTogglePostReact();
+  const commentMutation = useToggleCommentReact();
   const { showToast } = useToast();
 
   const handleToggleReact = ({
@@ -35,8 +48,17 @@ const ReactionSection = ({ postId, reactions }: ReactionSectionProps) => {
       });
       return;
     }
+    const mutation = type === "post" ? postMutation : commentMutation;
     mutation.mutate(
-      { emojiId, codepoint, emojiUrl, postId, userId: user.id },
+      {
+        emojiId,
+        codepoint,
+        emojiUrl,
+        postId,
+        blockId,
+        commentId,
+        userId: user.id,
+      },
       {
         onSuccess: () => {
           // Cập nhật recent nếu là unicode
@@ -50,8 +72,8 @@ const ReactionSection = ({ postId, reactions }: ReactionSectionProps) => {
 
   return (
     <div
-      className={`flex items-center justify-between w-full gap-[3px] px-2 h-fit overflow-y-auto
-      ${reactions.length === 0 ? "justify-end p-2" : ""}
+      className={`flex items-center justify-between w-full gap-[3px] h-fit overflow-y-auto
+      ${reactions.length === 0 ? "justify-end" : ""}
     `}
     >
       <EmojiReactionBar

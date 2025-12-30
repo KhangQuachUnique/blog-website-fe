@@ -1,6 +1,8 @@
-import { Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../../contexts/AuthContext';
-import { EUserRole } from '../../types/user';
+import { Navigate } from "react-router-dom";
+import { useAuth } from "../../contexts/AuthContext";
+import { EUserRole } from "../../types/user";
+
+import LoginRequiredPage from "../../pages/errors/LoginRequiredPage";
 
 interface RoleGuardProps {
   children: React.ReactNode;
@@ -14,20 +16,19 @@ interface RoleGuardProps {
 
 /**
  * Component bảo vệ route thống nhất
- * 
+ *
  * Cách dùng:
  * - Yêu cầu đăng nhập: <RoleGuard><Page /></RoleGuard>
  * - Yêu cầu role cụ thể: <RoleGuard allowedRoles={[EUserRole.ADMIN]}><AdminPage /></RoleGuard>
  * - Chỉ guest (chưa đăng nhập): <RoleGuard guestOnly><LoginPage /></RoleGuard>
  */
-const RoleGuard = ({ 
-  children, 
+const RoleGuard = ({
+  children,
   allowedRoles,
-  redirectTo = '/', 
+  redirectTo = "/",
   guestOnly = false,
 }: RoleGuardProps) => {
   const { user, isLoading, isAuthenticated } = useAuth();
-  const location = useLocation();
 
   // Đang loading
   if (isLoading) {
@@ -48,7 +49,7 @@ const RoleGuard = ({
 
   // Yêu cầu đăng nhập
   if (!isAuthenticated || !user) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    return <LoginRequiredPage />;
   }
 
   // Nếu có allowedRoles, kiểm tra role
