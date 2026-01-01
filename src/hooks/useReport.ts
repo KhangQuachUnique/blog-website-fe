@@ -9,6 +9,7 @@ import {
   resolveReport,
   getReportsByPost,
   getReportDetail,
+  getGroupedReports,
 } from '../services/user/report/reportService';
 import type {
   ICreateReportRequest,
@@ -16,6 +17,7 @@ import type {
   EReportType,
   IReportResponse,
   EReportStatus,
+  IGroupedReportListResponse,
 } from '../types/report';
 
 // ============================================
@@ -28,6 +30,8 @@ export const reportKeys = {
   detail: (reportId: number) => ['reports', 'detail', reportId] as const,
   check: (type: EReportType, targetId: number) => 
     [...reportKeys.all, 'check', type, targetId] as const,
+  grouped: (status: string, type: string, page: number) => 
+    ['reports', 'grouped', status, type, page] as const,
 };
 
 // ============================================
@@ -71,6 +75,8 @@ export const useCreateReport = (options?: UseCreateReportOptions) => {
       queryClient.invalidateQueries({
         queryKey: reportKeys.check(variables.type, getTargetId(variables)),
       });
+
+      queryClient.invalidateQueries({ queryKey: ['reports', 'grouped'] });
 
       showToast({
         type: 'success',
@@ -128,6 +134,30 @@ export const useGetResolvedReports = () => {
 };
 
 /**
+ * 📊 Hook lấy danh sách báo cáo đã NHÓM (Dùng cho trang Admin)
+ * Nhóm các báo cáo theo đối tượng bị report (Post/Comment/User)
+ * @param status Trạng thái (PENDING/RESOLVED)
+ * @param type Loại (POST/COMMENT/USER/ALL)
+ * @param page Trang hiện tại
+ * @param limit Số lượng item/trang (mặc định 10)
+ */
+export const useGetGroupedReports = (
+  status: EReportStatus | string,
+  type: EReportType | string | 'ALL' = 'ALL',
+  page: number = 1,
+  limit: number = 10,
+  enabled: boolean = true
+) => {
+  return useQuery<IGroupedReportListResponse>({
+    queryKey: reportKeys.grouped(status, type, page),
+    queryFn: () => getGroupedReports(status, type, page, limit),
+    enabled: enabled && !!status,
+    placeholderData: (previousData) => previousData, 
+    staleTime: 60 * 1000, 
+  });
+};
+
+/**
  * Hook to get reports for a specific post
  * @param postId 
  * @param status (Optional)
@@ -170,6 +200,7 @@ export const useResolveReport = () => {
       });
 
       queryClient.invalidateQueries({ queryKey: reportKeys.all });
+      queryClient.invalidateQueries({ queryKey: ['reports', 'grouped'] });
     },
 
     onError: (error: any) => {

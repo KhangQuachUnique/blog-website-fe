@@ -7,6 +7,7 @@ import type {
   IReportListResponse,
   EReportType,
   EReportStatus,
+  IGroupedReportListResponse,
 } from '../../../types/report';
 
 /**
@@ -42,6 +43,31 @@ export const checkIfReported = async (
 export const getAllReports = async (): Promise<IReportResponse[]> => {
   const response = await axios.get("/reports/all");
   return response as unknown as IReportResponse[];
+};
+
+/**
+ * 📊 API: Lấy danh sách báo cáo đã NHÓM theo đối tượng (Admin)
+ * Endpoint: GET /reports/grouped
+ */
+export const getGroupedReports = async (
+  status: EReportStatus | string,
+  type: EReportType | string | 'ALL',
+  page = 1,
+  limit = 10
+): Promise<IGroupedReportListResponse> => {
+  const params: any = { page, limit };
+  
+  // Chỉ gửi status nếu có (và khác ALL nếu UI bạn có option đó)
+  if (status) params.status = status;
+  
+  // Nếu type là 'ALL', ta không gửi param type lên để BE tự fallback hoặc lấy hết
+  // Nếu type cụ thể (POST/COMMENT/USER), gửi lên bình thường.
+  if (type && type !== 'ALL') {
+    params.type = type;
+  }
+
+  const response = await axios.get('/reports/grouped', { params });
+  return response as unknown as IGroupedReportListResponse;
 };
 
 /**
