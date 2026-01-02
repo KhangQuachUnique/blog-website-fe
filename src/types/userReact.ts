@@ -5,6 +5,7 @@ export interface EmojiReactSummaryDto {
   type: EEmojiType;
   codepoint?: string;
   emojiUrl?: string;
+  name: string;
   totalCount: number;
   reactedByCurrentUser: boolean;
 }

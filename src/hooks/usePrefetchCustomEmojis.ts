@@ -11,7 +11,7 @@ export const usePrefetchCustomEmojis = (userId?: number) => {
 
     queryClient.prefetchQuery({
       queryKey: [CUSTOM_EMOJIS_QUERY_KEY, userId],
-      queryFn: () => getUserCommunityEmojis(12),
+      queryFn: () => getUserCommunityEmojis(userId),
       staleTime: 30 * 60 * 1000,
     });
   }, [userId, queryClient]);
