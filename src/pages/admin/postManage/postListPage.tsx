@@ -30,7 +30,7 @@ const PostListPage = () => {
   // Mutation hooks
   const { mutate: hidePost } = useHidePost();
   const { mutate: restorePost } = useRestorePost();
-  const { mutate: resolveReport } = useResolveReport();
+  const { mutateAsync: resolveReportAsync } = useResolveReport();
 
   // --- CLIENT-SIDE LOGIC ---
 
@@ -73,20 +73,30 @@ const PostListPage = () => {
     });
   };
 
-  const handleApproveReport = (reportId: number) => {
-    resolveReport({ id: reportId, type: "POST" as EReportType, action: "APPROVE" }, {
-       onSuccess: () => {
-         refetch();
-       },
-    });
+  const handleApproveReport = async (reportId: number) => {
+    try {
+      await resolveReportAsync({ 
+        id: reportId, 
+        type: "POST" as EReportType, 
+        action: "APPROVE" 
+      });
+      await refetch();
+    } catch (error) {
+      console.error(error);
+    }
   };
 
-  const handleRejectReport = (reportId: number) => {
-    resolveReport({ id: reportId, type: "POST" as EReportType, action: "REJECT" }, {
-        onSuccess: () => {
-            refetch();
-        },
-     });
+  const handleRejectReport = async (reportId: number) => {
+    try {
+      await resolveReportAsync({ 
+        id: reportId, 
+        type: "POST" as EReportType, 
+        action: "REJECT" 
+      });
+      await refetch();
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   useEffect(() => {
@@ -214,23 +224,25 @@ const PostListPage = () => {
       </div>
 
       {/* RENDER TABLE */}
-      {isLoading ? (
-        <PostTableSkeleton /> 
-      ) : (
-        <PostsTable
-          posts={normalizedPosts}
-          onHide={handleHide}
-          onRestore={handleRestore}
-          onApproveReport={handleApproveReport}
-          onRejectReport={handleRejectReport}
-          loadingId={actionLoading}
-          emptyMessage={
-            filterStatus !== "ALL"
-              ? `Không có bài viết nào với trạng thái "${filterStatus}"`
-              : "Không có bài viết nào"
-          }
-        />
-      )}
+      <div className={`transition-opacity duration-300 ${isFetching ? "opacity-60 pointer-events-none" : "opacity-100"}`}>
+        {isLoading ? (
+          <PostTableSkeleton /> 
+        ) : (
+          <PostsTable
+            posts={normalizedPosts}
+            onHide={handleHide}
+            onRestore={handleRestore}
+            onApproveReport={handleApproveReport}
+            onRejectReport={handleRejectReport}
+            loadingId={actionLoading}
+            emptyMessage={
+              filterStatus !== "ALL"
+                ? `Không có bài viết nào với trạng thái "${filterStatus}"`
+                : "Không có bài viết nào"
+            }
+          />
+        )}
+      </div>
 
       {!isLoading && (
           <div className="mt-8">
