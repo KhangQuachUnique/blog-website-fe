@@ -33,8 +33,6 @@ const PostListPage = () => {
   const { mutate: restorePost } = useRestorePost();
   const { mutate: resolveReport } = useResolveReport();
 
-  const { showToast } = useToast();
-
   // --- CLIENT-SIDE LOGIC ---
 
   const stats = useMemo(() => {
@@ -65,11 +63,6 @@ const PostListPage = () => {
   const handleHide = (postId: number) => {
     setActionLoading(postId);
     hidePost(postId, {
-      onSuccess: () => showToast({ type: "success", message: "Ẩn bài viết thành công!" }),
-      onError: (err: any) => {
-        const msg = err?.response?.data?.message || err.message || "Lỗi khi ẩn bài viết";
-        showToast({ type: "error", message: msg });
-      },
       onSettled: () => setActionLoading(null)
     });
   };
@@ -77,11 +70,6 @@ const PostListPage = () => {
   const handleRestore = (postId: number) => {
     setActionLoading(postId);
     restorePost(postId, {
-      onSuccess: () => showToast({ type: "success", message: "Phục hồi bài viết thành công!" }),
-      onError: (err: any) => {
-        const msg = err?.response?.data?.message || err.message || "Lỗi khi phục hồi bài viết";
-        showToast({ type: "error", message: msg });
-      },
       onSettled: () => setActionLoading(null)
     });
   };
@@ -89,20 +77,16 @@ const PostListPage = () => {
   const handleApproveReport = (reportId: number) => {
     resolveReport({ id: reportId, type: "POST" as EReportType, action: "APPROVE" }, {
        onSuccess: () => {
-         showToast({ type: "success", message: "Báo cáo đã được phê duyệt!" });
          refetch();
        },
-       onError: (err: any) => showToast({ type: "error", message: err?.response?.data?.message || "Lỗi xử lý" })
     });
   };
 
   const handleRejectReport = (reportId: number) => {
     resolveReport({ id: reportId, type: "POST" as EReportType, action: "REJECT" }, {
         onSuccess: () => {
-            showToast({ type: "success", message: "Báo cáo đã được từ chối!" });
             refetch();
         },
-        onError: (err: any) => showToast({ type: "error", message: err?.response?.data?.message || "Lỗi xử lý" })
      });
   };
 

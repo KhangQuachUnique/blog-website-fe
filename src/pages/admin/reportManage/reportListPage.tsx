@@ -16,7 +16,6 @@ import ReportTable from "../../../features/admin/reportManage/ReportTable";
 import ReportDetailModal from "../../../features/admin/reportManage/ReportDetailModal";
 import type { IGroupedReport, EReportType } from "../../../types/report";
 import { ReportTableSkeleton } from "../../../components/skeleton/ReportTableSkeleton";
-import { useToast } from "../../../contexts/toast";
 
 // Chỉ định nghĩa các loại cụ thể, bỏ "ALL"
 type ReportTypeFilter = EReportType; 
@@ -35,8 +34,6 @@ const ReportListPage = () => {
   const [actionLoading, setActionLoading] = useState<number | null>(null);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [selectedReport, setSelectedReport] = useState<IGroupedReport | null>(null);
-
-  const { showToast } = useToast();
 
   // --- REACT QUERY HOOKS (Server-side Pagination) ---
   const {

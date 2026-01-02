@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useToast } from '../contexts/toast';
 import {
   createPost,
   getPostById,
@@ -62,6 +63,7 @@ export const useUpdatePost = () => {
  */
 export const useHidePost = () => {
   const qc = useQueryClient();
+  const { showToast } = useToast();
 
   return useMutation({
     mutationFn: (postId: number) => hidePost(postId),
@@ -82,6 +84,19 @@ export const useHidePost = () => {
       });
 
       qc.invalidateQueries({ queryKey: ["posts"] });
+
+      showToast({ 
+        type: "success", 
+        message: "Ẩn bài viết thành công!" 
+      });
+    },
+
+    onError: (error: any) => {
+      const msg = error?.response?.data?.message || error.message || "Lỗi khi ẩn bài viết";
+      showToast({ 
+        type: "error", 
+        message: msg 
+      });
     },
   });
 };
@@ -91,6 +106,7 @@ export const useHidePost = () => {
  */
 export const useRestorePost = () => {
   const qc = useQueryClient();
+  const { showToast } = useToast();
 
   return useMutation({
     mutationFn: (postId: number) => restorePost(postId),
@@ -111,6 +127,19 @@ export const useRestorePost = () => {
       });
 
       qc.invalidateQueries({ queryKey: ["posts"] });
+
+      showToast({ 
+        type: "success", 
+        message: "Phục hồi bài viết thành công!" 
+      });
+    },
+
+    onError: (error: any) => {
+      const msg = error?.response?.data?.message || error.message || "Lỗi khi phục hồi bài viết";
+      showToast({ 
+        type: "error", 
+        message: msg 
+      });
     },
   });
 };
