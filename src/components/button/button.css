@@ -24,18 +24,18 @@
 }
 
 .btn-outline {
-  color: #8c1d35;
-  border: 2px solid #8c1d35;
+  color: #ec4899;
+  border: 2px solid #ec4899;
   background-color: #fff;
 }
 
 .btn-default {
   color: #ffffff;
-  background-color: #8c1d35;
+  background-color: #ec4899;
 }
 
 .btn-default:hover {
-  background-color: rgba(140, 29, 53, 0.9);
+  background-color: #db2777;
   transform: translateY(-2px);
 }
 
@@ -44,8 +44,8 @@
 }
 
 .btn-outline:hover {
-  border-color: rgba(140, 29, 53, 0.9);
-  color: rgba(140, 29, 53, 0.9);
+  border-color: #db2777;
+  color: #db2777;
   transform: translateY(-2px);
 }
 

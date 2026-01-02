@@ -266,6 +266,17 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
                 <ReactionSection
                   postId={post?.id ?? post.originalPostId ?? post.id}
                   reactions={post?.reacts?.emojis ?? []}
+                  communityId={
+                    fetchedOriginal?.community
+                      ? typeof fetchedOriginal.community === "string"
+                        ? undefined
+                        : fetchedOriginal.community.id
+                      : post.community
+                      ? typeof post.community === "string"
+                        ? undefined
+                        : post.community.id
+                      : undefined
+                  }
                 />
               </div>
               <div className="pl-2 border-t border-t-[#FFC9DC]">
@@ -406,6 +417,13 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
                 <ReactionSection
                   postId={post.id}
                   reactions={post.reacts?.emojis ?? []}
+                  communityId={
+                    post.community
+                      ? typeof post.community === "string"
+                        ? undefined
+                        : post.community.id
+                      : undefined
+                  }
                 />
               </div>
               <div className="pl-2 border-t border-t-[#FFC9DC]">

@@ -1,107 +1,134 @@
-import { useState } from "react";
-import { Dialog, DialogActions, DialogTitle } from "@mui/material";
-import { IoMdTrash } from "react-icons/io";
+import {
+  Dialog,
+  DialogActions,
+  DialogTitle,
+  DialogContent,
+} from "@mui/material";
+import { Trash2, AlertTriangle } from "lucide-react";
 import CustomButton from "../button";
 
-interface DeleteConfirmButtonProps {
-  title?: string;
+interface DeleteConfirmDialogProps {
+  /** Control dialog visibility from parent */
+  open: boolean;
+  /** Callback when dialog should close */
+  onClose: () => void;
+  /** Callback when user confirms deletion */
   onConfirm: () => void;
-  style?: React.CSSProperties;
-  buttonIcon?: boolean;
-  buttonText?: string;
-  className?: string;
+  /** Dialog title */
+  title?: string;
+  /** Dialog description/warning message */
+  description?: string;
 }
 
-const DeleteConfirmButton = ({
-  title,
+/**
+ * Delete Confirmation Dialog Component
+ * Hiển thị dialog xác nhận xóa với UI đẹp
+ * Sử dụng controlled mode (phải truyền open và onClose)
+ */
+const DeleteConfirmDialog = ({
+  open,
+  onClose,
   onConfirm,
-  style,
-  buttonIcon = true,
-  buttonText,
-  className,
-}: DeleteConfirmButtonProps) => {
-  const [open, setOpen] = useState(false);
-
-  const handleClickOpen = () => {
-    setOpen(true);
-  };
-
-  const handleClose = () => {
-    setOpen(false);
+  title = "Xác nhận xóa?",
+  description,
+}: DeleteConfirmDialogProps) => {
+  const handleConfirm = () => {
+    onConfirm();
+    onClose();
   };
 
   return (
-    <div style={style} className={className}>
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          handleClickOpen();
-        }}
-        className={
-          "flex gap-2 items-center p-2 bg-[#BA2243]/80 rounded-md hover:bg-[#BA2243] transition-all duration-50" +
-          (className ? ` ${className}` : "")
-        }
-      >
-        {buttonText && <span>{buttonText}</span>}
-        {buttonIcon && <IoMdTrash fontSize="24px" color="white" />}
-      </button>
-      <Dialog
-        open={open}
-        onClose={handleClose}
-        PaperProps={{
-          sx: {
-            borderRadius: 2,
-            p: 0,
-            overflow: "hidden",
-            width: 380,
-            bgcolor: "white",
-          },
-        }}
-        sx={{
-          fontFamily: "Quicksand, Mona Sans, Open Sans, Outfit, sans-serif",
-        }}
-      >
-        <div className="py-5 bg-white">
-          <DialogTitle
-            sx={{
-              fontFamily: "Quicksand, Mona Sans, Open Sans, Outfit, sans-serif",
-              fontWeight: "800",
-              fontSize: 23,
-              textAlign: "center",
-              color: "#4A3C42",
-              py: 3,
-            }}
-          >
-            {title ? title : "Xác nhận xóa?"}
-          </DialogTitle>
-          <DialogActions
-            sx={{
-              px: 0,
-              py: 1,
-              gap: 2,
-              display: "flex",
-              justifyContent: "center",
-            }}
-          >
-            <CustomButton onClick={handleClose} variant="outline">
-              Hủy
-            </CustomButton>
-            <CustomButton
-              onClick={() => {
-                onConfirm();
-                handleClose();
-              }}
-              variant="default"
-              className="flex items-center justify-center gap-2"
-              style={{ width: "100px" }}
-            >
-              Xóa
-            </CustomButton>
-          </DialogActions>
+    <Dialog
+      open={open}
+      onClose={onClose}
+      PaperProps={{
+        sx: {
+          borderRadius: 2,
+          overflow: "hidden",
+          maxWidth: 420,
+          width: "90%",
+          bgcolor: "white",
+          border: "3px solid #F295B6",
+        },
+      }}
+      sx={{
+        fontFamily: "Quicksand, Mona Sans, Open Sans, Outfit, sans-serif",
+      }}
+    >
+      <div className="bg-white">
+        {/* Icon Header */}
+        <div className="flex justify-center pt-6 pb-3">
+          <div className="w-14 h-14 rounded-full border-2 border-red-500 flex items-center justify-center">
+            <AlertTriangle
+              size={28}
+              className="text-red-500"
+              strokeWidth={2.5}
+            />
+          </div>
         </div>
-      </Dialog>
-    </div>
+
+        {/* Title */}
+        <DialogTitle
+          sx={{
+            fontFamily: "Quicksand, Mona Sans, Open Sans, Outfit, sans-serif",
+            fontWeight: "700",
+            fontSize: 22,
+            textAlign: "center",
+            color: "#dc2626",
+            py: 1,
+            px: 3,
+          }}
+        >
+          {title}
+        </DialogTitle>
+
+        {/* Description */}
+        {description && (
+          <DialogContent sx={{ px: 3, py: 1.5 }}>
+            <p className="text-center text-gray-600 text-sm leading-relaxed">
+              {description}
+            </p>
+          </DialogContent>
+        )}
+
+        {/* Actions */}
+        <DialogActions
+          sx={{
+            px: 3,
+            pb: 3,
+            pt: 2.5,
+            gap: 2,
+            display: "flex",
+            justifyContent: "center",
+          }}
+        >
+          <CustomButton
+            onClick={onClose}
+            variant="outline"
+            style={{
+              minWidth: "110px",
+              borderColor: "#ef4444",
+              color: "#ef4444",
+            }}
+          >
+            Hủy
+          </CustomButton>
+          <CustomButton
+            onClick={handleConfirm}
+            variant="default"
+            className="flex items-center justify-center gap-2"
+            style={{
+              minWidth: "110px",
+              backgroundColor: "#ef4444",
+            }}
+          >
+            <Trash2 size={16} strokeWidth={2.5} />
+            Xóa
+          </CustomButton>
+        </DialogActions>
+      </div>
+    </Dialog>
   );
 };
 
-export default DeleteConfirmButton;
+export default DeleteConfirmDialog;

@@ -5,6 +5,7 @@ import PrivacySetting from "./components/PrivacySetting";
 import ApprovePostToggle from "./components/ApprovePostToggle";
 import ApproveMemberToggle from "./components/ApproveMemberToggle";
 import ForumInfoForm from "./components/ForumInfoForm";
+import CommunityEmojiSetting from "./components/CommunityEmojiSetting";
 
 import {
   useGetCommunitySettings,
@@ -106,6 +107,10 @@ const ForumSetting = () => {
           onSave={handleSave}
           saving={updateSettings.isPending}
         />
+      </div>
+
+      <div className="community-card">
+        <CommunityEmojiSetting communityId={communityId} />
       </div>
     </div>
   );

@@ -22,6 +22,8 @@ export interface IEmojiResponseDto {
   emojiUrl?: string;
   twemoji_url?: string;
   communityId?: number;
+  /** Flag để đánh dấu emoji bị disabled (không thuộc community của post) */
+  disabled?: boolean;
 }
 
 export interface IEmojiCommunityResponseDto {
@@ -38,6 +40,25 @@ export interface CategoryTab {
   key: string;
   label: string;
   icon: React.ReactNode;
+}
+
+// ============================================
+// 🎨 COMMUNITY EMOJI MANAGEMENT TYPES
+// ============================================
+
+/** Request DTO để tạo emoji mới cho community */
+export interface ICreateCommunityEmojiDto {
+  name: string;
+  emojiUrl: string;
+}
+
+/** Response DTO khi lấy danh sách emoji của một community */
+export interface ICommunityEmojiResponseDto {
+  id: number;
+  name: string;
+  emojiUrl: string;
+  communityId: number;
+  createdAt: string;
 }
 
 /**

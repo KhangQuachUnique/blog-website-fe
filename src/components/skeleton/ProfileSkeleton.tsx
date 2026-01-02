@@ -23,11 +23,11 @@ const ProfileSkeleton: React.FC = () => {
         }}
       >
         <Box sx={{ width: "900px", position: "relative" }}>
-          <Box sx={{ position: "absolute", top: -56 }}>
+          <Box sx={{ position: "absolute", top: -75 }}>
             <Skeleton
               variant="circular"
-              width={112}
-              height={112}
+              width={150}
+              height={150}
               animation="wave"
             />
           </Box>
@@ -40,7 +40,7 @@ const ProfileSkeleton: React.FC = () => {
             direction="row"
             alignItems="center"
             justifyContent="space-between"
-            sx={{ mb: 2 }}
+            sx={{ mb: 2, mt: 3 }}
           >
             <Stack spacing={0.5}>
               <Skeleton

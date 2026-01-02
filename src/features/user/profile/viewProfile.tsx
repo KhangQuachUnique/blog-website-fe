@@ -5,7 +5,7 @@ import { MdGroup } from "react-icons/md";
 import { BsFileText } from "react-icons/bs";
 import { BsGenderMale } from "react-icons/bs";
 import { BsGenderFemale } from "react-icons/bs";
-import { Users } from "lucide-react";
+import { Users, ShieldOff, ShieldCheck } from "lucide-react";
 import Card from "../../../components/card/Card";
 import "../../../styles/profile/profile.css";
 import "../../../styles/profile/tabs.css";
@@ -14,15 +14,18 @@ import { stringAvatar } from "../../../utils/avatarHelper";
 import { MdEmail, MdPhone } from "react-icons/md";
 import CustomButton from "../../../components/button";
 import { useToast } from "../../../contexts/toast";
+import { useLoginRequired } from "../../../hooks/useLoginRequired";
 import { useAuth } from "../../../hooks/useAuth";
 import { useGetUserProfile } from "../../../hooks/useUser";
 import FollowModal from "../../../components/profile/FollowModal";
 import ProfileSkeleton from "../../../components/skeleton/ProfileSkeleton";
+import { MoreButton } from "../../../components/moreButton";
 
 const ViewProfile = () => {
   const { userId } = useParams<{ userId: string }>();
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const { requireLogin } = useLoginRequired();
   const { user: currentUser } = useAuth();
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"posts" | "communities">("posts");
@@ -36,7 +39,6 @@ const ViewProfile = () => {
     "followers" | "following"
   >("followers");
   const [isBlocked, setIsBlocked] = useState(false);
-  const [blockLoading, setBlockLoading] = useState(false);
 
   // Đóng dropdown khi click bên ngoài
   useEffect(() => {
@@ -72,10 +74,23 @@ const ViewProfile = () => {
         message: queryError.message || "Không thể tải thông tin hồ sơ",
       });
     }
-  }, [fetchedProfile, queryLoading, queryError, userId, currentUser?.id]);
+  }, [
+    fetchedProfile,
+    queryLoading,
+    queryError,
+    userId,
+    currentUser?.id,
+    showToast,
+  ]);
 
   const handleFollowToggle = async () => {
     if (!fetchedProfile || isOwnProfile) return;
+
+    if (
+      !requireLogin({ message: "Vui lòng đăng nhập để theo dõi người dùng" })
+    ) {
+      return;
+    }
 
     setFollowLoading(true);
     try {
@@ -108,7 +123,10 @@ const ViewProfile = () => {
   const handleBlockToggle = async () => {
     if (!fetchedProfile || isOwnProfile) return;
 
-    setBlockLoading(true);
+    if (!requireLogin({ message: "Vui lòng đăng nhập để chặn người dùng" })) {
+      return;
+    }
+
     try {
       if (isBlocked) {
         await userService.unblockUser(fetchedProfile.id);
@@ -130,8 +148,6 @@ const ViewProfile = () => {
         message:
           error.response?.data?.message || error.message || "Có lỗi xảy ra",
       });
-    } finally {
-      setBlockLoading(false);
     }
   };
 
@@ -227,9 +243,26 @@ const ViewProfile = () => {
                   </div>
                 </div>
               </div>
-              <div className="flex items-start mt-2 gap-2">
+              <div className="flex items-center mt-2 gap-3">
                 {!isOwnProfile && (
                   <>
+                    <MoreButton
+                      menuItems={[
+                        {
+                          label: isBlocked ? "Bỏ chặn" : "Chặn người dùng",
+                          icon: isBlocked ? (
+                            <ShieldCheck size={16} strokeWidth={2.5} />
+                          ) : (
+                            <ShieldOff size={16} strokeWidth={2.5} />
+                          ),
+                          onClick: handleBlockToggle,
+                          danger: !isBlocked,
+                        },
+                      ]}
+                      buttonSize="medium"
+                      iconSize={22}
+                      tooltip="Tùy chọn"
+                    />
                     <CustomButton
                       variant={isFollowing ? "default" : "outline"}
                       style={{
@@ -247,22 +280,6 @@ const ViewProfile = () => {
                         : isFollowing
                         ? "Đã theo dõi"
                         : "Theo dõi"}
-                    </CustomButton>
-                    <CustomButton
-                      variant={isBlocked ? "default" : "outline"}
-                      style={{
-                        color: isBlocked ? "#fff" : "#ef4444",
-                        borderColor: "#ef4444",
-                        backgroundColor: isBlocked ? "#ef4444" : "transparent",
-                      }}
-                      onClick={handleBlockToggle}
-                      disabled={blockLoading}
-                    >
-                      {blockLoading
-                        ? "Đang xử lý..."
-                        : isBlocked
-                        ? "Đã chặn"
-                        : "Chặn"}
                     </CustomButton>
                   </>
                 )}

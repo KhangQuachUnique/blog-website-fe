@@ -12,12 +12,15 @@ interface BlockCommentsSidebarProps {
     username: string;
     avatarUrl?: string;
   };
+  /** Community ID để lọc emoji reaction cho comment */
+  communityId?: number;
 }
 
 export const BlockCommentsSidebar: React.FC<BlockCommentsSidebarProps> = ({
   isOpen,
   onClose,
   blockId,
+  communityId,
 }) => {
   return (
     <Drawer
@@ -35,7 +38,7 @@ export const BlockCommentsSidebar: React.FC<BlockCommentsSidebarProps> = ({
     >
       <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
         <Box sx={{ p: 2, overflowY: "auto", flex: 1 }}>
-          <BlockCommentsSection blockId={blockId} />
+          <BlockCommentsSection blockId={blockId} communityId={communityId} />
         </Box>
       </Box>
     </Drawer>

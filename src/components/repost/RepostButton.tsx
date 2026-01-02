@@ -5,6 +5,7 @@ import RepostModal from "./RepostModal";
 import type { RepostFormData } from "./RepostModal";
 import { useCreateRepost } from "../../hooks/useRepost";
 import { useToast } from "../../contexts/toast";
+import { useLoginRequired } from "../../hooks/useLoginRequired";
 import type { IPostResponseDto } from "../../types/post";
 import { EPostType as PostTypeEnum } from "../../types/post";
 
@@ -68,12 +69,11 @@ const RepostButton: React.FC<RepostButtonProps> = ({
 }) => {
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const { requireLogin } = useLoginRequired();
   const [showModal, setShowModal] = useState(false);
 
   // Repost mutation hook
   const { mutate: createRepost, isPending: isReposting } = useCreateRepost();
-
-  const isLoggedIn = userId > 0;
 
   // Không cho phép repost bài repost (chỉ repost bài gốc PERSONAL hoặc COMMUNITY)
   const canRepost = post.type !== PostTypeEnum.REPOST;
@@ -89,12 +89,7 @@ const RepostButton: React.FC<RepostButtonProps> = ({
       return;
     }
 
-    if (!isLoggedIn) {
-      showToast({
-        type: "error",
-        message: "Vui lòng đăng nhập để đăng lại bài viết",
-        duration: 3000,
-      });
+    if (!requireLogin({ message: "Vui lòng đăng nhập để đăng lại bài viết" })) {
       return;
     }
 

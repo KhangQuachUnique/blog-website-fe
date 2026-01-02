@@ -20,6 +20,8 @@ interface EmojiPickerProps {
     emojiUrl?: string;
   }) => void;
   onClose: () => void;
+  /** Community ID để hiển thị tooltip cho emoji bị disabled */
+  communityId?: number;
 }
 
 /**
@@ -30,6 +32,7 @@ export const EmojiPicker: React.FC<EmojiPickerProps> = ({
   recent = [],
   onSelect,
   onClose,
+  communityId,
 }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
@@ -107,6 +110,9 @@ export const EmojiPicker: React.FC<EmojiPickerProps> = ({
   }, [categories, isSearching]);
 
   const handleEmojiClick = (emoji: IEmojiResponseDto) => {
+    // Không cho click emoji bị disabled
+    if (emoji.disabled) return;
+
     onSelect({
       emojiId: emoji.id,
       codepoint: emoji.codepoint,
@@ -125,48 +131,67 @@ export const EmojiPicker: React.FC<EmojiPickerProps> = ({
         justifyContent: "start",
       }}
     >
-      {emojis.map((emoji) => (
-        <button
-          key={emoji.codepoint}
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            handleEmojiClick(emoji);
-          }}
-          onMouseDown={(e) => {
-            e.preventDefault(); // Prevent focus/active state
-          }}
-          style={{
-            width: "40px",
-            height: "40px",
-            padding: "0",
-            backgroundColor: "transparent",
-            border: "none",
-            borderRadius: "10px",
-            cursor: "pointer",
-            transition: "background-color 0.1s ease",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            position: "relative",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = "#FFE7F0";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = "transparent";
-          }}
-        >
-          <img
-            src={emoji.twemoji_url ? emoji.twemoji_url : emoji.emojiUrl}
-            style={{
-              width: "35px",
-              height: "35px",
-              pointerEvents: "none",
+      {emojis.map((emoji) => {
+        const isDisabled = emoji.disabled;
+
+        return (
+          <button
+            key={emoji.codepoint || emoji.id}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              if (!isDisabled) {
+                handleEmojiClick(emoji);
+              }
             }}
-          />
-        </button>
-      ))}
+            onMouseDown={(e) => {
+              e.preventDefault(); // Prevent focus/active state
+            }}
+            title={
+              isDisabled
+                ? communityId
+                  ? "Emoji này không thuộc cộng đồng này"
+                  : "Chỉ dùng được emoji tùy chỉnh trong bài viết cộng đồng"
+                : undefined
+            }
+            style={{
+              width: "40px",
+              height: "40px",
+              padding: "0",
+              backgroundColor: "transparent",
+              border: "none",
+              borderRadius: "10px",
+              cursor: isDisabled ? "not-allowed" : "pointer",
+              transition: "background-color 0.1s ease",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              position: "relative",
+              opacity: isDisabled ? 0.35 : 1,
+              filter: isDisabled ? "grayscale(100%)" : "none",
+            }}
+            onMouseEnter={(e) => {
+              if (!isDisabled) {
+                e.currentTarget.style.backgroundColor = "#FFE7F0";
+              }
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = "transparent";
+            }}
+            disabled={isDisabled}
+          >
+            <img
+              src={emoji.twemoji_url ? emoji.twemoji_url : emoji.emojiUrl}
+              style={{
+                width: "35px",
+                height: "35px",
+                pointerEvents: "none",
+              }}
+              alt=""
+            />
+          </button>
+        );
+      })}
     </div>
   );
 

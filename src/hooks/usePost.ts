@@ -62,23 +62,23 @@ export const useUpdatePost = () => {
  */
 export const useHidePost = () => {
   const qc = useQueryClient();
-  
+
   return useMutation({
     mutationFn: (postId: number) => hidePost(postId),
-    
+
     onSuccess: (_, postId) => {
       qc.setQueryData<IPostResponseDto[]>(["posts"], (oldPosts) => {
         if (!oldPosts) return [];
         return oldPosts.map((post) =>
-          post.id === postId 
+          post.id === postId
             ? { ...post, status: EBlogPostStatus.HIDDEN }
             : post
         );
       });
 
       qc.setQueryData<IPostResponseDto>(["post", postId], (oldPost) => {
-          if (!oldPost) return oldPost;
-          return { ...oldPost, status: EBlogPostStatus.HIDDEN };
+        if (!oldPost) return oldPost;
+        return { ...oldPost, status: EBlogPostStatus.HIDDEN };
       });
 
       qc.invalidateQueries({ queryKey: ["posts"] });
@@ -94,20 +94,20 @@ export const useRestorePost = () => {
 
   return useMutation({
     mutationFn: (postId: number) => restorePost(postId),
-    
+
     onSuccess: (_, postId) => {
       qc.setQueryData<IPostResponseDto[]>(["posts"], (oldPosts) => {
         if (!oldPosts) return [];
         return oldPosts.map((post) =>
-          post.id === postId 
+          post.id === postId
             ? { ...post, status: EBlogPostStatus.ACTIVE }
             : post
         );
       });
 
       qc.setQueryData<IPostResponseDto>(["post", postId], (oldPost) => {
-          if (!oldPost) return oldPost;
-          return { ...oldPost, status: EBlogPostStatus.ACTIVE };
+        if (!oldPost) return oldPost;
+        return { ...oldPost, status: EBlogPostStatus.ACTIVE };
       });
 
       qc.invalidateQueries({ queryKey: ["posts"] });
@@ -145,15 +145,26 @@ export const useApprovePost = (communityId: number) => {
   });
 };
 
-export const useDeletePost = (communityId: number) => {
+export const useDeletePost = (communityId: number, userId?: number) => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (postId: number) => deletePost(postId),
     onSuccess: () => {
+      // Invalidate community posts
       qc.invalidateQueries({
         queryKey: ["community-manage-posts", communityId],
       });
       qc.invalidateQueries({ queryKey: ["community-posts", communityId] });
+
+      // Invalidate user profile to update post count
+      if (userId) {
+        qc.invalidateQueries({
+          queryKey: ["userProfile", userId],
+        });
+      }
+      qc.invalidateQueries({
+        queryKey: ["userProfile", "me"],
+      });
     },
   });
 };

@@ -308,7 +308,7 @@ const PostDetailsPage: React.FC = () => {
             <div>
               Bởi{" "}
               <Link
-                to={`/user/${postData.author?.id}`}
+                to={`/profile/${postData.author?.id}`}
                 className="text-md text-[#F295B6] hover:underline"
               >
                 {postData.author?.username ?? "Người dùng"}
@@ -337,7 +337,17 @@ const PostDetailsPage: React.FC = () => {
 
         {/*Reactions section*/}
         <div className="mt-10">
-          <ReactionSection postId={postId} reactions={reacts} />
+          <ReactionSection
+            postId={postId}
+            reactions={reacts}
+            communityId={
+              postData?.community
+                ? typeof postData.community === "string"
+                  ? undefined
+                  : postData.community.id
+                : undefined
+            }
+          />
         </div>
       </div>
 
@@ -395,7 +405,16 @@ const PostDetailsPage: React.FC = () => {
       {/* [CHANGE] Hiển thị comments section cho tất cả user, form sẽ tự xử lý kiểm tra login */}
       {!isReviewMode && (
         <div style={{ width: GRID_SETTINGS.width, marginTop: 32 }}>
-          <PostCommentsSection postId={postData.id} />
+          <PostCommentsSection
+            postId={postData.id}
+            communityId={
+              postData?.community
+                ? typeof postData.community === "string"
+                  ? undefined
+                  : postData.community.id
+                : undefined
+            }
+          />
         </div>
       )}
 
