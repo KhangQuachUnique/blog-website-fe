@@ -7,10 +7,13 @@ import type { SortType } from "../../types/comment";
 
 interface PostCommentsProps {
   postId: number;
+  /** Community ID để lọc emoji reaction cho comment */
+  communityId?: number;
 }
 
 export const PostCommentsSection: React.FC<PostCommentsProps> = ({
   postId,
+  communityId,
 }) => {
   const [sortBy, setSortBy] = React.useState<SortType>("newest");
   const [openSort, setOpenSort] = React.useState(false);
@@ -160,7 +163,12 @@ export const PostCommentsSection: React.FC<PostCommentsProps> = ({
           </div>
         ) : (
           commentsData?.comments.map((comment) => (
-            <CommentItem key={comment.id} comment={comment} postId={postId} />
+            <CommentItem
+              key={comment.id}
+              comment={comment}
+              postId={postId}
+              communityId={communityId}
+            />
           ))
         )}
       </div>

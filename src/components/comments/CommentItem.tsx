@@ -16,12 +16,15 @@ interface CommentItemProps {
   comment: ICommentResponse;
   postId?: number;
   blockId?: number;
+  /** Community ID để lọc emoji reaction */
+  communityId?: number;
 }
 
 export const CommentItem: React.FC<CommentItemProps> = ({
   comment,
   postId,
   blockId,
+  communityId,
 }) => {
   const [showReplyForm, setShowReplyForm] = useState(false);
   const [showReplies, setShowReplies] = useState(false);
@@ -144,6 +147,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
             postId={postId}
             blockId={blockId}
             reactions={comment.reacts?.emojis || []}
+            communityId={communityId}
           />
 
           {/* Comment Actions */}

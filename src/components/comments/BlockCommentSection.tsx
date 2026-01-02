@@ -6,10 +6,13 @@ import BlockCommentsSectionSkeleton from "../skeleton/BlockCommentsSectionSkelet
 
 interface BlockCommentsProps {
   blockId: number;
+  /** Community ID để lọc emoji reaction cho comment */
+  communityId?: number;
 }
 
 export const BlockCommentsSection: React.FC<BlockCommentsProps> = ({
   blockId,
+  communityId,
 }) => {
   const {
     data: commentsData,
@@ -53,7 +56,12 @@ export const BlockCommentsSection: React.FC<BlockCommentsProps> = ({
           </div>
         ) : (
           commentsData?.map((comment) => (
-            <CommentItem key={comment.id} comment={comment} blockId={blockId} />
+            <CommentItem
+              key={comment.id}
+              comment={comment}
+              blockId={blockId}
+              communityId={communityId}
+            />
           ))
         )}
       </div>

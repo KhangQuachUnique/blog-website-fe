@@ -25,6 +25,8 @@ interface EmojiSelectorProps {
     emojiUrl?: string;
   }) => void;
   onRecentUpdate?: (codepoint: string) => void;
+  /** Community ID để hiển thị tooltip cho emoji bị disabled */
+  communityId?: number;
 }
 
 /**
@@ -35,6 +37,7 @@ export const EmojiSelector: React.FC<EmojiSelectorProps> = ({
   recentCodepoints,
   onToggleReact,
   onRecentUpdate,
+  communityId,
 }) => {
   const recentEmojis = useMemo(() => {
     if (recentCodepoints && recentCodepoints.length > 0) {
@@ -231,6 +234,7 @@ export const EmojiSelector: React.FC<EmojiSelectorProps> = ({
               recent={recentEmojis}
               onSelect={handleSelect}
               onClose={() => setIsPickerOpen(false)}
+              communityId={communityId}
             />
           </div>,
           document.body

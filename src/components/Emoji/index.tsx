@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useAuthUser } from "../../hooks/useAuth";
 import {
   useToggleCommentReact,
@@ -16,6 +17,8 @@ export interface ReactionSectionProps {
   blockId?: number;
   commentId?: number;
   reactions: EmojiReactSummaryDto[];
+  /** Community ID để lọc custom emoji (chỉ cho phép dùng emoji của community này) */
+  communityId?: number;
 }
 
 const ReactionSection = ({
@@ -24,13 +27,52 @@ const ReactionSection = ({
   blockId,
   commentId,
   reactions,
+  communityId,
 }: ReactionSectionProps) => {
   const { user, isAuthenticated } = useAuthUser();
   const { recent, add } = useRecentEmojis();
-  const emojisData = useEmojiData();
+  const allEmojisData = useEmojiData();
   const postMutation = useTogglePostReact();
   const commentMutation = useToggleCommentReact();
   const { showToast } = useToast();
+
+  // Lọc emoji data:
+  // - Unicode emoji: luôn hiển thị và cho phép click
+  // - Custom emoji: chỉ hiển thị của community này (nếu có communityId)
+  const filteredEmojisData = useMemo(() => {
+    if (!allEmojisData) return [];
+
+    return allEmojisData.map((categoryData) => {
+      // Nếu là Unicode category (category là string)
+      if (typeof categoryData.category === "string") {
+        return categoryData; // Giữ nguyên
+      }
+
+      // Nếu là Custom emoji category (category là ICommunityDTO)
+      const community = categoryData.category;
+
+      // Nếu không có communityId (bài viết cá nhân), không hiển thị custom emoji
+      if (!communityId) {
+        return {
+          ...categoryData,
+          emojis: categoryData.emojis.map((e) => ({
+            ...e,
+            disabled: true, // Đánh dấu disabled
+          })),
+        };
+      }
+
+      // Nếu có communityId, chỉ enable emoji của community đó
+      const isAllowed = community.id === communityId;
+      return {
+        ...categoryData,
+        emojis: categoryData.emojis.map((e) => ({
+          ...e,
+          disabled: !isAllowed, // Disable nếu không phải community này
+        })),
+      };
+    });
+  }, [allEmojisData, communityId]);
 
   const handleToggleReact = ({
     emojiId,
@@ -81,10 +123,11 @@ const ReactionSection = ({
         onReactionClick={handleToggleReact}
       />
       <EmojiSelector
-        emojisData={emojisData ?? []}
+        emojisData={filteredEmojisData ?? []}
         onToggleReact={handleToggleReact}
         recentCodepoints={recent}
         onRecentUpdate={add}
+        communityId={communityId}
       />
     </div>
   );
