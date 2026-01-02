@@ -200,12 +200,12 @@ const EditPostForm = ({
       if (imageUrls["thumbnail"]) {
         return imageUrls["thumbnail"];
       }
-      
+
       // Priority 2: Existing thumbnailUrl that's not a blob (already uploaded)
       if (thumbnailUrl && !isBlobUrl(thumbnailUrl)) {
         return thumbnailUrl;
       }
-      
+
       // Priority 3: If thumbnailUrl is a blob, it means we have a file to upload
       // This will be handled by uploadMultipleFiles if "thumbnail" key exists in imageForm
       return undefined;

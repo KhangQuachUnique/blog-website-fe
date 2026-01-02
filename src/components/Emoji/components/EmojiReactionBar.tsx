@@ -21,7 +21,8 @@ export const EmojiReactionBar: React.FC<EmojiReactionBarProps> = React.memo(
   ({ reactions, onReactionClick }) => {
     if (reactions.length === 0) return null;
 
-    const [hoveredReaction, setHoveredReaction] = useState<EmojiReactSummaryDto | null>(null);
+    const [hoveredReaction, setHoveredReaction] =
+      useState<EmojiReactSummaryDto | null>(null);
     const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0 });
     const buttonRefs = useRef<Map<number, HTMLButtonElement>>(new Map());
 
@@ -107,40 +108,41 @@ export const EmojiReactionBar: React.FC<EmojiReactionBarProps> = React.memo(
             <span className="text-sm">{reaction.totalCount}</span>
           </button>
         ))}
-        
+
         {/* Tooltip rendered via Portal at document body */}
-        {hoveredReaction && createPortal(
-          <div
-            style={{
-              position: "fixed",
-              top: `${tooltipPosition.top}px`,
-              left: `${tooltipPosition.left}px`,
-              transform: "translate(-50%, -100%)",
-              zIndex: 9999,
-              pointerEvents: "none",
-            }}
-          >
+        {hoveredReaction &&
+          createPortal(
             <div
-              className="px-3 py-2 bg-[#4A3C42] text-white text-xs font-bold rounded-lg whitespace-nowrap transition-opacity duration-200"
               style={{
-                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+                position: "fixed",
+                top: `${tooltipPosition.top}px`,
+                left: `${tooltipPosition.left}px`,
+                transform: "translate(-50%, -100%)",
+                zIndex: 9999,
+                pointerEvents: "none",
               }}
             >
-              <span className="text-[#F295B6]">{hoveredReaction.name}</span>
-              
-              {/* Arrow */}
               <div
-                className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0"
+                className="px-3 py-2 bg-[#4A3C42] text-white text-xs font-bold rounded-lg whitespace-nowrap transition-opacity duration-200"
                 style={{
-                  borderLeft: "6px solid transparent",
-                  borderRight: "6px solid transparent",
-                  borderTop: "6px solid #4A3C42",
+                  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
                 }}
-              />
-            </div>
-          </div>,
-          document.body
-        )}
+              >
+                <span className="text-[#F295B6]">{hoveredReaction.name}</span>
+
+                {/* Arrow */}
+                <div
+                  className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0"
+                  style={{
+                    borderLeft: "6px solid transparent",
+                    borderRight: "6px solid transparent",
+                    borderTop: "6px solid #4A3C42",
+                  }}
+                />
+              </div>
+            </div>,
+            document.body
+          )}
       </div>
     );
   }
