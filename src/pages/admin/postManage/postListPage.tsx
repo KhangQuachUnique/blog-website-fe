@@ -4,7 +4,6 @@ import { BiChevronLeft, BiChevronRight, BiChevronsLeft, BiChevronsRight } from "
 import { FaBookmark } from "react-icons/fa";
 import { useGetAllPosts, useHidePost, useRestorePost } from "../../../hooks/usePost"; 
 import { useResolveReport } from "../../../hooks/useReport";
-import { useToast } from "../../../contexts/toast";
 import PostsTable from "../../../features/admin/postManage/PostsTable";
 import { type IPostResponseDto, EBlogPostStatus } from "../../../types/post";
 import type { EReportType } from "../../../types/report";
