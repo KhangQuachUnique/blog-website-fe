@@ -308,7 +308,7 @@ const PostDetailsPage: React.FC = () => {
             <div>
               Bởi{" "}
               <Link
-                to={`/user/${postData.author?.id}`}
+                to={`/profile/${postData.author?.id}`}
                 className="text-md text-[#F295B6] hover:underline"
               >
                 {postData.author?.username ?? "Người dùng"}

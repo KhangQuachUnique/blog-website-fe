@@ -45,18 +45,8 @@ const MoreMenu: React.FC<{
   onShare: () => void;
   onClose: () => void;
   postId: number;
-  currentUserId: number;
-  onLoginRequired: () => void;
   anchorRef?: React.RefObject<HTMLButtonElement | null>;
-}> = ({
-  visible,
-  onShare,
-  onClose,
-  postId,
-  currentUserId,
-  onLoginRequired,
-  anchorRef,
-}) => {
+}> = ({ visible, onShare, onClose, postId, anchorRef }) => {
   const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -186,10 +176,8 @@ const MoreMenu: React.FC<{
         <ReportButton
           type={EReportType.POST}
           targetId={postId}
-          currentUserId={currentUserId}
           onClose={onClose}
           onSuccess={onClose}
-          onLoginRequired={onLoginRequired}
           renderButton={({ onClick }) => (
             <MenuItem
               icon={<Flag size={16} strokeWidth={2.5} />}
@@ -483,15 +471,6 @@ const FloatingInteractBar: React.FC<FloatingInteractBarProps> = ({
         onShare={handleShare}
         onClose={handleCloseMoreMenu}
         postId={postId}
-        currentUserId={userId}
-        onLoginRequired={() => {
-          showToast({
-            type: "info",
-            message: "Vui lòng đăng nhập để tiếp tục",
-            duration: 3000,
-          });
-          setShowMoreMenu(false);
-        }}
         anchorRef={moreButtonRef}
       />
     </div>

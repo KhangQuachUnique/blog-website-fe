@@ -14,6 +14,7 @@ import { stringAvatar } from "../../../utils/avatarHelper";
 import { MdEmail, MdPhone } from "react-icons/md";
 import CustomButton from "../../../components/button";
 import { useToast } from "../../../contexts/toast";
+import { useLoginRequired } from "../../../hooks/useLoginRequired";
 import { useAuth } from "../../../hooks/useAuth";
 import { useGetUserProfile } from "../../../hooks/useUser";
 import FollowModal from "../../../components/profile/FollowModal";
@@ -23,6 +24,7 @@ const ViewProfile = () => {
   const { userId } = useParams<{ userId: string }>();
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const { requireLogin } = useLoginRequired();
   const { user: currentUser } = useAuth();
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"posts" | "communities">("posts");
@@ -72,10 +74,23 @@ const ViewProfile = () => {
         message: queryError.message || "Không thể tải thông tin hồ sơ",
       });
     }
-  }, [fetchedProfile, queryLoading, queryError, userId, currentUser?.id]);
+  }, [
+    fetchedProfile,
+    queryLoading,
+    queryError,
+    userId,
+    currentUser?.id,
+    showToast,
+  ]);
 
   const handleFollowToggle = async () => {
     if (!fetchedProfile || isOwnProfile) return;
+
+    if (
+      !requireLogin({ message: "Vui lòng đăng nhập để theo dõi người dùng" })
+    ) {
+      return;
+    }
 
     setFollowLoading(true);
     try {
@@ -107,6 +122,10 @@ const ViewProfile = () => {
 
   const handleBlockToggle = async () => {
     if (!fetchedProfile || isOwnProfile) return;
+
+    if (!requireLogin({ message: "Vui lòng đăng nhập để chặn người dùng" })) {
+      return;
+    }
 
     setBlockLoading(true);
     try {

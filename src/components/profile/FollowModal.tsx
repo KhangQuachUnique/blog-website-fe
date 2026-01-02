@@ -4,6 +4,7 @@ import Avatar from "@mui/material/Avatar";
 import { stringAvatar } from "../../utils/avatarHelper";
 import * as userService from "../../services/user/userService";
 import { useToast } from "../../contexts/toast";
+import { useLoginRequired } from "../../hooks/useLoginRequired";
 import { useNavigate } from "react-router-dom";
 import type { UserListItem } from "../../types/user";
 import { IoClose } from "react-icons/io5";
@@ -26,6 +27,7 @@ const FollowModal = ({
   const [users, setUsers] = useState<UserListItem[]>([]);
   const [loading, setLoading] = useState(false);
   const { showToast } = useToast();
+  const { requireLogin } = useLoginRequired();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -60,6 +62,12 @@ const FollowModal = ({
   };
 
   const handleFollowToggle = async (targetUser: UserListItem) => {
+    if (
+      !requireLogin({ message: "Vui lòng đăng nhập để theo dõi người dùng" })
+    ) {
+      return;
+    }
+
     if (!currentUserId) return;
 
     try {
