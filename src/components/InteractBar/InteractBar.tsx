@@ -1,6 +1,5 @@
-import React, { useState, useRef, useEffect } from "react";
-import { createPortal } from "react-dom";
-import { MoreHorizontal, Share2, Flag, Bookmark } from "lucide-react";
+import React, { useState } from "react";
+import { Share2, Flag, Bookmark, Edit, Trash2 } from "lucide-react";
 import { useCheckSaved, useToggleSavePost } from "../../hooks/useSavedPost";
 import ReportButton from "../report/ReportButton";
 import { EReportType } from "../../types/report";
@@ -9,7 +8,13 @@ import type { IVotesSummaryDto } from "../../types/user-vote";
 import { useToast } from "../../contexts/toast";
 import { useLoginRequired } from "../../hooks/useLoginRequired";
 import { RepostButton } from "../repost";
+import { MoreButton } from "../moreButton";
+import type { MoreMenuItem } from "../moreButton";
 import { EPostType, type IPostResponseDto } from "../../types/post";
+import DeleteConfirmDialog from "../deleteConfirmButton";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../hooks/useAuth";
+import { useDeletePost } from "../../hooks/usePost";
 
 // ============================================
 // 🎨 BLOOKIE DESIGN SYSTEM - PASTEL PINK EDITION
@@ -36,161 +41,6 @@ const THEME = {
   shadowStrong: "0 8px 32px rgba(242, 149, 182, 0.25)",
 };
 
-// More Menu Dropdown (rendered in a portal so it overlays without affecting layout)
-const MoreMenu: React.FC<{
-  visible: boolean;
-  onShare: () => void;
-  onClose: () => void;
-  postId: number;
-  anchorRef?: React.RefObject<HTMLButtonElement | null>;
-}> = ({ visible, onShare, onClose, postId, anchorRef }) => {
-  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
-  const menuRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (visible && anchorRef?.current) {
-      const rect = anchorRef.current.getBoundingClientRect();
-      setMenuPosition({
-        top: rect.bottom + 8,
-        left: rect.right,
-      });
-    }
-  }, [visible, anchorRef]);
-
-  // Close menu when clicking outside
-  useEffect(() => {
-    if (!visible) return;
-
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        menuRef.current &&
-        !menuRef.current.contains(event.target as Node) &&
-        anchorRef?.current &&
-        !anchorRef.current.contains(event.target as Node)
-      ) {
-        onClose();
-      }
-    };
-
-    // Delay adding listener to prevent immediate close
-    const timeoutId = setTimeout(() => {
-      document.addEventListener("mousedown", handleClickOutside);
-    }, 0);
-
-    return () => {
-      clearTimeout(timeoutId);
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [visible, onClose, anchorRef]);
-
-  if (!visible) return null;
-
-  const MenuItem: React.FC<{
-    icon: React.ReactNode;
-    label: string;
-    onClick: () => void;
-    danger?: boolean;
-  }> = ({ icon, label, onClick, danger }) => {
-    const [isHovered, setIsHovered] = useState(false);
-
-    return (
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          onClick();
-        }}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "12px",
-          width: "100%",
-          padding: "12px 16px",
-          border: "none",
-          background: isHovered ? THEME.tertiary : "transparent",
-          cursor: "pointer",
-          fontFamily: "'Quicksand', sans-serif",
-          fontSize: "14px",
-          fontWeight: 600,
-          color: danger ? "#E57373" : THEME.text,
-          transition: "all 0.15s ease",
-          textAlign: "left",
-        }}
-      >
-        <span
-          style={{
-            display: "flex",
-            color: danger ? "#E57373" : THEME.primary,
-            opacity: 0.9,
-          }}
-        >
-          {icon}
-        </span>
-        {label}
-      </button>
-    );
-  };
-
-  const menu = (
-    <>
-      <style>{`
-        @keyframes menuSlideIn {
-          0% { opacity: 0; transform: translateY(-8px) scale(0.95); }
-          100% { opacity: 1; transform: translateY(0) scale(1); }
-        }
-      `}</style>
-      <div
-        ref={menuRef}
-        style={{
-          position: "fixed",
-          top: `${menuPosition.top}px`,
-          left: `${menuPosition.left}px`,
-          transform: "translateX(-100%)",
-          minWidth: "160px",
-          background: THEME.white,
-          borderRadius: "16px",
-          border: `1.5px solid ${THEME.secondary}`,
-          overflow: "hidden",
-          boxShadow: THEME.shadowMedium,
-          // animation: 'menuSlideIn 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
-          zIndex: 1000,
-        }}
-        onMouseDown={(e) => e.stopPropagation()}
-      >
-        <MenuItem
-          icon={<Share2 size={16} strokeWidth={2.5} />}
-          label="Chia sẻ"
-          onClick={onShare}
-        />
-        <div
-          style={{
-            height: "1px",
-            background: THEME.tertiary,
-            margin: "4px 12px",
-          }}
-        />
-        <ReportButton
-          type={EReportType.POST}
-          targetId={postId}
-          onClose={onClose}
-          onSuccess={onClose}
-          renderButton={({ onClick }) => (
-            <MenuItem
-              icon={<Flag size={16} strokeWidth={2.5} />}
-              label="Báo cáo"
-              onClick={onClick}
-              danger
-            />
-          )}
-        />
-      </div>
-    </>
-  );
-
-  return createPortal(menu, document.body);
-};
-
 // ============================================
 // 🎪 MAIN COMPONENT
 // ============================================
@@ -211,17 +61,25 @@ const InteractBar: React.FC<InteractBarProps> = ({
   // postType không cần dùng trực tiếp ở đây, RepostButton tự xử lý
   post,
 }) => {
-  const [showMoreMenu, setShowMoreMenu] = useState(false);
-  const [moreHovered, setMoreHovered] = useState(false);
   const wrapperRef = React.useRef<HTMLDivElement | null>(null);
   const { showToast } = useToast();
   const { requireLogin } = useLoginRequired();
-
-  const moreMenuRef = useRef<HTMLDivElement>(null);
-  const moreButtonRef = useRef<HTMLButtonElement>(null);
-  const emojiPickerRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
+  const { user: currentUser } = useAuth();
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const isLoggedIn = userId > 0;
+  const isOwnPost = post && currentUser && post.author.id === currentUser.id;
+
+  // Delete post hook
+  const { mutate: deletePostMutation } = useDeletePost(
+    post?.community
+      ? typeof post.community === "string"
+        ? 0
+        : post.community.id
+      : 0,
+    currentUser?.id
+  );
 
   // 🔖 Saved post hooks
   const { data: isSaved = false } = useCheckSaved(
@@ -248,30 +106,9 @@ const InteractBar: React.FC<InteractBarProps> = ({
     );
   };
 
-  // Close dropdowns on outside click
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        moreMenuRef.current &&
-        !moreMenuRef.current.contains(event.target as Node)
-      ) {
-        setShowMoreMenu(false);
-      }
-      if (
-        emojiPickerRef.current &&
-        !emojiPickerRef.current.contains(event.target as Node)
-      ) {
-        // setShowEmojiPicker(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
   // Menu handlers
   const handleShare = () => {
     navigator.clipboard.writeText(`${window.location.origin}/post/${postId}`);
-    setShowMoreMenu(false);
     showToast({
       type: "success",
       message: "Link đã được sao chép vào clipboard",
@@ -279,9 +116,53 @@ const InteractBar: React.FC<InteractBarProps> = ({
     });
   };
 
-  const handleCloseMoreMenu = () => {
-    setShowMoreMenu(false);
+  const handleEdit = () => {
+    navigate(`/post/edit/${postId}`);
   };
+
+  const handleDelete = () => {
+    deletePostMutation(postId, {
+      onSuccess: () => {
+        showToast({
+          type: "success",
+          message: "Xóa bài viết thành công",
+          duration: 2000,
+        });
+        setShowDeleteDialog(false);
+      },
+      onError: () => {
+        showToast({
+          type: "error",
+          message: "Không thể xóa bài viết",
+          duration: 2000,
+        });
+      },
+    });
+  };
+
+  // Tạo menu items cho MoreButton
+  const moreMenuItems: MoreMenuItem[] = [
+    {
+      label: "Chia sẻ",
+      icon: <Share2 size={16} strokeWidth={2.5} />,
+      onClick: handleShare,
+    },
+    ...(isOwnPost
+      ? [
+          {
+            label: "Chỉnh sửa",
+            icon: <Edit size={16} strokeWidth={2.5} />,
+            onClick: handleEdit,
+          },
+          {
+            label: "Xóa",
+            icon: <Trash2 size={16} strokeWidth={2.5} />,
+            onClick: () => setShowDeleteDialog(true),
+            danger: true,
+          },
+        ]
+      : []),
+  ];
 
   // When any floating UI is visible, increase bottom padding so the popup
   // doesn't overlap the next card. This lets the card expand in height
@@ -338,52 +219,57 @@ const InteractBar: React.FC<InteractBarProps> = ({
         {post && post.type === EPostType.PERSONAL && (
           <RepostButton post={post} userId={userId} size="sm" />
         )}
-        {/* More Menu Button */}
-        <div ref={moreMenuRef} style={{ position: "relative" }}>
-          <button
-            ref={moreButtonRef}
-            onClick={(e) => {
-              e.stopPropagation();
-              setShowMoreMenu(!showMoreMenu);
-            }}
-            onMouseEnter={() => setMoreHovered(true)}
-            onMouseLeave={() => setMoreHovered(false)}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
+        {/* More Menu Button - khác nhau cho owner và người khác */}
+        {isOwnPost ? (
+          <MoreButton
+            menuItems={moreMenuItems}
+            buttonSize="small"
+            iconSize={14}
+            tooltip="Thêm"
+            buttonStyle={{
               width: "28px",
               height: "28px",
-              borderRadius: "50px",
-              border: `1.5px solid ${
-                showMoreMenu ? THEME.primary : THEME.secondary
-              }`,
-              background: showMoreMenu
-                ? THEME.tertiary
-                : moreHovered
-                ? THEME.tertiary
-                : THEME.white,
-              cursor: "pointer",
-              transition: "all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)",
-              transform: moreHovered ? "scale(1.05)" : "scale(1)",
             }}
-          >
-            <MoreHorizontal
-              size={14}
-              strokeWidth={2.5}
-              style={{ color: THEME.primary }}
-            />
-          </button>
-
-          <MoreMenu
-            visible={showMoreMenu}
-            onShare={handleShare}
-            onClose={handleCloseMoreMenu}
-            postId={postId}
-            anchorRef={moreButtonRef}
           />
-        </div>{" "}
+        ) : (
+          <ReportButton
+            type={EReportType.POST}
+            targetId={postId}
+            renderButton={({ onClick }) => (
+              <MoreButton
+                menuItems={[
+                  ...moreMenuItems,
+                  {
+                    label: "Báo cáo",
+                    icon: <Flag size={16} strokeWidth={2.5} />,
+                    onClick: onClick,
+                    danger: true,
+                  },
+                ]}
+                buttonSize="small"
+                iconSize={14}
+                tooltip="Thêm"
+                buttonStyle={{
+                  width: "28px",
+                  height: "28px",
+                }}
+              />
+            )}
+          />
+        )}
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <DeleteConfirmDialog
+        open={showDeleteDialog}
+        onClose={() => setShowDeleteDialog(false)}
+        title="Xác nhận xóa bài viết?"
+        description="Hành động này không thể hoàn tác. Bài viết sẽ bị xóa vĩnh viễn."
+        onConfirm={() => {
+          handleDelete();
+          setShowDeleteDialog(false);
+        }}
+      />
     </div>
   );
 };

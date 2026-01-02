@@ -29,23 +29,23 @@ const ToastItem: React.FC<ToastItemProps> = ({
       case "success":
         return {
           icon: <IoCheckmarkCircle className="w-5 h-5" />,
-          bgClass: "bg-[#FFF0F5] border-[#F295B6]",
-          iconColor: "text-[#F295B6]",
-          textColor: "text-[#4A3C42]",
+          bgClass: "bg-[#F0FDF4] border-[#22C55E]",
+          iconColor: "text-[#22C55E]",
+          textColor: "text-[#15803D]",
         };
       case "error":
         return {
           icon: <IoCloseCircle className="w-5 h-5" />,
-          bgClass: "bg-[#FFF0F0] border-[#E57373]",
-          iconColor: "text-[#E57373]",
-          textColor: "text-[#4A3C42]",
+          bgClass: "bg-[#FEF2F2] border-[#EF4444]",
+          iconColor: "text-[#EF4444]",
+          textColor: "text-[#991B1B]",
         };
       case "info":
         return {
           icon: <IoInformationCircle className="w-5 h-5" />,
-          bgClass: "bg-[#FFF0F5] border-[#F295B6]",
-          iconColor: "text-[#F295B6]",
-          textColor: "text-[#4A3C42]",
+          bgClass: "bg-[#FDF2F8] border-[#EC4899]",
+          iconColor: "text-[#EC4899]",
+          textColor: "text-[#831843]",
         };
     }
   };

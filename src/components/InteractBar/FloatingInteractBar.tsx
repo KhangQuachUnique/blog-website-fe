@@ -1,13 +1,5 @@
-import React, { useState, useRef, useEffect } from "react";
-import { createPortal } from "react-dom";
-import {
-  MessageCircle,
-  MoreHorizontal,
-  Share2,
-  Flag,
-  Bookmark,
-  Repeat2,
-} from "lucide-react";
+import React, { useState } from "react";
+import { MessageCircle, Share2, Flag, Bookmark, Repeat2 } from "lucide-react";
 import { useCheckSaved, useToggleSavePost } from "../../hooks/useSavedPost";
 import ReportButton from "../report/ReportButton";
 import { EReportType } from "../../types/report";
@@ -17,6 +9,8 @@ import type { IVotesSummaryDto } from "../../types/user-vote";
 import { EPostType, type IPostResponseDto } from "../../types/post";
 import VoteButton from "../VoteButton";
 import { RepostButton } from "../repost";
+import { MoreButton } from "../moreButton";
+import type { MoreMenuItem } from "../moreButton";
 
 // ============================================
 // 🎨 BLOOKIE DESIGN SYSTEM - PASTEL PINK EDITION
@@ -37,161 +31,6 @@ const THEME = {
   shadowSoft: "0 2px 12px rgba(242, 149, 182, 0.15)",
   shadowMedium: "0 4px 20px rgba(242, 149, 182, 0.2)",
   shadowStrong: "0 8px 32px rgba(242, 149, 182, 0.25)",
-};
-
-// More Menu Dropdown (rendered in a portal so it overlays without affecting layout)
-const MoreMenu: React.FC<{
-  visible: boolean;
-  onShare: () => void;
-  onClose: () => void;
-  postId: number;
-  anchorRef?: React.RefObject<HTMLButtonElement | null>;
-}> = ({ visible, onShare, onClose, postId, anchorRef }) => {
-  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
-  const menuRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (visible && anchorRef?.current) {
-      const rect = anchorRef.current.getBoundingClientRect();
-      setMenuPosition({
-        top: rect.bottom + 8,
-        left: rect.right,
-      });
-    }
-  }, [visible, anchorRef]);
-
-  // Close menu when clicking outside
-  useEffect(() => {
-    if (!visible) return;
-
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        menuRef.current &&
-        !menuRef.current.contains(event.target as Node) &&
-        anchorRef?.current &&
-        !anchorRef.current.contains(event.target as Node)
-      ) {
-        onClose();
-      }
-    };
-
-    // Delay adding listener to prevent immediate close
-    const timeoutId = setTimeout(() => {
-      document.addEventListener("mousedown", handleClickOutside);
-    }, 0);
-
-    return () => {
-      clearTimeout(timeoutId);
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [visible, onClose, anchorRef]);
-
-  if (!visible) return null;
-
-  const MenuItem: React.FC<{
-    icon: React.ReactNode;
-    label: string;
-    onClick: () => void;
-    danger?: boolean;
-  }> = ({ icon, label, onClick, danger }) => {
-    const [isHovered, setIsHovered] = useState(false);
-
-    return (
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          onClick();
-        }}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "12px",
-          width: "100%",
-          padding: "12px 16px",
-          border: "none",
-          background: isHovered ? THEME.tertiary : "transparent",
-          cursor: "pointer",
-          fontFamily: "'Quicksand', sans-serif",
-          fontSize: "14px",
-          fontWeight: 600,
-          color: danger ? "#E57373" : THEME.text,
-          transition: "all 0.15s ease",
-          textAlign: "left",
-        }}
-      >
-        <span
-          style={{
-            display: "flex",
-            color: danger ? "#E57373" : THEME.primary,
-            opacity: 0.9,
-          }}
-        >
-          {icon}
-        </span>
-        {label}
-      </button>
-    );
-  };
-
-  const menu = (
-    <>
-      <style>{`
-        @keyframes menuSlideIn {
-          0% { opacity: 0; transform: translateY(-8px) scale(0.95); }
-          100% { opacity: 1; transform: translateY(0) scale(1); }
-        }
-      `}</style>
-      <div
-        ref={menuRef}
-        style={{
-          position: "fixed",
-          top: `${menuPosition.top}px`,
-          left: `${menuPosition.left}px`,
-          transform: "translateX(-100%)",
-          minWidth: "160px",
-          background: THEME.white,
-          borderRadius: "16px",
-          border: `1.5px solid ${THEME.secondary}`,
-          overflow: "hidden",
-          boxShadow: THEME.shadowMedium,
-          // animation: 'menuSlideIn 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
-          zIndex: 1000,
-        }}
-        onMouseDown={(e) => e.stopPropagation()}
-      >
-        <MenuItem
-          icon={<Share2 size={16} strokeWidth={2.5} />}
-          label="Chia sẻ"
-          onClick={onShare}
-        />
-        <div
-          style={{
-            height: "1px",
-            background: THEME.tertiary,
-            margin: "4px 12px",
-          }}
-        />
-        <ReportButton
-          type={EReportType.POST}
-          targetId={postId}
-          onClose={onClose}
-          onSuccess={onClose}
-          renderButton={({ onClick }) => (
-            <MenuItem
-              icon={<Flag size={16} strokeWidth={2.5} />}
-              label="Báo cáo"
-              onClick={onClick}
-              danger
-            />
-          )}
-        />
-      </div>
-    </>
-  );
-
-  return createPortal(menu, document.body);
 };
 
 // ============================================
@@ -285,10 +124,8 @@ const FloatingInteractBar: React.FC<FloatingInteractBarProps> = ({
   totalComments = 0,
   post,
 }) => {
-  const [showMoreMenu, setShowMoreMenu] = useState(false);
   const { showToast } = useToast();
   const { isLoggedIn, requireLogin, userId } = useLoginRequired();
-  const moreButtonRef = useRef<HTMLButtonElement>(null);
 
   // 🔖 Saved post hooks
   const { data: isSaved = false } = useCheckSaved(
@@ -337,7 +174,6 @@ const FloatingInteractBar: React.FC<FloatingInteractBarProps> = ({
   // Menu handlers
   const handleShare = () => {
     navigator.clipboard.writeText(`${window.location.origin}/post/${postId}`);
-    setShowMoreMenu(false);
     showToast({
       type: "success",
       message: "Link đã được sao chép vào clipboard",
@@ -345,9 +181,14 @@ const FloatingInteractBar: React.FC<FloatingInteractBarProps> = ({
     });
   };
 
-  const handleCloseMoreMenu = () => {
-    setShowMoreMenu(false);
-  };
+  // Tạo menu items cho MoreButton
+  const moreMenuItems: MoreMenuItem[] = [
+    {
+      label: "Chia sẻ",
+      icon: <Share2 size={16} strokeWidth={2.5} />,
+      onClick: handleShare,
+    },
+  ];
 
   return (
     <div
@@ -449,29 +290,26 @@ const FloatingInteractBar: React.FC<FloatingInteractBarProps> = ({
         />
       )}
 
-      {/* More Menu Button (use ActionButton, forwarded ref for anchor) */}
-      <ActionButton
-        ref={moreButtonRef}
-        onClick={() => setShowMoreMenu(!showMoreMenu)}
-        active={showMoreMenu}
-        tooltip="Thêm"
-      >
-        <MoreHorizontal
-          size={22}
-          strokeWidth={2.5}
-          style={
-            showMoreMenu ? { color: THEME.primary } : { color: THEME.icon }
-          }
-        />
-      </ActionButton>
-
-      {/* More Menu Dropdown */}
-      <MoreMenu
-        visible={showMoreMenu}
-        onShare={handleShare}
-        onClose={handleCloseMoreMenu}
-        postId={postId}
-        anchorRef={moreButtonRef}
+      {/* More Menu Button (use MoreButton component) */}
+      <ReportButton
+        type={EReportType.POST}
+        targetId={postId}
+        renderButton={({ onClick }) => (
+          <MoreButton
+            menuItems={[
+              ...moreMenuItems,
+              {
+                label: "Báo cáo",
+                icon: <Flag size={16} strokeWidth={2.5} />,
+                onClick: onClick,
+                danger: true,
+              },
+            ]}
+            buttonSize="medium"
+            iconSize={22}
+            tooltip="Thêm"
+          />
+        )}
       />
     </div>
   );
