@@ -8,6 +8,9 @@ import {
   joinCommunity, // ✅ thêm
 } from "../services/user/community/communityService";
 import type { ECommunityRole, EManageCommunityRole } from "../types/community";
+import { clearEmojiCache } from "../services/emoji/customEmojiCache";
+import { useAuthUser } from "./useAuth";
+import { CUSTOM_EMOJIS_QUERY_KEY } from "./useCustomEmojis";
 
 export function useManageCommunityMembers(
   communityId?: number,
@@ -62,6 +65,7 @@ export function useRemoveMember(communityId: number) {
  */
 export function useJoinCommunity(communityId: number) {
   const qc = useQueryClient();
+  const { user } = useAuthUser();
 
   return useMutation({
     mutationFn: () => joinCommunity(communityId),
@@ -72,6 +76,11 @@ export function useJoinCommunity(communityId: number) {
         queryKey: ["manage-community-members", communityId],
       });
       qc.invalidateQueries({ queryKey: ["myCommunities"] });
+      // ✅ Invalidate custom emojis cache để cập nhật emoji của community mới join
+      qc.invalidateQueries({ queryKey: [CUSTOM_EMOJIS_QUERY_KEY] });
+      if (user?.id) {
+        clearEmojiCache(user.id); // Clear localStorage cache
+      }
     },
   });
 }
@@ -79,6 +88,7 @@ export function useJoinCommunity(communityId: number) {
 // ✅ Leave community
 export function useLeaveCommunity(communityId: number) {
   const qc = useQueryClient();
+  const { user } = useAuthUser();
 
   return useMutation({
     mutationFn: () => leaveCommunity(communityId),
@@ -89,6 +99,11 @@ export function useLeaveCommunity(communityId: number) {
         queryKey: ["manage-community-members", communityId],
       });
       qc.invalidateQueries({ queryKey: ["myCommunities"] });
+      // ✅ Invalidate custom emojis cache vì không còn access emoji của community này
+      qc.invalidateQueries({ queryKey: [CUSTOM_EMOJIS_QUERY_KEY] });
+      if (user?.id) {
+        clearEmojiCache(user.id); // Clear localStorage cache
+      }
     },
   });
 }
