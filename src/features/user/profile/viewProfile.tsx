@@ -5,7 +5,7 @@ import { MdGroup } from "react-icons/md";
 import { BsFileText } from "react-icons/bs";
 import { BsGenderMale } from "react-icons/bs";
 import { BsGenderFemale } from "react-icons/bs";
-import { Users } from "lucide-react";
+import { Users, ShieldOff, ShieldCheck } from "lucide-react";
 import Card from "../../../components/card/Card";
 import "../../../styles/profile/profile.css";
 import "../../../styles/profile/tabs.css";
@@ -19,6 +19,7 @@ import { useAuth } from "../../../hooks/useAuth";
 import { useGetUserProfile } from "../../../hooks/useUser";
 import FollowModal from "../../../components/profile/FollowModal";
 import ProfileSkeleton from "../../../components/skeleton/ProfileSkeleton";
+import { MoreButton } from "../../../components/moreButton";
 
 const ViewProfile = () => {
   const { userId } = useParams<{ userId: string }>();
@@ -38,7 +39,6 @@ const ViewProfile = () => {
     "followers" | "following"
   >("followers");
   const [isBlocked, setIsBlocked] = useState(false);
-  const [blockLoading, setBlockLoading] = useState(false);
 
   // Đóng dropdown khi click bên ngoài
   useEffect(() => {
@@ -127,7 +127,6 @@ const ViewProfile = () => {
       return;
     }
 
-    setBlockLoading(true);
     try {
       if (isBlocked) {
         await userService.unblockUser(fetchedProfile.id);
@@ -149,8 +148,6 @@ const ViewProfile = () => {
         message:
           error.response?.data?.message || error.message || "Có lỗi xảy ra",
       });
-    } finally {
-      setBlockLoading(false);
     }
   };
 
@@ -246,9 +243,26 @@ const ViewProfile = () => {
                   </div>
                 </div>
               </div>
-              <div className="flex items-start mt-2 gap-2">
+              <div className="flex items-center mt-2 gap-3">
                 {!isOwnProfile && (
                   <>
+                    <MoreButton
+                      menuItems={[
+                        {
+                          label: isBlocked ? "Bỏ chặn" : "Chặn người dùng",
+                          icon: isBlocked ? (
+                            <ShieldCheck size={16} strokeWidth={2.5} />
+                          ) : (
+                            <ShieldOff size={16} strokeWidth={2.5} />
+                          ),
+                          onClick: handleBlockToggle,
+                          danger: !isBlocked,
+                        },
+                      ]}
+                      buttonSize="medium"
+                      iconSize={22}
+                      tooltip="Tùy chọn"
+                    />
                     <CustomButton
                       variant={isFollowing ? "default" : "outline"}
                       style={{
@@ -266,22 +280,6 @@ const ViewProfile = () => {
                         : isFollowing
                         ? "Đã theo dõi"
                         : "Theo dõi"}
-                    </CustomButton>
-                    <CustomButton
-                      variant={isBlocked ? "default" : "outline"}
-                      style={{
-                        color: isBlocked ? "#fff" : "#ef4444",
-                        borderColor: "#ef4444",
-                        backgroundColor: isBlocked ? "#ef4444" : "transparent",
-                      }}
-                      onClick={handleBlockToggle}
-                      disabled={blockLoading}
-                    >
-                      {blockLoading
-                        ? "Đang xử lý..."
-                        : isBlocked
-                        ? "Đã chặn"
-                        : "Chặn"}
                     </CustomButton>
                   </>
                 )}
