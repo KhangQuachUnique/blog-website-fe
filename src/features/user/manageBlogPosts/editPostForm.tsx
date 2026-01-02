@@ -9,7 +9,7 @@ import {
 
 import TextBlock from "../../../components/block/textBlockEdit";
 import ImageBlock from "../../../components/block/imageBlockEdit";
-import DeleteConfirmButton from "../../../components/deleteConfirmButton";
+import { DeleteConfirmButton } from "../../../components/deleteConfirmButton";
 import CustomButton from "../../../components/button";
 import BlockSidebar from "./components/blockSidebar";
 import ConfigDialog from "./components/configDialog";
@@ -196,8 +196,18 @@ const EditPostForm = ({
 
   const buildThumbnailUrl = useCallback(
     (imageUrls: Record<string, string>): string | undefined => {
-      if (imageUrls["thumbnail"]) return imageUrls["thumbnail"];
-      if (thumbnailUrl && !isBlobUrl(thumbnailUrl)) return thumbnailUrl;
+      // Priority 1: Newly uploaded thumbnail from imageUrls
+      if (imageUrls["thumbnail"]) {
+        return imageUrls["thumbnail"];
+      }
+      
+      // Priority 2: Existing thumbnailUrl that's not a blob (already uploaded)
+      if (thumbnailUrl && !isBlobUrl(thumbnailUrl)) {
+        return thumbnailUrl;
+      }
+      
+      // Priority 3: If thumbnailUrl is a blob, it means we have a file to upload
+      // This will be handled by uploadMultipleFiles if "thumbnail" key exists in imageForm
       return undefined;
     },
     [thumbnailUrl]
@@ -271,12 +281,18 @@ const EditPostForm = ({
 
     setIsPublishing(true);
     try {
-      // Upload images
+      // Upload images - check if form has any files
       const imageKeys = getImageKeys();
       let imageUrls: Record<string, string> = {};
 
+      console.log("handlePublish - imageKeys:", imageKeys);
+      console.log("handlePublish - thumbnailUrl state:", thumbnailUrl);
+
+      // Upload if there are any files in the form (including thumbnail)
       if (imageKeys.length > 0) {
+        console.log("Uploading files with keys:", imageKeys);
         imageUrls = await uploadMultipleFiles(getImageForm(), imageKeys);
+        console.log("Upload result imageUrls:", imageUrls);
         clearImageForm();
       }
 
@@ -286,6 +302,7 @@ const EditPostForm = ({
           ? buildCreateDto(imageUrls)
           : buildUpdateDto(imageUrls);
 
+      console.log("Publishing DTO:", dto);
       onPublish(dto);
 
       // Clear draft after successful publish
@@ -435,7 +452,7 @@ const EditPostForm = ({
               )}
 
               {isCtrlPressed && (
-                <div className="absolute top-2 right-2 z-10 rgl-no-drag transition-all">
+                <div className="absolute top-2 right-2 z-[100] rgl-no-drag transition-all pointer-events-auto">
                   <DeleteConfirmButton
                     className="rgl-no-drag"
                     onConfirm={() => handleDeleteBlock(block.id)}

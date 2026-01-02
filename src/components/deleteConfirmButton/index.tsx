@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   Dialog,
   DialogActions,
@@ -132,3 +133,58 @@ const DeleteConfirmDialog = ({
 };
 
 export default DeleteConfirmDialog;
+
+/**
+ * Delete Confirm Button Component
+ * Kết hợp nút xóa + dialog xác nhận trong một component
+ */
+interface DeleteConfirmButtonProps {
+  /** Callback when user confirms deletion */
+  onConfirm: () => void;
+  /** Additional class names for the button */
+  className?: string;
+  /** Dialog title */
+  title?: string;
+  /** Dialog description */
+  description?: string;
+}
+
+export const DeleteConfirmButton = ({
+  onConfirm,
+  className = "",
+  title = "Xác nhận xóa?",
+  description,
+}: DeleteConfirmButtonProps) => {
+  const [open, setOpen] = useState(false);
+
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    setOpen(true);
+  };
+
+  return (
+    <>
+      <button
+        onClick={handleClick}
+        className={`
+          w-8 h-8 rounded-full bg-red-500 hover:bg-red-600 
+          text-white flex items-center justify-center 
+          transition-all duration-200 shadow-md hover:shadow-lg
+          hover:scale-110 active:scale-95
+          ${className}
+        `}
+        title="Xóa"
+      >
+        <Trash2 size={16} strokeWidth={2.5} />
+      </button>
+      <DeleteConfirmDialog
+        open={open}
+        onClose={() => setOpen(false)}
+        onConfirm={onConfirm}
+        title={title}
+        description={description}
+      />
+    </>
+  );
+};
