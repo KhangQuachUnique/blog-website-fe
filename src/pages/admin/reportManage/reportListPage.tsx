@@ -12,12 +12,13 @@ import {
   useGetGroupedReports,
   useResolveReport,
 } from "../../../hooks/useReport";
-import GroupedReportTable from "../../../features/admin/reportManage/GroupedReportTable";
+import ReportTable from "../../../features/admin/reportManage/ReportTable";
 import ReportDetailModal from "../../../features/admin/reportManage/ReportDetailModal";
 import type { IGroupedReport, EReportType } from "../../../types/report";
 import { ReportTableSkeleton } from "../../../components/skeleton/ReportTableSkeleton";
+import { useToast } from "../../../contexts/toast";
 
-// 👇 FIX 1: Loại bỏ "ALL", chỉ cho phép chọn loại cụ thể
+// Chỉ định nghĩa các loại cụ thể, bỏ "ALL"
 type ReportTypeFilter = EReportType; 
 type StatusFilter = "PENDING" | "RESOLVED";
 
@@ -27,7 +28,7 @@ const ReportListPage = () => {
   // --- STATE UI ---
   const [currentPage, setCurrentPage] = useState(1);
   
-  // 👇 FIX 2: Mặc định vào là POST (Bài viết) để tránh query rỗng
+  // Mặc định vào là POST (Bài viết) để tránh query rỗng nếu backend chưa hỗ trợ ALL
   const [typeFilter, setTypeFilter] = useState<ReportTypeFilter>("POST");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("PENDING");
   
@@ -35,27 +36,27 @@ const ReportListPage = () => {
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [selectedReport, setSelectedReport] = useState<IGroupedReport | null>(null);
 
-  // --- REACT QUERY HOOKS ---
+  const { showToast } = useToast();
+
+  // --- REACT QUERY HOOKS (Server-side Pagination) ---
   const {
     data: responseData,
     isLoading,
     isError,
-    error,
     refetch,
     isFetching,
   } = useGetGroupedReports(
     statusFilter,
-    typeFilter, // Luôn gửi type cụ thể lên Server
+    typeFilter,
     currentPage,
     ITEMS_PER_PAGE
   );
 
   const { mutate: resolveReport } = useResolveReport();
 
-  // Extract data
-  // Logic này handle cả trường hợp interceptor trả về data trực tiếp hoặc trả về object {data, meta}
+  // Xử lý dữ liệu trả về (hỗ trợ cả trường hợp Interceptor trả về mảng hoặc object)
   const rawData = responseData as any;
-  const groupedReports = Array.isArray(rawData) ? rawData : (rawData?.data || []);
+  const groupedReports = (Array.isArray(rawData) ? rawData : rawData?.data || []) as IGroupedReport[];
   
   const meta = rawData?.meta || {
     totalItems: 0,
@@ -64,14 +65,15 @@ const ReportListPage = () => {
     itemsPerPage: ITEMS_PER_PAGE,
   };
 
-  // --- RESET PAGE KHI FILTER ---
+  // --- EFFECTS ---
+  // Reset về trang 1 khi đổi bộ lọc
   useEffect(() => {
     setCurrentPage(1);
   }, [typeFilter, statusFilter]);
 
   // --- HANDLERS ---
   const getReportType = (reportId: number): EReportType => {
-    const report = groupedReports.find((r: IGroupedReport) => r.id === reportId);
+    const report = groupedReports.find((r) => r.id === reportId);
     return report?.type || "POST";
   };
 
@@ -98,23 +100,21 @@ const ReportListPage = () => {
   };
 
   const handleViewDetail = (reportId: number) => {
-    const report = groupedReports.find((r: IGroupedReport) => r.id === reportId);
+    const report = groupedReports.find((r) => r.id === reportId);
     if (report) {
       setSelectedReport(report);
       setDetailModalOpen(true);
     }
   };
 
-  // ================= RENDER: ERROR =================
+  // --- RENDER ERROR ---
   if (isError) {
     return (
       <div className="flex items-center justify-center h-screen bg-white">
         <div className="text-center bg-white p-8 rounded-2xl shadow-lg border-2 border-pink-100">
           <p className="text-2xl mb-2">⚠️</p>
           <p className="text-red-600 font-semibold mb-4">
-            {(error as any)?.response?.data?.message ||
-              (error as Error).message ||
-              "Có lỗi xảy ra khi tải dữ liệu"}
+            Có lỗi xảy ra khi tải dữ liệu báo cáo
           </p>
           <button
             onClick={() => refetch()}
@@ -127,7 +127,7 @@ const ReportListPage = () => {
     );
   }
 
-  // ================= RENDER: MAIN UI =================
+  // --- MAIN RENDER ---
   return (
     <div className="py-8 px-20 bg-white min-h-screen">
       {/* HEADER */}
@@ -156,7 +156,7 @@ const ReportListPage = () => {
           </button>
         </div>
 
-        {/* --- MAIN STATUS TABS (Pending vs Resolved) --- */}
+        {/* STATUS TABS */}
         <div className="flex p-1 bg-gray-100 rounded-xl w-fit mb-6 border border-gray-200">
           <button
             onClick={() => setStatusFilter("PENDING")}
@@ -184,8 +184,7 @@ const ReportListPage = () => {
           </button>
         </div>
 
-        {/* STATS SUMMARY */}
-        {/* FIX 3: Chỉ hiện 1 card tổng hợp cho loại đang chọn (vì ta không biết số lượng loại khác) */}
+        {/* STATS SUMMARY CARD */}
         <div className="grid grid-cols-1 mb-6">
             <div className={`border-2 rounded-xl p-4 text-center transition-all shadow-sm flex flex-col items-center justify-center
                 ${typeFilter === 'POST' ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : ''}
@@ -201,11 +200,10 @@ const ReportListPage = () => {
             </div>
         </div>
 
-        {/* FIX 4: SUB FILTER TABS - Chỉ còn 3 loại, bỏ "Tất cả" */}
+        {/* TYPE FILTER TABS */}
         <div className="flex gap-3 overflow-x-auto pb-2">
           {(["POST", "COMMENT", "USER"] as ReportTypeFilter[]).map((type) => {
             const isActive = typeFilter === type;
-            // Style riêng cho từng nút active
             let activeClass = "";
             if(type === 'POST') activeClass = "text-emerald-700 bg-emerald-100 border-emerald-500 shadow-sm";
             if(type === 'COMMENT') activeClass = "text-amber-700 bg-amber-100 border-amber-500 shadow-sm";
@@ -229,23 +227,22 @@ const ReportListPage = () => {
         </div>
       </div>
 
-      {/* RENDER TABLE */}
+      {/* TABLE CONTENT */}
       {isLoading ? (
         <ReportTableSkeleton />
       ) : (
         <>
-          <GroupedReportTable
+          <ReportTable
             reports={groupedReports}
             onViewDetail={handleViewDetail}
             onApprove={statusFilter === "PENDING" ? handleApprove : undefined}
             onReject={statusFilter === "PENDING" ? handleReject : undefined}
             loadingId={actionLoading}
             emptyMessage={
-              `Hiện tại không có báo cáo nào về "${typeFilter === 'POST' ? 'Bài viết' : typeFilter === 'COMMENT' ? 'Bình luận' : 'Người dùng'}" ở trạng thái ${statusFilter === 'PENDING' ? 'chờ xử lý' : 'đã giải quyết'}.`
+              `Không có báo cáo nào về "${typeFilter}" ở trạng thái ${statusFilter === 'PENDING' ? 'chờ xử lý' : 'đã giải quyết'}.`
             }
           />
 
-          {/* DETAIL MODAL */}
           {selectedReport && (
             <ReportDetailModal
               open={detailModalOpen}
@@ -277,72 +274,67 @@ const ReportListPage = () => {
             </p>
           </div>
 
-          {meta.totalPages > 1 && (
-            <div className="flex justify-center items-center gap-2 flex-wrap">
-              <button
-                onClick={() => setCurrentPage(1)}
-                disabled={currentPage === 1}
-                className="p-2.5 rounded-lg border-2 border-[#F295B6] hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <BiChevronsLeft size={20} />
-              </button>
+          <div className="flex justify-center items-center gap-2 flex-wrap">
+            <button
+              onClick={() => setCurrentPage(1)}
+              disabled={currentPage === 1}
+              className="p-2.5 rounded-lg border-2 border-[#F295B6] hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <BiChevronsLeft size={20} />
+            </button>
 
-              <button
-                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                disabled={currentPage === 1}
-                className="p-2.5 rounded-lg border-2 border-[#F295B6] hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <BiChevronLeft size={20} />
-              </button>
+            <button
+              onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+              disabled={currentPage === 1}
+              className="p-2.5 rounded-lg border-2 border-[#F295B6] hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <BiChevronLeft size={20} />
+            </button>
 
-              {Array.from({ length: meta.totalPages }, (_, i) => i + 1).map(
-                (page) => {
-                  const isVisible =
-                    page === 1 ||
-                    page === meta.totalPages ||
-                    Math.abs(page - currentPage) <= 1;
+            {Array.from({ length: meta.totalPages }, (_, i) => i + 1).map(
+              (page) => {
+                const isVisible =
+                  page === 1 ||
+                  page === meta.totalPages ||
+                  Math.abs(page - currentPage) <= 1;
 
-                  if (!isVisible && page !== 2 && page !== meta.totalPages - 1)
-                    return null;
-                  if (
-                    !isVisible &&
-                    (page === 2 || page === meta.totalPages - 1)
-                  )
-                    return <span key={`dots-${page}`} className="px-2">...</span>;
+                if (!isVisible && page !== 2 && page !== meta.totalPages - 1)
+                  return null;
+                if (!isVisible && (page === 2 || page === meta.totalPages - 1))
+                  return <span key={`dots-${page}`} className="px-2">...</span>;
 
-                  return (
-                    <button
-                      key={page}
-                      onClick={() => setCurrentPage(page)}
-                      className={`px-4 py-2 rounded-lg font-semibold transition ${
-                        currentPage === page
-                          ? "text-white bg-[#F295B6] border-2 border-[#F295B6]"
-                          : "bg-white border-2 text-gray-700 hover:bg-[#F295B6]/10 border-[#F295B6]"
-                      }`}
-                    >
-                      {page}
-                    </button>
-                  );
-                }
-              )}
+                return (
+                  <button
+                    key={page}
+                    onClick={() => setCurrentPage(page)}
+                    className={`px-4 py-2 rounded-lg font-semibold transition ${
+                      currentPage === page
+                        ? "text-white bg-[#F295B6] border-2 border-[#F295B6]"
+                        : "bg-white border-2 text-gray-700 hover:bg-[#F295B6]/10 border-[#F295B6]"
+                    }`}
+                  >
+                    {page}
+                  </button>
+                );
+              }
+            )}
 
-              <button
-                onClick={() => setCurrentPage(Math.min(meta.totalPages, currentPage + 1))}
-                disabled={currentPage === meta.totalPages}
-                className="p-2.5 rounded-lg border-2 border-[#F295B6] hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <BiChevronRight size={20} />
-              </button>
+            <button
+              onClick={() => setCurrentPage(Math.min(meta.totalPages, currentPage + 1))}
+              disabled={currentPage === meta.totalPages}
+              className="p-2.5 rounded-lg border-2 border-[#F295B6] hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <BiChevronRight size={20} />
+            </button>
 
-              <button
-                onClick={() => setCurrentPage(meta.totalPages)}
-                disabled={currentPage === meta.totalPages}
-                className="p-2.5 rounded-lg border-2 border-[#F295B6] hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <BiChevronsRight size={20} />
-              </button>
-            </div>
-          )}
+            <button
+              onClick={() => setCurrentPage(meta.totalPages)}
+              disabled={currentPage === meta.totalPages}
+              className="p-2.5 rounded-lg border-2 border-[#F295B6] hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <BiChevronsRight size={20} />
+            </button>
+          </div>
         </div>
       )}
     </div>

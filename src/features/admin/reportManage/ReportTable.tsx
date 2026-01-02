@@ -4,10 +4,10 @@ import { Box } from "@mui/material";
 import GenericTable from "../../../components/table/GenericTable";
 import type { TableColumn, ActionColumn } from "../../../types/table";
 import { BLOOGIE_COLORS as colors } from "../../../types/table";
-import type { IReportResponse, EReportType } from "../../../types/report";
+import type { IGroupedReport, EReportType } from "../../../types/report";
 
 interface ReportTableProps {
-  reports: IReportResponse[];
+  reports: IGroupedReport[];
   onViewDetail?: (reportId: number) => void;
   onApprove?: (reportId: number) => void;
   onReject?: (reportId: number) => void;
@@ -15,10 +15,6 @@ interface ReportTableProps {
   emptyMessage?: string;
 }
 
-/**
- * ReportTable - A wrapper around GenericTable customized for reports
- * Displays report information with action buttons (VIEW DETAIL, APPROVE/REJECT)
- */
 const ReportTable: React.FC<ReportTableProps> = ({
   reports,
   onViewDetail,
@@ -27,6 +23,7 @@ const ReportTable: React.FC<ReportTableProps> = ({
   loadingId,
   emptyMessage = "Không có báo cáo nào",
 }) => {
+  // --- HELPER FUNCTIONS ---
   const getReportTypeLabel = (type: EReportType): string => {
     const typeMap: Record<EReportType, string> = {
       USER: "Người dùng",
@@ -38,37 +35,26 @@ const ReportTable: React.FC<ReportTableProps> = ({
 
   const getReportTypeColor = (type: EReportType) => {
     const colorMap: Record<EReportType, { bg: string; border: string; text: string }> = {
-      USER: {
-        bg: "#fef2f2",
-        border: "#fecaca",
-        text: "#dc2626",
-      },
-      POST: {
-        bg: "#f0fdf4",
-        border: "#bbf7d0",
-        text: "#16a34a",
-      },
-      COMMENT: {
-        bg: "#fffbeb",
-        border: "#fde68a",
-        text: "#b45309",
-      },
+      USER: { bg: "#fef2f2", border: "#fecaca", text: "#dc2626" },
+      POST: { bg: "#f0fdf4", border: "#bbf7d0", text: "#16a34a" },
+      COMMENT: { bg: "#fffbeb", border: "#fde68a", text: "#b45309" },
     };
     return colorMap[type] || colorMap.POST;
   };
 
-  const columns: TableColumn<IReportResponse>[] = [
+  // --- COLUMNS CONFIGURATION ---
+  const columns: TableColumn<IGroupedReport>[] = [
     {
       id: "id",
       label: "ID",
-      width: "70px",
+      width: "60px",
       align: "left",
       render: (report) => (
         <Box
           sx={{
             fontWeight: "600",
             color: colors.text,
-            fontFamily: '"Quicksand", "Open Sans", sans-serif',
+            fontFamily: '"Quicksand", sans-serif',
           }}
         >
           #{report.id}
@@ -78,104 +64,113 @@ const ReportTable: React.FC<ReportTableProps> = ({
     {
       id: "type",
       label: "Loại",
-      width: "160px",
+      width: "110px",
       align: "left",
       render: (report) => {
         const typeColor = getReportTypeColor(report.type);
-        const typeLabel = getReportTypeLabel(report.type);
         return (
           <Box
             component="span"
             sx={{
               display: "inline-flex",
               alignItems: "center",
-              gap: "6px",
-              px: 2.5,
-              py: 1,
-              borderRadius: "9999px",
-              fontSize: "12px",
-              fontWeight: "600",
+              px: 1.5,
+              py: 0.5,
+              borderRadius: "6px",
+              fontSize: "11px",
+              fontWeight: "700",
               textTransform: "uppercase",
-              letterSpacing: "0.5px",
               backgroundColor: typeColor.bg,
               color: typeColor.text,
-              border: `1.5px solid ${typeColor.border}`,
-              fontFamily: '"Outfit", "Montserrat", sans-serif',
+              border: `1px solid ${typeColor.border}`,
+              fontFamily: '"Outfit", sans-serif',
             }}
           >
-            {typeLabel}
+            {getReportTypeLabel(report.type)}
           </Box>
         );
       },
     },
     {
-      id: "reason",
-      label: "Lý do",
+      id: "target" as keyof IGroupedReport,
+      label: "Đối tượng vi phạm",
       align: "left",
+      render: (report) => {
+        let content = "Không xác định";
+        if (report.type === "USER") content = report.reportedUser?.username || "N/A";
+        else if (report.type === "POST") content = report.reportedPost?.title || "N/A";
+        else if (report.type === "COMMENT") content = report.reportedComment?.contentPreview || "N/A";
+
+        return (
+          <Box
+            sx={{
+              fontSize: "14px",
+              fontWeight: "500",
+              color: "#111827",
+              fontFamily: '"Quicksand", sans-serif',
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+              maxWidth: "220px", 
+            }}
+            title={content}
+          >
+            {content}
+          </Box>
+        );
+      },
+    },
+    {
+      id: "totalReports",
+      label: "Số lượng",
+      width: "90px",
+      align: "center",
       render: (report) => (
         <Box
           sx={{
+            fontWeight: "700",
+            color: "#f59e0b",
             fontSize: "14px",
-            color: colors.text,
-            fontFamily: '"Quicksand", "Open Sans", sans-serif',
-            maxWidth: "250px",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
+            fontFamily: '"Quicksand", sans-serif',
           }}
-          title={report.reason}
         >
-          {report.reason}
+          {report.totalReports}
         </Box>
       ),
     },
     {
-      id: "reporter",
-      label: "Người report",
-      width: "150px",
+      id: "latestReason",
+      label: "Lý do gần nhất",
       align: "left",
       render: (report) => (
         <Box
           sx={{
-            fontSize: "14px",
-            color: colors.text,
-            fontFamily: '"Quicksand", "Open Sans", sans-serif',
-            display: "flex",
-            alignItems: "center",
-            gap: 1,
+            fontSize: "13px",
+            color: "#6b7280",
+            fontStyle: "italic",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+            maxWidth: "180px",
+            fontFamily: '"Quicksand", sans-serif',
           }}
+          title={report.latestReason}
         >
-          <Box
-            sx={{
-              width: "28px",
-              height: "28px",
-              borderRadius: "50%",
-              backgroundColor: colors.backgroundHover,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: "12px",
-              fontWeight: "600",
-              color: colors.text,
-            }}
-          >
-            {(report.reporter?.username || "?")[0].toUpperCase()}
-          </Box>
-          {report.reporter?.username || "Ẩn danh"}
+          "{report.latestReason}"
         </Box>
       ),
     },
     {
       id: "createdAt",
-      label: "Ngày report",
-      width: "130px",
+      label: "Ngày báo cáo",
+      width: "110px",
       align: "center",
       render: (report) => (
         <Box
           sx={{
-            fontSize: "14px",
+            fontSize: "13px",
             color: colors.textSecondary,
-            fontFamily: '"Quicksand", "Open Sans", sans-serif',
+            fontFamily: '"Quicksand", sans-serif',
           }}
         >
           {new Date(report.createdAt).toLocaleDateString("vi-VN")}
@@ -184,60 +179,53 @@ const ReportTable: React.FC<ReportTableProps> = ({
     },
   ];
 
-  const actionColumns: ActionColumn<IReportResponse>[] = [];
+  // --- ACTIONS CONFIGURATION ---
+  const actionColumns: ActionColumn<IGroupedReport>[] = [];
 
+  // 1. Cột Xem Chi Tiết
   if (onViewDetail) {
     actionColumns.push({
       id: "view-detail-column",
-      label: "Xem chi tiết",
-      width: "130px",
+      label: "Chi tiết",
+      width: "80px",
       align: "center",
       actions: [
         {
           id: "view-detail",
-          tooltip: "Xem chi tiết nội dung bị báo cáo",
-          icon: () => {
-            return (
-              <Box
-                sx={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  padding: "8px",
-                  color: "#2563eb",
-                  backgroundColor: "#eff6ff",
-                  border: "2px solid #93c5fd",
-                  borderRadius: "6px",
-                  cursor: "pointer",
-                  transition: "all 0.2s",
-                  "&:hover": {
-                    backgroundColor: "#dbeafe",
-                    borderColor: "#60a5fa",
-                  },
-                }}
-              >
-                <MdRemoveRedEye size={18} />
-              </Box>
-            );
-          },
-          onClick: (report) => {
-            onViewDetail(report.id);
-          },
+          tooltip: "Xem chi tiết vi phạm",
+          icon: () => (
+            <Box
+              sx={{
+                display: "inline-flex",
+                p: "8px",
+                color: "#2563eb",
+                bgcolor: "#eff6ff",
+                border: "1px solid #93c5fd",
+                borderRadius: "6px",
+                transition: "all 0.2s",
+                "&:hover": { bgcolor: "#dbeafe", borderColor: "#60a5fa" },
+              }}
+            >
+              <MdRemoveRedEye size={18} />
+            </Box>
+          ),
+          onClick: (report) => onViewDetail(report.id),
         },
       ],
     });
   }
 
+  // 2. Cột Duyệt (Chấp nhận báo cáo -> Xử lý vi phạm)
   if (onApprove) {
     actionColumns.push({
       id: "approve-column",
-      label: "Phê duyệt",
-      width: "130px",
+      label: "Duyệt",
+      width: "80px",
       align: "center",
       actions: [
         {
           id: "approve",
-          tooltip: "Phê duyệt báo cáo",
+          tooltip: "Chấp nhận báo cáo (Xử lý vi phạm)",
           disabled: (report) => loadingId === report.id,
           icon: (report) => {
             const isLoading = loadingId === report.id;
@@ -245,47 +233,37 @@ const ReportTable: React.FC<ReportTableProps> = ({
               <Box
                 sx={{
                   display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  padding: "8px",
+                  p: "8px",
                   color: "#059669",
-                  backgroundColor: "#ecfdf5",
-                  border: "2px solid #a7f3d0",
+                  bgcolor: "#ecfdf5",
+                  border: "1px solid #a7f3d0",
                   borderRadius: "6px",
+                  opacity: isLoading ? 0.6 : 1,
                   cursor: isLoading ? "not-allowed" : "pointer",
-                  transition: "all 0.2s",
-                  "&:hover:not(:disabled)": {
-                    backgroundColor: "#d1fae5",
-                    borderColor: "#6ee7b7",
-                  },
+                  "&:hover:not(:disabled)": { bgcolor: "#d1fae5", borderColor: "#6ee7b7" },
                 }}
               >
-                {isLoading ? (
-                  <MdAutorenew className="animate-spin" size={18} />
-                ) : (
-                  <MdCheckCircle size={18} />
-                )}
+                {isLoading ? <MdAutorenew className="animate-spin" size={18} /> : <MdCheckCircle size={18} />}
               </Box>
             );
           },
-          onClick: (report) => {
-            onApprove(report.id);
-          },
+          onClick: (report) => onApprove(report.id),
         },
       ],
     });
   }
 
+  // 3. Cột Từ chối (Bỏ qua báo cáo -> Giữ nội dung)
   if (onReject) {
     actionColumns.push({
       id: "reject-column",
       label: "Từ chối",
-      width: "130px",
+      width: "80px",
       align: "center",
       actions: [
         {
           id: "reject",
-          tooltip: "Từ chối báo cáo",
+          tooltip: "Từ chối báo cáo (Bỏ qua)",
           disabled: (report) => loadingId === report.id,
           icon: (report) => {
             const isLoading = loadingId === report.id;
@@ -293,32 +271,21 @@ const ReportTable: React.FC<ReportTableProps> = ({
               <Box
                 sx={{
                   display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  padding: "8px",
+                  p: "8px",
                   color: "#dc2626",
-                  backgroundColor: "#fef2f2",
-                  border: "2px solid #fecaca",
+                  bgcolor: "#fef2f2",
+                  border: "1px solid #fecaca",
                   borderRadius: "6px",
+                  opacity: isLoading ? 0.6 : 1,
                   cursor: isLoading ? "not-allowed" : "pointer",
-                  transition: "all 0.2s",
-                  "&:hover:not(:disabled)": {
-                    backgroundColor: "#fee2e2",
-                    borderColor: "#fca5a5",
-                  },
+                  "&:hover:not(:disabled)": { bgcolor: "#fee2e2", borderColor: "#fca5a5" },
                 }}
               >
-                {isLoading ? (
-                  <MdAutorenew className="animate-spin" size={18} />
-                ) : (
-                  <MdClose size={18} />
-                )}
+                {isLoading ? <MdAutorenew className="animate-spin" size={18} /> : <MdClose size={18} />}
               </Box>
             );
           },
-          onClick: (report) => {
-            onReject(report.id);
-          },
+          onClick: (report) => onReject(report.id),
         },
       ],
     });
