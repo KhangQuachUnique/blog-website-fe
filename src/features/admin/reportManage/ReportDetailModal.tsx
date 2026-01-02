@@ -10,7 +10,6 @@ import {
 import { Box } from "@mui/material";
 import type { IGroupedReport } from "../../../types/report";
 
-// 👇 FIX: Cập nhật interface để nhận groupedReport thay vì report lẻ
 interface ReportDetailModalProps {
   open: boolean;
   groupedReport: IGroupedReport; 
@@ -22,7 +21,6 @@ const ReportDetailModal: React.FC<ReportDetailModalProps> = ({
   groupedReport,
   onClose,
 }) => {
-  // State quản lý Tab đang xem
   const [activeTab, setActiveTab] = useState<'CONTENT' | 'HISTORY'>('CONTENT');
 
   if (!open) return null;
@@ -108,14 +106,12 @@ const ReportDetailModal: React.FC<ReportDetailModalProps> = ({
                 <MdComment /> Bình luận vi phạm
             </p>
             <div className="bg-gray-50 p-6 rounded-xl border border-gray-200 relative">
-               {/* Quote Mở */}
                <div className="absolute top-4 left-4 text-gray-200 text-6xl font-serif pointer-events-none">“</div>
                
                <p className="text-gray-800 text-lg relative z-10 font-medium leading-relaxed px-4 wrap-break-word">
                 {groupedReport.reportedComment.contentPreview || "Nội dung bình luận"}
               </p>
               
-               {/* Quote Đóng */}
                <div className="absolute bottom-14 right-4 text-gray-200 text-6xl font-serif pointer-events-none leading-none">”</div>
 
                <div className="mt-4 pt-4 border-t border-gray-200 flex justify-end relative z-10">
@@ -136,7 +132,7 @@ const ReportDetailModal: React.FC<ReportDetailModalProps> = ({
     }
   };
 
-  // --- 2. RENDER LỊCH SỬ BÁO CÁO (Danh sách chi tiết) ---
+  // --- 2. RENDER LỊCH SỬ BÁO CÁO ---
   const renderHistory = () => {
     return (
         <div className="space-y-4">

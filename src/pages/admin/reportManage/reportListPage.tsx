@@ -17,7 +17,6 @@ import ReportDetailModal from "../../../features/admin/reportManage/ReportDetail
 import type { IGroupedReport, EReportType } from "../../../types/report";
 import { ReportTableSkeleton } from "../../../components/skeleton/ReportTableSkeleton";
 
-// Chỉ định nghĩa các loại cụ thể, bỏ "ALL"
 type ReportTypeFilter = EReportType; 
 type StatusFilter = "PENDING" | "RESOLVED";
 
@@ -27,7 +26,6 @@ const ReportListPage = () => {
   // --- STATE UI ---
   const [currentPage, setCurrentPage] = useState(1);
   
-  // Mặc định vào là POST (Bài viết) để tránh query rỗng nếu backend chưa hỗ trợ ALL
   const [typeFilter, setTypeFilter] = useState<ReportTypeFilter>("POST");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("PENDING");
   
@@ -51,7 +49,6 @@ const ReportListPage = () => {
 
   const { mutate: resolveReport } = useResolveReport();
 
-  // Xử lý dữ liệu trả về (hỗ trợ cả trường hợp Interceptor trả về mảng hoặc object)
   const rawData = responseData as any;
   const groupedReports = (Array.isArray(rawData) ? rawData : rawData?.data || []) as IGroupedReport[];
   
@@ -63,7 +60,6 @@ const ReportListPage = () => {
   };
 
   // --- EFFECTS ---
-  // Reset về trang 1 khi đổi bộ lọc
   useEffect(() => {
     setCurrentPage(1);
   }, [typeFilter, statusFilter]);
