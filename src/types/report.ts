@@ -51,6 +51,7 @@ export interface IReportResponse {
   reason: string;
   type: EReportType;
   createdAt: string;
+  resolvedAt?: string;
   reporter: IReporterSummary;
   reportedUser?: IReportedUserSummary;
   reportedPost?: IReportedPostSummary;

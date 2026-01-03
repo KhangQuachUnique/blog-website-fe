@@ -13,6 +13,7 @@ interface ReportTableProps {
   onReject?: (reportId: number) => void;
   loadingId: number | null;
   emptyMessage?: string;
+  isResolved?: boolean;
 }
 
 const ReportTable: React.FC<ReportTableProps> = ({
@@ -22,6 +23,7 @@ const ReportTable: React.FC<ReportTableProps> = ({
   onReject,
   loadingId,
   emptyMessage = "Không có báo cáo nào",
+  isResolved = false,
 }) => {
   // --- HELPER FUNCTIONS ---
   const getReportTypeLabel = (type: EReportType): string => {
@@ -178,6 +180,22 @@ const ReportTable: React.FC<ReportTableProps> = ({
       ),
     },
   ];
+
+  if (isResolved) {
+    columns.push({
+      id: "resolvedAt",
+      label: "Ngày xử lý",
+      width: "110px",
+      align: "center",
+      render: (report) => (
+        <Box sx={{ fontSize: "13px", color: colors.textSecondary, fontWeight: "600", fontFamily: '"Quicksand", sans-serif' }}>
+          {report.resolvedAt 
+            ? new Date(report.resolvedAt).toLocaleDateString("vi-VN") 
+            : "-"}
+        </Box>
+      ),
+    });
+  }
 
   // --- ACTIONS CONFIGURATION ---
   const actionColumns: ActionColumn<IGroupedReport>[] = [];

@@ -272,6 +272,7 @@ const ReportListPage = () => {
                 onApprove={statusFilter === "PENDING" ? handleApprove : undefined}
                 onReject={statusFilter === "PENDING" ? handleReject : undefined}
                 loadingId={actionLoading}
+                isResolved={statusFilter === "RESOLVED"}
                 emptyMessage={
                 `Không có báo cáo nào về "${typeFilter === EReportType.POST ? 'Bài viết' : typeFilter}" ở trạng thái ${statusFilter === 'PENDING' ? 'chờ xử lý' : 'đã giải quyết'}.`
                 }

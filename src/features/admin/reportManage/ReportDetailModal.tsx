@@ -167,7 +167,6 @@ const ReportDetailModal: React.FC<ReportDetailModalProps> = ({
                     {/* Lý do báo cáo */}
                     <div className="pl-11">
                         <div className="bg-gray-50 p-2 rounded border border-gray-100 text-sm text-gray-700 italic relative">
-                           <span className="text-gray-300 absolute -top-2 left-2 text-xl">▲</span>
                            "{report.reason}"
                         </div>
                     </div>
