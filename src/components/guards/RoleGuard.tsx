@@ -1,4 +1,4 @@
-import { Navigate, useLocation } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { EUserRole } from "../../types/user";
 
@@ -33,7 +33,6 @@ const RoleGuard = ({
   allowAdmin = true,
 }: RoleGuardProps) => {
   const { user, isLoading, isAuthenticated } = useAuth();
-  const location = useLocation();
 
   // Đang loading
   if (isLoading) {

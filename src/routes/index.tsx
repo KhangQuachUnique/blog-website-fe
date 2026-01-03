@@ -1,4 +1,4 @@
-import { createBrowserRouter, Navigate } from "react-router-dom";
+import { createBrowserRouter } from "react-router-dom";
 
 import AdminLayout from "../components/layout/adminLayout";
 import UserLayout from "../components/layout/userLayout";

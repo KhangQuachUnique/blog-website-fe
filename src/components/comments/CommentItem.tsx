@@ -6,7 +6,7 @@ import { useDeleteComment } from "../../hooks/useComments";
 import { useAuthUser } from "../../hooks/useAuth";
 import { useToast } from "../../contexts/toast";
 import { stringAvatar } from "../../utils/avatarHelper";
-import { formatCommentTimeVi } from "../../utils/timeHelper";
+import { formatCommentTimeVi, formatShortDateVi } from "../../utils/timeHelper";
 import { Avatar } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 
@@ -223,7 +223,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
                             )}
 
                             <span className="text-xs text-gray-400 flex-shrink-0">
-                              {formatShortDate(String(childComment.createAt))}
+                              {formatShortDateVi(String(childComment.createAt))}
                             </span>
 
                             {currentUser?.id === commenter.id && (

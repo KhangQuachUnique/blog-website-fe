@@ -5,7 +5,6 @@ import { FaInbox } from "react-icons/fa6";
 import { IoCheckmarkDoneSharp } from "react-icons/io5";
 import { useNavigate } from "react-router-dom";
 
-import { useAuth } from "../../hooks/useAuth";
 import {
   useGetNotifications,
   useMarkNotificationAsRead,
@@ -27,9 +26,7 @@ const isNotificationClickable = (
 };
 
 const NotificationBell = () => {
-  const { user } = useAuth();
   const navigate = useNavigate();
-  const userId = user?.id as number;
 
   // Use the hook for reactive data updates
   const { data: notifications } = useGetNotifications();
