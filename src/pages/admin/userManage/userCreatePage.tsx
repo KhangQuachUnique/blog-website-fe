@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FiArrowLeft, FiSave } from "react-icons/fi";
+import { FiArrowLeft, FiSave, FiAlertTriangle } from "react-icons/fi";
 import {
   HiOutlineMail,
   HiOutlineUser,
@@ -12,6 +12,13 @@ import {
   type CreateUserRequest,
 } from "../../../services/userService";
 import { useToast } from "../../../contexts/toast";
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+} from "@mui/material";
 
 const UserCreatePage = () => {
   const navigate = useNavigate();
@@ -28,11 +35,25 @@ const UserCreatePage = () => {
     type: "USER", // Mặc định là USER
   });
 
+  // Dialog xác nhận cấp Admin
+  const [showAdminConfirm, setShowAdminConfirm] = useState(false);
+
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+
+    // Nếu đổi sang ADMIN, hiện dialog xác nhận
+    if (name === "type" && value === "ADMIN") {
+      setShowAdminConfirm(true);
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
+  };
+
+  const handleConfirmAdmin = () => {
+    setFormData((prev) => ({ ...prev, type: "ADMIN" }));
+    setShowAdminConfirm(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -256,6 +277,40 @@ const UserCreatePage = () => {
           </div>
         </form>
       </div>
+
+      {/* Dialog xác nhận cấp quyền Admin */}
+      <Dialog
+        open={showAdminConfirm}
+        onClose={() => setShowAdminConfirm(false)}
+      >
+        <DialogTitle
+          sx={{ fontFamily: "Mona Sans", fontWeight: "bold", color: "#b45309" }}
+        >
+          <div className="flex items-center gap-2">
+            <FiAlertTriangle /> Xác nhận cấp quyền Admin
+          </div>
+        </DialogTitle>
+        <DialogContent>
+          <p className="text-gray-700">
+            Bạn có chắc chắn muốn tạo tài khoản với quyền <strong>Admin</strong>
+            ?
+          </p>
+          <p className="text-sm text-gray-500 mt-2">
+            Admin có toàn quyền quản lý hệ thống, bao gồm quản lý người dùng,
+            nội dung và cấu hình.
+          </p>
+        </DialogContent>
+        <DialogActions sx={{ padding: "16px 24px" }}>
+          <Button onClick={() => setShowAdminConfirm(false)}>Hủy</Button>
+          <Button
+            onClick={handleConfirmAdmin}
+            variant="contained"
+            sx={{ bgcolor: "#b45309", "&:hover": { bgcolor: "#92400e" } }}
+          >
+            Xác nhận
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 };
