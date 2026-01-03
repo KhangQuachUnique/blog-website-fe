@@ -24,7 +24,7 @@ export const createReport = async (
   data: ICreateReportRequest
 ): Promise<ICreateReportResponse> => {
   const response = await axios.post('/reports', data);
-  return response as unknown as ICreateReportResponse;
+  return response as ICreateReportResponse;
 };
 
 /**
@@ -37,16 +37,16 @@ export const checkIfReported = async (
   const response = await axios.get('/reports/check', {
     params: { type, targetId },
   });
-  return response as unknown as ICheckReportedResponse;
+  return response as ICheckReportedResponse;
 };
 
 export const getAllReports = async (): Promise<IReportResponse[]> => {
   const response = await axios.get("/reports/all");
-  return response as unknown as IReportResponse[];
+  return response as IReportResponse[];
 };
 
 /**
- * 📊 API: Lấy danh sách báo cáo đã NHÓM theo đối tượng (Admin)
+ * Lấy danh sách báo cáo đã NHÓM theo đối tượng (Admin)
  * Endpoint: GET /reports/grouped
  */
 export const getGroupedReports = async (
@@ -56,18 +56,15 @@ export const getGroupedReports = async (
   limit = 10
 ): Promise<IGroupedReportListResponse> => {
   const params: any = { page, limit };
-  
-  // Chỉ gửi status nếu có (và khác ALL nếu UI bạn có option đó)
+
   if (status) params.status = status;
   
-  // Nếu type là 'ALL', ta không gửi param type lên để BE tự fallback hoặc lấy hết
-  // Nếu type cụ thể (POST/COMMENT/USER), gửi lên bình thường.
   if (type && type !== 'ALL') {
     params.type = type;
   }
 
   const response = await axios.get('/reports/grouped', { params });
-  return response as unknown as IGroupedReportListResponse;
+  return response as IGroupedReportListResponse;
 };
 
 /**
@@ -84,7 +81,24 @@ export const resolveReport = async (
     type,
     action,
   });
-  return response as unknown as IReportResponse;
+  return response as IReportResponse;
+};
+
+/**
+ * 🚀 Resolve ALL reports for a specific target
+ * Endpoint: PATCH /reports/resolve-all
+ */
+export const resolveAllReportsByTarget = async (
+  targetId: number,
+  type: EReportType,
+  action: 'APPROVE' | 'REJECT'
+): Promise<{ message: string; count: number }> => {
+  const response = await axios.patch('/reports/resolve-all', {
+    targetId,
+    type,
+    action,
+  });
+  return response as { message: string; count: number };
 };
 
 /**
@@ -97,7 +111,7 @@ export const getReports = async (
   const response = await axios.get('/reports', {
     params: { page, limit },
   });
-  return response as unknown as IReportListResponse;
+  return response as IReportListResponse;
 };
 
 /**
@@ -106,7 +120,7 @@ export const getReports = async (
  */
 export const getPendingReports = async (): Promise<IReportResponse[]> => {
   const response = await axios.get("/reports/pending");
-  return response as unknown as IReportResponse[];
+  return response as IReportResponse[];
 };
 
 /**
@@ -115,7 +129,7 @@ export const getPendingReports = async (): Promise<IReportResponse[]> => {
  */
 export const getResolvedReports = async (): Promise<IReportResponse[]> => {
   const response = await axios.get("/reports/resolved");
-  return response as unknown as IReportResponse[];
+  return response as IReportResponse[];
 };
 
 /**
@@ -125,15 +139,13 @@ export const getResolvedReports = async (): Promise<IReportResponse[]> => {
  */
 export const getReportsByPost = async (
   postId: number,
-  status?: EReportStatus | string // Cho phép truyền Enum hoặc string
+  status?: EReportStatus | string
 ): Promise<IReportResponse[]> => {
   const response = await axios.get<IReportResponse[]>(`/reports/posts/${postId}`, {
-    // Axios sẽ tự động ghép thành: /reports/posts/1?status=PENDING
     params: status ? { status } : {}, 
   });
-  
-  // Ép kiểu về mảng kết quả
-  return response as unknown as IReportResponse[];
+
+  return response as IReportResponse[];
 };
 
 /**
@@ -141,7 +153,7 @@ export const getReportsByPost = async (
  */
 export const getReportById = async (id: number): Promise<IReportResponse> => {
   const response = await axios.get(`/reports/${id}`);
-  return response as unknown as IReportResponse;
+  return response as IReportResponse;
 };
 
 /**
@@ -149,7 +161,7 @@ export const getReportById = async (id: number): Promise<IReportResponse> => {
  */
 export const deleteReport = async (id: number): Promise<{ message: string }> => {
   const response = await axios.delete(`/reports/${id}`);
-  return response as unknown as { message: string };
+  return response as { message: string };
 };
 
 /**

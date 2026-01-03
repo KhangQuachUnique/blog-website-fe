@@ -3,22 +3,23 @@ import { MdRefresh } from "react-icons/md";
 import { BiChevronLeft, BiChevronRight, BiChevronsLeft, BiChevronsRight } from "react-icons/bi";
 import { FaBookmark } from "react-icons/fa";
 import { useGetAllPosts, useHidePost, useRestorePost } from "../../../hooks/usePost"; 
-import { useResolveReport } from "../../../hooks/useReport";
+import { useResolveAllReportsByTarget } from "../../../hooks/useReport"; 
 import PostsTable from "../../../features/admin/postManage/PostsTable";
-import { type IPostResponseDto, EBlogPostStatus } from "../../../types/post";
-import type { EReportType } from "../../../types/report";
 import { PostTableSkeleton } from "../../../components/skeleton/PostTableSkeleton"; 
+import { type IPostResponseDto, EBlogPostStatus } from "../../../types/post";
+import { EReportType } from "../../../types/report";
 
 type StatusFilter = "ALL" | EBlogPostStatus;
 
 const ITEMS_PER_PAGE = 10;
 
 const PostListPage = () => {
+  // --- STATE ---
   const [filterStatus, setFilterStatus] = useState<StatusFilter>("ALL");
   const [actionLoading, setActionLoading] = useState<number | null>(null);
   const [currentPage, setCurrentPage] = useState<number>(1);
 
-  // Data fetching hook
+  // --- DATA FETCHING ---
   const {
     data: allPosts = [] as IPostResponseDto[],
     isLoading,
@@ -27,13 +28,13 @@ const PostListPage = () => {
     refetch,
   } = useGetAllPosts();
 
-  // Mutation hooks
+  // --- MUTATIONS ---
   const { mutate: hidePost } = useHidePost();
   const { mutate: restorePost } = useRestorePost();
-  const { mutateAsync: resolveReportAsync } = useResolveReport();
 
-  // --- CLIENT-SIDE LOGIC ---
+  const { mutateAsync: resolveAllReportsAsync } = useResolveAllReportsByTarget();
 
+  // --- DERIVED STATE (Filter & Pagination) ---
   const stats = useMemo(() => {
     return {
       all: allPosts.length,
@@ -58,7 +59,16 @@ const PostListPage = () => {
     currentPage * ITEMS_PER_PAGE
   );
 
+  // Chuẩn hóa dữ liệu
+  const normalizedPosts: IPostResponseDto[] = currentViewPosts.map((p) => ({
+    ...p,
+    createdAt: typeof p.createdAt === "string" 
+      ? p.createdAt 
+      : new Date(p.createdAt).toISOString(),
+  }));
+
   // --- HANDLERS ---
+  // 1. Ẩn bài viết (Ban)
   const handleHide = (postId: number) => {
     setActionLoading(postId);
     hidePost(postId, {
@@ -66,6 +76,7 @@ const PostListPage = () => {
     });
   };
 
+  // 2. Khôi phục bài viết (Restore)
   const handleRestore = (postId: number) => {
     setActionLoading(postId);
     restorePost(postId, {
@@ -73,32 +84,41 @@ const PostListPage = () => {
     });
   };
 
-  const handleApproveReport = async (reportId: number) => {
+  // 3. Duyệt báo cáo (Approve) -> Ẩn bài + Resolve all reports
+  const handleApproveReport = async (postId: number) => {
+    setActionLoading(postId); 
     try {
-      await resolveReportAsync({ 
-        id: reportId, 
-        type: "POST" as EReportType, 
+      await resolveAllReportsAsync({ 
+        targetId: postId, 
+        type: EReportType.POST, 
         action: "APPROVE" 
       });
       await refetch();
     } catch (error) {
-      console.error(error);
+      console.error("Error approving report:", error);
+    } finally {
+      setActionLoading(null);
     }
   };
 
-  const handleRejectReport = async (reportId: number) => {
+  // 4. Từ chối báo cáo (Reject)
+  const handleRejectReport = async (postId: number) => {
+    setActionLoading(postId);
     try {
-      await resolveReportAsync({ 
-        id: reportId, 
-        type: "POST" as EReportType, 
+      await resolveAllReportsAsync({ 
+        targetId: postId, 
+        type: EReportType.POST, 
         action: "REJECT" 
       });
       await refetch();
     } catch (error) {
-      console.error(error);
+      console.error("Error rejecting report:", error);
+    } finally {
+      setActionLoading(null);
     }
   };
 
+  // --- EFFECTS ---
   useEffect(() => {
     setCurrentPage(1);
   }, [filterStatus]);
@@ -109,14 +129,6 @@ const PostListPage = () => {
     }
   }, [filteredPosts.length, totalPages, currentPage]);
 
-
-  const normalizedPosts: IPostResponseDto[] = currentViewPosts.map((p) => ({
-    ...p,
-    createdAt: typeof p.createdAt === "string" 
-      ? p.createdAt 
-      : new Date(p.createdAt).toISOString(),
-  }));
-  
   // --- RENDER ---
   if (isError) {
     return (
@@ -140,6 +152,7 @@ const PostListPage = () => {
   return (
     <div className="py-8 bg-white min-h-screen px-20">
       <div className="mb-8">
+        {/* Header Section */}
         <div className="flex justify-between items-start mb-6">
           <div>
             <h1 className="text-4xl text-[#6E344D] font-extrabold mb-2 flex items-center">
@@ -230,11 +243,12 @@ const PostListPage = () => {
         ) : (
           <PostsTable
             posts={normalizedPosts}
+            loadingId={actionLoading}
+            // Truyền các handlers
             onHide={handleHide}
             onRestore={handleRestore}
-            onApproveReport={handleApproveReport}
-            onRejectReport={handleRejectReport}
-            loadingId={actionLoading}
+            onApproveReport={(id) => handleApproveReport(id)} 
+            onRejectReport={(id) => handleRejectReport(id)}
             emptyMessage={
               filterStatus !== "ALL"
                 ? `Không có bài viết nào với trạng thái "${filterStatus}"`
@@ -244,6 +258,7 @@ const PostListPage = () => {
         )}
       </div>
 
+      {/* Pagination Footer */}
       {!isLoading && (
           <div className="mt-8">
             <div className="flex justify-between items-center mb-6">

@@ -7,14 +7,14 @@ import {
   BiChevronsRight,
 } from "react-icons/bi";
 import { FaExclamationTriangle } from "react-icons/fa";
-
 import {
   useGetGroupedReports,
-  useResolveReport,
+  useResolveAllReportsByTarget,
 } from "../../../hooks/useReport";
+
 import ReportTable from "../../../features/admin/reportManage/ReportTable";
 import ReportDetailModal from "../../../features/admin/reportManage/ReportDetailModal";
-import type { IGroupedReport, EReportType } from "../../../types/report";
+import { type IGroupedReport, EReportType } from "../../../types/report";
 import { ReportTableSkeleton } from "../../../components/skeleton/ReportTableSkeleton";
 
 type ReportTypeFilter = EReportType; 
@@ -26,7 +26,7 @@ const ReportListPage = () => {
   // --- STATE UI ---
   const [currentPage, setCurrentPage] = useState(1);
   
-  const [typeFilter, setTypeFilter] = useState<ReportTypeFilter>("POST");
+  const [typeFilter, setTypeFilter] = useState<ReportTypeFilter>(EReportType.POST);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("PENDING");
   
   const [actionLoading, setActionLoading] = useState<number | null>(null);
@@ -47,7 +47,7 @@ const ReportListPage = () => {
     ITEMS_PER_PAGE
   );
 
-  const { mutate: resolveReport } = useResolveReport();
+  const { mutateAsync: resolveAllReportsAsync } = useResolveAllReportsByTarget();
 
   const rawData = responseData as any;
   const groupedReports = (Array.isArray(rawData) ? rawData : rawData?.data || []) as IGroupedReport[];
@@ -64,32 +64,70 @@ const ReportListPage = () => {
     setCurrentPage(1);
   }, [typeFilter, statusFilter]);
 
-  // --- HANDLERS ---
-  const getReportType = (reportId: number): EReportType => {
+  // --- HELPERS ---
+  const getTargetInfo = (reportId: number) => {
     const report = groupedReports.find((r) => r.id === reportId);
-    return report?.type || "POST";
+    if (!report) return null;
+
+    let targetId = 0;
+    switch (report.type) {
+        case EReportType.POST:
+            targetId = report.reportedPost?.id || 0;
+            break;
+        case EReportType.COMMENT:
+            targetId = report.reportedComment?.id || 0;
+            break;
+        case EReportType.USER:
+            targetId = report.reportedUser?.id || 0;
+            break;
+    }
+
+    if (!targetId) return null;
+
+    return { targetId, type: report.type };
   };
 
-  const handleApprove = (reportId: number) => {
+  // --- HANDLERS (Async Batch Processing) ---
+
+  // 1. Chấp thuận (Approve) -> Xử lý vi phạm + Resolve All
+  const handleApprove = async (reportId: number) => {
+    const targetInfo = getTargetInfo(reportId);
+    if (!targetInfo) return;
+
     setActionLoading(reportId);
-    resolveReport(
-      { id: reportId, type: getReportType(reportId), action: "APPROVE" },
-      {
-        onSuccess: () => setActionLoading(null),
-        onError: () => setActionLoading(null),
-      }
-    );
+    try {
+      await resolveAllReportsAsync({
+        targetId: targetInfo.targetId,
+        type: targetInfo.type,
+        action: "APPROVE",
+      });
+
+      await refetch();
+    } catch (error) {
+      console.error("Error approving group:", error);
+    } finally {
+      setActionLoading(null);
+    }
   };
 
-  const handleReject = (reportId: number) => {
+  // 2. Từ chối (Reject) -> Bỏ qua + Resolve All
+  const handleReject = async (reportId: number) => {
+    const targetInfo = getTargetInfo(reportId);
+    if (!targetInfo) return;
+
     setActionLoading(reportId);
-    resolveReport(
-      { id: reportId, type: getReportType(reportId), action: "REJECT" },
-      {
-        onSuccess: () => setActionLoading(null),
-        onError: () => setActionLoading(null),
-      }
-    );
+    try {
+      await resolveAllReportsAsync({
+        targetId: targetInfo.targetId,
+        type: targetInfo.type,
+        action: "REJECT",
+      });
+      await refetch();
+    } catch (error) {
+      console.error("Error rejecting group:", error);
+    } finally {
+      setActionLoading(null);
+    }
   };
 
   const handleViewDetail = (reportId: number) => {
@@ -119,6 +157,8 @@ const ReportListPage = () => {
       </div>
     );
   }
+
+  
 
   // --- MAIN RENDER ---
   return (
@@ -180,12 +220,12 @@ const ReportListPage = () => {
         {/* STATS SUMMARY CARD */}
         <div className="grid grid-cols-1 mb-6">
             <div className={`border-2 rounded-xl p-4 text-center transition-all shadow-sm flex flex-col items-center justify-center
-                ${typeFilter === 'POST' ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : ''}
-                ${typeFilter === 'COMMENT' ? 'bg-amber-50 border-amber-200 text-amber-700' : ''}
-                ${typeFilter === 'USER' ? 'bg-red-50 border-red-200 text-red-700' : ''}
+                ${typeFilter === EReportType.POST ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : ''}
+                ${typeFilter === EReportType.COMMENT ? 'bg-amber-50 border-amber-200 text-amber-700' : ''}
+                ${typeFilter === EReportType.USER ? 'bg-red-50 border-red-200 text-red-700' : ''}
             `}>
               <p className="text-sm font-medium uppercase tracking-wide opacity-80">
-                Tổng số {typeFilter === 'POST' ? 'Bài viết' : typeFilter === 'COMMENT' ? 'Bình luận' : 'Người dùng'} {statusFilter === 'PENDING' ? 'đang chờ xử lý' : 'đã xử lý'}
+                Tổng số {typeFilter === EReportType.POST ? 'Bài viết' : typeFilter === EReportType.COMMENT ? 'Bình luận' : 'Người dùng'} {statusFilter === 'PENDING' ? 'đang chờ xử lý' : 'đã xử lý'}
               </p>
               <p className="text-4xl font-bold mt-2">
                 {isLoading ? "-" : meta.totalItems}
@@ -195,12 +235,12 @@ const ReportListPage = () => {
 
         {/* TYPE FILTER TABS */}
         <div className="flex gap-3 overflow-x-auto pb-2">
-          {(["POST", "COMMENT", "USER"] as ReportTypeFilter[]).map((type) => {
+          {([EReportType.POST, EReportType.COMMENT, EReportType.USER] as ReportTypeFilter[]).map((type) => {
             const isActive = typeFilter === type;
             let activeClass = "";
-            if(type === 'POST') activeClass = "text-emerald-700 bg-emerald-100 border-emerald-500 shadow-sm";
-            if(type === 'COMMENT') activeClass = "text-amber-700 bg-amber-100 border-amber-500 shadow-sm";
-            if(type === 'USER') activeClass = "text-red-700 bg-red-100 border-red-500 shadow-sm";
+            if(type === EReportType.POST) activeClass = "text-emerald-700 bg-emerald-100 border-emerald-500 shadow-sm";
+            if(type === EReportType.COMMENT) activeClass = "text-amber-700 bg-amber-100 border-amber-500 shadow-sm";
+            if(type === EReportType.USER) activeClass = "text-red-700 bg-red-100 border-red-500 shadow-sm";
 
             return (
               <button
@@ -213,7 +253,7 @@ const ReportListPage = () => {
                     : "bg-white text-gray-500 border-gray-200 hover:bg-gray-50 hover:border-gray-300"
                 } ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
               >
-                {type === "POST" ? "Bài viết" : type === "COMMENT" ? "Bình luận" : "Người dùng"}
+                {type === EReportType.POST ? "Bài viết" : type === EReportType.COMMENT ? "Bình luận" : "Người dùng"}
               </button>
             );
           })}
@@ -221,33 +261,35 @@ const ReportListPage = () => {
       </div>
 
       {/* TABLE CONTENT */}
-      {isLoading ? (
-        <ReportTableSkeleton />
-      ) : (
-        <>
-          <ReportTable
-            reports={groupedReports}
-            onViewDetail={handleViewDetail}
-            onApprove={statusFilter === "PENDING" ? handleApprove : undefined}
-            onReject={statusFilter === "PENDING" ? handleReject : undefined}
-            loadingId={actionLoading}
-            emptyMessage={
-              `Không có báo cáo nào về "${typeFilter}" ở trạng thái ${statusFilter === 'PENDING' ? 'chờ xử lý' : 'đã giải quyết'}.`
-            }
-          />
-
-          {selectedReport && (
-            <ReportDetailModal
-              open={detailModalOpen}
-              groupedReport={selectedReport}
-              onClose={() => {
-                setDetailModalOpen(false);
-                setSelectedReport(null);
-              }}
+      <div className={`transition-opacity duration-300 ${isFetching ? "opacity-60 pointer-events-none" : "opacity-100"}`}>
+        {isLoading ? (
+            <ReportTableSkeleton />
+        ) : (
+            <>
+            <ReportTable
+                reports={groupedReports}
+                onViewDetail={handleViewDetail}
+                onApprove={statusFilter === "PENDING" ? handleApprove : undefined}
+                onReject={statusFilter === "PENDING" ? handleReject : undefined}
+                loadingId={actionLoading}
+                emptyMessage={
+                `Không có báo cáo nào về "${typeFilter === EReportType.POST ? 'Bài viết' : typeFilter}" ở trạng thái ${statusFilter === 'PENDING' ? 'chờ xử lý' : 'đã giải quyết'}.`
+                }
             />
-          )}
-        </>
-      )}
+
+            {selectedReport && (
+                <ReportDetailModal
+                open={detailModalOpen}
+                groupedReport={selectedReport}
+                onClose={() => {
+                    setDetailModalOpen(false);
+                    setSelectedReport(null);
+                }}
+                />
+            )}
+            </>
+        )}
+      </div>
 
       {/* PAGINATION */}
       {!isLoading && meta.totalPages > 0 && (
