@@ -50,7 +50,7 @@ const ReportListPage = () => {
   const { mutateAsync: resolveAllReportsAsync } = useResolveAllReportsByTarget();
 
   const rawData = responseData as any;
-  const groupedReports = (Array.isArray(rawData) ? rawData : rawData?.data || []) as IGroupedReport[];
+  const groupedReports = (Array.isArray(rawData) ? rawData : rawData?.items || []) as IGroupedReport[];
   
   const meta = rawData?.meta || {
     totalItems: 0,

@@ -115,7 +115,7 @@ export interface IGroupedReport extends IReportResponse {
  * Response trả về từ API /reports/grouped
  */
 export interface IGroupedReportListResponse {
-  data: IGroupedReport[];
+  items: IGroupedReport[];
   meta: {
     totalItems: number;
     totalPages: number;
