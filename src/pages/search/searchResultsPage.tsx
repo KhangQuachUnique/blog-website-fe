@@ -14,6 +14,7 @@ import type { IPostResponseDto } from "../../types/post";
 // Removed legacy newsfeed CSS in favor of Tailwind classes
 import { Avatar } from "@mui/material";
 import { stringAvatar } from "../../utils/avatarHelper";
+import { formatRelativeTimeVi } from "../../utils/timeHelper";
 
 export const SearchResultPage = () => {
   const [searchParams] = useSearchParams();
@@ -88,19 +89,6 @@ export const SearchResultPage = () => {
     [isFetchingNextPage, hasNextPage, fetchNextPage]
   );
 
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return "";
-    const date = new Date(dateString);
-    const now = new Date();
-    const diff = Math.floor((now.getTime() - date.getTime()) / 1000);
-
-    if (diff < 60) return "vừa xong";
-    if (diff < 3600) return `${Math.floor(diff / 60)} phút trước`;
-    if (diff < 86400) return `${Math.floor(diff / 3600)} giờ trước`;
-    if (diff < 604800) return `${Math.floor(diff / 86400)} ngày trước`;
-    return date.toLocaleDateString("vi-VN");
-  };
-
   // grid handled via Tailwind in render
 
   // Render User Card (Tailwind, 3-column grid)
@@ -125,13 +113,13 @@ export const SearchResultPage = () => {
             <div className="flex-shrink-0 transform -translate-y-1/3">
               {user?.avatarUrl ? (
                 <Avatar
-                  alt="User Avatar"
+                  alt="Ảnh đại diện"
                   src={user.avatarUrl}
                   sx={{ width: 88, height: 88, border: "4px solid white" }}
                 />
               ) : (
                 <Avatar
-                  {...stringAvatar(user?.username || "User", 88, "2rem")}
+                  {...stringAvatar(user?.username || "Người dùng", 88, "2rem")}
                 />
               )}
             </div>
@@ -178,13 +166,22 @@ export const SearchResultPage = () => {
             <h2 className="newsfeed-card__title">{community.name}</h2>
             <div className="newsfeed-card__header">
               <div className="newsfeed-card__author">
-                <img
-                  src={
-                    community.thumbnailUrl || "https://via.placeholder.com/40"
-                  }
-                  alt={community.name}
-                  className="newsfeed-card__avatar"
-                />
+                {community.thumbnailUrl ? (
+                  <img
+                    src={community.thumbnailUrl}
+                    alt={community.name}
+                    className="newsfeed-card__avatar"
+                  />
+                ) : (
+                  <div
+                    className="newsfeed-card__avatar bg-gray-200 flex items-center justify-center"
+                    style={{ width: 40, height: 40, borderRadius: "50%" }}
+                  >
+                    <span className="text-gray-500 text-sm font-bold">
+                      {community.name?.charAt(0)?.toUpperCase() || "C"}
+                    </span>
+                  </div>
+                )}
                 <div className="newsfeed-card__author-info">
                   <span className="newsfeed-card__username">
                     Cộng đồng · {community.memberCount} thành viên
@@ -193,7 +190,7 @@ export const SearchResultPage = () => {
               </div>
               {community.createdAt && (
                 <time className="newsfeed-card__time">
-                  {formatDate(community.createdAt)}
+                  {formatRelativeTimeVi(community.createdAt)}
                 </time>
               )}
             </div>

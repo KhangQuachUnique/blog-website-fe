@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+﻿import React, { useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Avatar from "@mui/material/Avatar";
 
@@ -9,6 +9,7 @@ import { recordViewedPost } from "../../services/user/viewedHistory/viewedHistor
 import { useAuth } from "../../contexts/AuthContext";
 import { useGetPostById } from "../../hooks/usePost";
 import { stringAvatar } from "../../utils/avatarHelper";
+import { formatRelativeTimeVi } from "../../utils/timeHelper";
 import "../../styles/newsfeed/Card.css";
 import ReactionSection from "../Emoji";
 
@@ -43,18 +44,6 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
     console.log("Original post data:", fetchedOriginal);
   }, [fetchedOriginal]);
 
-  const formatDate = (dateInput: string | Date) => {
-    const date = dateInput instanceof Date ? dateInput : new Date(dateInput);
-    const now = new Date();
-    const diff = Math.floor((now.getTime() - date.getTime()) / 1000);
-
-    if (diff < 60) return "vừa xong";
-    if (diff < 3600) return `${Math.floor(diff / 60)} phút trước`;
-    if (diff < 86400) return `${Math.floor(diff / 3600)} giờ trước`;
-    if (diff < 604800) return `${Math.floor(diff / 86400)} ngày trước`;
-    return date.toLocaleDateString("vi-VN");
-  };
-
   return (
     <>
       {/* REPOST layout */}
@@ -83,7 +72,7 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
 
           {/* Right side: repost header (compact) + original content */}
           <div className="newsfeed-card__right">
-            {/* Compact repost header — links to the repost itself */}
+            {/* Compact repost header â€” links to the repost itself */}
             <div
               style={{
                 padding: "8px 12px",
@@ -142,13 +131,13 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
                       >
                         {post.author.username}
                         <span className="text-gray-500 font-normal ml-3">
-                          đã đăng lại
+                          Ä‘Ă£ Ä‘Äƒng láº¡i
                         </span>
                       </span>
                     </div>
                   </div>
                   <span className="newsfeed-card__time">
-                    {formatDate(post.createdAt)}
+                    {formatRelativeTimeVi(post.createdAt)}
                   </span>
                 </div>
                 <h2 className="newsfeed-card__title">{post.title}</h2>
@@ -169,7 +158,7 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
               </div>
             </div>
 
-            {/* Original post content — links to original post */}
+            {/* Original post content â€” links to original post */}
             <Link
               to={`/post/${
                 fetchedOriginal?.id ?? post.originalPostId ?? post.id
@@ -236,7 +225,9 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
                   </div>
                 </div>
                 <time className="newsfeed-card__time">
-                  {formatDate(fetchedOriginal?.createdAt ?? post.createdAt)}
+                  {formatRelativeTimeVi(
+                    fetchedOriginal?.createdAt ?? post.createdAt
+                  )}
                 </time>
               </div>
 
@@ -256,7 +247,7 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
                 )}
             </Link>
 
-            {/* InteractBar của người repost */}
+            {/* InteractBar cá»§a ngÆ°á»i repost */}
 
             <div
               className="newsfeed-card__interact !p-0"
@@ -294,7 +285,7 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
       ) : (
         /* Normal card layout */
         <article className="newsfeed-card hover:shadow-lg transition-shadow">
-          {/* Thumbnail bên trái */}
+          {/* Thumbnail bĂªn trĂ¡i */}
           {post.thumbnailUrl && (
             <Link
               to={`/post/${post.id}`}
@@ -312,7 +303,7 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
             </Link>
           )}
 
-          {/* Content + InteractBar bên phải */}
+          {/* Content + InteractBar bĂªn pháº£i */}
           <div className="newsfeed-card__right">
             <Link
               to={`/post/${post.id}`}
@@ -386,10 +377,10 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
                   </div>
                 </div>
                 <time className="newsfeed-card__time">
-                  {formatDate(post.createdAt)}
+                  {formatRelativeTimeVi(post.createdAt)}
                 </time>
                 {/* <time className="newsfeed-card__time">
-              {formatDate(post.createdAt)}
+              {formatRelativeTimeVi(post.createdAt)}
             </time> */}
               </div>
               {post.hashtags && post.hashtags.length > 0 && (
@@ -407,7 +398,7 @@ const Card = ({ post }: { post: IPostResponseDto }) => {
               )}
             </Link>
 
-            {/* InteractBar nằm dưới content */}
+            {/* InteractBar náº±m dÆ°á»›i content */}
 
             <div
               className="newsfeed-card__interact bg-white"

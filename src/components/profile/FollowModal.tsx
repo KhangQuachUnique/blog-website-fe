@@ -73,10 +73,10 @@ const FollowModal = ({
     try {
       if (targetUser.isFollowing) {
         await userService.unfollowUser(targetUser.id);
-        showToast({ type: "success", message: "Đã unfollow người dùng" });
+        showToast({ type: "success", message: "Đã bỏ theo dõi người dùng" });
       } else {
         await userService.followUser(targetUser.id);
-        showToast({ type: "success", message: "Đã follow người dùng" });
+        showToast({ type: "success", message: "Đã theo dõi người dùng" });
       }
 
       // Cập nhật lại trạng thái trong danh sách
@@ -180,7 +180,7 @@ const FollowModal = ({
                         : "bg-[#F295B6] text-white hover:bg-[#FFB8D1]"
                     }`}
                   >
-                    {user.isFollowing ? "Đã Follow" : "Follow"}
+                    {user.isFollowing ? "Đang theo dõi" : "Theo dõi"}
                   </button>
                 )}
               </div>

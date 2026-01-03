@@ -52,9 +52,7 @@ const CommunityLayout = () => {
   // ✅ private: nếu chưa approved thì lock posts/members
   const isPrivateLocked = !data.isPublic && !isMemberApproved;
 
-  const coverSrc =
-    data.thumbnailUrl ??
-    "https://via.placeholder.com/1200x300?text=Community+Cover";
+  const hasCover = !!data.thumbnailUrl;
 
   // ✅ chỉ member thật sự mới được leave
   const canLeave = isMemberApproved;
@@ -129,7 +127,13 @@ const CommunityLayout = () => {
       <div className="community-content">
         <div className="flex gap-8 items-start">
           <div className="community-header-img !w-[400px] !h-[300px] !rounded-md">
-            <img src={coverSrc} alt="cover" />
+            {hasCover ? (
+              <img src={data.thumbnailUrl!} alt="cover" />
+            ) : (
+              <div className="w-full h-full bg-gray-200 flex items-center justify-center rounded-md">
+                <span className="text-gray-400">Chưa có ảnh bìa</span>
+              </div>
+            )}
           </div>
           <div className="community-header-main h-[300px] flex flex-col justify-between">
             <h1 className="community-title text-5xl leading-tight">

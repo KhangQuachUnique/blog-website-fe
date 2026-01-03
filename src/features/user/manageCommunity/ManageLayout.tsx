@@ -29,9 +29,7 @@ const ManageLayout = () => {
 
   const role = data.role;
 
-  const coverSrc =
-    data.thumbnailUrl ??
-    "https://via.placeholder.com/1200x300?text=Community+Cover";
+  const hasCover = !!data.thumbnailUrl;
 
   const goBackToCommunity = () => {
     const path = location.pathname.includes("/manage/members")
@@ -48,6 +46,19 @@ const ManageLayout = () => {
       Quay lại trang chung
     </button>
   );
+
+  const CoverImage = () =>
+    hasCover ? (
+      <img
+        src={data.thumbnailUrl!}
+        alt="cover"
+        className="w-full h-full object-cover"
+      />
+    ) : (
+      <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+        <span className="text-gray-400">Chưa có ảnh bìa</span>
+      </div>
+    );
 
   const handleConfirmDelete = async () => {
     try {
@@ -80,8 +91,8 @@ const ManageLayout = () => {
       <div className="community-page">
         <div className="community-content">
           <div className="flex gap-8 items-start">
-            <div className="community-header-img !w-[400px] !h-[300px] !rounded-md">
-              <img src={coverSrc} alt="cover" />
+            <div className="community-header-img !w-[400px] !h-[300px] !rounded-md overflow-hidden">
+              <CoverImage />
             </div>
 
             <div className="community-header-main h-[300px] flex flex-col justify-start">
@@ -113,8 +124,8 @@ const ManageLayout = () => {
       <div className="community-page">
         <div className="community-content">
           <div className="flex gap-8 items-start">
-            <div className="community-header-img !w-[400px] !h-[300px] !rounded-md">
-              <img src={coverSrc} alt="cover" />
+            <div className="community-header-img !w-[400px] !h-[300px] !rounded-md overflow-hidden">
+              <CoverImage />
             </div>
 
             <div className="community-header-main h-[300px] flex flex-col justify-start">
@@ -140,8 +151,8 @@ const ManageLayout = () => {
     <div className="community-page">
       <div className="community-content">
         <div className="flex gap-8 items-start">
-          <div className="community-header-img !w-[400px] !h-[300px] !rounded-md">
-            <img src={coverSrc} alt="cover" />
+          <div className="community-header-img !w-[400px] !h-[300px] !rounded-md overflow-hidden">
+            <CoverImage />
           </div>
 
           <div className="community-header-main h-[300px] flex flex-col justify-start">

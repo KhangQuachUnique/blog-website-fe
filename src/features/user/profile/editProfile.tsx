@@ -697,7 +697,7 @@ const EditProfile = () => {
                 ) : (
                   <Avatar
                     {...stringAvatar(
-                      profileData.username || "User",
+                      profileData.username || "Người dùng",
                       80,
                       "1.8rem"
                     )}

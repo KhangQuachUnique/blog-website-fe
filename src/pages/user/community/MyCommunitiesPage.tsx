@@ -56,7 +56,7 @@ const MyCommunitiesPage = () => {
         name: createForm.name.trim(),
         description: createForm.description.trim(),
         isPublic: createForm.isPublic,
-        thumbnailUrl: "https://picsum.photos/seed/community/300/300",
+        thumbnailUrl: "",
       },
       {
         onSuccess: () => {

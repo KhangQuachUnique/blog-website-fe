@@ -11,7 +11,7 @@ const HomePage = () => {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-500 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
+          <p className="mt-4 text-gray-600">Đang tải...</p>
         </div>
       </div>
     );
@@ -25,10 +25,10 @@ const HomePage = () => {
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gray-800 mb-2">
-            🏠 Home Page - Debug Info
+            🏠 Trang chủ - Thông tin gỡ lỗi
           </h1>
           <p className="text-gray-600">
-            Thông tin authentication và user hiện tại
+            Thông tin xác thực và người dùng hiện tại
           </p>
         </div>
 
@@ -36,12 +36,12 @@ const HomePage = () => {
         <div className="bg-white rounded-lg shadow-lg p-6 mb-6 border-l-4 border-pink-500">
           <h2 className="text-2xl font-semibold text-gray-800 mb-4 flex items-center">
             <span className="mr-2">🔐</span>
-            Authentication Status
+            Trạng thái xác thực
           </h2>
           <div className="space-y-3">
             <div className="flex items-center">
               <span className="font-medium text-gray-700 w-40">
-                Is Authenticated:
+                Đã xác thực:
               </span>
               <span
                 className={`px-3 py-1 rounded-full text-sm font-semibold ${
@@ -50,13 +50,11 @@ const HomePage = () => {
                     : "bg-red-100 text-red-800"
                 }`}
               >
-                {isAuthenticated ? "✓ Yes" : "✗ No"}
+                {isAuthenticated ? "✓ Có" : "✗ Không"}
               </span>
             </div>
             <div className="flex items-center">
-              <span className="font-medium text-gray-700 w-40">
-                Is Loading:
-              </span>
+              <span className="font-medium text-gray-700 w-40">Đang tải:</span>
               <span
                 className={`px-3 py-1 rounded-full text-sm font-semibold ${
                   isLoading
@@ -64,12 +62,12 @@ const HomePage = () => {
                     : "bg-gray-100 text-gray-800"
                 }`}
               >
-                {isLoading ? "⏳ Loading..." : "✓ Ready"}
+                {isLoading ? "⏳ Đang tải..." : "✓ Sẵn sàng"}
               </span>
             </div>
             <div className="flex items-center">
               <span className="font-medium text-gray-700 w-40">
-                Token in localStorage:
+                Token trong localStorage:
               </span>
               <span
                 className={`px-3 py-1 rounded-full text-sm font-semibold ${
@@ -78,7 +76,7 @@ const HomePage = () => {
                     : "bg-gray-100 text-gray-800"
                 }`}
               >
-                {accessToken ? "✓ Present" : "✗ None"}
+                {accessToken ? "✓ Có" : "✗ Không"}
               </span>
             </div>
           </div>
@@ -89,7 +87,7 @@ const HomePage = () => {
           <div className="bg-white rounded-lg shadow-lg p-6 border-l-4 border-purple-500">
             <h2 className="text-2xl font-semibold text-gray-800 mb-4 flex items-center">
               <span className="mr-2">👤</span>
-              User Information
+              Thông tin người dùng
             </h2>
             <div className="bg-gray-50 rounded-lg p-4">
               <pre className="text-sm overflow-auto">
@@ -116,7 +114,7 @@ const HomePage = () => {
               <div className="bg-green-50 p-4 rounded-lg">
                 <p className="text-sm text-gray-600 mb-1">Role</p>
                 <p className="text-lg font-semibold text-gray-800">
-                  {user.role || "N/A"}
+                  {user.role || "Không có"}
                 </p>
               </div>
               <div className="bg-yellow-50 p-4 rounded-lg md:col-span-2">
@@ -124,7 +122,7 @@ const HomePage = () => {
                 {user.avatarUrl ? (
                   <img
                     src={user.avatarUrl}
-                    alt="User avatar"
+                    alt="Ảnh đại diện"
                     className="w-20 h-20 rounded-full border-2 border-pink-300"
                   />
                 ) : (
@@ -139,7 +137,7 @@ const HomePage = () => {
           <div className="bg-white rounded-lg shadow-lg p-6 border-l-4 border-gray-400">
             <h2 className="text-2xl font-semibold text-gray-800 mb-4 flex items-center">
               <span className="mr-2">⚠️</span>
-              Not Authenticated
+              Chưa xác thực
             </h2>
             <p className="text-gray-600 mb-4">
               Bạn chưa đăng nhập. Vui lòng đăng nhập để xem thông tin user.
@@ -178,13 +176,13 @@ const HomePage = () => {
             href="/"
             className="bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white font-semibold px-6 py-3 rounded-lg shadow-lg transition-all"
           >
-            📰 Go to Newsfeed
+            📰 Bảng tin
           </a>
           <a
             href="/create-post"
             className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-semibold px-6 py-3 rounded-lg shadow-lg transition-all"
           >
-            ✏️ Create Post
+            ✏️ Tạo bài viết
           </a>
         </div>
       </div>

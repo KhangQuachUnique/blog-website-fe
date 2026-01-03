@@ -6,6 +6,7 @@ import { useDeleteComment } from "../../hooks/useComments";
 import { useAuthUser } from "../../hooks/useAuth";
 import { useToast } from "../../contexts/toast";
 import { stringAvatar } from "../../utils/avatarHelper";
+import { formatCommentTimeVi } from "../../utils/timeHelper";
 import { Avatar } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 
@@ -55,39 +56,6 @@ export const CommentItem: React.FC<CommentItemProps> = ({
     });
   };
 
-  const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr);
-    const now = new Date();
-
-    // same calendar day -> show time only
-    if (date.toDateString() === now.toDateString()) {
-      return date.toLocaleTimeString("vi-VN", {
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-    }
-
-    // same year -> show day and month
-    if (date.getFullYear() === now.getFullYear()) {
-      return date.toLocaleDateString("vi-VN", {
-        day: "numeric",
-        month: "short",
-      });
-    }
-
-    // different year -> show day month year
-    return date.toLocaleDateString("vi-VN", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  };
-
-  const formatShortDate = (dateStr: string) => {
-    // Short variant: same as formatDate but prefer time when same day
-    return formatDate(dateStr);
-  };
-
   return (
     <div className="border-b border-gray-200 py-4">
       {/* Comment Header */}
@@ -123,7 +91,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
               {comment.commenter.username}
             </span>
             <span className="text-xs text-gray-400 flex-shrink-0">
-              {formatDate(String(comment.createAt))}
+              {formatCommentTimeVi(String(comment.createAt))}
             </span>
 
             {/* Delete button for comment owner */}
@@ -198,7 +166,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
                     childComment.commenter ?? {
                       id: 0,
                       username: "Người dùng",
-                      avatarUrl: "/default-avatar.png",
+                      avatarUrl: "",
                     };
                   const repliedTo = childComment.replyToUser;
 
