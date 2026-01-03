@@ -101,3 +101,25 @@ export const REPORT_REASONS = [
 ] as const;
 
 export type ReportReasonValue = (typeof REPORT_REASONS)[number]['value'];
+
+/**
+ * Interface cho 1 Nhóm báo cáo (đại diện cho 1 Post/Comment/User bị report nhiều lần)
+ */
+export interface IGroupedReport extends IReportResponse {
+  totalReports: number;
+  reportsList: IReportResponse[];
+  latestReason: string;
+}
+
+/**
+ * Response trả về từ API /reports/grouped
+ */
+export interface IGroupedReportListResponse {
+  items: IGroupedReport[];
+  meta: {
+    totalItems: number;
+    totalPages: number;
+    currentPage: number;
+    itemsPerPage: number;
+  };
+}

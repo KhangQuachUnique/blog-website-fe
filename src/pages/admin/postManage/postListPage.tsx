@@ -3,23 +3,23 @@ import { MdRefresh } from "react-icons/md";
 import { BiChevronLeft, BiChevronRight, BiChevronsLeft, BiChevronsRight } from "react-icons/bi";
 import { FaBookmark } from "react-icons/fa";
 import { useGetAllPosts, useHidePost, useRestorePost } from "../../../hooks/usePost"; 
-import { useResolveReport } from "../../../hooks/useReport";
-import { useToast } from "../../../contexts/toast";
+import { useResolveAllReportsByTarget } from "../../../hooks/useReport"; 
 import PostsTable from "../../../features/admin/postManage/PostsTable";
-import { type IPostResponseDto, EBlogPostStatus } from "../../../types/post";
-import type { EReportType } from "../../../types/report";
 import { PostTableSkeleton } from "../../../components/skeleton/PostTableSkeleton"; 
+import { type IPostResponseDto, EBlogPostStatus } from "../../../types/post";
+import { EReportType } from "../../../types/report";
 
 type StatusFilter = "ALL" | EBlogPostStatus;
 
 const ITEMS_PER_PAGE = 10;
 
 const PostListPage = () => {
+  // --- STATE ---
   const [filterStatus, setFilterStatus] = useState<StatusFilter>("ALL");
   const [actionLoading, setActionLoading] = useState<number | null>(null);
   const [currentPage, setCurrentPage] = useState<number>(1);
 
-  // Data fetching hook
+  // --- DATA FETCHING ---
   const {
     data: allPosts = [] as IPostResponseDto[],
     isLoading,
@@ -28,15 +28,13 @@ const PostListPage = () => {
     refetch,
   } = useGetAllPosts();
 
-  // Mutation hooks
+  // --- MUTATIONS ---
   const { mutate: hidePost } = useHidePost();
   const { mutate: restorePost } = useRestorePost();
-  const { mutate: resolveReport } = useResolveReport();
 
-  const { showToast } = useToast();
+  const { mutateAsync: resolveAllReportsAsync } = useResolveAllReportsByTarget();
 
-  // --- CLIENT-SIDE LOGIC ---
-
+  // --- DERIVED STATE (Filter & Pagination) ---
   const stats = useMemo(() => {
     return {
       all: allPosts.length,
@@ -61,51 +59,66 @@ const PostListPage = () => {
     currentPage * ITEMS_PER_PAGE
   );
 
+  // Chuẩn hóa dữ liệu
+  const normalizedPosts: IPostResponseDto[] = currentViewPosts.map((p) => ({
+    ...p,
+    createdAt: typeof p.createdAt === "string" 
+      ? p.createdAt 
+      : new Date(p.createdAt).toISOString(),
+  }));
+
   // --- HANDLERS ---
+  // 1. Ẩn bài viết (Ban)
   const handleHide = (postId: number) => {
     setActionLoading(postId);
     hidePost(postId, {
-      onSuccess: () => showToast({ type: "success", message: "Ẩn bài viết thành công!" }),
-      onError: (err: any) => {
-        const msg = err?.response?.data?.message || err.message || "Lỗi khi ẩn bài viết";
-        showToast({ type: "error", message: msg });
-      },
       onSettled: () => setActionLoading(null)
     });
   };
 
+  // 2. Khôi phục bài viết (Restore)
   const handleRestore = (postId: number) => {
     setActionLoading(postId);
     restorePost(postId, {
-      onSuccess: () => showToast({ type: "success", message: "Phục hồi bài viết thành công!" }),
-      onError: (err: any) => {
-        const msg = err?.response?.data?.message || err.message || "Lỗi khi phục hồi bài viết";
-        showToast({ type: "error", message: msg });
-      },
       onSettled: () => setActionLoading(null)
     });
   };
 
-  const handleApproveReport = (reportId: number) => {
-    resolveReport({ id: reportId, type: "POST" as EReportType, action: "APPROVE" }, {
-       onSuccess: () => {
-         showToast({ type: "success", message: "Báo cáo đã được phê duyệt!" });
-         refetch();
-       },
-       onError: (err: any) => showToast({ type: "error", message: err?.response?.data?.message || "Lỗi xử lý" })
-    });
+  // 3. Duyệt báo cáo (Approve) -> Ẩn bài + Resolve all reports
+  const handleApproveReport = async (postId: number) => {
+    setActionLoading(postId); 
+    try {
+      await resolveAllReportsAsync({ 
+        targetId: postId, 
+        type: EReportType.POST, 
+        action: "APPROVE" 
+      });
+      await refetch();
+    } catch (error) {
+      console.error("Error approving report:", error);
+    } finally {
+      setActionLoading(null);
+    }
   };
 
-  const handleRejectReport = (reportId: number) => {
-    resolveReport({ id: reportId, type: "POST" as EReportType, action: "REJECT" }, {
-        onSuccess: () => {
-            showToast({ type: "success", message: "Báo cáo đã được từ chối!" });
-            refetch();
-        },
-        onError: (err: any) => showToast({ type: "error", message: err?.response?.data?.message || "Lỗi xử lý" })
-     });
+  // 4. Từ chối báo cáo (Reject)
+  const handleRejectReport = async (postId: number) => {
+    setActionLoading(postId);
+    try {
+      await resolveAllReportsAsync({ 
+        targetId: postId, 
+        type: EReportType.POST, 
+        action: "REJECT" 
+      });
+      await refetch();
+    } catch (error) {
+      console.error("Error rejecting report:", error);
+    } finally {
+      setActionLoading(null);
+    }
   };
 
+  // --- EFFECTS ---
   useEffect(() => {
     setCurrentPage(1);
   }, [filterStatus]);
@@ -116,14 +129,6 @@ const PostListPage = () => {
     }
   }, [filteredPosts.length, totalPages, currentPage]);
 
-
-  const normalizedPosts: IPostResponseDto[] = currentViewPosts.map((p) => ({
-    ...p,
-    createdAt: typeof p.createdAt === "string" 
-      ? p.createdAt 
-      : new Date(p.createdAt).toISOString(),
-  }));
-  
   // --- RENDER ---
   if (isError) {
     return (
@@ -147,6 +152,7 @@ const PostListPage = () => {
   return (
     <div className="py-8 bg-white min-h-screen px-20">
       <div className="mb-8">
+        {/* Header Section */}
         <div className="flex justify-between items-start mb-6">
           <div>
             <h1 className="text-4xl text-[#6E344D] font-extrabold mb-2 flex items-center">
@@ -195,7 +201,7 @@ const PostListPage = () => {
             return (
               <div
                 key={status}
-                className={`${colors.bg} border-2 ${colors.border} rounded-xl p-4 text-center`}
+                className={`${colors.bg} border-2 ${colors.border} rounded-xl p-4 text-center transition-all hover:shadow-md`}
               >
                 <p className={`${colors.text} text-sm font-medium uppercase tracking-wide`}>
                   {label}
@@ -231,24 +237,28 @@ const PostListPage = () => {
       </div>
 
       {/* RENDER TABLE */}
-      {isLoading ? (
-        <PostTableSkeleton /> 
-      ) : (
-        <PostsTable
-          posts={normalizedPosts}
-          onHide={handleHide}
-          onRestore={handleRestore}
-          onApproveReport={handleApproveReport}
-          onRejectReport={handleRejectReport}
-          loadingId={actionLoading}
-          emptyMessage={
-            filterStatus !== "ALL"
-              ? `Không có bài viết nào với trạng thái "${filterStatus}"`
-              : "Không có bài viết nào"
-          }
-        />
-      )}
+      <div className={`transition-opacity duration-300 ${isFetching ? "opacity-60 pointer-events-none" : "opacity-100"}`}>
+        {isLoading ? (
+          <PostTableSkeleton /> 
+        ) : (
+          <PostsTable
+            posts={normalizedPosts}
+            loadingId={actionLoading}
+            // Truyền các handlers
+            onHide={handleHide}
+            onRestore={handleRestore}
+            onApproveReport={(id) => handleApproveReport(id)} 
+            onRejectReport={(id) => handleRejectReport(id)}
+            emptyMessage={
+              filterStatus !== "ALL"
+                ? `Không có bài viết nào với trạng thái "${filterStatus}"`
+                : "Không có bài viết nào"
+            }
+          />
+        )}
+      </div>
 
+      {/* Pagination Footer */}
       {!isLoading && (
           <div className="mt-8">
             <div className="flex justify-between items-center mb-6">

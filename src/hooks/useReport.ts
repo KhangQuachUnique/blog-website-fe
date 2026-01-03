@@ -7,15 +7,18 @@ import {
   getPendingReports,
   getResolvedReports,
   resolveReport,
+  resolveAllReportsByTarget,
   getReportsByPost,
   getReportDetail,
+  getGroupedReports,
 } from '../services/user/report/reportService';
-import type {
-  ICreateReportRequest,
-  ICheckReportedResponse,
+import {
+  type ICreateReportRequest,
+  type ICheckReportedResponse,
   EReportType,
-  IReportResponse,
-  EReportStatus,
+  type IReportResponse,
+  type EReportStatus,
+  type IGroupedReportListResponse,
 } from '../types/report';
 
 // ============================================
@@ -28,6 +31,10 @@ export const reportKeys = {
   detail: (reportId: number) => ['reports', 'detail', reportId] as const,
   check: (type: EReportType, targetId: number) => 
     [...reportKeys.all, 'check', type, targetId] as const,
+  grouped: (status: string, type: string, page: number) => 
+    ['reports', 'grouped', status, type, page] as const,
+  byPost: (postId: number, status: string) => 
+    ['reports', 'post', postId, status] as const,
 };
 
 // ============================================
@@ -71,6 +78,8 @@ export const useCreateReport = (options?: UseCreateReportOptions) => {
       queryClient.invalidateQueries({
         queryKey: reportKeys.check(variables.type, getTargetId(variables)),
       });
+
+      queryClient.invalidateQueries({ queryKey: ['reports', 'grouped'] });
 
       showToast({
         type: 'success',
@@ -128,26 +137,44 @@ export const useGetResolvedReports = () => {
 };
 
 /**
+ * 📊 Hook lấy danh sách báo cáo đã NHÓM (Dùng cho trang Admin)
+ */
+export const useGetGroupedReports = (
+  status: EReportStatus | string,
+  type: EReportType | string | 'ALL' = 'ALL',
+  page: number = 1,
+  limit: number = 10,
+  enabled: boolean = true
+) => {
+  return useQuery<IGroupedReportListResponse>({
+    queryKey: reportKeys.grouped(status, type, page),
+    queryFn: () => getGroupedReports(status, type, page, limit),
+    enabled: enabled && !!status,
+    placeholderData: (previousData) => previousData, 
+    staleTime: 60 * 1000, 
+  });
+};
+
+/**
  * Hook to get reports for a specific post
- * @param postId 
- * @param status (Optional)
  */
 export const useGetReportsByPost = (
   postId: number, 
   status?: EReportStatus | string
 ) => {
   return useQuery({
-    queryKey: ["reports", "post", postId, status || "ALL"], 
-    
+    queryKey: reportKeys.byPost(postId, status || "ALL"),
     queryFn: () => getReportsByPost(postId, status),
-
     enabled: Number.isFinite(postId) && postId > 0,
-
     placeholderData: (previousData) => previousData,
   });
 };
 
-// RESOLVE REPORT HOOK
+// ============================================
+// RESOLVE REPORT HOOKS
+// ============================================
+
+// 1. Resolve Single Report
 interface ResolveReportVariables {
   id: number;
   type: EReportType;
@@ -169,11 +196,59 @@ export const useResolveReport = () => {
         message: `Đã ${actionText} báo cáo thành công!`,
       });
 
+      // Làm mới danh sách report chung
       queryClient.invalidateQueries({ queryKey: reportKeys.all });
+      queryClient.invalidateQueries({ queryKey: ['reports', 'grouped'] });
+      // Làm mới danh sách report của post cụ thể (nếu đang ở trong Modal)
+      queryClient.invalidateQueries({ queryKey: ['reports', 'post'] });
     },
 
     onError: (error: any) => {
       const message = error?.response?.data?.message || 'Lỗi khi xử lý báo cáo';
+      showToast({
+        type: 'error',
+        message,
+      });
+    },
+  });
+};
+
+// 2. Resolve ALL Reports by Target (NEW HOOK)
+interface ResolveAllReportsVariables {
+  targetId: number;
+  type: EReportType;
+  action: 'APPROVE' | 'REJECT';
+}
+
+export const useResolveAllReportsByTarget = () => {
+  const queryClient = useQueryClient();
+  const { showToast } = useToast();
+
+  return useMutation({
+    mutationFn: ({ targetId, type, action }: ResolveAllReportsVariables) => 
+      resolveAllReportsByTarget(targetId, type, action),
+
+    onSuccess: (data, variables) => {
+      showToast({
+        type: 'success',
+        message: data.message,
+      });
+
+      queryClient.invalidateQueries({ queryKey: ['reports', 'grouped'] });
+
+      if (variables.type === EReportType.POST) {
+        queryClient.invalidateQueries({ 
+            queryKey: ['reports', 'post', variables.targetId] 
+        });
+
+        if (variables.action === 'APPROVE') {
+           queryClient.invalidateQueries({ queryKey: ['posts'] });
+        }
+      }
+    },
+
+    onError: (error: any) => {
+      const message = error?.message || 'Lỗi khi xử lý hàng loạt';
       showToast({
         type: 'error',
         message,
@@ -190,6 +265,6 @@ export const useReportDetail = (reportId: number, enabled: boolean = false) => {
     queryKey: reportKeys.detail(reportId),
     queryFn: () => getReportDetail(reportId),
     enabled: enabled && reportId > 0,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000, 
   });
 };

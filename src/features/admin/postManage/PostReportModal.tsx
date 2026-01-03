@@ -11,8 +11,9 @@ interface PostReportModalProps {
   isOpen: boolean;
   postId: number;
   onClose: () => void;
-  onApproveReport?: (reportId: number) => void;
-  onRejectReport?: (reportId: number) => void;
+
+  onApproveReport?: (id: number) => void;
+  onRejectReport?: (id: number) => void;
 }
 
 const PostReportModal: React.FC<PostReportModalProps> = ({
@@ -22,16 +23,14 @@ const PostReportModal: React.FC<PostReportModalProps> = ({
   onApproveReport,
   onRejectReport,
 }) => {
-  // 👇 1. Thêm State cho filter (Mặc định là PENDING để Admin tập trung xử lý việc cần làm)
+  // State filter
   const [filterStatus, setFilterStatus] = useState<EReportStatus | undefined>(EReportStatus.PENDING);
-  
   const [isProcessing, setIsProcessing] = useState(false);
-
-  // 👇 2. Truyền filterStatus vào hook (Hook này phải hỗ trợ param thứ 2 như bài trước đã sửa)
   const { data: reports = [], isLoading: reportsLoading } = useGetReportsByPost(postId, filterStatus);
 
+  // --- HELPER FUNCTIONS ---
   const getReportTypeLabel = (type: EReportType): string => {
-    const typeMap: Record<EReportType, string> = {
+    const typeMap: Record<string, string> = {
       USER: "Người dùng",
       POST: "Bài viết",
       COMMENT: "Bình luận",
@@ -40,7 +39,7 @@ const PostReportModal: React.FC<PostReportModalProps> = ({
   };
 
   const getReportTypeColor = (type: EReportType) => {
-    const colorMap: Record<EReportType, { bg: string; border: string; text: string }> = {
+    const colorMap: Record<string, { bg: string; border: string; text: string }> = {
       USER: { bg: "#fef2f2", border: "#fecaca", text: "#dc2626" },
       POST: { bg: "#f0fdf4", border: "#bbf7d0", text: "#16a34a" },
       COMMENT: { bg: "#fffbeb", border: "#fde68a", text: "#b45309" },
@@ -48,6 +47,36 @@ const PostReportModal: React.FC<PostReportModalProps> = ({
     return colorMap[type] || colorMap.POST;
   };
 
+  // --- HANDLERS (Đã sửa logic Batch Processing) ---
+
+  const handleApprove = async () => {
+    if (!onApproveReport) return;
+    setIsProcessing(true);
+    try {
+      await onApproveReport(postId);
+
+      onClose();
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleReject = async () => {
+    if (!onRejectReport) return;
+    setIsProcessing(true);
+    try {
+      await onRejectReport(postId);
+      onClose();
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  // --- TABLE COLUMNS ---
   const columns: TableColumn<IReportResponse>[] = [
     {
       id: "id",
@@ -132,23 +161,36 @@ const PostReportModal: React.FC<PostReportModalProps> = ({
       ),
     },
     {
-      id: "status", // Thêm cột status để dễ nhìn khi xem tab "Tất cả"
+      id: "status",
       label: "Trạng thái",
       width: "120px",
       align: "center",
-      render: (report) => (
-        <Box
-          sx={{
-            display: "inline-block",
-            px: 1.5, py: 0.5, borderRadius: "6px", fontSize: "11px", fontWeight: "600",
-            backgroundColor: report.status === EReportStatus.PENDING ? "#fff7ed" : "#f0fdf4",
-            color: report.status === EReportStatus.PENDING ? "#c2410c" : "#15803d",
-            border: `1px solid ${report.status === EReportStatus.PENDING ? "#ffedd5" : "#bbf7d0"}`,
-          }}
-        >
-          {report.status === EReportStatus.PENDING ? "Chờ xử lý" : "Đã giải quyết"}
-        </Box>
-      ),
+      render: (report) => {
+        const normalizedStatus = String(report.status).toUpperCase();
+        
+        let statusConfig = { label: "Không xác định", bg: "#f3f4f6", color: "#4b5563", border: "#e5e7eb" };
+
+        if (normalizedStatus === "PENDING") {
+           statusConfig = { label: "Chờ xử lý", bg: "#fff7ed", color: "#c2410c", border: "#ffedd5" };
+        } else if (normalizedStatus === "RESOLVED") {
+           statusConfig = { label: "Đã giải quyết", bg: "#f0fdf4", color: "#15803d", border: "#bbf7d0" };
+        }
+
+        return (
+          <Box
+            sx={{
+              display: "inline-block",
+              px: 1.5, py: 0.5, borderRadius: "6px", fontSize: "11px", fontWeight: "600",
+              backgroundColor: statusConfig.bg,
+              color: statusConfig.color,
+              border: `1px solid ${statusConfig.border}`,
+              whiteSpace: "nowrap"
+            }}
+          >
+            {statusConfig.label}
+          </Box>
+        );
+      },
     },
     {
       id: "createdAt",
@@ -162,26 +204,6 @@ const PostReportModal: React.FC<PostReportModalProps> = ({
       ),
     },
   ];
-
-  const handleApprove = async () => {
-    if (reports.length === 0 || !onApproveReport) return;
-    setIsProcessing(true);
-    try {
-      for (const report of reports) await onApproveReport(report.id);
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  const handleReject = async () => {
-    if (reports.length === 0 || !onRejectReport) return;
-    setIsProcessing(true);
-    try {
-      for (const report of reports) await onRejectReport(report.id);
-    } finally {
-      setIsProcessing(false);
-    }
-  };
 
   // Helper render nút Filter
   const FilterButton = ({ label, value, color }: { label: string, value: EReportStatus | undefined, color: string }) => {
@@ -227,14 +249,14 @@ const PostReportModal: React.FC<PostReportModalProps> = ({
           <button onClick={onClose} style={{ background: "none", border: "none", fontSize: "24px", cursor: "pointer", color: "#6b7280" }}>✕</button>
         </Box>
 
-        {/* 👇 3. UI Bộ Lọc (Filter Tabs) */}
+        {/* Filter Tabs */}
         <Box sx={{ display: "flex", gap: 1, mb: 2 }}>
           <FilterButton label="Chờ xử lý" value={EReportStatus.PENDING} color="#f59e0b" />
           <FilterButton label="Đã giải quyết" value={EReportStatus.RESOLVED} color="#10b981" />
           <FilterButton label="Tất cả" value={undefined} color="#6366f1" />
         </Box>
 
-        {/* 👇 4. Action Buttons (Chỉ hiện khi ở tab PENDING và có dữ liệu) */}
+        {/* Action Buttons */}
         {filterStatus === EReportStatus.PENDING && reports.length > 0 && (
           <Box sx={{ display: "flex", gap: 2, p: 2, backgroundColor: "#fff7ed", borderRadius: "8px", border: "1px solid #ffedd5" }}>
             <Box sx={{ flex: 1, display: "flex", alignItems: "center", gap: 1, color: "#9a3412", fontSize: "13px", fontWeight: "600" }}>
