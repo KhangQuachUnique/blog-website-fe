@@ -1,47 +1,27 @@
 // src/pages/community/CommunityMembers.tsx
 import { useNavigate, useParams } from "react-router-dom";
 import { useCommunityMembers } from "../../../hooks/useCommunityMembers";
-
-function formatDate(iso: string) {
-  const d = new Date(iso);
-  return new Intl.DateTimeFormat("vi-VN", { dateStyle: "medium" }).format(d);
-}
+import Avatar from "@mui/material/Avatar";
+import { stringAvatar } from "../../../utils/avatarHelper";
+import { formatShortDateVi } from "../../../utils/timeHelper";
 
 function roleLabel(role: "ADMIN" | "MODERATOR" | "MEMBER") {
-  if (role === "ADMIN") return "Admin";
-  if (role === "MODERATOR") return "Moderator";
-  return "Member";
+  if (role === "ADMIN") return "Quản trị viên";
+  if (role === "MODERATOR") return "Điều hành viên";
+  return "Thành viên";
 }
 
-function Avatar({
+function MemberAvatar({
   username,
   avatarUrl,
 }: {
   username: string;
   avatarUrl?: string | null;
 }) {
-  const fallback = username?.trim()?.[0]?.toUpperCase() ?? "?";
   return avatarUrl ? (
-    <img
-      src={avatarUrl}
-      alt={username}
-      style={{ width: 36, height: 36, borderRadius: 999, objectFit: "cover" }}
-    />
+    <Avatar src={avatarUrl} alt={username} sx={{ width: 36, height: 36 }} />
   ) : (
-    <div
-      style={{
-        width: 36,
-        height: 36,
-        borderRadius: 999,
-        display: "grid",
-        placeItems: "center",
-        background: "#f3f4f6",
-        fontWeight: 700,
-      }}
-      title={username}
-    >
-      {fallback}
-    </div>
+    <Avatar {...stringAvatar(username, 36, "0.9rem", "", "none")} />
   );
 }
 
@@ -77,7 +57,7 @@ export default function CommunityMembers() {
       <div className="community-members">
         <h3>Danh sách thành viên</h3>
         <p className="community-members__error">
-          Lỗi tải members: {(error as any)?.message ?? "Unknown error"}
+          Lỗi tải thành viên: {(error as any)?.message ?? "Lỗi không xác định"}
         </p>
         <button
           className="btn btn-outline community-members__retry"
@@ -127,7 +107,7 @@ export default function CommunityMembers() {
                     }}
                   >
                     <div className="community-member-avatar">
-                      <Avatar
+                      <MemberAvatar
                         username={m.user.username}
                         avatarUrl={m.user.avatarUrl}
                       />
@@ -138,7 +118,7 @@ export default function CommunityMembers() {
                         {m.user.username}
                       </div>
                       <div className="community-member-joined">
-                        Tham gia: {formatDate(String(m.joinedAt))}
+                        Tham gia: {formatShortDateVi(String(m.joinedAt))}
                       </div>
                     </div>
                   </div>

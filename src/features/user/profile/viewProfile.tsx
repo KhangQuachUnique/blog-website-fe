@@ -98,12 +98,12 @@ const ViewProfile = () => {
         await userService.unfollowUser(fetchedProfile.id);
         setIsFollowing(false);
         setFollowersCount((prev) => prev - 1);
-        showToast({ type: "success", message: "Đã unfollow người dùng" });
+        showToast({ type: "success", message: "Đã bỏ theo dõi người dùng" });
       } else {
         await userService.followUser(fetchedProfile.id);
         setIsFollowing(true);
         setFollowersCount((prev) => prev + 1);
-        showToast({ type: "success", message: "Đã follow người dùng" });
+        showToast({ type: "success", message: "Đã theo dõi người dùng" });
       }
     } catch (err: unknown) {
       const error = err as {

@@ -15,29 +15,7 @@ import type { NotificationResponseDto } from "../../types/notification";
 import { getNotificationNavigationUrl } from "../../types/notification";
 import { Link } from "react-router-dom";
 import { stringAvatar } from "../../utils/avatarHelper";
-
-/**
- * Format relative time from date
- */
-const formatRelativeTime = (date: Date): string => {
-  const now = new Date();
-  const notificationDate = new Date(date);
-  const diffMs = now.getTime() - notificationDate.getTime();
-  const diffSec = Math.floor(diffMs / 1000);
-  const diffMin = Math.floor(diffSec / 60);
-  const diffHour = Math.floor(diffMin / 60);
-  const diffDay = Math.floor(diffHour / 24);
-
-  if (diffSec < 60) return "Just now";
-  if (diffMin < 60) return `${diffMin}m ago`;
-  if (diffHour < 24) return `${diffHour}h ago`;
-  if (diffDay < 7) return `${diffDay}d ago`;
-
-  return notificationDate.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-  });
-};
+import { formatRelativeTimeVi } from "../../utils/timeHelper";
 
 /**
  * Check if notification is clickable (has navigation)
@@ -147,10 +125,10 @@ const NotificationBell = () => {
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-gray-100">
             <h3 className="text-lg font-semibold text-gray-800">
-              Notifications
+              Thông báo
               {hasUnread && (
                 <span className="ml-2 text-sm font-normal text-gray-500">
-                  ({unreadCount} new)
+                  ({unreadCount} mới)
                 </span>
               )}
             </h3>
@@ -167,7 +145,7 @@ const NotificationBell = () => {
                 ) : (
                   <IoCheckmarkDoneSharp className="text-base" />
                 )}
-                <span>Mark all read</span>
+                <span>Đánh dấu đã đọc</span>
               </button>
             )}
           </div>
@@ -186,7 +164,7 @@ const NotificationBell = () => {
               <li className="text-sm text-gray-600 flex justify-center items-center py-[80px]">
                 <div className="flex flex-col items-center">
                   <FaInbox className="text-4xl text-gray-400" />
-                  <span className="mt-2">No notifications yet</span>
+                  <span className="mt-2">Chưa có thông báo nào</span>
                 </div>
               </li>
             )}
@@ -288,7 +266,7 @@ const NotificationItem = ({ notification, onClick }: NotificationItemProps) => {
 
           {/* Time */}
           <span className="text-xs text-gray-400 mt-1 block">
-            {formatRelativeTime(notification.createdAt)}
+            {formatRelativeTimeVi(notification.createdAt)}
           </span>
         </div>
       </div>

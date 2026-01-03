@@ -28,6 +28,9 @@ import type { IPostResponseDto } from "../../../types/post";
 import DetailPostSkeleton from "../../../components/skeleton/DetailPostSkeleton";
 import { BlockCommentButton } from "../../../components/comments/BlockCommentButton";
 import FloatingInteractBar from "../../../components/InteractBar/FloatingInteractBar";
+import { formatRelativeTimeVi } from "../../../utils/timeHelper";
+import Avatar from "@mui/material/Avatar";
+import { stringAvatar } from "../../../utils/avatarHelper";
 
 // ============================================
 // Types
@@ -43,18 +46,6 @@ interface LayoutItem {
 // ============================================
 // Helper Functions
 // ============================================
-const formatDate = (dateInput: string | Date): string => {
-  const date = dateInput instanceof Date ? dateInput : new Date(dateInput);
-  const now = new Date();
-  const diff = Math.floor((now.getTime() - date.getTime()) / 1000);
-
-  if (diff < 60) return "vừa xong";
-  if (diff < 3600) return `${Math.floor(diff / 60)} phút trước`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)} giờ trước`;
-  if (diff < 604800) return `${Math.floor(diff / 86400)} ngày trước`;
-  return date.toLocaleDateString("vi-VN");
-};
-
 const parseObjectFit = (value: unknown): ObjectFitType => {
   if (!value) return ObjectFitType.COVER;
   const normalized = String(value).toUpperCase();
@@ -299,11 +290,23 @@ const PostDetailsPage: React.FC = () => {
 
         {/* Author Info */}
         <div className="flex items-center gap-3 text-md text-gray-500 mt-10">
-          <img
-            src={postData.author?.avatarUrl ?? "/assets/default-avatar.png"}
-            alt={postData.author?.username ?? "avatar"}
-            className="w-15 h-15 rounded-full object-cover"
-          />
+          {postData.author?.avatarUrl ? (
+            <img
+              src={postData.author.avatarUrl}
+              alt={postData.author?.username ?? "Ảnh đại diện"}
+              className="w-15 h-15 rounded-full object-cover"
+            />
+          ) : (
+            <Avatar
+              {...stringAvatar(
+                postData.author?.username || "Người dùng",
+                60,
+                "1.5rem",
+                "",
+                "none"
+              )}
+            />
+          )}
           <div>
             <div>
               Bởi{" "}
@@ -315,7 +318,7 @@ const PostDetailsPage: React.FC = () => {
               </Link>
             </div>
             <div className="text-md text-gray-400">
-              {formatDate(postData.createdAt)}
+              {formatRelativeTimeVi(postData.createdAt)}
             </div>
           </div>
         </div>

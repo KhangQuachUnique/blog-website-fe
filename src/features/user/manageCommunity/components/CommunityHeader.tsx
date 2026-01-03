@@ -15,9 +15,7 @@ const CommunityHeader = ({ community }: Props) => {
 
   const isAdmin = community.role === "ADMIN" || community.role === "MODERATOR";
 
-  const coverSrc =
-    community.thumbnailUrl ??
-    "https://via.placeholder.com/1200x300?text=Community+Cover";
+  const hasCover = !!community.thumbnailUrl;
 
   return (
     <div style={{ width: "100%", marginBottom: 24 }}>
@@ -28,14 +26,31 @@ const CommunityHeader = ({ community }: Props) => {
           height: 220,
           borderRadius: 14,
           overflow: "hidden",
-          backgroundColor: "#eee",
+          backgroundColor: "#e5e7eb",
         }}
       >
-        <img
-          src={coverSrc}
-          alt="cover"
-          style={{ width: "100%", height: "100%", objectFit: "cover" }}
-        />
+        {hasCover ? (
+          <img
+            src={community.thumbnailUrl!}
+            alt="cover"
+            style={{ width: "100%", height: "100%", objectFit: "cover" }}
+          />
+        ) : (
+          <div
+            style={{
+              width: "100%",
+              height: "100%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor: "#e5e7eb",
+            }}
+          >
+            <span style={{ color: "#9ca3af", fontSize: 18 }}>
+              Chưa có ảnh bìa
+            </span>
+          </div>
+        )}
       </div>
 
       {/* MAIN INFO */}

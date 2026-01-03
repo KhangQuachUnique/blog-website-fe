@@ -86,13 +86,13 @@ const Header = ({ layout, collapsed, setCollapsed }: HeaderProps) => {
               to="/login"
               className="font-label py-2 px-4 text-[#F295B6] bg-white rounded-lg hover:bg-[#FFEFF4] transition-background duration-200"
             >
-              Login
+              Đăng nhập
             </NavLink>
             <NavLink
               to="/register"
               className="font-label py-2 px-4 text-white bg-[#F295B6] rounded-lg hover:bg-[#FFB8D1] transition-background duration-200"
             >
-              Register
+              Đăng ký
             </NavLink>
           </div>
         ) : (
@@ -101,10 +101,14 @@ const Header = ({ layout, collapsed, setCollapsed }: HeaderProps) => {
             <Box>
               <IconButton onClick={handleOpen} size="small">
                 {user?.avatarUrl ? (
-                  <Avatar alt="User Avatar" src={user.avatarUrl} />
+                  <Avatar alt="Ảnh đại diện" src={user.avatarUrl} />
                 ) : (
                   <Avatar
-                    {...stringAvatar(user?.username || "User", 40, "1rem")}
+                    {...stringAvatar(
+                      user?.username || "Người dùng",
+                      40,
+                      "1rem"
+                    )}
                   />
                 )}
               </IconButton>
