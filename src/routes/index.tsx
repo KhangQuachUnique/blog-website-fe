@@ -1,4 +1,4 @@
-import { createBrowserRouter } from "react-router-dom";
+import { createBrowserRouter, Navigate } from "react-router-dom";
 
 import AdminLayout from "../components/layout/adminLayout";
 import UserLayout from "../components/layout/userLayout";
@@ -20,10 +20,22 @@ import PostDetailsPage from "../pages/user/post/postDetailsPage";
 import { savedPostsRoutes } from "./user/savedPosts.route";
 import NotFoundPage from "../pages/errors/NotFoundPage";
 
+/**
+ * Component wrapper để chặn Admin vào các trang user
+ * Admin sẽ được redirect về /admin
+ */
+const UserOnlyLayout = () => {
+  return (
+    <RoleGuard allowAdmin={false}>
+      <UserLayout />
+    </RoleGuard>
+  );
+};
+
 export const router = createBrowserRouter([
   {
     path: "/",
-    element: <UserLayout />,
+    element: <UserOnlyLayout />,
     children: [
       ...newsfeedRoutes,
       {

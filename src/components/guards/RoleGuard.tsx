@@ -1,4 +1,4 @@
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { EUserRole } from "../../types/user";
 
@@ -12,6 +12,8 @@ interface RoleGuardProps {
   redirectTo?: string;
   /** Chế độ guest-only: redirect về home nếu đã đăng nhập */
   guestOnly?: boolean;
+  /** Cho phép admin truy cập (default: true cho admin routes, false cho user routes) */
+  allowAdmin?: boolean;
 }
 
 /**
@@ -21,14 +23,17 @@ interface RoleGuardProps {
  * - Yêu cầu đăng nhập: <RoleGuard><Page /></RoleGuard>
  * - Yêu cầu role cụ thể: <RoleGuard allowedRoles={[EUserRole.ADMIN]}><AdminPage /></RoleGuard>
  * - Chỉ guest (chưa đăng nhập): <RoleGuard guestOnly><LoginPage /></RoleGuard>
+ * - Chặn admin vào trang user: <RoleGuard allowAdmin={false}><UserPage /></RoleGuard>
  */
 const RoleGuard = ({
   children,
   allowedRoles,
   redirectTo = "/",
   guestOnly = false,
+  allowAdmin = true,
 }: RoleGuardProps) => {
   const { user, isLoading, isAuthenticated } = useAuth();
+  const location = useLocation();
 
   // Đang loading
   if (isLoading) {
@@ -42,7 +47,9 @@ const RoleGuard = ({
   // Guest-only mode (login, register pages)
   if (guestOnly) {
     if (isAuthenticated) {
-      return <Navigate to="/" replace />;
+      // Nếu là admin, redirect về /admin, ngược lại về /
+      const redirectPath = user?.role === EUserRole.ADMIN ? "/admin" : "/";
+      return <Navigate to={redirectPath} replace />;
     }
     return <>{children}</>;
   }
@@ -50,6 +57,13 @@ const RoleGuard = ({
   // Yêu cầu đăng nhập
   if (!isAuthenticated || !user) {
     return <LoginRequiredPage />;
+  }
+
+  // Kiểm tra nếu là Admin và không cho phép Admin truy cập route này
+  // (áp dụng cho các trang user bình thường)
+  if (!allowAdmin && user.role === EUserRole.ADMIN) {
+    // Redirect admin về trang admin dashboard
+    return <Navigate to="/admin" replace />;
   }
 
   // Nếu có allowedRoles, kiểm tra role
