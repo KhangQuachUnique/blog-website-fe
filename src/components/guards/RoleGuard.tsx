@@ -39,7 +39,8 @@ const RoleGuard = ({
 
   // Xác định có yêu cầu đăng nhập không
   // Nếu không truyền requireAuth, mặc định = true khi có allowedRoles
-  const shouldRequireAuth = requireAuth ?? (allowedRoles && allowedRoles.length > 0);
+  const shouldRequireAuth =
+    requireAuth ?? (allowedRoles && allowedRoles.length > 0);
 
   // Đang loading
   if (isLoading) {
