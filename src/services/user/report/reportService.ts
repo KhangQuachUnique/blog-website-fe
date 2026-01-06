@@ -53,9 +53,14 @@ export const getGroupedReports = async (
   status: EReportStatus | string,
   type: EReportType | string | 'ALL',
   page = 1,
-  limit = 10
+  limit = 10,
+  search?: string,
 ): Promise<IGroupedReportListResponse> => {
-  const params: any = { page, limit };
+  const params: any = { status, type, page, limit };
+
+  if (search) {
+    params.search = search;
+  }
 
   if (status) params.status = status;
   

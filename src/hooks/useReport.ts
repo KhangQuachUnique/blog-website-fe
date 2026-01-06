@@ -144,11 +144,12 @@ export const useGetGroupedReports = (
   type: EReportType | string | 'ALL' = 'ALL',
   page: number = 1,
   limit: number = 10,
-  enabled: boolean = true
+  search: string = "",
+  enabled: boolean = true,
 ) => {
   return useQuery<IGroupedReportListResponse>({
-    queryKey: reportKeys.grouped(status, type, page),
-    queryFn: () => getGroupedReports(status, type, page, limit),
+    queryKey: [...reportKeys.grouped(status, type, page), search],
+    queryFn: () => getGroupedReports(status, type, page, limit, search),
     enabled: enabled && !!status,
     placeholderData: (previousData) => previousData, 
     staleTime: 60 * 1000, 

@@ -1,11 +1,6 @@
 import { useEffect, useState } from "react";
-import { MdRefresh, MdCheckCircle, MdPendingActions } from "react-icons/md";
-import {
-  BiChevronLeft,
-  BiChevronRight,
-  BiChevronsLeft,
-  BiChevronsRight,
-} from "react-icons/bi";
+import { MdRefresh, MdSearch, MdClose } from "react-icons/md";
+import { BiChevronLeft, BiChevronRight, BiChevronsLeft, BiChevronsRight, BiChevronDown } from "react-icons/bi";
 import { FaExclamationTriangle } from "react-icons/fa";
 import {
   useGetGroupedReports,
@@ -22,9 +17,27 @@ type StatusFilter = "PENDING" | "RESOLVED";
 
 const ITEMS_PER_PAGE = 10;
 
+// Custom hook cho debounce
+const useDebounce = <T,>(value: T, delay: number): T => {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+};
+
 const ReportListPage = () => {
   // --- STATE UI ---
   const [currentPage, setCurrentPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState("");
   
   const [typeFilter, setTypeFilter] = useState<ReportTypeFilter>(EReportType.POST);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("PENDING");
@@ -32,6 +45,9 @@ const ReportListPage = () => {
   const [actionLoading, setActionLoading] = useState<number | null>(null);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [selectedReport, setSelectedReport] = useState<IGroupedReport | null>(null);
+
+  // Debounce search term (300ms)
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
   // --- REACT QUERY HOOKS (Server-side Pagination) ---
   const {
@@ -44,7 +60,8 @@ const ReportListPage = () => {
     statusFilter,
     typeFilter,
     currentPage,
-    ITEMS_PER_PAGE
+    ITEMS_PER_PAGE,
+    debouncedSearchTerm
   );
 
   const { mutateAsync: resolveAllReportsAsync } = useResolveAllReportsByTarget();
@@ -62,7 +79,7 @@ const ReportListPage = () => {
   // --- EFFECTS ---
   useEffect(() => {
     setCurrentPage(1);
-  }, [typeFilter, statusFilter]);
+  }, [typeFilter, statusFilter, debouncedSearchTerm]);
 
   // --- HELPERS ---
   const getTargetInfo = (reportId: number) => {
@@ -189,74 +206,84 @@ const ReportListPage = () => {
           </button>
         </div>
 
-        {/* STATUS TABS */}
-        <div className="flex p-1 bg-gray-100 rounded-xl w-fit mb-6 border border-gray-200">
-          <button
-            onClick={() => setStatusFilter("PENDING")}
-            disabled={isLoading}
-            className={`flex items-center gap-2 px-6 py-2.5 rounded-lg font-bold transition-all ${
-              statusFilter === "PENDING"
-                ? "bg-white text-pink-600 shadow-md"
-                : "text-gray-500 hover:text-gray-700"
-            } ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
-          >
-            <MdPendingActions size={20} />
-            Cần xử lý
-          </button>
-          <button
-            onClick={() => setStatusFilter("RESOLVED")}
-            disabled={isLoading}
-            className={`flex items-center gap-2 px-6 py-2.5 rounded-lg font-bold transition-all ${
-              statusFilter === "RESOLVED"
-                ? "bg-white text-green-600 shadow-md"
-                : "text-gray-500 hover:text-gray-700"
-            } ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
-          >
-            <MdCheckCircle size={20} />
-            Đã giải quyết
-          </button>
-        </div>
-
-        {/* STATS SUMMARY CARD */}
-        <div className="grid grid-cols-1 mb-6">
-            <div className={`border-2 rounded-xl p-4 text-center transition-all shadow-sm flex flex-col items-center justify-center
-                ${typeFilter === EReportType.POST ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : ''}
-                ${typeFilter === EReportType.COMMENT ? 'bg-amber-50 border-amber-200 text-amber-700' : ''}
-                ${typeFilter === EReportType.USER ? 'bg-red-50 border-red-200 text-red-700' : ''}
-            `}>
-              <p className="text-sm font-medium uppercase tracking-wide opacity-80">
-                Tổng số {typeFilter === EReportType.POST ? 'Bài viết' : typeFilter === EReportType.COMMENT ? 'Bình luận' : 'Người dùng'} {statusFilter === 'PENDING' ? 'đang chờ xử lý' : 'đã xử lý'}
-              </p>
-              <p className="text-4xl font-bold mt-2">
-                {isLoading ? "-" : meta.totalItems}
-              </p>
-            </div>
-        </div>
-
-        {/* TYPE FILTER TABS */}
-        <div className="flex gap-3 overflow-x-auto pb-2">
-          {([EReportType.POST, EReportType.COMMENT, EReportType.USER] as ReportTypeFilter[]).map((type) => {
-            const isActive = typeFilter === type;
-            let activeClass = "";
-            if(type === EReportType.POST) activeClass = "text-emerald-700 bg-emerald-100 border-emerald-500 shadow-sm";
-            if(type === EReportType.COMMENT) activeClass = "text-amber-700 bg-amber-100 border-amber-500 shadow-sm";
-            if(type === EReportType.USER) activeClass = "text-red-700 bg-red-100 border-red-500 shadow-sm";
-
+        {/* Stats Grid */}
+        <div className="grid grid-cols-3 gap-4 mb-8">
+          {([
+            { type: EReportType.POST, label: "Báo cáo Bài viết", colors: { bg: "bg-emerald-50", text: "text-emerald-700", border: "border-emerald-200" } },
+            { type: EReportType.COMMENT, label: "Báo cáo Bình luận", colors: { bg: "bg-amber-50", text: "text-amber-700", border: "border-amber-200" } },
+            { type: EReportType.USER, label: "Báo cáo Người dùng", colors: { bg: "bg-red-50", text: "text-red-700", border: "border-red-200" } },
+          ] as const).map((item) => {
+            const count = groupedReports.filter((r) => r.type === item.type).length;
             return (
-              <button
-                key={type}
-                onClick={() => setTypeFilter(type)}
-                disabled={isLoading}
-                className={`px-6 py-2.5 rounded-lg font-semibold transition whitespace-nowrap border-2 ${
-                  isActive
-                    ? activeClass
-                    : "bg-white text-gray-500 border-gray-200 hover:bg-gray-50 hover:border-gray-300"
-                } ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
+              <div
+                key={item.type}
+                className={`${item.colors.bg} border-2 ${item.colors.border} rounded-xl p-4 text-center`}
               >
-                {type === EReportType.POST ? "Bài viết" : type === EReportType.COMMENT ? "Bình luận" : "Người dùng"}
-              </button>
+                <p className={`${item.colors.text} text-sm font-medium uppercase tracking-wide`}>
+                  {item.label}
+                </p>
+                <p className={`${item.colors.text} text-3xl font-bold mt-1`}>
+                  {isLoading ? "-" : count}
+                </p>
+              </div>
             );
           })}
+        </div>
+
+        {/* CONTROL BAR */}
+        <div className="flex flex-col md:flex-row gap-4 justify-between items-center mb-6">
+          <div className="flex gap-3 w-full">
+            {/* SEARCH INPUT */}
+            <div className="relative flex-1">
+              <MdSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+              <input
+                type="text"
+                placeholder="Tìm theo ID báo cáo, người dùng, bài viết..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 pr-10 py-3 w-full border-2 border-gray-200 rounded-lg focus:outline-none focus:border-[#F295B6] transition-colors"
+              />
+              {searchTerm && (
+                <button
+                  onClick={() => setSearchTerm("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  <MdClose size={18} />
+                </button>
+              )}
+            </div>
+
+            {/* TYPE FILTER DROPDOWN */}
+            <div className="relative min-w-[200px]">
+              <select
+                value={typeFilter}
+                onChange={(e) => setTypeFilter(e.target.value as ReportTypeFilter)}
+                className="w-full appearance-none pl-4 pr-10 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-[#F295B6] transition-colors bg-white font-medium text-gray-700 cursor-pointer hover:border-gray-300"
+              >
+                <option value={EReportType.POST}>Báo cáo Bài viết</option>
+                <option value={EReportType.COMMENT}>Báo cáo Bình luận</option>
+                <option value={EReportType.USER}>Báo cáo Người dùng</option>
+              </select>
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-500">
+                <BiChevronDown size={20} />
+              </div>
+            </div>
+
+            {/* STATUS FILTER DROPDOWN */}
+            <div className="relative min-w-[200px]">
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
+                className="w-full appearance-none pl-4 pr-10 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-[#F295B6] transition-colors bg-white font-medium text-gray-700 cursor-pointer hover:border-gray-300"
+              >
+                <option value="PENDING">Chờ xử lý</option>
+                <option value="RESOLVED">Đã giải quyết</option>
+              </select>
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-500">
+                <BiChevronDown size={20} />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
