@@ -73,7 +73,7 @@ const MyCommunitiesPage = () => {
 
   return (
     <div className="community-page">
-      {/* ✅ WRAPPER để KHỚP kích cỡ với CommunityLayout.tsx (padding 150px) */}
+      {/*  WRAPPER để KHỚP kích cỡ với CommunityLayout.tsx (padding 150px) */}
       <div style={{ padding: "20px 150px" }}>
         {/* Header (styled like SavedPostsPage) */}
         <div className="saved-posts-header community-header">

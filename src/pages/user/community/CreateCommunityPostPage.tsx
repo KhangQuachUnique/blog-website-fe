@@ -44,7 +44,7 @@ const CreateCommunityPostPage = () => {
   const isMemberApproved =
     role === "ADMIN" || role === "MODERATOR" || role === "MEMBER";
 
-  // ✅ chặn vào URL create-post nếu chưa được tham gia/duyệt
+  //  chặn vào URL create-post nếu chưa được tham gia/duyệt
   useEffect(() => {
     if (!isMemberApproved) {
       showToast({
@@ -81,7 +81,7 @@ const CreateCommunityPostPage = () => {
           });
         }
 
-        // ✅ điều hướng về trang cộng đồng sau khi submit
+        // điều hướng về trang cộng đồng sau khi submit
         // setTimeout nhỏ để toast kịp render ổn định
         setTimeout(() => {
           navigate(`/community/${communityId}`, { replace: true });
