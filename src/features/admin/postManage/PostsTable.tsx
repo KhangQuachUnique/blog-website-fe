@@ -64,6 +64,53 @@ const PostsTable: React.FC<PostsTableProps> = ({
       ),
     },
     {
+      id: "author",
+      label: "Người đăng",
+      width: "160px",
+      align: "left",
+      render: (post) => {
+        const author = post.author || { username: "Ẩn danh", avatarUrl: null }; 
+        
+        return (
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+            {author.avatarUrl ? (
+              <Box
+                component="img"
+                src={author.avatarUrl}
+                alt={author.username}
+                sx={{
+                  width: "28px", height: "28px", borderRadius: "50%",
+                  objectFit: "cover", border: "1px solid #e5e7eb"
+                }}
+              />
+            ) : (
+              <Box
+                sx={{
+                  width: "28px", height: "28px", borderRadius: "50%",
+                  backgroundColor: "#f3f4f6", color: "#6b7280",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: "11px", fontWeight: "700", border: "1px solid #e5e7eb"
+                }}
+              >
+                {(author.username?.[0] || "?").toUpperCase()}
+              </Box>
+            )}
+            
+            <Box 
+              sx={{ 
+                fontSize: "13px", fontWeight: "500", color: colors.text,
+                whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "110px",
+                fontFamily: '"Quicksand", sans-serif'
+              }}
+              title={author.username}
+            >
+              {author.username}
+            </Box>
+          </Box>
+        );
+      },
+    },
+    {
       id: "title",
       label: "Tiêu đề",
       align: "left",

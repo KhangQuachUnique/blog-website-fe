@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
-import { MdRefresh } from "react-icons/md";
-import { BiChevronLeft, BiChevronRight, BiChevronsLeft, BiChevronsRight } from "react-icons/bi";
+import { MdRefresh, MdSearch, MdClose } from "react-icons/md";
+import { BiChevronLeft, BiChevronRight, BiChevronsLeft, BiChevronsRight, BiChevronDown } from "react-icons/bi";
 import { FaBookmark } from "react-icons/fa";
 import { useGetAllPosts, useHidePost, useRestorePost } from "../../../hooks/usePost"; 
 import { useResolveAllReportsByTarget } from "../../../hooks/useReport"; 
@@ -18,6 +18,7 @@ const PostListPage = () => {
   const [filterStatus, setFilterStatus] = useState<StatusFilter>("ALL");
   const [actionLoading, setActionLoading] = useState<number | null>(null);
   const [currentPage, setCurrentPage] = useState<number>(1);
+  const [searchTerm, setSearchTerm] = useState("");
 
   // --- DATA FETCHING ---
   const {
@@ -31,10 +32,9 @@ const PostListPage = () => {
   // --- MUTATIONS ---
   const { mutate: hidePost } = useHidePost();
   const { mutate: restorePost } = useRestorePost();
-
   const { mutateAsync: resolveAllReportsAsync } = useResolveAllReportsByTarget();
 
-  // --- DERIVED STATE (Filter & Pagination) ---
+  // --- DERIVED STATE ---
   const stats = useMemo(() => {
     return {
       all: allPosts.length,
@@ -44,9 +44,24 @@ const PostListPage = () => {
   }, [allPosts]);
 
   const filteredPosts = useMemo(() => {
-    if (filterStatus === "ALL") return allPosts;
-    return allPosts.filter((p) => p.status === filterStatus);
-  }, [allPosts, filterStatus]);
+    let result = allPosts;
+
+    // Lọc theo trạng thái
+    if (filterStatus !== "ALL") {
+      result = result.filter((p) => p.status === filterStatus);
+    }
+
+    // Lọc theo Search Term
+    if (searchTerm.trim()) {
+        const lowerTerm = searchTerm.toLowerCase();
+        result = result.filter((p) => 
+            p.title.toLowerCase().includes(lowerTerm) || 
+            p.author?.username?.toLowerCase().includes(lowerTerm) 
+        );
+    }
+
+    return result;
+  }, [allPosts, filterStatus, searchTerm]);
 
   const totalRecords = filteredPosts.length;
   const totalPages = Math.ceil(totalRecords / ITEMS_PER_PAGE) || 1;
@@ -59,7 +74,6 @@ const PostListPage = () => {
     currentPage * ITEMS_PER_PAGE
   );
 
-  // Chuẩn hóa dữ liệu
   const normalizedPosts: IPostResponseDto[] = currentViewPosts.map((p) => ({
     ...p,
     createdAt: typeof p.createdAt === "string" 
@@ -68,23 +82,16 @@ const PostListPage = () => {
   }));
 
   // --- HANDLERS ---
-  // 1. Ẩn bài viết (Ban)
   const handleHide = (postId: number) => {
     setActionLoading(postId);
-    hidePost(postId, {
-      onSettled: () => setActionLoading(null)
-    });
+    hidePost(postId, { onSettled: () => setActionLoading(null) });
   };
 
-  // 2. Khôi phục bài viết (Restore)
   const handleRestore = (postId: number) => {
     setActionLoading(postId);
-    restorePost(postId, {
-      onSettled: () => setActionLoading(null)
-    });
+    restorePost(postId, { onSettled: () => setActionLoading(null) });
   };
 
-  // 3. Duyệt báo cáo (Approve) -> Ẩn bài + Resolve all reports
   const handleApproveReport = async (postId: number) => {
     setActionLoading(postId); 
     try {
@@ -95,13 +102,12 @@ const PostListPage = () => {
       });
       await refetch();
     } catch (error) {
-      console.error("Error approving report:", error);
+      console.error(error);
     } finally {
       setActionLoading(null);
     }
   };
 
-  // 4. Từ chối báo cáo (Reject)
   const handleRejectReport = async (postId: number) => {
     setActionLoading(postId);
     try {
@@ -112,7 +118,7 @@ const PostListPage = () => {
       });
       await refetch();
     } catch (error) {
-      console.error("Error rejecting report:", error);
+      console.error(error);
     } finally {
       setActionLoading(null);
     }
@@ -124,26 +130,22 @@ const PostListPage = () => {
   }, [filterStatus]);
 
   useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]); 
+
+  useEffect(() => {
     if (currentPage > totalPages && totalPages > 0) {
         setCurrentPage(totalPages);
     }
   }, [filteredPosts.length, totalPages, currentPage]);
 
-  // --- RENDER ---
   if (isError) {
     return (
       <div className="flex items-center justify-center h-screen bg-white">
         <div className="text-center bg-white p-8 rounded-2xl shadow-lg border-2 border-pink-100">
           <p className="text-2xl mb-2">⚠️</p>
-          <p className="text-red-600 font-semibold mb-4">
-            Có lỗi xảy ra khi tải dữ liệu
-          </p>
-          <button
-            onClick={() => refetch()}
-            className="px-6 py-2 text-white rounded-lg transition hover:opacity-90 bg-pink-500"
-          >
-            Thử lại
-          </button>
+          <p className="text-red-600 font-semibold mb-4">Có lỗi xảy ra khi tải dữ liệu</p>
+          <button onClick={() => refetch()} className="px-6 py-2 text-white rounded-lg transition hover:opacity-90 bg-pink-500">Thử lại</button>
         </div>
       </div>
     );
@@ -152,6 +154,7 @@ const PostListPage = () => {
   return (
     <div className="py-8 bg-white min-h-screen px-20">
       <div className="mb-8">
+        
         {/* Header Section */}
         <div className="flex justify-between items-start mb-6">
           <div>
@@ -163,6 +166,7 @@ const PostListPage = () => {
               Quản lý, lọc và kiểm soát các bài viết blog của bạn
             </p>
           </div>
+          
           <button
             type="button"
             onClick={() => refetch()}
@@ -175,20 +179,20 @@ const PostListPage = () => {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-3 gap-4 mb-6">
-          {["ALL", EBlogPostStatus.ACTIVE, EBlogPostStatus.HIDDEN].map((status) => {
+        <div className="grid grid-cols-3 gap-4 mb-8">
+           {["ALL", EBlogPostStatus.ACTIVE, EBlogPostStatus.HIDDEN].map((status) => {
             let count = 0;
             let label = "";
 
             if (status === "ALL") {
                 count = stats.all;
-                label = "Tất cả";
+                label = "Tổng bài viết";
             } else if (status === EBlogPostStatus.ACTIVE) {
                 count = stats.active;
-                label = "Công khai";
+                label = "Đang công khai";
             } else if (status === EBlogPostStatus.HIDDEN) {
                 count = stats.hidden;
-                label = "Đã ẩn";
+                label = "Đã bị ẩn";
             }
                 
             const colors =
@@ -201,7 +205,7 @@ const PostListPage = () => {
             return (
               <div
                 key={status}
-                className={`${colors.bg} border-2 ${colors.border} rounded-xl p-4 text-center transition-all hover:shadow-md`}
+                className={`${colors.bg} border-2 ${colors.border} rounded-xl p-4 text-center`}
               >
                 <p className={`${colors.text} text-sm font-medium uppercase tracking-wide`}>
                   {label}
@@ -214,26 +218,47 @@ const PostListPage = () => {
           })}
         </div>
 
-        {/* Filter Tabs */}
-        <div className="flex gap-3 overflow-x-auto pb-2">
-          {(["ALL", EBlogPostStatus.ACTIVE, EBlogPostStatus.HIDDEN] as StatusFilter[]).map((status) => {
-            const isActive = filterStatus === status;
-            return (
-              <button
-                key={status}
-                onClick={() => setFilterStatus(status)}
-                disabled={isLoading}
-                className={`px-5 py-2.5 rounded-lg font-semibold transition whitespace-nowrap ${
-                  isActive
-                    ? "text-white bg-[#F295B6] border-2 border-[#F295B6]"
-                    : "bg-white border-2 text-gray-700 hover:border-[#F295B6] border-gray-200"
-                } ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
-              >
-                {status === "ALL" ? "Tất cả" : status === EBlogPostStatus.ACTIVE ? "Công khai" : "Ẩn"}
-              </button>
-            );
-          })}
+        {/* CONTROL BAR */}
+        <div className="flex flex-col md:flex-row gap-4 justify-between items-center mb-6">
+            <div className="flex gap-3 w-full">
+                {/* SEARCH INPUT */}
+                <div className="relative">
+                    <MdSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                    <input 
+                        type="text" 
+                        placeholder="Tìm theo tiêu đề, tác giả..." 
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-10 pr-10 py-3 w-[500px] border-2 border-gray-200 rounded-lg focus:outline-none focus:border-[#F295B6] transition-colors"
+                    />
+                    {searchTerm && (
+                        <button 
+                            onClick={() => setSearchTerm("")}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                        >
+                            <MdClose size={18} />
+                        </button>
+                    )}
+                </div>
+
+                {/* FILTER DROPDOWN */}
+                <div className="relative min-w-[200px]">
+                    <select
+                    value={filterStatus}
+                    onChange={(e) => setFilterStatus(e.target.value as StatusFilter)}
+                    className="w-full appearance-none pl-4 pr-10 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-[#F295B6] transition-colors bg-white font-medium text-gray-700 cursor-pointer hover:border-gray-300"
+                    >
+                    <option value="ALL">Tất cả trạng thái</option>
+                    <option value={EBlogPostStatus.ACTIVE}>Công khai (Active)</option>
+                    <option value={EBlogPostStatus.HIDDEN}>Đã ẩn (Hidden)</option>
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-500">
+                    <BiChevronDown size={20} />
+                    </div>
+                </div>
+            </div>
         </div>
+
       </div>
 
       {/* RENDER TABLE */}
@@ -244,15 +269,16 @@ const PostListPage = () => {
           <PostsTable
             posts={normalizedPosts}
             loadingId={actionLoading}
-            // Truyền các handlers
             onHide={handleHide}
             onRestore={handleRestore}
             onApproveReport={(id) => handleApproveReport(id)} 
             onRejectReport={(id) => handleRejectReport(id)}
             emptyMessage={
-              filterStatus !== "ALL"
-                ? `Không có bài viết nào với trạng thái "${filterStatus}"`
-                : "Không có bài viết nào"
+                searchTerm 
+                ? `Không tìm thấy kết quả cho từ khóa "${searchTerm}"`
+                : (filterStatus !== "ALL"
+                    ? `Không có bài viết nào với trạng thái "${filterStatus}"`
+                    : "Không có bài viết nào")
             }
           />
         )}
