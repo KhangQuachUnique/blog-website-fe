@@ -150,7 +150,16 @@ const GroupedReportTable: React.FC<GroupedReportTableProps> = ({
                   ? groupedReport.reportedUser?.username || "Không xác định"
                   : groupedReport.type === "POST"
                   ? groupedReport.reportedPost?.title || "Không xác định"
-                  : groupedReport.reportedComment?.contentPreview || "Không xác định"}
+                  : (
+                      <span className="flex items-center gap-2">
+                        {groupedReport.reportedComment?.contentPreview || "Không xác định"}
+                        {groupedReport.reportedComment?.isDeleted && (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-700">
+                            Đã xóa
+                          </span>
+                        )}
+                      </span>
+                    )}
               </Box>
 
               {/* Total Reports Count */}

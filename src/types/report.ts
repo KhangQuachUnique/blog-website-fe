@@ -43,6 +43,7 @@ export interface IReportedPostSummary {
 export interface IReportedCommentSummary {
   id: number;
   contentPreview: string;
+  isDeleted?: boolean;
 }
 
 // Full report response

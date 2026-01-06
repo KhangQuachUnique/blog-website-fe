@@ -98,10 +98,24 @@ const ReportTable: React.FC<ReportTableProps> = ({
       label: "Đối tượng vi phạm",
       align: "left",
       render: (report) => {
-        let content = "Không xác định";
-        if (report.type === "USER") content = report.reportedUser?.username || "N/A";
-        else if (report.type === "POST") content = report.reportedPost?.title || "N/A";
-        else if (report.type === "COMMENT") content = report.reportedComment?.contentPreview || "N/A";
+        let content: string | React.ReactNode = "Không xác định";
+        if (report.type === "USER") {
+          content = report.reportedUser?.username || "N/A";
+        } else if (report.type === "POST") {
+          content = report.reportedPost?.title || "N/A";
+        } else if (report.type === "COMMENT") {
+          const contentText = report.reportedComment?.contentPreview || "N/A";
+          content = (
+            <span className="flex items-center gap-2">
+              {contentText}
+              {report.reportedComment?.isDeleted && (
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-700 whitespace-nowrap">
+                  Đã xóa
+                </span>
+              )}
+            </span>
+          );
+        }
 
         return (
           <Box
@@ -115,7 +129,7 @@ const ReportTable: React.FC<ReportTableProps> = ({
               whiteSpace: "nowrap",
               maxWidth: "220px", 
             }}
-            title={content}
+            title={typeof content === 'string' ? content : ''}
           >
             {content}
           </Box>

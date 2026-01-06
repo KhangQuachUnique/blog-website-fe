@@ -23,7 +23,7 @@ const ProfileHeader = ({
     <div className="bg-white rounded-2xl border border-[#FFE4EC] shadow-sm p-8">
       <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
         {/* Avatar */}
-        <div className="flex-shrink-0">
+        <div className="shrink-0">
           {user.avatarUrl ? (
             <img
               src={user.avatarUrl}

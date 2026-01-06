@@ -203,7 +203,7 @@ const InteractBar: React.FC<InteractBarProps> = ({
             transition: "all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)",
           }}
         >
-          <div className="hover:translate-y-[-2px] transition-transform duration-100">
+          <div className="hover:-translate-y-0.5 transition-transform duration-100">
             <Bookmark
               size={18}
               strokeWidth={2.5}

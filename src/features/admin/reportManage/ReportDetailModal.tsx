@@ -100,31 +100,60 @@ const ReportDetailModal: React.FC<ReportDetailModalProps> = ({
         );
 
       case "COMMENT":
-        return groupedReport.reportedComment ? (
+        if (!groupedReport.reportedComment || !groupedReport.reportedComment.id) {
+          return (
+            <div className="p-8 text-center text-gray-500 italic">
+              Bình luận này không tồn tại.
+            </div>
+          );
+        }
+
+        const isCommentDeleted = groupedReport.reportedComment.isDeleted;
+
+        return (
           <Box sx={{ p: 1 }}>
             <p className="text-sm font-semibold text-gray-500 uppercase mb-4 flex items-center gap-2">
                 <MdComment /> Bình luận vi phạm
             </p>
-            <div className="bg-gray-50 p-6 rounded-xl border border-gray-200 relative">
-               <div className="absolute top-4 left-4 text-gray-200 text-6xl font-serif pointer-events-none">“</div>
+            <div className={`p-6 rounded-xl border relative ${
+              isCommentDeleted
+                ? 'bg-red-50 border-red-200'
+                : 'bg-gray-50 border-gray-200'
+            }`}>
+               {isCommentDeleted && (
+                 <div className="absolute top-2 right-2 px-3 py-1 bg-red-100 text-red-700 text-xs font-semibold rounded-full">
+                   Đã xóa
+                 </div>
+               )}
+
+               <div className="absolute top-4 left-4 text-gray-200 text-6xl font-serif pointer-events-none opacity-30">"</div>
                
-               <p className="text-gray-800 text-lg relative z-10 font-medium leading-relaxed px-4 wrap-break-word">
-                {groupedReport.reportedComment.contentPreview || "Nội dung bình luận"}
+               <p className={`text-lg relative z-10 font-medium leading-relaxed px-4 wrap-break-word ${
+                 isCommentDeleted
+                   ? 'text-gray-500 italic line-through'
+                   : 'text-gray-800'
+               }`}>
+                {groupedReport.reportedComment?.contentPreview || "Nội dung bình luận"}
               </p>
               
-               <div className="absolute bottom-14 right-4 text-gray-200 text-6xl font-serif pointer-events-none leading-none">”</div>
+               <div className="absolute bottom-14 right-4 text-gray-200 text-6xl font-serif pointer-events-none opacity-30 leading-none">"</div>
 
-               <div className="mt-4 pt-4 border-t border-gray-200 flex justify-end relative z-10">
+               <div className="mt-4 pt-4 border-t flex justify-between items-center relative z-10" style={{
+                 borderColor: isCommentDeleted ? '#fecaca' : '#e5e7eb'
+               }}>
+                  <span className={`text-xs font-semibold ${
+                    isCommentDeleted
+                      ? 'text-red-600'
+                      : 'text-gray-600'
+                  }`}>
+                    {isCommentDeleted ? '✓ Bình luận đã được xóa mềm' : 'Bình luận đang hoạt động'}
+                  </span>
                   <span className="text-xs font-mono text-gray-400 bg-white px-2 py-1 rounded border border-gray-200">
-                    Comment ID: {groupedReport.reportedComment.id}
+                    Comment ID: {groupedReport.reportedComment?.id}
                   </span>
                </div>
             </div>
           </Box>
-        ) : (
-           <div className="p-8 text-center text-gray-500 italic">
-            Bình luận này không tồn tại hoặc đã bị xóa.
-          </div>
         );
 
       default:
