@@ -24,7 +24,7 @@ export const useNotificationSocket = () => {
       });
       showToast({
         type: "info",
-        message: "You have a new notification",
+        message: "Bạn có thông báo mới",
       });
     };
 

@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useRef } from "react";
 import { X, Loader2 } from "lucide-react";
-import { searchPosts } from "../../services/search/search.service";
-import type { IPostSearchResponseDto } from "../../services/search/search.service";
+import { Link } from "react-router-dom";
+import { searchAPI } from "../../services/search/search.service";
+import type { SearchResultItem } from "../../services/search/search.service";
 import Card from "../../components/card/Card";
 import type { IPostResponseDto } from "../../types/post";
 import "../../styles/newsfeed/NewsfeedList.css";
@@ -19,33 +20,75 @@ export const SearchSidebar: React.FC<SearchSidebarProps> = ({
   keyword,
 }) => {
   // --- STATE ---
-  const [posts, setPosts] = useState<IPostResponseDto[]>([]);
+  const [results, setResults] = useState<SearchResultItem[]>([]);
   const [loading, setLoading] = useState(false);
-  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
 
   const timeoutRef = useRef<number | null>(null);
-  const scrollRef = useRef<HTMLDivElement>(null);
+
+  // --- HELPER FUNCTIONS ---
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    const now = new Date();
+    const diff = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+    if (diff < 60) return "vừa xong";
+    if (diff < 3600) return `${Math.floor(diff / 60)} phút trước`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)} giờ trước`;
+    if (diff < 604800) return `${Math.floor(diff / 86400)} ngày trước`;
+    return date.toLocaleDateString("vi-VN");
+  };
+
+  const convertToPost = (item: SearchResultItem): IPostResponseDto => ({
+    id: Number(item.id),
+    title: item.title || "",
+    shortDescription: "",
+    thumbnailUrl: item.thumbnailUrl,
+    isPublic: true,
+    author: {
+      id: item.author?.id || 0,
+      username: item.author?.username || item.username || "Ẩn danh",
+      avatarUrl:
+        item.author?.avatarUrl ||
+        item.avatarUrl ||
+        "https://via.placeholder.com/40",
+    },
+    status: "ACTIVE",
+    type: "PERSONAL",
+    hashtags: item.hashtags || [],
+    createdAt: item.createdAt ? new Date(item.createdAt) : new Date(),
+    upVotes: item.upVotes || 0,
+    downVotes: item.downVotes || 0,
+    totalComments: item.totalComments || 0,
+    totalReacts: item.totalReacts || 0,
+  });
 
   // --- LOGIC GỌI API ---
-  const fetchData = async (isNewSearch = false, cursor?: string | null) => {
+  const fetchData = async (pageNum: number, isNewSearch = false) => {
     if (!keyword) return;
 
     setLoading(true);
     try {
-      const response: IPostSearchResponseDto = await searchPosts(
+      const { items, hasMore: serverHasMore } = await searchAPI.search(
         keyword,
-        cursor || undefined
+        "",
+        pageNum,
+        10
       );
 
-      if (isNewSearch) {
-        setPosts(response.posts);
+      const users = items.filter((i) => i.type === "USER");
+      const communities = items.filter((i) => i.type === "COMMUNITY");
+      const posts = items.filter((i) => i.type === "POST");
+
+      if (isNewSearch || pageNum === 1) {
+        setResults([...users, ...communities, ...posts]);
       } else {
-        setPosts((prev) => [...prev, ...response.posts]);
+        setResults((prev) => [...prev, ...posts]);
       }
 
-      setNextCursor(response.pagination.nextCursor || null);
-      setHasMore(response.pagination.hasMore);
+      setHasMore(!!serverHasMore);
     } catch (error) {
       console.error("Sidebar search error:", error);
     } finally {
@@ -57,15 +100,15 @@ export const SearchSidebar: React.FC<SearchSidebarProps> = ({
   useEffect(() => {
     if (!isOpen) return;
 
-    setPosts([]);
-    setNextCursor(null);
+    setResults([]);
+    setPage(1);
     setHasMore(true);
 
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
 
     if (keyword) {
       timeoutRef.current = setTimeout(() => {
-        fetchData(true);
+        fetchData(1, true);
       }, 300);
     }
 
@@ -74,6 +117,13 @@ export const SearchSidebar: React.FC<SearchSidebarProps> = ({
     };
   }, [keyword, isOpen]);
 
+  // --- EFFECT 2: TẢI THÊM KHI PAGE TĂNG ---
+  useEffect(() => {
+    if (page > 1) {
+      fetchData(page, false);
+    }
+  }, [page]);
+
   // --- SỰ KIỆN CUỘN (INFINITE SCROLL) ---
   const onScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const el = e.currentTarget;
@@ -81,7 +131,104 @@ export const SearchSidebar: React.FC<SearchSidebarProps> = ({
     if (loading || !hasMore) return;
 
     if (el.scrollTop + el.clientHeight >= el.scrollHeight - 50) {
-      fetchData(false, nextCursor);
+      setPage((prev) => prev + 1);
+    }
+  };
+
+  // --- RENDER CARD COMPONENTS ---
+  const renderUserCard = (item: SearchResultItem) => (
+    <Link to={`/profile/${item.id}`} className="block" onClick={onClose}>
+      <article className="newsfeed-card hover:shadow-lg transition-shadow cursor-pointer">
+        {item.avatarUrl && (
+          <div className="newsfeed-card__thumbnail">
+            <img
+              src={item.avatarUrl}
+              alt={item.username}
+              className="newsfeed-card__image"
+              loading="lazy"
+            />
+          </div>
+        )}
+        <div className="newsfeed-card__right">
+          <div className="newsfeed-card__content">
+            <h2 className="newsfeed-card__title">{item.username}</h2>
+            <div className="newsfeed-card__header">
+              <div className="newsfeed-card__author">
+                <img
+                  src={item.avatarUrl || "https://via.placeholder.com/40"}
+                  alt={item.username}
+                  className="newsfeed-card__avatar"
+                />
+                <div className="newsfeed-card__author-info">
+                  <span className="newsfeed-card__username">
+                    @{item.username}
+                  </span>
+                </div>
+              </div>
+            </div>
+            <span className="text-blue-500 text-sm hover:underline mt-2">
+              Xem trang cá nhân
+            </span>
+          </div>
+        </div>
+      </article>
+    </Link>
+  );
+
+  const renderCommunityCard = (item: SearchResultItem) => (
+    <Link to={`/community/${item.id}`} className="block" onClick={onClose}>
+      <article className="newsfeed-card hover:shadow-lg transition-shadow cursor-pointer">
+        {item.thumbnailUrl && (
+          <div className="newsfeed-card__thumbnail">
+            <img
+              src={item.thumbnailUrl}
+              alt={item.name}
+              className="newsfeed-card__image"
+              loading="lazy"
+            />
+          </div>
+        )}
+        <div className="newsfeed-card__right">
+          <div className="newsfeed-card__content">
+            <h2 className="newsfeed-card__title">{item.name}</h2>
+            <div className="newsfeed-card__header">
+              <div className="newsfeed-card__author">
+                <img
+                  src={item.thumbnailUrl || "https://via.placeholder.com/40"}
+                  alt={item.name}
+                  className="newsfeed-card__avatar"
+                />
+                <div className="newsfeed-card__author-info">
+                  <span className="newsfeed-card__username">Cộng đồng</span>
+                  {item.createdAt && (
+                    <time className="newsfeed-card__time">
+                      {formatDate(item.createdAt)}
+                    </time>
+                  )}
+                </div>
+              </div>
+            </div>
+            {item.description && (
+              <p className="text-gray-600 text-sm mt-2 line-clamp-2">
+                {item.description}
+              </p>
+            )}
+            <span className="text-blue-500 text-sm hover:underline mt-2">
+              Tham gia ngay
+            </span>
+          </div>
+        </div>
+      </article>
+    </Link>
+  );
+
+  const renderItem = (item: SearchResultItem) => {
+    if (item.type === "USER") {
+      return renderUserCard(item);
+    } else if (item.type === "COMMUNITY") {
+      return renderCommunityCard(item);
+    } else {
+      return <Card post={convertToPost(item)} />;
     }
   };
 
@@ -119,32 +266,30 @@ export const SearchSidebar: React.FC<SearchSidebarProps> = ({
 
         {/* Content List */}
         <div
-          ref={scrollRef}
           className="h-[calc(100vh-73px)] overflow-y-auto p-4 bg-gray-100"
           onScroll={onScroll}
         >
           {/* Loading lần đầu */}
-          {loading && posts.length === 0 ? (
+          {loading && page === 1 && results.length === 0 ? (
             <div className="flex justify-center py-10">
               <Loader2 className="animate-spin text-blue-500" />
             </div>
-          ) : posts.length > 0 ? (
+          ) : results.length > 0 ? (
             <div className="space-y-4">
-              {posts.map((post, index) => (
-                <div key={`${post.id}-${index}`}>
-                  <Card post={post} />
-                </div>
-              ))}
+              {results.map((item, index) => {
+                const uniqueKey = `${item.type}-${item.id}-${index}`;
+                return <div key={uniqueKey}>{renderItem(item)}</div>;
+              })}
 
               {/* Loader khi cuộn xuống dưới (Load More) */}
-              {loading && (
+              {loading && page > 1 && (
                 <div className="flex justify-center py-4">
                   <Loader2 className="animate-spin text-blue-500 w-6 h-6" />
                 </div>
               )}
 
               {/* Thông báo hết dữ liệu */}
-              {!hasMore && posts.length > 0 && (
+              {!hasMore && results.length > 0 && (
                 <div className="text-center text-xs text-gray-400 py-4 italic">
                   Đã hiển thị hết kết quả
                 </div>
