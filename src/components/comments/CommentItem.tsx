@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { MessageCircle } from "lucide-react";
+import { MessageCircle, Flag, Trash2 } from "lucide-react";
 import { ReplyForm } from "./ReplyForm";
 import type { ICommentResponse } from "../../types/comment";
 import { useDeleteComment } from "../../hooks/useComments";
@@ -12,6 +12,9 @@ import { useNavigate } from "react-router-dom";
 
 import { FaArrowRightLong } from "react-icons/fa6";
 import ReactionSection from "../Emoji";
+import ReportButton from "../report/ReportButton";
+import { EReportType } from "../../types/report";
+import { MoreButton } from "../moreButton";
 
 interface CommentItemProps {
   comment: ICommentResponse;
@@ -90,19 +93,55 @@ export const CommentItem: React.FC<CommentItemProps> = ({
             <span className="font-medium text-gray-800 pr-3 truncate max-w-[180px]">
               {comment.commenter.username}
             </span>
-            <span className="text-xs text-gray-400 flex-shrink-0">
+            <span className="text-xs text-gray-400 shrink-0">
               {formatCommentTimeVi(String(comment.createAt))}
             </span>
 
-            {/* Delete button for comment owner */}
-            {currentUser?.id === comment.commenter.id && (
-              <button
-                className="ml-auto inline-flex items-center gap-2 px-3 py-1 text-sm font-semibold text-[#BA2243] border border-[#FEC6D1] bg-transparent rounded-full hover:bg-[#BA2243] hover:text-white transition-transform duration-150 transform hover:-translate-y-0.5"
-                onClick={handleDeleteComment}
-                aria-label="Xóa bình luận"
-              >
-                Xóa
-              </button>
+            {/* More menu button - khác nhau cho owner và người khác */}
+            {currentUser?.id === comment.commenter.id ? (
+              <MoreButton
+                menuItems={[
+                  {
+                    label: "Xóa",
+                    icon: <Trash2 size={16} strokeWidth={2.5} />,
+                    onClick: handleDeleteComment,
+                    danger: true,
+                  },
+                ]}
+                buttonSize="small"
+                iconSize={14}
+                tooltip="Tùy chọn"
+                buttonStyle={{
+                  width: "28px",
+                  height: "28px",
+                  marginLeft: "auto",
+                }}
+              />
+            ) : (
+              <ReportButton
+                type={EReportType.COMMENT}
+                targetId={comment.id}
+                renderButton={({ onClick }) => (
+                  <MoreButton
+                    menuItems={[
+                      {
+                        label: "Báo cáo",
+                        icon: <Flag size={16} strokeWidth={2.5} />,
+                        onClick: onClick,
+                        danger: true,
+                      },
+                    ]}
+                    buttonSize="small"
+                    iconSize={14}
+                    tooltip="Tùy chọn"
+                    buttonStyle={{
+                      width: "28px",
+                      height: "28px",
+                      marginLeft: "auto",
+                    }}
+                  />
+                )}
+              />
             )}
           </div>
 
@@ -173,7 +212,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
                   return (
                     <div
                       key={childComment.id}
-                      className="p-[16px] rounded-md border-l-3 bg-[#FAFAFA] border-gray-200"
+                      className="p-4 rounded-md border-l-3 bg-[#FAFAFA] border-gray-200"
                     >
                       <div className="flex items-start space-x-1">
                         {childComment.commenter.avatarUrl ? (
@@ -222,7 +261,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
                               </>
                             )}
 
-                            <span className="text-xs text-gray-400 flex-shrink-0">
+                            <span className="text-xs text-gray-400 shrink-0">
                               {formatShortDateVi(String(childComment.createAt))}
                             </span>
 

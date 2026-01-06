@@ -5,7 +5,7 @@ import { MdGroup } from "react-icons/md";
 import { BsFileText } from "react-icons/bs";
 import { BsGenderMale } from "react-icons/bs";
 import { BsGenderFemale } from "react-icons/bs";
-import { Users, ShieldOff, ShieldCheck } from "lucide-react";
+import { Users, ShieldOff, ShieldCheck, Flag } from "lucide-react";
 import Card from "../../../components/card/Card";
 import "../../../styles/profile/profile.css";
 import "../../../styles/profile/tabs.css";
@@ -20,6 +20,8 @@ import { useGetUserProfile } from "../../../hooks/useUser";
 import FollowModal from "../../../components/profile/FollowModal";
 import ProfileSkeleton from "../../../components/skeleton/ProfileSkeleton";
 import { MoreButton } from "../../../components/moreButton";
+import ReportButton from "../../../components/report/ReportButton";
+import { EReportType } from "../../../types/report";
 
 const ViewProfile = () => {
   const { userId } = useParams<{ userId: string }>();
@@ -179,7 +181,7 @@ const ViewProfile = () => {
                 className="w-full h-full object-cover"
               />
             ) : (
-              <div className="w-full h-full bg-gradient-to-r from-gray-200 to-gray-300 flex items-center justify-center">
+              <div className="w-full h-full bg-linear-to-r from-gray-200 to-gray-300 flex items-center justify-center">
                 <span className="text-gray-400 text-lg">Chưa có ảnh bìa</span>
               </div>
             )}
@@ -187,7 +189,7 @@ const ViewProfile = () => {
           <div className="flex flex-col max-w-[90%] w-[900px]">
             <div className="flex gap-2 h-25">
               {/* Avatar */}
-              <div className="flex-shrink-0">
+              <div className="shrink-0">
                 {fetchedProfile.avatarUrl ? (
                   <Avatar
                     src={fetchedProfile.avatarUrl}
@@ -246,22 +248,34 @@ const ViewProfile = () => {
               <div className="flex items-center mt-2 gap-3">
                 {!isOwnProfile && (
                   <>
-                    <MoreButton
-                      menuItems={[
-                        {
-                          label: isBlocked ? "Bỏ chặn" : "Chặn người dùng",
-                          icon: isBlocked ? (
-                            <ShieldCheck size={16} strokeWidth={2.5} />
-                          ) : (
-                            <ShieldOff size={16} strokeWidth={2.5} />
-                          ),
-                          onClick: handleBlockToggle,
-                          danger: !isBlocked,
-                        },
-                      ]}
-                      buttonSize="medium"
-                      iconSize={22}
-                      tooltip="Tùy chọn"
+                    <ReportButton
+                      type={EReportType.USER}
+                      targetId={fetchedProfile.id}
+                      renderButton={({ onClick }) => (
+                        <MoreButton
+                          menuItems={[
+                            {
+                              label: isBlocked ? "Bỏ chặn" : "Chặn người dùng",
+                              icon: isBlocked ? (
+                                <ShieldCheck size={16} strokeWidth={2.5} />
+                              ) : (
+                                <ShieldOff size={16} strokeWidth={2.5} />
+                              ),
+                              onClick: handleBlockToggle,
+                              danger: !isBlocked,
+                            },
+                            {
+                              label: "Báo cáo",
+                              icon: <Flag size={16} strokeWidth={2.5} />,
+                              onClick: onClick,
+                              danger: true,
+                            },
+                          ]}
+                          buttonSize="medium"
+                          iconSize={22}
+                          tooltip="Tùy chọn"
+                        />
+                      )}
                     />
                     <CustomButton
                       variant={isFollowing ? "default" : "outline"}
@@ -326,7 +340,7 @@ const ViewProfile = () => {
                   setFollowModalOpen(true);
                 }}
               >
-                <div className="profile-stat-value !text-[20px]">
+                <div className="profile-stat-value text-[20px]!">
                   {followersCount}
                 </div>
                 <div className="profile-stat-label">Người theo dõi</div>
@@ -338,7 +352,7 @@ const ViewProfile = () => {
                   setFollowModalOpen(true);
                 }}
               >
-                <div className="profile-stat-value !text-[20px]">
+                <div className="profile-stat-value text-[20px]!">
                   {fetchedProfile.followingCount}
                 </div>
                 <div className="profile-stat-label">Đang theo dõi</div>
@@ -401,7 +415,7 @@ const ViewProfile = () => {
                     className="bg-white text-gray-900 rounded-lg flex transform transition duration-150 border border-pink-100 overflow-hidden h-45 w-full hover:-translate-y-1 hover:ring-pink-100"
                   >
                     {/* Left: thumbnail */}
-                    <div className="w-50 h-full flex-shrink-0">
+                    <div className="w-50 h-full shrink-0">
                       {community.thumbnailUrl ? (
                         <img
                           src={community.thumbnailUrl}
@@ -430,7 +444,7 @@ const ViewProfile = () => {
 
                       <div className="flex items-center justify-between mt-3">
                         {/* Role badge */}
-                        <div className="flex-shrink-0">
+                        <div className="shrink-0">
                           {community.role && community.role !== "NONE" && (
                             <span
                               className={`text-sm font-semibold px-3 py-1 rounded-full ${

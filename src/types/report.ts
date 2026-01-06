@@ -91,13 +91,13 @@ export interface ICreateReportRequest {
 
 // Predefined report reasons
 export const REPORT_REASONS = [
-  { value: 'SPAM', label: 'Spam hoặc quảng cáo' },
-  { value: 'VIOLENCE', label: 'Bạo lực hoặc nội dung gây hại' },
-  { value: 'HARASSMENT', label: 'Quấy rối hoặc bắt nạt' },
-  { value: 'HATE_SPEECH', label: 'Ngôn từ thù địch' },
-  { value: 'MISINFORMATION', label: 'Thông tin sai lệch' },
-  { value: 'SEXUAL_CONTENT', label: 'Nội dung khiêu dâm' },
-  { value: 'COPYRIGHT', label: 'Vi phạm bản quyền' },
+  { value: 'Spam hoặc quảng cáo', label: 'Spam hoặc quảng cáo' },
+  { value: 'Bạo lực hoặc nội dung gây hại', label: 'Bạo lực hoặc nội dung gây hại' },
+  { value: 'Quấy rối hoặc bắt nạt', label: 'Quấy rối hoặc bắt nạt' },
+  { value: 'Ngôn từ thù địch', label: 'Ngôn từ thù địch' },
+  { value: 'Thông tin sai lệch', label: 'Thông tin sai lệch' },
+  { value: 'Nội dung khiêu dâm', label: 'Nội dung khiêu dâm' },
+  { value: 'Vi phạm bản quyền', label: 'Vi phạm bản quyền' },
   { value: 'OTHER', label: 'Lý do khác' },
 ] as const;
 
