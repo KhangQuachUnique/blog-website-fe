@@ -13,12 +13,29 @@ type StatusFilter = "ALL" | EBlogPostStatus;
 
 const ITEMS_PER_PAGE = 10;
 
+const useDebounce = <T,>(value: T, delay: number): T => {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+};
+
 const PostListPage = () => {
   // --- STATE ---
   const [filterStatus, setFilterStatus] = useState<StatusFilter>("ALL");
   const [actionLoading, setActionLoading] = useState<number | null>(null);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [searchTerm, setSearchTerm] = useState("");
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
   // --- DATA FETCHING ---
   const {
@@ -52,8 +69,8 @@ const PostListPage = () => {
     }
 
     // Lọc theo Search Term
-    if (searchTerm.trim()) {
-        const lowerTerm = searchTerm.toLowerCase();
+    if (debouncedSearchTerm.trim()) {
+        const lowerTerm = debouncedSearchTerm.toLowerCase();
         result = result.filter((p) => 
             p.title.toLowerCase().includes(lowerTerm) || 
             p.author?.username?.toLowerCase().includes(lowerTerm) 
@@ -61,7 +78,7 @@ const PostListPage = () => {
     }
 
     return result;
-  }, [allPosts, filterStatus, searchTerm]);
+  }, [allPosts, filterStatus, debouncedSearchTerm]);
 
   const totalRecords = filteredPosts.length;
   const totalPages = Math.ceil(totalRecords / ITEMS_PER_PAGE) || 1;
@@ -131,7 +148,7 @@ const PostListPage = () => {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm]); 
+  }, [debouncedSearchTerm]);
 
   useEffect(() => {
     if (currentPage > totalPages && totalPages > 0) {
@@ -222,14 +239,14 @@ const PostListPage = () => {
         <div className="flex flex-col md:flex-row gap-4 justify-between items-center mb-6">
             <div className="flex gap-3 w-full">
                 {/* SEARCH INPUT */}
-                <div className="relative">
+                <div className="relative flex-1">
                     <MdSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
                     <input 
                         type="text" 
                         placeholder="Tìm theo tiêu đề, tác giả..." 
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-10 pr-10 py-3 w-[500px] border-2 border-gray-200 rounded-lg focus:outline-none focus:border-[#F295B6] transition-colors"
+                        className="pl-10 pr-10 py-3 w-full border-2 border-gray-200 rounded-lg focus:outline-none focus:border-[#F295B6] transition-colors"
                     />
                     {searchTerm && (
                         <button 
@@ -274,8 +291,8 @@ const PostListPage = () => {
             onApproveReport={(id) => handleApproveReport(id)} 
             onRejectReport={(id) => handleRejectReport(id)}
             emptyMessage={
-                searchTerm 
-                ? `Không tìm thấy kết quả cho từ khóa "${searchTerm}"`
+                debouncedSearchTerm 
+                ? `Không tìm thấy kết quả cho từ khóa "${debouncedSearchTerm}"`
                 : (filterStatus !== "ALL"
                     ? `Không có bài viết nào với trạng thái "${filterStatus}"`
                     : "Không có bài viết nào")
