@@ -175,8 +175,6 @@ const ReportListPage = () => {
     );
   }
 
-  
-
   // --- MAIN RENDER ---
   return (
     <div className="py-8 px-20 bg-white min-h-screen">
