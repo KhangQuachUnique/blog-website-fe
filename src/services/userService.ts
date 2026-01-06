@@ -7,6 +7,7 @@ export interface IUser {
   phoneNumber?: string;
   type: "USER" | "ADMIN";
   isBanned: boolean;
+  isPrivate?: boolean;
   avatarUrl?: string;
   bio?: string;
   dob?: string;
@@ -19,49 +20,97 @@ export interface CreateUserRequest {
   email: string;
   password: string;
   phoneNumber?: string;
-  type: "USER" | "ADMIN";
+  type?: "USER" | "ADMIN";
 }
 
-// Lấy danh sách người dùng
+export interface UpdateUserRequest {
+  username?: string;
+  email?: string;
+  phoneNumber?: string;
+  type?: "USER" | "ADMIN";
+}
+
+export interface UserListResponse {
+  data: IUser[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface BanUserRequest {
+  reason?: string;
+}
+
+// Lấy danh sách người dùng (Admin)
 export const getUserList = async (params?: {
   search?: string;
   status?: string;
+  page?: number;
+  limit?: number;
 }): Promise<IUser[]> => {
-  const response = await axiosInstance.get<IUser[]>("/users", { params });
-  return response as unknown as IUser[];
+  const response = await axiosInstance.get<UserListResponse>(
+    "/users/admin/all",
+    { params }
+  );
+  // Backend trả về object có data array
+  const result = response as unknown as UserListResponse;
+  return result.data || [];
 };
 
-// Lấy chi tiết người dùng
+// Lấy chi tiết người dùng (Admin)
 export const getUserById = async (id: number): Promise<IUser> => {
-  const response = await axiosInstance.get<IUser>(`/users/${id}`);
+  const response = await axiosInstance.get<IUser>(`/users/admin/${id}`);
   return response as unknown as IUser;
 };
 
-// Tạo người dùng
+// Tạo người dùng (Admin)
 export const createUser = async (data: CreateUserRequest): Promise<IUser> => {
-  const response = await axiosInstance.post<IUser>("/users", data);
+  const response = await axiosInstance.post<IUser>("/users/admin", data);
   return response as unknown as IUser;
 };
 
-// Cập nhật người dùng
-export const updateUser = async (id: number, data: Partial<IUser>): Promise<IUser> => {
-  const response = await axiosInstance.patch<IUser>(`/users/${id}`, data);
-  return response as IUser;
+// Cập nhật người dùng (Admin)
+export const updateUser = async (
+  id: number,
+  data: UpdateUserRequest
+): Promise<IUser> => {
+  const response = await axiosInstance.patch<IUser>(`/users/admin/${id}`, data);
+  return response as unknown as IUser;
 };
 
-// Khóa người dùng (Ban)
-export const banUser = async (id: number): Promise<{ message: string }> => {
-  const response = await axiosInstance.post(`/users/${id}/ban`, {});
-  return response;
+// Cập nhật role người dùng (Admin)
+export const updateUserRole = async (
+  id: number,
+  role: "USER" | "ADMIN"
+): Promise<{ message: string; user: IUser }> => {
+  const response = await axiosInstance.patch(`/users/admin/${id}/role`, {
+    role,
+  });
+  return response as unknown as { message: string; user: IUser };
 };
 
-// Mở khóa người dùng (Unban)
-export const unbanUser = async (id: number): Promise<{ message: string }> => {
-  const response = await axiosInstance.post(`/users/${id}/unban`, {});
-  return response;
+// Khóa người dùng - Ban (Admin)
+export const banUser = async (
+  id: number,
+  reason?: string
+): Promise<{ message: string; user: IUser }> => {
+  const response = await axiosInstance.post(`/users/admin/${id}/ban`, {
+    reason,
+  });
+  return response as unknown as { message: string; user: IUser };
 };
 
-// Xóa người dùng
-export const deleteUser = async (id: number): Promise<void> => {
-  await axiosInstance.delete(`/users/${id}`);
+// Mở khóa người dùng - Unban (Admin)
+export const unbanUser = async (
+  id: number
+): Promise<{ message: string; user: IUser }> => {
+  const response = await axiosInstance.post(`/users/admin/${id}/unban`, {});
+  return response as unknown as { message: string; user: IUser };
+};
+
+// Xóa người dùng (Admin)
+export const deleteUser = async (id: number): Promise<{ message: string }> => {
+  const response = await axiosInstance.delete(`/users/admin/${id}`);
+  return response as unknown as { message: string };
 };
