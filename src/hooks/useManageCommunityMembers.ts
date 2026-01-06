@@ -11,6 +11,7 @@ import type { ECommunityRole, EManageCommunityRole } from "../types/community";
 import { clearEmojiCache } from "../services/emoji/customEmojiCache";
 import { useAuthUser } from "./useAuth";
 import { CUSTOM_EMOJIS_QUERY_KEY } from "./useCustomEmojis";
+import { useToast } from "../contexts/toast";
 
 export function useManageCommunityMembers(
   communityId?: number,
@@ -26,6 +27,7 @@ export function useManageCommunityMembers(
 
 export function useUpdateMemberRole(communityId: number) {
   const qc = useQueryClient();
+  const { showToast } = useToast();
 
   return useMutation({
     mutationFn: (p: { memberId: number; role: ECommunityRole }) =>
@@ -37,6 +39,13 @@ export function useUpdateMemberRole(communityId: number) {
       qc.invalidateQueries({ queryKey: ["community-members", communityId] });
       qc.invalidateQueries({ queryKey: ["communitySettings", communityId] });
       qc.invalidateQueries({ queryKey: ["myCommunities"] });
+    },
+    onError: (error) => {
+      showToast({
+        type: "error",
+        message:
+          error.message || "Có lỗi xảy ra khi cập nhật vai trò thành viên.",
+      });
     },
   });
 }
@@ -89,6 +98,7 @@ export function useJoinCommunity(communityId: number) {
 export function useLeaveCommunity(communityId: number) {
   const qc = useQueryClient();
   const { user } = useAuthUser();
+  const { showToast } = useToast();
 
   return useMutation({
     mutationFn: () => leaveCommunity(communityId),
@@ -104,6 +114,12 @@ export function useLeaveCommunity(communityId: number) {
       if (user?.id) {
         clearEmojiCache(user.id); // Clear localStorage cache
       }
+    },
+    onError: (error) => {
+      showToast({
+        type: "error",
+        message: error.message || "Có lỗi xảy ra khi rời khỏi cộng đồng.",
+      });
     },
   });
 }
