@@ -49,6 +49,14 @@ export interface ICommunitySearchResponseDto {
   pagination: ISearchPaginationDto;
 }
 
+// Combined response (khi search không có type)
+export interface ICombinedSearchResponseDto {
+  posts?: IPostResponseDto[];
+  users?: IUserSearchDto[];
+  communities?: ICommunitySearchDto[];
+  pagination: ISearchPaginationDto;
+}
+
 // Raw response from backend
 interface RawSearchResponse {
   posts?: IPostResponseDto[];
@@ -153,6 +161,30 @@ export const searchByHashtag = async (
   };
 };
 
+/**
+ * Combined search (all types) - for sidebar or initial search
+ */
+export const searchAll = async (
+  keyword: string,
+  after?: string
+): Promise<ICombinedSearchResponseDto> => {
+  const params: Record<string, string | number> = {
+    q: keyword,
+    limit: 15,
+  };
+  if (after) params.after = after;
+
+  const response = await axios.get<RawSearchResponse>("/search", { params });
+  const data = response as unknown as RawSearchResponse;
+
+  return {
+    posts: data.posts,
+    users: data.users,
+    communities: data.communities,
+    pagination: data.pagination ?? { hasMore: false, nextCursor: null },
+  };
+};
+
 // ============================================
 // Legacy API (deprecated - for backward compatibility)
 // ============================================
@@ -170,22 +202,21 @@ export interface ISearchResponseDto {
 }
 
 /**
- * Unified search function - requires type parameter
+ * Use specific search functions (searchPosts, searchUsers, etc.) instead
  */
 export const searchWithPagination = async (
   keyword: string,
   type: string,
   after?: string
 ): Promise<ISearchResponseDto> => {
-  if (!type) {
-    throw new Error("Search type is required");
-  }
-
   const params: Record<string, string | number> = {
     q: keyword,
-    type: type,
     limit: 15,
   };
+
+  if (type) {
+    params.type = type;
+  }
 
   if (after) {
     params.after = after;
@@ -203,10 +234,58 @@ export const searchWithPagination = async (
     items = data.communities;
   } else if (type === "user" && data.users) {
     items = data.users;
+  } else if (!type) {
+    // Tìm kiếm tổng hợp
+    if (data.posts) items = [...items, ...data.posts];
+    if (data.users) items = [...items, ...data.users];
+    if (data.communities) items = [...items, ...data.communities];
   }
+
+  console.log("Search items:", items);
 
   return {
     items,
     pagination: data.pagination ?? { hasMore: false, nextCursor: null },
   };
+};
+
+/**
+ * @deprecated Use specific search functions instead
+ */
+export const searchAPI = {
+  search: async (
+    keyword: string,
+    type: string
+  ): Promise<SearchResultItem[]> => {
+    try {
+      const params: Record<string, string> = { q: keyword };
+
+      if (type) {
+        params.type = type;
+      }
+
+      const response = await axios.get<RawSearchResponse>("/search", {
+        params,
+      });
+      const data = response as unknown as RawSearchResponse;
+
+      if ((type === "post" || type === "hashtag") && data.posts)
+        return data.posts;
+      if (type === "community" && data.communities) return data.communities;
+      if (type === "user" && data.users) return data.users;
+
+      if (!type) {
+        let results: SearchResultItem[] = [];
+        if (data.posts) results = [...results, ...data.posts];
+        if (data.users) results = [...results, ...data.users];
+        if (data.communities) results = [...results, ...data.communities];
+        return results;
+      }
+
+      return [];
+    } catch (error) {
+      console.error("Lỗi khi tìm kiếm:", error);
+      throw error;
+    }
+  },
 };
