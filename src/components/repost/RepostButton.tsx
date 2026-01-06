@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { Repeat2 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 import RepostModal from "./RepostModal";
 import type { RepostFormData } from "./RepostModal";
 import { useCreateRepost } from "../../hooks/useRepost";
@@ -67,7 +66,6 @@ const RepostButton: React.FC<RepostButtonProps> = ({
   onError,
   renderButton,
 }) => {
-  const navigate = useNavigate();
   const { showToast } = useToast();
   const { requireLogin } = useLoginRequired();
   const [showModal, setShowModal] = useState(false);
@@ -115,11 +113,6 @@ const RepostButton: React.FC<RepostButtonProps> = ({
 
           if (onSuccess) {
             onSuccess(newPost);
-          } else {
-            // Default behavior: navigate to new post
-            if (newPost?.id) {
-              navigate(`/post/${newPost.id}`);
-            }
           }
         },
         onError: (error) => {
