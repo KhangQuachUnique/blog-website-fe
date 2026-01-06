@@ -5,7 +5,7 @@ import {
   updateCommunityMemberRole,
   leaveCommunity,
   deleteCommunity,
-  joinCommunity, // ✅ thêm
+  joinCommunity, // thêm
 } from "../services/user/community/communityService";
 import type { ECommunityRole, EManageCommunityRole } from "../types/community";
 import { clearEmojiCache } from "../services/emoji/customEmojiCache";
@@ -59,7 +59,7 @@ export function useRemoveMember(communityId: number) {
 }
 
 /**
- * ✅ JOIN community
+ * JOIN community
  * - public + no approval => vào MEMBER ngay
  * - private hoặc require approval => PENDING
  */
@@ -76,7 +76,7 @@ export function useJoinCommunity(communityId: number) {
         queryKey: ["manage-community-members", communityId],
       });
       qc.invalidateQueries({ queryKey: ["myCommunities"] });
-      // ✅ Invalidate custom emojis cache để cập nhật emoji của community mới join
+      // Invalidate custom emojis cache để cập nhật emoji của community mới join
       qc.invalidateQueries({ queryKey: [CUSTOM_EMOJIS_QUERY_KEY] });
       if (user?.id) {
         clearEmojiCache(user.id); // Clear localStorage cache
@@ -85,7 +85,7 @@ export function useJoinCommunity(communityId: number) {
   });
 }
 
-// ✅ Leave community
+// Leave community
 export function useLeaveCommunity(communityId: number) {
   const qc = useQueryClient();
   const { user } = useAuthUser();
@@ -99,7 +99,7 @@ export function useLeaveCommunity(communityId: number) {
         queryKey: ["manage-community-members", communityId],
       });
       qc.invalidateQueries({ queryKey: ["myCommunities"] });
-      // ✅ Invalidate custom emojis cache vì không còn access emoji của community này
+      // Invalidate custom emojis cache vì không còn access emoji của community này
       qc.invalidateQueries({ queryKey: [CUSTOM_EMOJIS_QUERY_KEY] });
       if (user?.id) {
         clearEmojiCache(user.id); // Clear localStorage cache
@@ -108,7 +108,7 @@ export function useLeaveCommunity(communityId: number) {
   });
 }
 
-// ✅ Delete community
+// Delete community
 export function useDeleteCommunity(communityId: number) {
   const qc = useQueryClient();
 

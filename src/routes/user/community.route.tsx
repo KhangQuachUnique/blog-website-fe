@@ -19,7 +19,7 @@ const communityRoutes = [
       </RoleGuard>
     ),
   },
-  // 🌍 FACEBOOK-STYLE COMMUNITY PAGE (ALL ROLES)
+  //  FACEBOOK-STYLE COMMUNITY PAGE (ALL ROLES)
   {
     path: "community/:id",
     element: <CommunityLayout />,
@@ -29,7 +29,7 @@ const communityRoutes = [
     ],
   },
 
-  // 🔒 COMMUNITY MANAGEMENT (ADMIN / MOD ONLY)
+  //  COMMUNITY MANAGEMENT (ADMIN / MOD ONLY)
   {
     path: "community/:id/manage",
     element: (

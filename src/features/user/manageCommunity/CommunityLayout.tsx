@@ -23,7 +23,7 @@ const CommunityLayout = () => {
   const navigate = useNavigate();
   // const location = useLocation();
 
-  // ✅ luôn gọi hooks đủ, kể cả id không hợp lệ
+  // luôn gọi hooks đủ, kể cả id không hợp lệ
   const safeCommunityId =
     Number.isFinite(communityId) && communityId > 0 ? communityId : 0;
 
@@ -35,7 +35,7 @@ const CommunityLayout = () => {
   const joinMutation = useJoinCommunity(safeCommunityId);
   const leaveMutation = useLeaveCommunity(safeCommunityId);
 
-  // ✅ return sớm đặt SAU khi đã gọi hết hooks
+  //  return sớm đặt SAU khi đã gọi hết hooks
   if (!Number.isFinite(communityId) || communityId <= 0) {
     return <p>Community id không hợp lệ</p>;
   }
@@ -49,15 +49,15 @@ const CommunityLayout = () => {
   const isMemberApproved =
     role === "ADMIN" || role === "MODERATOR" || role === "MEMBER";
 
-  // ✅ private: nếu chưa approved thì lock posts/members
+  //  private: nếu chưa approved thì lock posts/members
   const isPrivateLocked = !data.isPublic && !isMemberApproved;
 
   const hasCover = !!data.thumbnailUrl;
 
-  // ✅ chỉ member thật sự mới được leave
+  // chỉ member thật sự mới được leave
   const canLeave = isMemberApproved;
 
-  // ✅ không cần useMemo
+  // không cần useMemo
   let joinLabel = "";
   if (role === "PENDING") joinLabel = "Đang chờ duyệt";
   else if (role === "NONE") {

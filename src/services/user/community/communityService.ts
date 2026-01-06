@@ -31,7 +31,7 @@ export const getCommunitySettings = async (
   return axios.get(`/communities/${communityId}/settings`);
 };
 
-// ✅ Update settings (dùng cho trang /manage/settings)
+//  Update settings (dùng cho trang /manage/settings)
 export const updateCommunitySettings = (
   communityId: number,
   payload: IUpdateCommunityDto
@@ -46,7 +46,7 @@ export const getCommunityMembers = (communityId: number) => {
   );
 };
 
-// ✅ Manage: có filter role (bao gồm PENDING)
+//  Manage: có filter role (bao gồm PENDING)
 export const getManageCommunityMembers = (
   communityId: number,
   role?: EManageCommunityRole
@@ -57,7 +57,7 @@ export const getManageCommunityMembers = (
   );
 };
 
-// ✅ Approve / Change role
+//  Approve / Change role
 export const updateCommunityMemberRole = (
   communityId: number,
   memberId: number,
@@ -68,7 +68,7 @@ export const updateCommunityMemberRole = (
   });
 };
 
-// ✅ Kick / Reject
+//  Kick / Reject
 export const removeCommunityMember = (
   communityId: number,
   memberId: number,
@@ -76,21 +76,21 @@ export const removeCommunityMember = (
 ) => {
   const ban = opts?.ban ?? true; // mặc định kick = ban
   return axios.delete(`/communities/${communityId}/members/${memberId}`, {
-    params: { ban: ban ? 1 : 0 }, // ✅ luôn gửi 1/0
+    params: { ban: ban ? 1 : 0 }, // luôn gửi 1/0
   });
 };
 
-// ✅ Leave community (rời cộng đồng)
+// Leave community (rời cộng đồng)
 export const leaveCommunity = (communityId: number) => {
   return axios.delete(`/communities/${communityId}/leave`);
 };
 
-// ✅ Delete community (xóa cộng đồng)
+// Delete community (xóa cộng đồng)
 export const deleteCommunity = (communityId: number) => {
   return axios.delete(`/communities/${communityId}`);
 };
 
-// ✅ Join community
+// Join community
 export const joinCommunity = (communityId: number) => {
   return axios.post(`/communities/${communityId}/join`);
 };

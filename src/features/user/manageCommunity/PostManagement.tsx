@@ -18,12 +18,12 @@ const PostManagement = () => {
   const [approvingPostId, setApprovingPostId] = useState<number | null>(null);
   const [rejectingPostId, setRejectingPostId] = useState<number | null>(null);
 
-  // ✅ [CHANGE] lấy thêm refetch để reload list sau khi duyệt/từ chối
+  //  [CHANGE] lấy thêm refetch để reload list sau khi duyệt/từ chối
   const {
     data: posts,
     isLoading,
     isError,
-    refetch, // ✅
+    refetch, // 
   } = useGetCommunityManagePosts(communityId);
 
   const approveMutation = useApprovePost(communityId);
@@ -37,7 +37,7 @@ const PostManagement = () => {
     setApprovingPostId(postId);
     approveMutation.mutate(postId, {
       onSuccess: async () => {
-        await refetch(); // ✅ [ADD] duyệt xong thì load lại danh sách
+        await refetch(); // [ADD] duyệt xong thì load lại danh sách
         showToast({
           type: "error",
           message: "Đã duyệt bài viết.",
@@ -52,7 +52,7 @@ const PostManagement = () => {
     setRejectingPostId(postId);
     deleteMutation.mutate(postId, {
       onSuccess: async () => {
-        await refetch(); // ✅ [ADD] từ chối xong thì load lại danh sách
+        await refetch(); // [ADD] từ chối xong thì load lại danh sách
       },
       onSettled: () => setRejectingPostId(null),
     });

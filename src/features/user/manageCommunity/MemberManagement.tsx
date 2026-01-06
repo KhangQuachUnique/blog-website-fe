@@ -46,7 +46,7 @@ export default function MemberManagement() {
   const [filter, setFilter] = useState<Filter>("all");
   const [memberToKick, setMemberToKick] = useState<MemberUI | null>(null);
 
-  // ✅ draft role (chưa áp dụng)
+  //  draft role (chưa áp dụng)
   const [draftRoles, setDraftRoles] = useState<
     Record<number, EManageCommunityRole>
   >({});
@@ -77,7 +77,7 @@ export default function MemberManagement() {
     [data]
   );
 
-  // ✅ khi đổi filter hoặc reload list → clear draft để tránh lệch dữ liệu
+  //  khi đổi filter hoặc reload list → clear draft để tránh lệch dữ liệu
   useEffect(() => {
     setDraftRoles({});
   }, [filter, communityId]);
@@ -116,7 +116,7 @@ export default function MemberManagement() {
     }
   };
 
-  // ✅ Apply: commit tất cả draftRoles
+  // Apply: commit tất cả draftRoles
   const handleApply = async () => {
     try {
       const updates = Object.entries(draftRoles)
@@ -142,7 +142,7 @@ export default function MemberManagement() {
         return;
       }
 
-      // ✅ RULES FOR MODERATOR
+      // RULES FOR MODERATOR
       if (isMod) {
         // 1) MOD không được promote ai lên ADMIN
         const hasPromoteToAdmin = updates.some((u) => u.role === "ADMIN");
@@ -187,7 +187,7 @@ export default function MemberManagement() {
   const handleConfirmKick = async () => {
     if (!memberToKick) return;
 
-    // ✅ MOD không được kick ADMIN (double-safety)
+    //  MOD không được kick ADMIN (double-safety)
     if (isMod && memberToKick.role === "ADMIN") {
       showToast({ type: "error", message: "Moderator không thể kick Admin." });
       setMemberToKick(null);
@@ -286,7 +286,7 @@ export default function MemberManagement() {
         </button>
       </div>
 
-      {/* ✅ Action bar: Apply / Cancel */}
+      {/* Action bar: Apply / Cancel */}
       <div
         style={{
           display: "flex",
@@ -343,11 +343,11 @@ export default function MemberManagement() {
           const isSelf =
             currentUserId != null && member.userId === currentUserId;
 
-          // ✅ MOD restrictions
+          //  MOD restrictions
           const modCannotEditAdmin = isMod && member.role === "ADMIN";
           const modCannotShowAdminOption = isMod;
 
-          // ✅ Ẩn hẳn Kick nếu là ADMIN
+          // Ẩn hẳn Kick nếu là ADMIN
           const hideKick = member.role === "ADMIN";
 
           return (
@@ -356,7 +356,7 @@ export default function MemberManagement() {
               className="community-card"
               style={{ display: "flex", alignItems: "center", gap: 16 }}
             >
-              {/* ✅ Click avatar/name => chuyển sang trang cá nhân */}
+              {/* Click avatar/name => chuyển sang trang cá nhân */}
               <div
                 style={{
                   display: "flex",
@@ -419,7 +419,7 @@ export default function MemberManagement() {
                   onChange={(e) => {
                     const nextRole = e.target.value as EManageCommunityRole;
 
-                    // ✅ MOD: chặn promote lên ADMIN
+                    // MOD: chặn promote lên ADMIN
                     if (isMod && nextRole === "ADMIN") {
                       showToast({
                         type: "error",
@@ -428,7 +428,7 @@ export default function MemberManagement() {
                       return;
                     }
 
-                    // ✅ MOD: không cho sửa admin
+                    // MOD: không cho sửa admin
                     if (modCannotEditAdmin) {
                       showToast({
                         type: "error",
@@ -452,7 +452,7 @@ export default function MemberManagement() {
                     opacity: modCannotEditAdmin ? 0.6 : 1,
                   }}
                 >
-                  {/* ✅ MOD không hiện ADMIN option */}
+                  {/* MOD không hiện ADMIN option */}
                   {!modCannotShowAdminOption && (
                     <option value="ADMIN">Admin</option>
                   )}
@@ -474,7 +474,7 @@ export default function MemberManagement() {
                   </button>
                 )}
 
-                {/* ✅ Admin: ẩn nút Kick */}
+                {/* Admin: ẩn nút Kick */}
                 {!hideKick && (
                   <button
                     style={{
