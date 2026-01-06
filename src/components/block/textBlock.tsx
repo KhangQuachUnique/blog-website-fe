@@ -7,7 +7,7 @@ const TextBlock = ({ id, content }: TextBlockProps) => {
   return (
     <div
       id={`text-block-${id}`}
-      className="text-block w-full pl-1 pr-3 pt-0 flex flex-col prose prose-lg max-w-none px-2 py-1 text-lg break-words
+      className="text-block rgl-no-drag w-full pl-1 pr-3 pt-0 flex flex-col prose prose-lg max-w-none px-2 py-1 text-lg break-words select-text
         [&_h1]:text-4xl [&_h1]:font-bold [&_h1]:my-4
         [&_h2]:text-3xl [&_h2]:font-bold [&_h2]:my-3
         [&_h3]:text-2xl [&_h3]:font-semibold [&_h3]:my-2
