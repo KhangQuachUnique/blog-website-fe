@@ -58,6 +58,7 @@ export default function MemberManagement() {
   // role của mình trong community (ADMIN/MOD/MEMBER/PENDING)
   const { data: settings } = useGetCommunitySettings(communityId);
   const viewerRole = settings?.role;
+  const isAdmin = viewerRole === "ADMIN";
   const isMod = viewerRole === "MODERATOR";
 
   // role param cho API
@@ -187,9 +188,33 @@ export default function MemberManagement() {
   const handleConfirmKick = async () => {
     if (!memberToKick) return;
 
-    //  MOD không được kick ADMIN (double-safety)
-    if (isMod && memberToKick.role === "ADMIN") {
-      showToast({ type: "error", message: "Moderator không thể kick Admin." });
+    // chỉ ADMIN / MODERATOR mới được kick
+    if (!isAdmin && !isMod) {
+      showToast({ type: "error", message: "Bạn không có quyền kick thành viên." });
+      setMemberToKick(null);
+      return;
+    }
+
+    // không cho kick chính mình
+    if (currentUserId != null && memberToKick.userId === currentUserId) {
+      showToast({ type: "error", message: "Bạn không thể kick chính mình." });
+      setMemberToKick(null);
+      return;
+    }
+
+    // MOD không được kick ADMIN/MODERATOR
+    if (isMod && (memberToKick.role === "ADMIN" || memberToKick.role === "MODERATOR")) {
+      showToast({
+        type: "error",
+        message: "Moderator không thể kick Admin/Moderator.",
+      });
+      setMemberToKick(null);
+      return;
+    }
+
+    // ADMIN không được kick ADMIN
+    if (isAdmin && memberToKick.role === "ADMIN") {
+      showToast({ type: "error", message: "Không thể kick Admin." });
       setMemberToKick(null);
       return;
     }
@@ -347,8 +372,13 @@ export default function MemberManagement() {
           const modCannotEditAdmin = isMod && member.role === "ADMIN";
           const modCannotShowAdminOption = isMod;
 
-          // Ẩn hẳn Kick nếu là ADMIN
-          const hideKick = member.role === "ADMIN";
+          // Quyền kick:
+          // - ADMIN: kick được MODERATOR/MEMBER/PENDING, KHÔNG kick ADMIN và KHÔNG kick chính mình
+          // - MODERATOR: kick được MEMBER/PENDING, KHÔNG kick ADMIN/MODERATOR và KHÔNG kick chính mình
+          const canKick =
+            !isSelf &&
+            ((isAdmin && member.role !== "ADMIN") ||
+              (isMod && (member.role === "MEMBER" || member.role === "PENDING")));
 
           return (
             <div
@@ -474,8 +504,7 @@ export default function MemberManagement() {
                   </button>
                 )}
 
-                {/* Admin: ẩn nút Kick */}
-                {!hideKick && (
+                {canKick && (
                   <button
                     style={{
                       padding: "6px 14px",
