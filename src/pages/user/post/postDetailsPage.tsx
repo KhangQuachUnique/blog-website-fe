@@ -379,8 +379,9 @@ const PostDetailsPage: React.FC = () => {
                   className={`
                     ${BLOCK_WRAPPER.readMode}
                     ${BLOCK_WRAPPER.default}
-                    h-full relative group hover:z-10
+                    h-full relative group hover:z-10 select-text
                   `}
+                  onMouseDown={(e) => e.stopPropagation()}
                 >
                   {block.type === EBlockType.TEXT ? (
                     <TextBlock
@@ -395,7 +396,7 @@ const PostDetailsPage: React.FC = () => {
                       objectFit={parseObjectFit(block.objectFit)}
                     />
                   )}
-                  <div className="absolute top-[40%] right-[35px] opacity-0 p-2 z-10 group-hover:right-[-35px] group-hover:opacity-100 transition-all duration-200">
+                  <div className="absolute top-[40%] right-[-35px] opacity-0 p-2 z-10 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity duration-200">
                     <BlockCommentButton blockId={block.id} />
                   </div>
                 </div>
