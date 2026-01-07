@@ -42,20 +42,23 @@ export interface BanUserRequest {
   reason?: string;
 }
 
-// Lấy danh sách người dùng (Admin)
+// Lấy danh sách người dùng (Admin) - Server-side Pagination
 export const getUserList = async (params?: {
   search?: string;
   status?: string;
   page?: number;
   limit?: number;
-}): Promise<IUser[]> => {
-  const response = await axiosInstance.get<UserListResponse>(
-    "/users/admin/all",
-    { params }
-  );
-  // Backend trả về object có data array
-  const result = response as unknown as UserListResponse;
-  return result.data || [];
+  sortBy?: string;
+  sortOrder?: 'ASC' | 'DESC';
+}): Promise<{
+  data: IUser[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}> => {
+  const response = await axiosInstance.get("/users/admin/all", { params });
+  return response;
 };
 
 // Lấy chi tiết người dùng (Admin)
