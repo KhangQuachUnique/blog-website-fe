@@ -7,6 +7,7 @@ import {
 } from "../services/user/community/communityService";
 
 import type { IUpdateCommunityDto } from "../types/community";
+import { useToast } from "../contexts/toast";
 
 export const useGetCommunitySettings = (communityId: number) => {
   return useQuery({
@@ -36,6 +37,7 @@ export const useGetCommunitiesByUserId = (userId: number) => {
 
 export const useUpdateCommunitySettings = (communityId: number) => {
   const qc = useQueryClient();
+  const {showToast} = useToast();
 
   return useMutation({
     mutationFn: (payload: IUpdateCommunityDto) =>
@@ -44,16 +46,34 @@ export const useUpdateCommunitySettings = (communityId: number) => {
       qc.invalidateQueries({ queryKey: ["communitySettings", communityId] });
       qc.invalidateQueries({ queryKey: ["myCommunities"] });
     },
+
+    onError: (error) => {
+      showToast({
+        type: "error",
+        message: (error as Error).message || "Đã có lỗi xảy ra khi tạo cộng đồng.",
+        duration: 3000,
+      });
+    }
   });
 };
 
 export const useCreateCommunity = () => {
   const qc = useQueryClient();
+  const {showToast} = useToast();
 
   return useMutation({
     mutationFn: createCommunity,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["myCommunities"] });
     },
+
+    onError: (error) => {
+      showToast({
+        type: "error",
+        message: (error as Error).message || "Đã có lỗi xảy ra khi tạo cộng đồng.",
+        duration: 3000,
+      });
+    }
+    
   });
 };
