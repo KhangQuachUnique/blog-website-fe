@@ -44,6 +44,12 @@ const CreateCommunityPostPage = () => {
   const isMemberApproved =
     role === "ADMIN" || role === "MODERATOR" || role === "MEMBER";
 
+  // Khi community bật duyệt bài:
+  // - Admin/Mod được đăng thẳng
+  // - Member gửi bài sẽ vào hàng chờ duyệt
+  const isPrivileged = role === "ADMIN" || role === "MODERATOR";
+  const shouldWaitForApproval = !!community.requirePostApproval && !isPrivileged;
+
   //  chặn vào URL create-post nếu chưa được tham gia/duyệt
   useEffect(() => {
     if (!isMemberApproved) {
@@ -63,14 +69,12 @@ const CreateCommunityPostPage = () => {
 
   const handlePublish = (dto: ICreateBlogPostDto) => {
     mutate(dto, {
-      onSuccess: (createdPost: any) => {
-        // BE sẽ trả status: "ACTIVE" hoặc "DRAFT"
-        const status = createdPost?.status;
-
-        if (status === "DRAFT") {
+      onSuccess: () => {
+        // Community bật duyệt bài => member đăng sẽ vào hàng chờ duyệt.
+        if (shouldWaitForApproval) {
           showToast({
             type: "info",
-            message: "Bài viết đã được gửi và đang chờ duyệt.",
+            message: "Bài viết đang chờ duyệt",
             duration: 3000,
           });
         } else {
